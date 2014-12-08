@@ -762,8 +762,12 @@ int Backend::send_list_caller(const std::string& name, int diff_count, const var
 int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
 {
   std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
-  if(name.substr(0,1) == "U") prefix = "l";
-  link_->put_variable(prefix + name, diff_count, variable_arg);
+  if(name.substr(0,1) == "U")
+  {
+    prefix = "l";
+    link_->put_variable(prefix + name, 0, Link::VF_NONE);
+  }
+  else link_->put_variable(prefix + name, diff_count, variable_arg);
   return 0;
 }
 
