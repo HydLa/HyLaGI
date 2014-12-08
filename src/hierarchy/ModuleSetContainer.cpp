@@ -28,6 +28,11 @@ ModuleSetContainer::module_set_set_t ModuleSetContainer::get_full_ms_list()const
   return full_module_set_set_;
 }
 
+std::set<boost::shared_ptr<symbolic_expression::Variable> > ModuleSetContainer::get_list_variables()
+{
+  return std::set<boost::shared_ptr<symbolic_expression::Variable> >();
+}
+
 void ModuleSetContainer::reset(){
   reset(full_module_set_set_);
 }

@@ -55,6 +55,8 @@ public:
   
   virtual void reset(const module_set_set_t &mss);
 
+  virtual std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables(){ return std::set<boost::shared_ptr<symbolic_expression::Variable> >(); }
+
   /**
    * ノードの情報の名前表現によるダンプ
    */

@@ -55,7 +55,7 @@ public:
   /**
    * return list variable vector
    */
-  std::vector<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables();
+  std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables();
 
   /**
    * 集合の集合(このクラス)の名前

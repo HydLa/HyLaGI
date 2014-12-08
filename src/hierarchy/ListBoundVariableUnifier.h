@@ -19,7 +19,7 @@ public:
   void set_prefix(std::string);
   void reset_prefix();
 
-  std::vector<std::string> get_list_variables();
+  std::set<std::string> get_list_variables();
 
   virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
 

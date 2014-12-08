@@ -382,6 +382,12 @@ void PhaseSimulator::initialize(variable_set_t &v,
   list_element_data_set_t le_set(finder.get_all_variable_set());
   backend_->set_list_element_set(le_set);
 
+  std::set<boost::shared_ptr<symbolic_expression::Variable> > list_variable = module_set_container->get_list_variables();
+  for(auto lv : list_variable)
+  {
+    backend_->call("addListVariable", 1, "s", "", lv->get_name().c_str());
+  }
+
   backend_->set_variable_set(*variable_set_);
   value_modifier.reset(new ValueModifier(*backend_));
 }

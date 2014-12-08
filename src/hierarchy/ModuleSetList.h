@@ -42,6 +42,8 @@ public:
    */ 
   std::string get_name() const;
 
+  virtual std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables(){ return std::set<boost::shared_ptr<symbolic_expression::Variable> >(); }
+
   /**
    * 集合の集合のダンプ
    */
