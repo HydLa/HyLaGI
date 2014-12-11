@@ -717,16 +717,16 @@ void Backend::set_range(const value_t &val, value_range_t &range, const int& rel
     range.set_unique_value(val);
     break;
     case 1://Less
-    range.set_upper_bound(val, false);
+    range.add_upper_bound(val, false);
     break;
     case 2://Greater
-    range.set_lower_bound(val, false);
+    range.add_lower_bound(val, false);
     break;
     case 3://LessEqual
-    range.set_upper_bound(val, true);
+    range.add_upper_bound(val, true);
     break;
     case 4://GreaterEqual
-    range.set_lower_bound(val, true);
+    range.add_lower_bound(val, true);
     break;
   }
 }
