@@ -234,17 +234,19 @@ Token Lexer::get_token()
         return LOGICAL_AND;
       }
       if(current == '*'){
+        next_char();
+        skip_space();
         while(true){
-          do{
+          if(get_current_char()=='*'){
+            next_char();
+            if(get_current_char()=='/'){
+              next_char();
+              return get_token();
+            }
+          }else{
             next_char();
             skip_space();
-          }while(get_current_char()!='*');
-          next_char();
-          if(get_current_char()=='/'){
-            next_char();
-            return get_token();
           }
-          skip_space();
         }
       }
       if(current == '/'){
