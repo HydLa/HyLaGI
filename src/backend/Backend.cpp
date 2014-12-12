@@ -15,6 +15,7 @@ using namespace parse_tree;
 using namespace symbolic_expression;
 
 const std::string Backend::var_prefix = "u";
+const std::string Backend::list_var_prefix = "l";
 // use different prefix to distinct variables and constants
 const std::string par_prefix = "p";
 
@@ -764,8 +765,7 @@ int Backend::send_variable(const std::string& name, int diff_count, const variab
   std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
   if(name.substr(0,1) == "U")
   {
-    prefix = "l";
-    link_->put_variable(prefix + name, 0, Link::VF_NONE);
+    link_->put_variable(list_var_prefix + name, 0, Link::VF_NONE);
   }
   else link_->put_variable(prefix + name, diff_count, variable_arg);
   return 0;
@@ -1064,6 +1064,8 @@ symbolic_expression::node_sptr Backend::receive_node(){
         ret = symbolic_expression::node_sptr(new symbolic_expression::False());
       else if(symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
         ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(var_prefix.length())));
+      else if(symbol.length() > list_var_prefix.length() && symbol.substr(0, list_var_prefix.length()) == list_var_prefix)
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(list_var_prefix.length())));
       break;
     }
   case Link::DT_INT: // オーバーフローする可能性があるなら文字列使う
@@ -1078,7 +1080,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
       ret = receive_function();
       break;
 
-    default:
+  default:
       break;
   }
   if(ret == NULL){
@@ -1115,7 +1117,24 @@ int Backend::receive_map(variable_map_t& map)
     //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
     link_->get_function(f_name, size); //List
     link_->get_function(f_name, size); //List
-    std::string variable_name = link_->get_symbol();
+    
+    Link::DataType type = link_->get_type();
+    std::string variable_name;
+    int list_args = 0;
+    symbolic_expression::node_sptr list_index;
+    switch(type)
+    {
+    case Link::DT_SYM:
+      variable_name = link_->get_symbol();
+      break;
+    case Link::DT_FUNC:
+      link_->get_function(variable_name, list_args);
+      assert(list_args == 1);
+      list_index = receive_node();
+      break;
+    default:
+      break;
+    }
     int d_cnt = link_->get_integer();
     // 関係演算子のコード
     int rel = link_->get_integer();
@@ -1124,8 +1143,15 @@ int Backend::receive_map(variable_map_t& map)
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;
-    variable_t variable(variable_name.substr(var_prefix.length()), d_cnt);
-
+    variable_t variable;
+    if(list_index == symbolic_expression::node_sptr())
+    {
+      variable = variable_t(variable_name.substr(var_prefix.length()), d_cnt);
+    }
+    else
+    {
+      variable = variable_t(variable_name.substr(var_prefix.length()), d_cnt, list_index);
+    }
     value_range_t tmp_range = map[variable];
     set_range(symbolic_value, tmp_range, rel);
     if(symbolic_value.undefined()){

@@ -93,6 +93,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
 
   private:
   static const std::string var_prefix;
+  static const std::string list_var_prefix;
   /// throw an exception for an invalid format
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();

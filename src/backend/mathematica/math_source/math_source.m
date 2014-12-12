@@ -203,7 +203,7 @@ hasVariable[exprs_] := Length[getVariables[exprs] ] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := (MatchQ[exprs, _Symbol] || MatchQ[Head[exprs], _Symbol]) && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
