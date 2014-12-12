@@ -239,6 +239,9 @@ And2and[reduceSol_] :=
 Or2or[reduceSol_] :=
   If[Head[reduceSol] === Or, or @@ reduceSol, or[reduceSol]];
 
+checkAndIgnore[expr_, failExpr_, messages_] := 
+Quiet[Check[expr, failExpr, messages], messages];
+SetAttributes[checkAndIgnore, HoldAll];
 
 (* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
