@@ -54,7 +54,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   if(phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
-    todo->children.push_back(todo);
+    todo->parent->children.push_back(todo);
   }
   else
   {
