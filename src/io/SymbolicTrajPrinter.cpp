@@ -21,7 +21,7 @@ SymbolicTrajPrinter::SymbolicTrajPrinter(set<string> vars, std::ostream& ost):
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
   stringstream sstr;
   if(result.phase_type == INTERVAL_PHASE){
-    sstr << "---------IP---------" << endl;
+    sstr << "---------IP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
@@ -29,7 +29,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
       sstr << "t\t: " << result.current_time << "->" << "???" << "\n";
     }
   }else{
-    sstr << "---------PP---------" << endl;
+    sstr << "---------PP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     sstr << "t\t: " << result.current_time << "\n";
   }
@@ -90,7 +90,6 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
 }
 
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, vector<std::string> &result, int &case_num, int &phase_num) const{
-
   if(node->children.size() == 0){
     ostream << "---------Case " << case_num++ << "---------" << endl;
     vector<std::string>::const_iterator r_it = result.begin();
@@ -102,6 +101,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       node->simulation_state==simulator::TIME_LIMIT ||
       node->simulation_state==simulator::NOT_SIMULATED ||
       node->simulation_state==simulator::NONE ||
+       node->simulation_state==simulator::SIMULATED ||  
       node->simulation_state==simulator::STEP_LIMIT ||
       node->simulation_state==simulator::SOME_ERROR ||
       node->simulation_state==simulator::INTERRUPTED)
@@ -143,7 +143,6 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       case simulator::NOT_SIMULATED:
         ostream << "# following phases were not simulated\n" ;
         break;
-
 
       case simulator::INTERRUPTED:
         ostream << "# simulation was interrupted\n" ;

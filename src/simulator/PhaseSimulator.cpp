@@ -219,8 +219,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore local_diff_sum = phase->diff_sum;
   for(auto diff : module_diff)
   {
-    HYDLA_LOGGER_DEBUG_VAR(diff.first.first);
-    HYDLA_LOGGER_DEBUG_VAR(diff.second);
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
   }
@@ -253,6 +251,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->unadopted_mss.insert(unadopted_ms);
 
     phase->parent->children.push_back(phase);
+    HYDLA_LOGGER_DEBUG_VAR(*phase);
+    HYDLA_LOGGER_DEBUG_VAR(*phase->parent);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if(create_result.size() != 1)
@@ -529,7 +529,12 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
 
   // TODO: implement branching here
   if(!unknown_asks.empty()){
-    throw SimulateError("unknown asks");
+    string error_msg = "unknown asks: ";
+    for(auto ask : unknown_asks)
+    {
+      error_msg += get_infix_string(ask) + ";";
+    }
+    throw SimulateError(error_msg);
   }
   return true;
 }
