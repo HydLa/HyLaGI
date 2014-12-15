@@ -59,27 +59,34 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
   tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)) - 1);            
   tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)) - 1);
 
-  std::cout << "width : " << width(candidate) << "\n";
+  std::cout << "\n" << "width : " << width(candidate) << "\n";
   std::cout << "log(width) : " << log10(width(candidate)) << "\n";
   std::cout << "(int)log(width) : " << (int)log10(width(candidate)) << "\n";
+
+  debug_print("tmp : ", tmp);
   
   itvd n_x, div;
   bool parted;
   IntervalTreeVisitor visitor;
   itvd time_interval = itvd(mid(tmp));
 
+
   itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
   itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
   
   div = division_part1(f_result, d_result, parted);
 
+  debug_print("div : ", div);
+  
   if(parted)
   {
-    std::cout << "Parted False.\n";
+    std::cout << "Parted False.\n\n";
     return false;
   }
   
   n_x = mid(tmp) - div;
+
+  debug_print("n_x : ", n_x);
   
   if(proper_subset(n_x, tmp))
   {
@@ -87,7 +94,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
   }
   else
   {
-    std::cout << "Not Subset.\n";
+    std::cout << "Not Subset.\n\n";
     return false;
   }
 }
@@ -125,10 +132,10 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       //   f_result = f_visitor.get_interval_value(exp);
       // }
 
-
-      IntervalTreeVisitor f_visitor = IntervalTreeVisitor(itvd(mid(current_value)), phase_map_);
-      f_result = f_visitor.get_interval_value(exp);
+      std::cout.precision(17);
       
+      itvd m = itvd(mid(current_value));
+
       IntervalTreeVisitor visitor;
 
       itvd time_interval = itvd(mid(current_value));
@@ -138,11 +145,19 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       std::cout << "f_result : " << f_result << "\n";
       std::cout << "d_result : " << d_result << "\n";
       
+      if(in(0.,f_result) && in(0.,d_result))
+      {
+        IntervalTreeVisitor f_visitor2 = IntervalTreeVisitor(m + 1./4.*width(current_value), phase_map_);
+        f_result = f_visitor2.get_interval_value(exp);
+        std::cout << "f_result2 : " << f_result << "\n";
+        m = m + 1./4.*width(current_value);
+      }
+      
       prev_value = current_value;
       debug_print("prev_value : ", prev_value);
       div1 = division_part1(f_result, d_result, parted);
       debug_print("div1 : ", div1);
-      tmp1 = mid(current_value) - div1;
+      tmp1 = m - div1;
       debug_print("tmp1 : ", tmp1);
       x1 = intersect_interval(current_value, tmp1);
       debug_print("x1 : ", x1);
@@ -150,7 +165,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       {
         div2 = division_part2(f_result, d_result);
         debug_print("div2 : ", div2);
-        tmp2 = mid(current_value) - div2;
+        tmp2 = m - div2;
         debug_print("tmp2 : ", tmp2);
         x2 = intersect_interval(current_value, tmp2);
         debug_print("x2 : ", x2);
