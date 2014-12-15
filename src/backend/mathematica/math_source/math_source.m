@@ -450,6 +450,8 @@ Module[
 
 calculateConsistentTime[cause_, cons_, maxTime_] := calculateConsistentTime[cause, cons, pConstraint, maxTime];
 
+findMinTime::minimizeFailure = "failed to minimize t";
+
 
 publicMethod[
   calculateConsistentTime,
@@ -491,8 +493,10 @@ publicMethod[
        ],
        {Minimize::wksol, Minimize::infeas}
     ];
-    debugPrint["minT after Minimize:", minT];
+    (* When minimize failed *)
+    If[Head[minT] === Minimize, Message[findMinTime::minimizeFailure]];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
+    simplePrint[minT];
     minT = First[minT];
     If[minT === Infinity, 
       {},
@@ -736,7 +740,3 @@ Module[
   ];
   sol
 ];
-
-exDSolve::unkn = "unknown error occurred in exDSolve";
-
-
