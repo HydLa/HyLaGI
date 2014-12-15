@@ -147,17 +147,16 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       
       if(in(0.,f_result) && in(0.,d_result))
       {
-        IntervalTreeVisitor f_visitor2 = IntervalTreeVisitor(m + 1./4.*width(current_value), phase_map_);
-        f_result = f_visitor2.get_interval_value(exp);
+        time_interval = time_interval + 1./4.*width(current_value);
+        f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
         std::cout << "f_result2 : " << f_result << "\n";
-        m = m + 1./4.*width(current_value);
       }
       
       prev_value = current_value;
       debug_print("prev_value : ", prev_value);
       div1 = division_part1(f_result, d_result, parted);
       debug_print("div1 : ", div1);
-      tmp1 = m - div1;
+      tmp1 = time_interval - div1;
       debug_print("tmp1 : ", tmp1);
       x1 = intersect_interval(current_value, tmp1);
       debug_print("x1 : ", x1);
@@ -165,7 +164,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       {
         div2 = division_part2(f_result, d_result);
         debug_print("div2 : ", div2);
-        tmp2 = m - div2;
+        tmp2 = time_interval - div2;
         debug_print("tmp2 : ", tmp2);
         x2 = intersect_interval(current_value, tmp2);
         debug_print("x2 : ", x2);
