@@ -1166,6 +1166,7 @@ int Backend::receive_map(variable_map_t& map)
 
 int Backend::receive_parameter_map(parameter_map_t& map)
 {
+  map.clear();
   string func_name;
   int condition_size; link_->get_function(func_name, condition_size);
   for(int cond_it = 0; cond_it < condition_size; cond_it++){
