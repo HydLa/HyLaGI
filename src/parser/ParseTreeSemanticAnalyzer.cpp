@@ -1,6 +1,7 @@
 #include "ParseTreeSemanticAnalyzer.h"
 
 #include <assert.h>
+#include <queue>
 
 #include "ParseError.h"
 #include "TreeInfixPrinter.h"
@@ -479,13 +480,23 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionLis
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
 {
   node_sptr element;
+  std::queue<node_sptr> queue;
   for(int i = 0; i < node->get_arguments_size(); i++){
-    if(element){
-      element = boost::shared_ptr<Parallel>(new Parallel(element, node->get_argument(i)));
-    }else{
-      element = node->get_argument(i);
-    }
+    queue.push(node->get_argument(i));
   }
+  while(queue.size()>1){
+    std::queue<node_sptr> tmp_queue;
+    while(queue.size()>1){
+      node_sptr l = queue.front();
+      queue.pop();
+      node_sptr r = queue.front();
+      queue.pop();
+      tmp_queue.push(node_sptr(new Parallel(l,r)));
+    }
+    if(!queue.empty()) tmp_queue.push(queue.front());
+    queue = tmp_queue;
+  }
+  element = queue.front();
   accept(element);
   if(!new_child_) new_child_ = element;
 }
