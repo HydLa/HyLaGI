@@ -270,7 +270,6 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 }
 
 
-
 void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
   if(!up_to_date) check_connected_components();
   initialize_node_visited();
@@ -307,6 +306,7 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
   module_set.clear();
   get_related_constraints_core(var, constraints, module_set);
 }
+
 
 
 void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
@@ -492,6 +492,41 @@ RelationGraph::AskNode::AskNode(const ask_t &a, const module_t &mod):ConstraintN
   finder.visit_node(ask->get_guard());
   prev = finder.get_variable_set().empty();
 }
+
+
+RelationGraph::variable_set_t RelationGraph::get_related_variables(constraint_t cons){
+
+  variable_set_t vars;
+  ConstraintStore constraints;
+  module_set_t modules;
+
+  if(!up_to_date) check_connected_components();
+  initialize_node_visited();
+    
+  if(tell_node_map.count(cons) == 0)
+  {
+    VariableFinder finder;
+    finder.visit_node(cons);
+    for(auto var: finder.get_all_variable_set())
+    {
+      if(variable_node_map.count(var))
+      {
+        visit_node(variable_node_map[var], constraints, modules, vars);
+      }
+    }
+    return vars;
+  }
+  else
+  {
+    TellNode *cons_node = tell_node_map[cons];
+
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(cons_node->constraint));
+
+    visit_node(cons_node, constraints, modules, vars);
+  }
+  return vars;
+}
+
 
 RelationGraph::variable_set_t RelationGraph::get_variables(unsigned int index)
 {

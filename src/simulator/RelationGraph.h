@@ -185,6 +185,11 @@ public:
   void get_related_constraints_vector(const ConstraintStore &constraints, const variable_set_t &variables, std::vector<ConstraintStore> &constraints_vector, std::vector<module_set_t> &modules_vector);
 
   /**
+   * Get variables related to constraint
+   */
+  variable_set_t get_related_variables(constraint_t constraint);
+
+  /**
    * Get variabes included by connected component specified by index
    */
   variable_set_t get_variables(unsigned int index);

@@ -116,7 +116,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
                                            always_list))
         {
           todo->always_list.add_constraint_store(always_list);
-          todo->diff_sum.add_constraint(trigger.first);
+          todo->diff_sum.add_constraint(trigger.first->get_child());
           if(entailed)
           {
             todo->diff_negative_asks.insert(trigger.first);
@@ -431,15 +431,13 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
   ask_set_t unknown_asks = trigger_asks;
   bool expanded, first_loop = true;
   PhaseType phase_type = state->phase_type;
-  ConstraintStore diff = diff_sum;
-  ConstraintStore next_diff;
   do{
-    HYDLA_LOGGER_DEBUG_VAR(diff);
+    HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
     timer::Timer entailment_timer;
     
     variable_set_t discrete_variables;
-    for(auto constraint: diff)
+    for(auto constraint: diff_sum)
     {
       VariableFinder finder;
       finder.visit_node(constraint);
@@ -483,8 +481,6 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
           always_list = relation_graph_->set_entailed(ask, true);
           expanded_always.add_constraint_store(always_list);
           positive_asks.insert(ask);
-          diff.add_constraint(ask->get_child());
-          next_diff.add_constraint(ask->get_child());
           diff_sum.add_constraint(ask->get_child());
           expanded = true;
         }
@@ -494,9 +490,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
         HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", *(ask->get_guard()));
         if(relation_graph_->get_entailed(ask))
         {
-          next_diff.add_constraint(ask->get_child());
           diff_sum.add_constraint(ask->get_child());
-          diff.add_constraint(ask->get_child());
           relation_graph_->set_entailed(ask, false);
           negative_asks.insert(ask);
           expanded = true;
@@ -515,7 +509,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, ask_set_t &tr
     {
       timer::Timer consistency_timer;
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff, phase_type, state->profile);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, state->profile);
       state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
       state->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){
@@ -668,11 +662,13 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       variable_set_t diff_variables;
       {
-        pp_time_result_t time_result;
-        VariableFinder v_finder;
-        for(auto diff : phase->diff_sum)v_finder.visit_node(diff);
-        for(auto trigger : phase->discrete_asks)v_finder.visit_node(trigger.first->get_guard());
-        diff_variables = v_finder.get_all_variable_set();
+        for(auto diff: phase->diff_sum)
+        {
+          variable_set_t var_set;
+          HYDLA_LOGGER_DEBUG_VAR(get_infix_string(diff));
+          var_set = relation_graph_->get_related_variables(diff);
+          diff_variables.insert(var_set.begin(), var_set.end());
+        }
       }
 
       // 各変数に関する最小時刻を更新する．
@@ -757,6 +753,10 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           else
           {
             next_todo->discrete_asks = candidate.discrete_asks;
+            for(auto ask : next_todo->discrete_asks)
+            {
+              pr->next_pp_candidate_map.erase(ask.first);
+            }
             next_todo->parameter_map = pr->parameter_map;
             next_todo->parent = pr.get();
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
