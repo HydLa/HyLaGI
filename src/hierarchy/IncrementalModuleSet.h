@@ -26,7 +26,7 @@ public:
   
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
-  IncrementalModuleSet(ModuleSet ms, node_sptr cl);
+  IncrementalModuleSet(ModuleSet ms, std::vector<node_sptr> cl);
   IncrementalModuleSet(const IncrementalModuleSet& im);
   virtual ~IncrementalModuleSet();
 
@@ -72,6 +72,16 @@ public:
    */
   virtual std::ostream& dump_priority_data_for_graphviz(std::ostream& s) const;
   
+  /**
+   * make list variable conditions
+   */
+  virtual void generate_list_variable_conditions();
+
+  /**
+   * get list variable condition correspnding variable which name is var
+   */
+  virtual std::vector<symbolic_expression::node_sptr> get_list_variable_conditions(std::string var);
+
   /**
    * 集合の集合のダンプ
    */
@@ -181,6 +191,10 @@ private:
 
   /// conditions which are unified
   module_conditions_t unified_conditions_;
+
+  /// conditions about list variables
+  module_conditions_t list_variable_conditions_;
+
 };
 
 

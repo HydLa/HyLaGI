@@ -16,7 +16,7 @@ ModuleSetGraph::ModuleSetGraph()
 ModuleSetGraph::ModuleSetGraph(ModuleSet m):ModuleSetContainer(m)
 {}
 
-ModuleSetGraph::ModuleSetGraph(ModuleSet m, symbolic_expression::node_sptr c) :
+ModuleSetGraph::ModuleSetGraph(ModuleSet m, std::vector<symbolic_expression::node_sptr> c) :
   ModuleSetContainer(m)
 {}
 

@@ -19,7 +19,7 @@ class ModuleSetList : public ModuleSetContainer {
 public:
   ModuleSetList();
   ModuleSetList(ModuleSet m);
-  ModuleSetList(ModuleSet ms, symbolic_expression::node_sptr c);
+  ModuleSetList(ModuleSet ms, std::vector<symbolic_expression::node_sptr> c);
   virtual ~ModuleSetList();
 
   /**

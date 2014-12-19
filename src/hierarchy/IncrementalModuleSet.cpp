@@ -30,12 +30,12 @@ IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms):
   }
 }
 
-IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, node_sptr c):
+IncrementalModuleSet::IncrementalModuleSet(ModuleSet ms, std::vector<node_sptr> c):
   ModuleSetContainer(ms)
 {
   for(auto m : ms)
   {
-    module_conditions_[m.first].push_back(c);
+    module_conditions_[m.first] = c;
     node_sptr tmp = m.second->clone();
     ListBoundVariableUnifier unifier;
     unifier.unify(tmp);
@@ -60,15 +60,19 @@ IncrementalModuleSet::~IncrementalModuleSet()
 std::set<boost::shared_ptr<symbolic_expression::Variable> > IncrementalModuleSet::get_list_variables()
 {
   std::set<boost::shared_ptr<symbolic_expression::Variable> > ret;
-  std::set<std::string> names;
-  for(auto u_map : unifiers_)
+  for(auto name : list_variable_conditions_)
   {
-    std::set<std::string> tmp = u_map.second.get_list_variables();
-    names.insert(tmp.begin(), tmp.end());
+    ret.insert(boost::shared_ptr<symbolic_expression::Variable>(new symbolic_expression::Variable(name.first)));
   }
-  for(auto name : names)
+  return ret;
+}
+
+std::vector<symbolic_expression::node_sptr > IncrementalModuleSet::get_list_variable_conditions(std::string var)
+{
+  std::vector<symbolic_expression::node_sptr > ret;
+  for(auto condition : list_variable_conditions_[var])
   {
-    ret.insert(boost::shared_ptr<symbolic_expression::Variable>(new symbolic_expression::Variable("l"+name)));
+    ret.push_back(condition->clone());
   }
   return ret;
 }
@@ -129,6 +133,29 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   }
   HYDLA_LOGGER_DEBUG("%% removable modules : ", str, "\n");
   return removable;
+}
+
+void IncrementalModuleSet::generate_list_variable_conditions()
+{
+  for(auto conditions : module_conditions_)
+  {
+    for(auto condition : conditions.second)
+    {
+      unifiers_[conditions.first].apply_change(condition);
+      boost::shared_ptr<symbolic_expression::EachElement> ee = boost::dynamic_pointer_cast<symbolic_expression::EachElement>(condition);
+      boost::shared_ptr<symbolic_expression::Variable> var = boost::dynamic_pointer_cast<symbolic_expression::Variable>(ee->get_lhs());
+      bool included = false;
+      for(auto exist : list_variable_conditions_[var->get_name()])
+      {
+        if(ee->get_rhs()->is_same_struct(*exist, true))
+        {
+          included = true;
+          break;
+        }
+      }
+      if(!included) list_variable_conditions_[var->get_name()].push_back(ee->get_rhs());
+    }
+  }
 }
 
 IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
@@ -406,6 +433,8 @@ void IncrementalModuleSet::init()
 
   maximal_module_set_ = get_unified_module_set(maximal_module_set_);
   required_ms_ = get_unified_module_set(required_ms_);
+
+  generate_list_variable_conditions();
 
   full_module_set_set_.clear();
   full_module_set_set_.insert(maximal_module_set_);

@@ -15,7 +15,7 @@ ModuleSetList::ModuleSetList()
 ModuleSetList::ModuleSetList(ModuleSet m) :
   ModuleSetContainer(m)
 {}
-ModuleSetList::ModuleSetList(ModuleSet m, symbolic_expression::node_sptr c) :
+ModuleSetList::ModuleSetList(ModuleSet m, std::vector<symbolic_expression::node_sptr> c) :
   ModuleSetContainer(m)
 {}
 

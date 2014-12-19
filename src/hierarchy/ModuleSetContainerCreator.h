@@ -34,7 +34,7 @@ namespace hierarchy {
     generated_mss_.insert(mod_set); \
   } \
   container_name_.clear(); \
-  if(conditions_) \
+  if(!conditions_.empty()) \
   { \
     container_sptr container(new Container(mod_set, conditions_)); \
     mod_set_stack_.push_back(container); \
@@ -141,14 +141,13 @@ public:
       nr.replace(replace);
       node = boost::dynamic_pointer_cast<hydla::symbolic_expression::ConditionalProgramList>(replace);
     }
-    conditions_.reset();
+    conditions_.clear();
     for(int i = 0; i < node->get_arguments_size(); i++)
     {
-      if(i) conditions_ = symbolic_expression::node_sptr(new symbolic_expression::LogicalAnd(conditions_, node->get_argument(i)->clone()));
-      else conditions_ = node->get_argument(i)->clone();
+      conditions_.push_back(node->get_argument(i)->clone());
     }
     accept(node->get_program());
-    conditions_.reset();
+    conditions_.clear();
     bound_variables_list_.clear();
   }
   
@@ -240,7 +239,7 @@ private:
 
   std::vector<std::pair<hydla::symbolic_expression::node_sptr,hydla::symbolic_expression::node_sptr> > bound_variables_list_;
 
-  hydla::symbolic_expression::node_sptr conditions_;
+  std::vector<hydla::symbolic_expression::node_sptr> conditions_;
 };
 
 } // namespace hierarchy
