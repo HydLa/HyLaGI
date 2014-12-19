@@ -54,7 +54,7 @@ Module[
   inputPrint["ccIntervalForEach", cond, initRules, pCons];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
-  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy}]; 
+  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}]; 
   simplePrint[lhs, pCons];
   (* caused by underConstraint *)
   If[hasVariable[lhs], Return[pCons] ];
