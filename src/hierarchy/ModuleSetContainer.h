@@ -59,7 +59,11 @@ public:
    */
   virtual void generate_new_ms(const module_set_set_t& mms, const ModuleSet& ms);
 
-  virtual std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables();
+  virtual std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables() = 0;
+  
+  virtual std::vector<symbolic_expression::node_sptr> get_list_variable_conditions(std::string) = 0;
+
+  virtual symbolic_expression::node_sptr get_list_variable_conditions() = 0;
   
   /**
    * 探索すべきモジュール集合の集合を初期化し，注目する集合を最初に戻す．

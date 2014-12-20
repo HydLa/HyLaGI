@@ -637,6 +637,35 @@ DEFINE_VISIT_FACTOR(Pi, Pi)
 /// 自然対数の底
 DEFINE_VISIT_FACTOR(E, E)
 
+void Backend::visit(boost::shared_ptr<symbolic_expression::EachElement> node)
+{
+  // リストの条件の送信
+  variable_form_t va;
+  if(variable_arg_== Link::VF_NONE && in_prev_)
+  {
+    va = Link::VF_PREV;
+  }
+  else{
+    if(variable_arg_ == Link::VF_IGNORE_PREV)
+    {
+      va = Link::VF_NONE;
+    }
+    else
+    {
+      va = variable_arg_;
+    }
+  }
+  boost::shared_ptr<symbolic_expression::Variable> variable = boost::dynamic_pointer_cast<symbolic_expression::Variable>(node->get_lhs()->clone());
+
+  boost::shared_ptr<symbolic_expression::Range> range = boost::dynamic_pointer_cast<symbolic_expression::Range>(node->get_rhs()->clone());
+  if(variable && range)
+  {
+    symbolic_expression::node_sptr condition = symbolic_expression::node_sptr(new symbolic_expression::LogicalAnd(symbolic_expression::node_sptr(new symbolic_expression::LessEqual(range->get_lhs()->clone(), variable)), symbolic_expression::node_sptr(new symbolic_expression::LessEqual(variable, range->get_rhs()->clone()))));
+    accept(condition);
+    return;
+  }
+}
+
 void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
 {
   // 式リストの要素の送信
@@ -653,15 +682,6 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
     else
     {
       va = variable_arg_;
-    }
-  }
-  std::string name = TreeInfixPrinter().get_infix_string(node);
-  std::string new_name;
-  for(int i = 0; i < name.length(); i++)
-  {
-    if(name[i] != '$')
-    {
-      new_name += name[i];
     }
   }
 

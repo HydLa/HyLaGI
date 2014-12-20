@@ -420,6 +420,11 @@ publicMethod[
 ];
 
 publicMethod[
+  resetListConstraint,
+  lConstraint = True;
+];
+
+publicMethod[
   addListConstraint,
   lCons,
   lConstraint = Reduce[lConstraint && lCons, Reals];

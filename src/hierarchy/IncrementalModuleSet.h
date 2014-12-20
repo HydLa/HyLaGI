@@ -78,6 +78,11 @@ public:
   virtual void generate_list_variable_conditions();
 
   /**
+   * get all conditions
+   */
+  virtual symbolic_expression::node_sptr get_list_variable_conditions();
+
+  /**
    * get list variable condition correspnding variable which name is var
    */
   virtual std::vector<symbolic_expression::node_sptr> get_list_variable_conditions(std::string var);

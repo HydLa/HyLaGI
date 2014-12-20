@@ -57,6 +57,10 @@ public:
 
   virtual std::set<boost::shared_ptr<symbolic_expression::Variable> > get_list_variables(){ return std::set<boost::shared_ptr<symbolic_expression::Variable> >(); }
 
+  virtual std::vector<symbolic_expression::node_sptr> get_list_variable_conditions(std::string){ return std::vector<symbolic_expression::node_sptr>(); }
+
+  virtual symbolic_expression::node_sptr get_list_variable_conditions(){ return symbolic_expression::node_sptr(); }
+  
   /**
    * ノードの情報の名前表現によるダンプ
    */

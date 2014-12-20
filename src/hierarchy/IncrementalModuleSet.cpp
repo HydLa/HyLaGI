@@ -67,6 +67,20 @@ std::set<boost::shared_ptr<symbolic_expression::Variable> > IncrementalModuleSet
   return ret;
 }
 
+symbolic_expression::node_sptr IncrementalModuleSet::get_list_variable_conditions()
+{
+  symbolic_expression::node_sptr ret;
+  for(auto conditions : module_conditions_)
+  {
+    for(auto condition : conditions.second)
+    {
+      if(!ret) ret = condition->clone();
+      else ret = symbolic_expression::node_sptr(new symbolic_expression::LogicalAnd(ret, condition->clone()));
+    }
+  }
+  return ret;
+}
+
 std::vector<symbolic_expression::node_sptr > IncrementalModuleSet::get_list_variable_conditions(std::string var)
 {
   std::vector<symbolic_expression::node_sptr > ret;
