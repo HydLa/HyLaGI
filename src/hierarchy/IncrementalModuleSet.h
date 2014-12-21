@@ -80,7 +80,7 @@ public:
   /**
    * get all conditions
    */
-  virtual symbolic_expression::node_sptr get_list_variable_conditions();
+  virtual module_conditions_t get_list_variable_conditions();
 
   /**
    * get list variable condition correspnding variable which name is var

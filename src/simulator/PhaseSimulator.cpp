@@ -149,10 +149,9 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     module_set_t unadopted_ms = module_set_container->unadopted_module_set();
     string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
-    symbolic_expression::node_sptr list_conditions = module_set_container->get_list_variable_conditions();
+    std::map<std::string, std::vector<symbolic_expression::node_sptr> > list_conditions = module_set_container->get_list_variable_conditions();
 
-    backend_->call("resetListConstraint", 0, "", "");
-    backend_->call("addListConstraint", 1, "en", "", &list_conditions); 
+    backend_->set_list_variable_conditions(list_conditions);
 
     result_list.merge(simulate_ms(unadopted_ms, todo, nonprev_trigger_asks, prev_positives, prev_negatives));
 

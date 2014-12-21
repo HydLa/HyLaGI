@@ -24,6 +24,7 @@ typedef hydla::symbolic_expression::node_sptr      node_sptr;
 typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
 typedef hydla::simulator::list_element_data_set_t list_element_data_set_t;
+typedef std::map<std::string, std::vector<node_sptr> > list_variable_map_t;
 
 struct MidpointRadius
 {
@@ -89,6 +90,28 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
       int diff = element->differential_count;
       call("addVariable", 2, "eni", "", &element->node, &diff);
     }
+  }
+
+  void set_list_variable_conditions(list_variable_map_t lm)
+  {
+    call("resetListConstraint",0,"","");
+    list_variable_map_ = lm;
+    node_sptr node;
+    for(auto list_variable : lm)
+    {
+      node_sptr var = node_sptr(new symbolic_expression::Variable(list_variable.first));
+      for(auto condition : list_variable.second)
+      {
+        boost::shared_ptr<symbolic_expression::Range> range = boost::dynamic_pointer_cast<symbolic_expression::Range>(condition->clone());
+        if(range)
+        {
+          node_sptr condition_node = node_sptr(node_sptr(new symbolic_expression::LogicalAnd(node_sptr(new symbolic_expression::LessEqual(range->get_lhs()->clone(), var->clone())),node_sptr(new symbolic_expression::LessEqual(var->clone(), range->get_rhs()->clone())))));
+          if(!node) node = condition_node;
+          else node = node_sptr(new symbolic_expression::LogicalAnd(node, condition_node));
+        }
+      }
+    }
+    call("addListConstraint", 1, "en", "", &node);
   }
 
   private:
@@ -240,6 +263,8 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   boost::shared_ptr<Link> link_;
 
   variable_form_t variable_arg_;
+
+  list_variable_map_t list_variable_map_;
 
   //valと関係演算子を元に、rangeを設定する
   void set_range(const hydla::simulator::value_t &val, hydla::simulator::range_t &range, const int& relop);

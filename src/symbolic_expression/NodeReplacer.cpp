@@ -8,7 +8,7 @@ namespace symbolic_expression{
   { \
     if(node->is_same_struct(*source_,true)) \
     { \
-      new_child_ = dest_->clone(); \
+      new_child_ = dest_; \
     } \
   }
 
@@ -17,7 +17,7 @@ namespace symbolic_expression{
   { \
     if(node->is_same_struct(*source_,true)) \
     { \
-      new_child_ = dest_->clone(); \
+      new_child_ = dest_; \
       return; \
     } \
     accept(node->get_child()); \
@@ -33,7 +33,7 @@ namespace symbolic_expression{
   { \
     if(node->is_same_struct(*source_,true)) \
     { \
-      new_child_ = dest_->clone(); \
+      new_child_ = dest_; \
       return; \
     } \
     accept(node->get_child()); \
@@ -58,7 +58,7 @@ namespace symbolic_expression{
   { \
     if(node->is_same_struct(*source_,true)) \
     { \
-      new_child_ = dest_->clone(); \
+      new_child_ = dest_; \
       return; \
     } \
     accept(node->get_lhs()); \
@@ -80,7 +80,7 @@ namespace symbolic_expression{
   { \
     if(node->is_same_struct(*source_,true)) \
     { \
-      new_child_ = dest_->clone(); \
+      new_child_ = dest_; \
       return; \
     } \
     for(int i = 0; i < node->get_arguments_size(); i++) \
@@ -164,7 +164,7 @@ void NodeReplacer::visit(boost::shared_ptr<ConditionalProgramList> node)
 {
   if(node->is_same_struct(*source_,true))
   {
-    new_child_ = dest_->clone();
+    new_child_ = dest_;
     return;
   }
   accept(node->get_program());
@@ -188,7 +188,7 @@ void NodeReplacer::visit(boost::shared_ptr<ConditionalExpressionList> node)
 {
   if(node->is_same_struct(*source_,true))
   {
-    new_child_ = dest_->clone();
+    new_child_ = dest_;
     return;
   }
   accept(node->get_expression());

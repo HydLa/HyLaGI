@@ -1,6 +1,7 @@
 #include "Backend.h"
 #include <stdarg.h>
 #include "InterfaceError.h"
+#include "NodeReplacer.h"
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 
@@ -1128,6 +1129,21 @@ void Backend::receive_bool(bool &b)
 
 int Backend::receive_map(variable_map_t& map)
 {
+  std::vector<symbolic_expression::NodeReplacer> replacers;
+  for(auto lv : list_variable_map_)
+  {
+    symbolic_expression::NodeReplacer replacer; 
+    node_sptr var = node_sptr(new symbolic_expression::Variable(lv.first));
+    node_sptr cond;
+    for(auto condition : lv.second)
+    {
+      if(!cond) cond = condition->clone();
+      else cond = node_sptr(new LogicalAnd(cond, condition->clone()));
+    }
+    replacer.set_source(var);
+    replacer.set_dest(cond);
+    replacers.push_back(replacer);
+  }
   value_t symbolic_value;
   std::string f_name;
   int and_size, size;
@@ -1151,6 +1167,7 @@ int Backend::receive_map(variable_map_t& map)
       link_->get_function(variable_name, list_args);
       assert(list_args == 1);
       list_index = receive_node();
+      for(auto replacer : replacers) replacer.replace(list_index);
       break;
     default:
       break;
@@ -1159,7 +1176,9 @@ int Backend::receive_map(variable_map_t& map)
     // 関係演算子のコード
     int rel = link_->get_integer();
 
-    symbolic_value = value_t(receive_node());
+    symbolic_expression::node_sptr value_node = receive_node();
+    for(auto replacer : replacers) replacer.replace(value_node);
+    symbolic_value = value_t(value_node);
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;

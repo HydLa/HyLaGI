@@ -63,7 +63,7 @@ public:
   
   virtual std::vector<symbolic_expression::node_sptr> get_list_variable_conditions(std::string) = 0;
 
-  virtual symbolic_expression::node_sptr get_list_variable_conditions() = 0;
+  virtual std::map<std::string, std::vector<symbolic_expression::node_sptr> > get_list_variable_conditions(){ return std::map<std::string, std::vector<symbolic_expression::node_sptr> >();}
   
   /**
    * 探索すべきモジュール集合の集合を初期化し，注目する集合を最初に戻す．
