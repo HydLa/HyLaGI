@@ -34,10 +34,10 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters, lConstraint]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters, lConstraint]
 );
 
 
@@ -83,7 +83,7 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pCons, pars,
+  cons, initCons, prevCons, pCons, pars, lCons,
   Module[
     {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
@@ -206,8 +206,12 @@ hasVariable[exprs_] := Length[getVariables[exprs] ] > 0;
 isVariable[exprs_] := (MatchQ[exprs, _Symbol] || MatchQ[Head[exprs], _Symbol]) && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
-
-getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
+getVariables[exprs_] := 
+Module[
+  {tVars},
+  tVars = Union[variables /. Derivative[_][x_] -> x];
+  Flatten[Cases[exprs, #, Infinity, Heads -> True]& /@ tVars]
+];
 
 (* 式中に出現するprev値を取得 *)
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
@@ -402,7 +406,7 @@ publicMethod[
 publicMethod[
   clearListVariables,
   var,
-  listVariabless = {}
+  listVariables = {}
 ];
 
 publicMethod[
