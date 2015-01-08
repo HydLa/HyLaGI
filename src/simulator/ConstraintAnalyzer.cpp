@@ -164,8 +164,8 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
     std::cout << ms->get_name() << std::endl;
   ConstraintAnalyzer::ConditionsResult ret = CONDITIONS_FALSE;
 
-  ask_set_t positive_asks;
-  ask_set_t negative_asks;
+  asks_t positive_asks;
+  asks_t negative_asks;
   always_set_t expanded_always;
   TellCollector tell_collector(ms);
   AskCollector ask_collector(ms);
@@ -174,7 +174,7 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
-  ask_set_t tmp_negative;
+  asks_t tmp_negative;
 
   variable_map_t vm;
   parameter_map_t pm;
@@ -195,14 +195,14 @@ void ConstraintAnalyzer::check_all_module_set(bool b)
   // ask制約のガード条件の成否のパターンを全通り考える(2^(ask制約の個数)通り)
   for(int i = 0; i < (1 << negative_asks.size()) && ret != CONDITIONS_TRUE; i++){
     non_prev = false;
-    ask_set_t tmp_positive_asks;
+    asks_t tmp_positive_asks;
     backend_->call("startTemporary", 0, "", "");
     maker.reset();
     constraint_list.clear();
 
     tmp_positive_asks.clear();
 
-    ask_set_t::iterator it = negative_asks.begin();
+    asks_t::iterator it = negative_asks.begin();
 
     // ガード条件の成否の仮定。i の各ビットが成否に対応
     // つまり i = 11(1011) でask制約が5つあれば否、成、否、成、成の順に仮定する

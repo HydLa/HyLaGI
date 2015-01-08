@@ -62,7 +62,7 @@ protected:
 	void push_result(current_condition_t cc);
 	
 	// asksを連ねた文字列を取得
-	std::string get_asks_str(ask_set_t asks);
+	std::string get_asks_str(asks_t asks);
 	
 	// 状態キューに新たな状態を追加する
 	// push_simulation_phaseと会わせる必要あり

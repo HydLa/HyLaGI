@@ -9,7 +9,6 @@ namespace simulator{
 typedef symbolic_expression::node_sptr constraint_t;
 typedef std::set<constraint_t> constraints_t;
 
-
 /**
  * 制約ストアに対応するクラス。
  * virtual デストラクタを持たないクラスを継承しているのでアップキャストしてはいけない。

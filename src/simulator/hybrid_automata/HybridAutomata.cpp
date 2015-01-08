@@ -39,9 +39,9 @@ void HybridAutomata::viewPr(phase_result_sptr_t result)
   HYDLA_LOGGER_DEBUG(viewAsks(result->get_all_positive_asks()));	
 }
 	
-string HybridAutomata::viewAsks(ask_set_t asks)
+string HybridAutomata::viewAsks(asks_t asks)
 {
-  ask_set_t::iterator it = asks.begin();
+  asks_t::iterator it = asks.begin();
   string str = "";
   while(it != asks.end()){
     str += get_infix_string((*it)->get_guard()) + " ";

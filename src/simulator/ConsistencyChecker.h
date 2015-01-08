@@ -26,8 +26,7 @@ class ConstraintDifferenceCalculator;
 class ConsistencyChecker{
 
 public:
-
-
+  
   ConsistencyChecker(backend_sptr_t back);
   ConsistencyChecker(ConsistencyChecker&);
 
@@ -50,7 +49,8 @@ public:
   CheckEntailmentResult check_entailment(
     RelationGraph &relation_graph,
     CheckConsistencyResult &cc_result,
-    const ask_t &ask,
+    const constraint_t &guard,
+    const constraint_t &node_sptr,
     const PhaseType &phase,
     profile_t &profile
     );
@@ -58,7 +58,7 @@ public:
   CheckEntailmentResult check_entailment(
     variable_map_t &vm,
     CheckConsistencyResult &cc_result,
-    const symbolic_expression::node_sptr &guard,
+    const constraint_t &guard,
     const PhaseType &phase,
     profile_t &profile
     );

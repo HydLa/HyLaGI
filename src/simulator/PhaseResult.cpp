@@ -62,6 +62,17 @@ void PhaseResult::generate_full_information()
   full_information = ancestor->full_information;
   for(auto r_it = ancestor_list.rbegin(); r_it != ancestor_list.rend(); r_it++)
   {
+    for(auto guard : (*r_it)->diff_positive_guards)
+    {
+      full_information->negative_guards.erase(guard);
+      full_information->positive_guards.insert(guard);
+    }
+    for(auto guard : (*r_it)->diff_negative_guards)
+    {
+      full_information->positive_guards.erase(guard);
+      full_information->negative_guards.insert(guard);
+    }
+    
     for(auto ask : (*r_it)->diff_positive_asks)
     {
       full_information->negative_asks.erase(ask);
@@ -75,17 +86,31 @@ void PhaseResult::generate_full_information()
   }
 }
 
-ask_set_t PhaseResult::get_all_positive_asks()
+constraints_t PhaseResult::get_all_positive_guards()
+{
+  if(!full_information)generate_full_information();
+  return full_information->positive_guards;
+}
+
+constraints_t PhaseResult::get_all_negative_guards()
+{
+  if(!full_information)generate_full_information();
+  return full_information->negative_guards;
+}
+
+
+asks_t PhaseResult::get_all_positive_asks()
 {
   if(!full_information)generate_full_information();
   return full_information->positive_asks;
 }
 
-ask_set_t PhaseResult::get_all_negative_asks()
+asks_t PhaseResult::get_all_negative_asks()
 {
   if(!full_information)generate_full_information();
   return full_information->negative_asks;
 }
+
 
 void PhaseResult::set_full_information(FullInformation &info)
 {
@@ -136,7 +161,7 @@ ostream& operator<<(std::ostream& s, const parameter_map_t& pm){
   return s;
 }
 
-ostream& operator<<(std::ostream& s, const ask_set_t& a)
+ostream& operator<<(std::ostream& s, const asks_t& a)
 {
   s << NodeDumper(a.begin(), a.end());
   return s;
@@ -179,10 +204,10 @@ ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
   {
     os << "time: " << candidate.time << endl;
     os << "--- parameter_map ---\n" << candidate.parameter_map << endl;
-    os << "--- discrete asks ---" << endl;
-    for(auto ask : candidate.discrete_asks)
+    os << "--- discrete guards ---" << endl;
+    for(auto guard : candidate.discrete_asks)
     {
-      os << "ask: " << get_infix_string(ask.first) << " on_time: " << ask.second << endl;
+      os << "guard: " << get_infix_string(guard.first) << " on_time: " << guard.second << endl;
     }
     os << endl;
   }

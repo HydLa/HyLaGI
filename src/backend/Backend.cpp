@@ -21,7 +21,7 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs)
 {
   const char *l = lhs.c_str(), *r = rhs.c_str();
   int d;
-  while(*l != '\0' && *r != '\0'){
+  while(*l != '\0' || *r != '\0'){
     d = (tolower(*l++) - tolower(*r++));
     if ( d != 0)
     {
@@ -210,15 +210,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   case 'e':
   {
     symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr*)ret;
-    variable_form_t form;
-    if(!get_form(ret_fmt[++i], form))
-    {
-      invalid_fmt(ret_fmt, i);
-    }
-    else
-    {
-      *node = receive_node();
-    }
+    *node = receive_node();
   }
   break;
   
@@ -332,6 +324,7 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   }
   link_->pre_receive();
   HYDLA_LOGGER_DEBUG("input: \n", link_->get_input_print());
+  HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
   for(int i = 0; ret_fmt[i] != '\0'; i++)
   {
     void* ret = va_arg(args, void *);
@@ -857,7 +850,7 @@ symbolic_expression::node_sptr Backend::receive_function()
     ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2")))); 
     ret = symbolic_expression::node_sptr(new symbolic_expression::Power(receive_node(), ret));
   }
-  else if(equal_ignoring_case(symbol, "par")){
+  else if(equal_ignoring_case(symbol, "p")){
     std::string name;
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str;
@@ -928,6 +921,7 @@ symbolic_expression::node_sptr Backend::receive_function()
         ret = symbolic_expression::node_sptr(new symbolic_expression::Greater(lhs, rhs));
       else if(equal_ignoring_case(symbol, "GreaterEqual"))
         ret = symbolic_expression::node_sptr(new symbolic_expression::GreaterEqual(lhs, rhs));
+      HYDLA_LOGGER_DEBUG_VAR(symbol);
     }
   }
   else if(equal_ignoring_case(symbol, "derivative"))
@@ -980,7 +974,9 @@ symbolic_expression::node_sptr Backend::receive_node(){
     }
   case Link::DT_SYM: // シンボル（記号）
     {
+
       std::string symbol = link_->get_symbol();
+      HYDLA_LOGGER_DEBUG_VAR(symbol);
       if(symbol=="t")
         ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")
@@ -1012,6 +1008,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
     default:
       break;
   }
+
   if(ret == NULL){
     invalid_ret();
   }

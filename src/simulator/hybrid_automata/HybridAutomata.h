@@ -29,7 +29,7 @@ protected:
   // phase_result_sptr_tの中身表示
   void viewPr(phase_result_sptr_t result);
   // asksの中身表示
-  std::string viewAsks(ask_set_t asks);
+  std::string viewAsks(asks_t asks);
 
 };//HybridAutomata
 

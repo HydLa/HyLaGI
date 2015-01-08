@@ -220,8 +220,8 @@ bool HAConverter::compare_phase_result(phase_result_sptr_t r1, phase_result_sptr
   // モジュール集合
   if(!(r1->unadopted_ms.compare(r2->unadopted_ms) == 0)) return false;
   // positive_ask
-  ask_set_t::iterator it_1 = r1->get_all_positive_asks().begin();
-  ask_set_t::iterator it_2 = r2->get_all_positive_asks().begin();
+  asks_t::iterator it_1 = r1->get_all_positive_asks().begin();
+  asks_t::iterator it_2 = r2->get_all_positive_asks().begin();
   while(it_1 != r1->get_all_positive_asks().end() && it_2 != r2->get_all_positive_asks().end()) {
     if(!((*it_1)->is_same_struct(**it_2, true))) return false;
     it_1++;
@@ -330,10 +330,10 @@ void HAConverter::convert_phase_results_to_ha(phase_result_sptrs_t results)
   cout << "}" << endl;
 }
 	
-std::string HAConverter::get_asks_str(ask_set_t asks)
+std::string HAConverter::get_asks_str(asks_t asks)
 {
   std::string res = "";
-  ask_set_t::iterator it = asks.begin();
+  asks_t::iterator it = asks.begin();
   while(it != asks.end()){
     res += get_infix_string((*it)->get_guard()) + " ";
     it++;

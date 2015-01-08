@@ -429,40 +429,56 @@ Module[
   ]
 ];
 
-findMinTime[cause_, cons_, maxTime_] := findMinTime[cause, cons, pConstraint, maxTime];
+calculateConsistentTime[cause_, cons_, maxTime_] := calculateConsistentTime[cause, cons, pConstraint, maxTime];
+
 
 publicMethod[
-  findMinTime,
+  calculateConsistentTime,
   cause, cons, pCons, maxTime,  
   Module[
     {
-      minT,
+      resultCons,
       timeAppliedCause,
-      necessaryPCons,
       maxCons,
-      resultList,
-      onTime = True,
       ret
     },
     tStore = Map[(Rule@@#)&, cons];  
     timeAppliedCause = cause /. tStore;
     simplePrint[timeAppliedCause];
-
+    
     maxCons = If[maxTime === Infinity, True, t < maxTime];
-    minT = Quiet[Check[minT = Minimize[{t, timeAppliedCause && t > 0 && maxCons && pCons}, {t}],
-           onTime = False;minT,
-           Minimize::wksol
-         ],
-         {Minimize::wksol, Minimize::infeas}
+    resultCons = Reduce[timeAppliedCause && pCons && maxCons && t > 0, Reals];
+    simplePrint[resultCons];
+    toReturnForm[LogicalExpand[resultCons]]
+  ]
+];
+
+minimizeTime[tCons_] := minimizeTime[tCons, pConstraint];
+
+publicMethod[
+  minimizeTime,
+  tCons, pCons,  
+  Module[
+    {
+      minT,
+      resultList,
+      onTime = True,
+      ret
+    },
+    Quiet[Check[minT = Minimize[{t, tCons && pCons}, {t}],
+         onTime = False,
+         Minimize::wksol
+       ],
+       {Minimize::wksol, Minimize::infeas}
     ];
-    debugPrint["minT after Minimize"];
+    debugPrint["minT after Minimize:", minT];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     minT = First[minT];
     If[minT === Infinity, 
       {},
       ret = makeListFromPiecewise[minT, pCons];
       (* 時刻が0となる場合はinfとする．*)
-       ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+      ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
 
       (* 整形して結果を返す *)
       resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
@@ -500,7 +516,33 @@ publicMethod[
     ]
   ]
 ];
- 
+
+publicMethod[
+  isTriggerGuard,
+  atomicGuard, cons, pCons, time,  
+  Module[
+    {
+      resultCons,
+      lhs,
+      reduced,
+      negated
+    },
+    lhs = atomicGuard[[1]] - atomicGuard[[2]];
+    simplePrint[lhs];
+    tStore = Map[(Rule@@#)&, cons];  
+    lhs = lhs /. tStore;
+    simplePrint[lhs];
+    lhs = lhs /. t->time;
+    reduced = Reduce[lhs == 0 && pCons];
+    negated = Reduce[!reduced && pCons];
+    simplePrint[reduced, negated];
+    (* Can result be some expression other than True or False ?*)
+    If[negated === False, True, False]
+  ]
+];
+
+
+
 (* 時刻と条件の組に対し，条件が論理和でつながっている場合それぞれの場合に分解する *)
 divideDisjunction[timeCond_] := Map[({timeCond[[1]], timeCond[[2]], #})&, List@@timeCond[[3]]];
 
@@ -678,4 +720,5 @@ Module[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
+
 

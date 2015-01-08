@@ -18,7 +18,7 @@ class GuardGetter : public symbolic_expression::DefaultTreeVisitor {
   // Ask
   virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
   
-  ask_set_t asks;
+  asks_t asks;
 };//GuardGetter
 
 class VaribleGetter : public symbolic_expression::DefaultTreeVisitor {

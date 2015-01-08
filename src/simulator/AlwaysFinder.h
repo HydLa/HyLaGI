@@ -7,9 +7,6 @@
 namespace hydla {
 namespace simulator {
 
-/**
- * 制約を調べ，変数の出現を取得するクラス．
- */
 class AlwaysFinder : public symbolic_expression::TreeVisitorForAtomicConstraint {
 public:
 

@@ -71,8 +71,8 @@ void UnsatCoreFinder::find_unsat_core(
   const module_set_sptr& ms,
   unsat_constraints_t& S,
   unsat_continuities_t& S4C,
-  const ask_set_t &positive_asks,
-  const ask_set_t &negative_asks,
+  const asks_t &positive_asks,
+  const asks_t &negative_asks,
   const variable_map_t& vm,
   const parameter_map_t &pm,
   PhaseType phase_type
@@ -85,7 +85,7 @@ void UnsatCoreFinder::find_unsat_core(
 
   continuity_map_t continuity_map;
   ContinuityMapMaker maker;
-  ask_set_t tmp_negative;
+  asks_t tmp_negative;
 
   reset(phase_type, vm, pm);
 
@@ -126,7 +126,7 @@ void UnsatCoreFinder::find_unsat_core(
       }
     }
 
-    ask_set_t::iterator it = positive_asks.begin();
+    asks_t::iterator it = positive_asks.begin();
     for(int j = 0; j < (int)positive_asks.size(); j++, it++)
     {
       const char* fmt = (phase_type == POINT_PHASE)?"en":"et";

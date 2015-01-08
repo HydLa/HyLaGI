@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(ss_consistency_checker_test)
   TellCollector tc(ms, false);                                    \
   tells_t tells;                                                  \
   expanded_always_t expanded_always;                              \
-  ask_set_t positive_asks;                                  \
+  asks_t positive_asks;                                  \
   tc.collect_all_tells(&tells, &expanded_always, &positive_asks); \
   hydla::simulator::symbolic::ConsistencyChecker cc(ml);           \
   ConstraintStoreBuilderPoint csbp;                               \

@@ -49,7 +49,7 @@ typedef enum {
 
 typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
 typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
-typedef std::set<ask_t >                                           ask_set_t;
+typedef std::set<ask_t >                                           asks_t;
 typedef std::set<boost::shared_ptr<symbolic_expression::Always> >  always_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
@@ -81,8 +81,9 @@ typedef std::set<module_set_t>                    module_set_set_t;
 struct FullInformation
 {
   always_set_t                 expanded_always;
-  ask_set_t                    positive_asks;
-  ask_set_t                    negative_asks;
+  constraints_t                positive_guards;
+  constraints_t                negative_guards;
+  asks_t                       positive_asks, negative_asks;
 };
 
 
@@ -95,8 +96,6 @@ struct FindMinTimeCandidate
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
 
-
-
 struct DCCandidate{
   value_t                       time;
   std::map<ask_t, bool>         discrete_asks;
@@ -104,15 +103,18 @@ struct DCCandidate{
 
   DCCandidate(const value_t                &t,
               const std::map<ask_t, bool> &d,
+//              const std::map<constraint_t, bool> &g,
               const parameter_map_t &p)
                 :time(t),
                  discrete_asks(d),
+//                 discrete_guards(g),
                  parameter_map(p)
     {}
   DCCandidate(){}
 };
 
 typedef std::list<DCCandidate>            pp_time_result_t;
+typedef std::map<constraint_t, constraint_t> guard_time_map_t;
 /// map from variables to candidates of next PP whose time is minimum
 typedef std::map<ask_t, find_min_time_result_t> next_pp_candidate_map_t;
 
@@ -133,7 +135,8 @@ public:
   variable_map_t               variable_map;
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
   parameter_map_t              parameter_map;
-  ask_set_t                    diff_positive_asks, diff_negative_asks;
+  asks_t                       diff_positive_asks, diff_negative_asks;
+  constraints_t                diff_positive_guards, diff_negative_guards;
   ConstraintStore              initial_constraint_store; /// 暫定的に場合分けとかで使う.TODO:別の方法を考える
   ConstraintStore              diff_sum;
   
@@ -142,23 +145,27 @@ public:
   module_set_t                 unadopted_ms;
   module_set_set_t             unadopted_mss;
   next_pp_candidate_map_t      next_pp_candidate_map;
+  guard_time_map_t             guard_time_map;
   ConstraintStore              always_list;
 
-  SimulationState          simulation_state;
+  SimulationState              simulation_state;
   PhaseResult                 *parent;
   phase_result_sptrs_t         children;
   todo_list_t                  todo_list;
 
   // trigger conditions
   std::map<ask_t, bool>        discrete_asks;
+  std::list<constraint_t>      discrete_guards;
   
   profile_t                    profile;
 
   PhaseResult();  
   ~PhaseResult();
 
-  ask_set_t                    get_all_positive_asks();
-  ask_set_t                    get_all_negative_asks();
+  asks_t                    get_all_positive_asks();
+  asks_t                    get_all_negative_asks();
+  constraints_t             get_all_positive_guards();
+  constraints_t             get_all_negative_guards();
 
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
@@ -171,7 +178,7 @@ private:
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
-std::ostream& operator<<(std::ostream& s, const ask_set_t& a);
+std::ostream& operator<<(std::ostream& s, const asks_t& a);
 std::ostream& operator<<(std::ostream& s, const tells_t& a);
 std::ostream& operator<<(std::ostream& s, const ConstraintStore& a);
 std::ostream& operator<<(std::ostream& s, const change_variables_t& a);

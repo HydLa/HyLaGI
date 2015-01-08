@@ -8,19 +8,19 @@
 namespace hydla{
 namespace backend{
 
-typedef hydla::simulator::value_t         value_t;
-typedef hydla::simulator::variable_t      variable_t;
-typedef hydla::simulator::variable_map_t  variable_map_t;
-typedef hydla::simulator::parameter_map_t parameter_map_t;
-typedef hydla::simulator::ValueRange      value_range_t;
-typedef hydla::simulator::parameter_t     parameter_t;
-typedef hydla::simulator::variable_set_t  variable_set_t;
-typedef hydla::simulator::ConstraintStore constraint_store_t;
-typedef hydla::simulator::find_min_time_result_t find_min_time_result_t;
-typedef hydla::simulator::CompareMinTimeResult compare_min_time_result_t;
+typedef simulator::value_t         value_t;
+typedef simulator::variable_t      variable_t;
+typedef simulator::variable_map_t  variable_map_t;
+typedef simulator::parameter_map_t parameter_map_t;
+typedef simulator::ValueRange      value_range_t;
+typedef simulator::parameter_t     parameter_t;
+typedef simulator::variable_set_t  variable_set_t;
+typedef simulator::ConstraintStore constraint_store_t;
+typedef simulator::find_min_time_result_t find_min_time_result_t;
+typedef simulator::CompareMinTimeResult compare_min_time_result_t;
 typedef Link::VariableForm        variable_form_t;
-typedef hydla::symbolic_expression::node_sptr      node_sptr;
-typedef hydla::simulator::CheckConsistencyResult check_consistency_result_t;
+typedef symbolic_expression::node_sptr      node_sptr;
+typedef simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
 
 struct MidpointRadius
@@ -30,7 +30,7 @@ struct MidpointRadius
 };
 
 
-class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
+class Backend : public symbolic_expression::DefaultTreeVisitor
 {
   public:
 
@@ -55,7 +55,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
    *    i: int: integer
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
-   *    e(n,p,z,t): symbolic_expression::node_sptr: expression (Variables are handled like n:x,c:x (ignoring prev), p:prev[x], z:x[0], t:x[t], needed only for sending)
+   *    e(n, p, c, z, t): symbolic_expression::node_sptr: expression (Variables are handled like n:x, c:x (ignoring prev), p:prev[x], z:x[0], t:x[t], needed only for sending)
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
    *    cs(n, p, z, t): constraint_store_t: constraint store
    *    cc: check_consistency_result_t (receive only)
@@ -92,7 +92,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
 
-  int send_value(const hydla::simulator::value_t& val, const variable_form_t &var);
+  int send_value(const simulator::value_t& val, const variable_form_t &var);
 
 
   int receive_map(variable_map_t &vm);
@@ -113,7 +113,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  int send_node(const hydla::symbolic_expression::node_sptr& node, const variable_form_t &form);
+  int send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form);
 
 
   /**
@@ -130,77 +130,77 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   bool get_form(const char &form_c, variable_form_t &form);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Tell> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Equal> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Less> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Greater> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalOr> node);
 
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Plus> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Subtract> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Times> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Divide> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Power> node);
   
   // コマンド文
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintPP> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::PrintIP> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Scan> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::PrintPP> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::PrintIP> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Scan> node);
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::True> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::False> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
 
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Positive> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
 
   // 否定
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Not> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Not> node);
   
   // 関数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
   
   
   // 円周率
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
   // 自然対数の底
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
   
     
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
 
   // 数字
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Float> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
 
   // 記号定数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
 
   // t
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
   
   // 無限大
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Infinity> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
   
   // Differentialノードを何回通ったか
   int differential_count_;
@@ -226,7 +226,7 @@ class Backend : public hydla::symbolic_expression::DefaultTreeVisitor
   variable_form_t variable_arg_;
 
   //valと関係演算子を元に、rangeを設定する
-  void set_range(const hydla::simulator::value_t &val, hydla::simulator::range_t &range, const int& relop);
+  void set_range(const simulator::value_t &val, simulator::range_t &range, const int& relop);
 };
 
 } // namespace backend
