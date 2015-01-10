@@ -76,10 +76,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
 }
 
 //単項演算子 "+"
-DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
+DEFINE_INFIX_VISIT_UNARY(Positive, "+", "")
 
 //微分
-DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
+DEFINE_INFIX_VISIT_UNARY(Differential, "", "\'")
 //左極限
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
 //否定

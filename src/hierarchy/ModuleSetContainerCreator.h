@@ -155,6 +155,20 @@ public:
     accept(node->get_rhs());
   }
 
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
+  {
+    accept(node->get_lhs());
+    if(!in_caller_) container_name_+="=>";
+    accept(node->get_rhs());
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
+  {
+    accept(node->get_child());
+    if(!in_caller_) container_name_+="\'";
+  }
+
+
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
   {
     if(!in_caller_) container_name_ += node->get_name();
