@@ -179,7 +179,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   if(phase == POINT_PHASE)
   {
     VariableFinder finder;   
-    finder.visit_node(ask->get_guard());
+    finder.visit_node(guard);
     for(auto variable : finder.get_prev_variable_set())
     {
       send_prev_constraint(variable);
