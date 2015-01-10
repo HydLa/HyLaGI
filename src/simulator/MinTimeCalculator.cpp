@@ -18,6 +18,10 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
   guard_time_map = g;
   AskNode *ask_node = relation_graph->get_ask_node(ask_to_be_updated);
   GuardNode *node = ask_node->guard_node;
+
+  assert(node->asks.size()==1);
+  if(node->asks.front()->entailed) node = (new NotGuardNode(node));
+
   node->accept(this);
 
 

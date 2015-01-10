@@ -465,7 +465,7 @@ publicMethod[
       onTime = True,
       ret
     },
-    Quiet[Check[minT = Minimize[{t, tCons && pCons}, {t}],
+    Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
