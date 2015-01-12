@@ -99,6 +99,7 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
 
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
+  // TODO : E<<(A<<B, B<<A, C<<C)<<Dのように循環参照したものが階層の途中にある場合にうまく処理できない
 
   ModuleSet strong_modules;
   ModuleSet weak_modules;
