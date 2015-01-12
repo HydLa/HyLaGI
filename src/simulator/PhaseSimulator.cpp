@@ -243,7 +243,9 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     HYDLA_LOGGER_DEBUG("INCONSISTENT: ", unadopted_ms);
     for(auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
+      timer::Timer gen_timer;
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
+      phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();
     }
   }
   else
@@ -251,6 +253,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     HYDLA_LOGGER_DEBUG("CONSISTENT: ", unadopted_ms);
     timer::Timer postprocess_timer;
     module_set_container->remove_included_ms_by_current_ms();
+    phase->profile["RemoveIncludedMS"] += postprocess_timer.get_elapsed_us();
     phase->unadopted_mss.insert(unadopted_ms);
 
     phase->parent->children.push_back(phase);

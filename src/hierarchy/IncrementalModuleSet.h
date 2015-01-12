@@ -28,7 +28,7 @@ public:
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  std::vector<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
+  std::vector<ModuleSet> get_removable_module_sets(const ModuleSet &ms);
 
   /**
    * 並列合成として集合を合成する
@@ -75,17 +75,15 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
-  ModuleSet unadopted_module_set();
+  ModuleSet unadopted_module_set(){ return *(ms_to_visit_.begin()); }
 
   void next();
 
   bool has_next(){ return !ms_to_visit_.empty(); }
 
-  ModuleSet get_weaker_module_set(){ return *ms_to_visit_.rbegin(); }
-
   ModuleSet get_module_set(){
-    ModuleSet ret = get_weaker_module_set();
-    ret.insert(required_ms_);
+    ModuleSet ret = maximal_module_set_; 
+    ret.erase(unadopted_module_set());
     return ret;
   }
 
@@ -121,18 +119,11 @@ public:
 
   virtual ModuleSet get_circular_ms(ModuleSet, module_t&, module_t&);
 
-  virtual module_set_set_t get_full_ms_list() const;
-
 private:
   /**
    * add << data
    */
   virtual void add_order_data(IncrementalModuleSet&);
-
-  /**
-   * check same module set was generated
-   */
-  virtual bool check_same_ms_generated(module_set_set_t&, ModuleSet&); 
 
   /**
    * update ms_to_visit_ by generated module sets

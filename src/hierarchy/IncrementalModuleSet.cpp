@@ -35,7 +35,7 @@ IncrementalModuleSet::~IncrementalModuleSet()
  * @param current_ms 対象のモジュール集合 
  * @param ms 矛盾の原因となったモジュール集合
  */
-std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms)
+std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(const ModuleSet &ms)
 {
   HYDLA_LOGGER_DEBUG("%% candidate modules : ", ms.get_name(), "\n");
   // msは矛盾集合
@@ -66,11 +66,8 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
       if(weaker_modules_.find(roop_it) != weaker_modules_.end()){
         for( auto wmit : weaker_modules_[roop_it] ){
 	  // wmit is a module which is weaker than roop_it
-	  // if wmit is included by current module set
-          if(current_ms.find(wmit) != current_ms.end()){
 	    // push wmit to childs
-            childs.push_back(wmit);
-          }
+          childs.push_back(wmit);
         }
       }
     }
@@ -87,19 +84,6 @@ std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet
   HYDLA_LOGGER_DEBUG("%% removable modules : ", str, "\n");
   return removable;
 }
-
-IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
-  module_set_set_t mss;
-  mss.insert(maximal_module_set_);
-  return mss;
-}
-
-ModuleSet IncrementalModuleSet::unadopted_module_set(){
-  ModuleSet ret = maximal_module_set_;
-  ret.erase(get_weaker_module_set());
-  return ret;
-}
-
 
 void IncrementalModuleSet::add_parallel(IncrementalModuleSet& parallel_module_set) 
 {
@@ -154,7 +138,7 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
   s << "  edge [dir=back];" << std::endl;
   module_set_set_t mss;
   while(has_next()){
-    ModuleSet tmp = get_weaker_module_set();
+    ModuleSet tmp = get_module_set();
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
       if(tmp.including(ms)){
@@ -213,11 +197,6 @@ std::ostream& IncrementalModuleSet::dump_node_trees(std::ostream& s) const
  * そのモジュール集合が包含しているモジュール集合を
  * 探索対象から外す
  */
-
-bool IncrementalModuleSet::check_same_ms_generated(module_set_set_t &new_mss, ModuleSet &ms)
-{
-  return new_mss.count(ms);
-}
 
 void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
 {
@@ -286,14 +265,14 @@ void IncrementalModuleSet::init()
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){
   /// current は現在のモジュール集合
-  ModuleSet current = get_weaker_module_set();
+  ModuleSet current = unadopted_module_set();
   module_set_set_t::iterator lit = ms_to_visit_.begin();
   while(lit!=ms_to_visit_.end()){
     /**
      * ms_to_visit_内のモジュール集合で
      * currentが包含するモジュール集合を削除
      */
-    if(current.including(*lit)){
+    if(lit->including(current)){
       lit = ms_to_visit_.erase(lit);
     }
     else lit++;
@@ -318,24 +297,24 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
   module_set_set_t new_mss;
   ModuleSet inconsistent_ms = ms;
   inconsistent_ms.erase(required_ms_);
+  std::vector<ModuleSet> rm = get_removable_module_sets(inconsistent_ms);
   for( auto lit : ms_to_visit_ ){
     // 探索対象のモジュール集合がmsを含んでいる場合
     // そのモジュール集合は矛盾するため
     // 新たなモジュール集合を生成する
-    if(lit.including(inconsistent_ms)){
+    if(inconsistent_ms.disjoint(lit)){
       // get vector of removable module set
-      std::vector<ModuleSet> rm = get_removable_module_sets(lit,inconsistent_ms);
       for(auto removable_module_set : rm){
         // remove removable module set of lit.
         // make new module set
         // The set has no module which is in removable module set
         ModuleSet new_ms = lit;
-        new_ms.erase(removable_module_set);
+        new_ms.insert(removable_module_set);
         // check weather the new_ms is included by maximal consistent module sets.
         bool checked = false;
         for( auto mcs : mcss ){
          // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
-          if(mcs.disjoint(new_ms)){
+          if(new_ms.including(mcs)){
             checked = true;
             break;
           }
@@ -348,9 +327,7 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
       }	
     }else{
       // 探索対象がmsを含んでいない場合そのまま残しておく
-      if(!check_same_ms_generated(new_mss, lit)){
-        new_mss.insert(lit);
-      }
+      new_mss.insert(lit);
     }
   }
   // update ms_to_visit_ by generated module sets
@@ -371,7 +348,8 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
 
 // 探索対象を初期状態に戻す
   void IncrementalModuleSet::reset(){
-    ms_to_visit_ = get_full_ms_list();
+    ms_to_visit_.clear();
+    ms_to_visit_.insert(ModuleSet());
   }
 
 } // namespace hierarchy
