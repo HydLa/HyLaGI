@@ -117,7 +117,7 @@ public:
    */
   virtual void init();
 
-  virtual ModuleSet get_circular_ms(ModuleSet, module_t&, module_t&);
+  // virtual ModuleSet get_circular_ms(ModuleSet, module_t&, module_t&);
 
 private:
   /**
@@ -136,10 +136,10 @@ private:
    */ 
   node_relations_data_t stronger_modules_;
   node_relations_data_t weaker_modules_;
-  node_relations_data_t same_modules_;
+  // node_relations_data_t same_modules_;
    
   /// required module set
-  ModuleSet required_ms_;
+  // ModuleSet required_ms_;
 };
 
 
