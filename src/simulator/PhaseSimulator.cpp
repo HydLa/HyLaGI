@@ -117,7 +117,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
         if(relation_graph_->entail_if_prev(ask,
                                            !entailed))
         {
-          todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
+todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
           todo->diff_sum.add_constraint(ask->get_child());
           
           if(entailed)
@@ -156,7 +156,6 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
   }
-
 
   if(todo->profile["# of CheckConsistency"]) todo->profile["Average of CheckConsistency"] = todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
   if(todo->profile["# of CheckEntailment"]) todo->profile["Average of CheckEntailment"] =  todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
@@ -929,7 +928,7 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   }
   for(auto always : always_list)
   {
-    relation_graph_->set_expanded_atomic(always, true);
+    relation_graph_->set_expanded_atomic(always, false);
   }
 }
 

@@ -447,7 +447,7 @@ publicMethod[
     simplePrint[timeAppliedCause];
     
     maxCons = If[maxTime === Infinity, True, t < maxTime];
-    resultCons = Reduce[timeAppliedCause && pCons && maxCons && t > 0, Reals];
+    resultCons = Reduce[timeAppliedCause && maxCons, Reals];
     simplePrint[resultCons];
     toReturnForm[LogicalExpand[resultCons]]
   ]
