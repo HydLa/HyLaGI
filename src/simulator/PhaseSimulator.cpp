@@ -98,7 +98,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
-  asks_t prev_positives, prev_negatives, nonprev_trigger_asks;
+  asks_t nonprev_trigger_asks;
   if(!relation_graph_is_taken_over)
   {
     // TODO: relation_graph_の状態が親フェーズから直接引き継いだものでない場合は，差分を用いることができないので全制約に関して設定する必要がある．
@@ -152,7 +152,7 @@ todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
     string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
 
-    result_list.merge(simulate_ms(unadopted_ms, todo, nonprev_trigger_asks, prev_positives, prev_negatives));
+    result_list.merge(simulate_ms(unadopted_ms, todo, nonprev_trigger_asks));
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
   }
@@ -212,7 +212,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms, module_
 }
 
 
-list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t& phase, asks_t trigger_asks, asks_t positive_asks, asks_t negative_asks)
+list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t& phase, asks_t trigger_asks)
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
@@ -256,8 +256,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->unadopted_mss.insert(unadopted_ms);
 
     phase->parent->children.push_back(phase);
-    HYDLA_LOGGER_DEBUG_VAR(*phase);
-    HYDLA_LOGGER_DEBUG_VAR(*phase->parent);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if(create_result.size() != 1)
@@ -278,10 +276,9 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
     }
     
-    phase->diff_positive_asks.insert(positive_asks.begin(), positive_asks.end());
-    phase->diff_negative_asks.insert(negative_asks.begin(), negative_asks.end());
     phase->diff_positive_asks.insert(cc_local_positives.begin(), cc_local_positives.end());
     phase->diff_negative_asks.insert(cc_local_negatives.begin(), cc_local_negatives.end());
+
     phase->always_list.add_constraint_store(cc_local_always);
     phase->simulation_state = SIMULATED;
     phase->diff_sum = local_diff_sum;
@@ -290,6 +287,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     result_list.push_back(phase);
     phase->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   }
+
   revert_diff(cc_local_positives, cc_local_negatives, cc_local_always, module_diff);
 
   return result_list;
@@ -485,10 +483,17 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, asks_t &trigg
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
         if(!relation_graph_->get_entailed(ask))
         {
-          relation_graph_->set_entailed(ask, true);
-          positive_asks.insert(ask);
+          if(negative_asks.erase(ask))
+          {
+            diff_sum.erase(ask->get_child());
+          }
+          else
+          {
 expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
-          diff_sum.add_constraint(ask->get_child());
+            positive_asks.insert(ask);
+            diff_sum.add_constraint(ask->get_child());
+          }
+          relation_graph_->set_entailed(ask, true);
           expanded = true;
         }
         ask_it = unknown_asks.erase(ask_it);
@@ -497,9 +502,16 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
         HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", get_infix_string(ask));
         if(relation_graph_->get_entailed(ask))
         {
+          if(positive_asks.erase(ask))
+          {
+            diff_sum.erase(ask->get_child());
+          }
+          else
+          {
+            negative_asks.insert(ask);
+            diff_sum.add_constraint(ask->get_child());
+          }
           relation_graph_->set_entailed(ask, false);
-          negative_asks.insert(ask);
-          diff_sum.add_constraint(ask->get_child());
           expanded = true;
         }
         ask_it = unknown_asks.erase(ask_it);
