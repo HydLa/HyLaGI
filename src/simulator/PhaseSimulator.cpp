@@ -59,6 +59,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
   else
   {
+    int phase_num = 0;
     for(auto phase : phase_list)
     {
       // TOOD: move this block into upper level
@@ -77,6 +78,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         }
       }
       make_next_todo(phase);
+      phase->id += phase_num;
+      phase_num++;
       todo->parent->todo_list.push_back(phase);
       if(aborting)break;
     }
