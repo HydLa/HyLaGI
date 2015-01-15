@@ -42,7 +42,7 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_graph)
@@ -62,7 +62,7 @@ void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
@@ -81,7 +81,7 @@ void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 namespace {
