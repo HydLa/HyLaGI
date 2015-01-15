@@ -146,6 +146,7 @@ phase_result_sptr_t Simulator::make_initial_todo()
 
 void Simulator::process_one_todo(phase_result_sptr_t& todo)
 {
+  if(todo->simulation_state == simulator::SIMULATED) return;
   if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase){
     todo->parent->simulation_state = simulator::STEP_LIMIT;
     return;

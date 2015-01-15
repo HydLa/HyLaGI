@@ -77,6 +77,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         }
       }
       make_next_todo(phase);
+      todo->parent->todo_list.push_back(phase);
       if(aborting)break;
     }
   }
@@ -117,7 +118,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
         if(relation_graph_->entail_if_prev(ask,
                                            !entailed))
         {
-todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
+          todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
           todo->diff_sum.add_constraint(ask->get_child());
           
           if(entailed)
@@ -255,6 +256,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->profile["RemoveIncludedMS"] += postprocess_timer.get_elapsed_us();
     phase->unadopted_mss.insert(unadopted_ms);
 
+    phase.reset(new PhaseResult(*phase));
     phase->parent->children.push_back(phase);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
@@ -295,7 +297,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
   phase_result_sptr_t branch_state_false(new PhaseResult(*original));
-  branch_state_false->id = ++todo_id;
+  branch_state_false->id = ++phase_sum_;
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
