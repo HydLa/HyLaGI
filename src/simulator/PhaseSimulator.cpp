@@ -259,7 +259,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->profile["RemoveIncludedMS"] += postprocess_timer.get_elapsed_us();
     phase->unadopted_mss.insert(unadopted_ms);
 
-    phase.reset(new PhaseResult(*phase));
+    if(phase->simulation_state == SIMULATED)
+    {
+      phase.reset(new PhaseResult(*phase));
+      phase->parent->todo_list.push_back(phase);
+    }
     phase->parent->children.push_back(phase);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
@@ -275,7 +279,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     consistency_checker->reset_count();
 
     backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
-
 
     if(opts_->epsilon_mode >= 0){
       cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
