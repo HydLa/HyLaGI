@@ -29,7 +29,7 @@ public:
   typedef typename boost::shared_ptr<Container> container_sptr;
   typedef std::deque<container_sptr>            container_stack_t;
   typedef std::map<std::string, int>            mod_name_map_t;
-  typedef std::set<ModuleSet>                   module_set_set_t;
+  typedef std::map<std::string, ModuleSet>                   module_set_map_t;
  
   ModuleSetContainerCreator()
   {}
@@ -217,15 +217,12 @@ public:
 
     // create ModuleSet
     ModuleSet mod_set;
-    for(auto ms : generated_mss_){
-      if(ms.begin()->first == container_name_){
-        mod_set = ms;
-        break;
-      }
+    if(generated_ms_.count(container_name_)){
+      mod_set = generated_ms_[container_name_];
     }
     if(mod_set.empty()){
       mod_set = ModuleSet(container_name_, node);
-      generated_mss_.insert(mod_set);
+      generated_ms_[container_name_] = mod_set;
     }
     container_name_.clear();
 
@@ -289,7 +286,7 @@ private:
   /**
    * ModuleSets which are generated before
    */
-  module_set_set_t generated_mss_;
+  module_set_map_t generated_ms_;
 
   /**
    * flag representating processing in caller
