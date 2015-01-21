@@ -16,8 +16,8 @@ LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
 LIBS     += -lboost_program_options
-#LIBS     += -lML64i3 -lm -lrt
-LIBS     += -lML32i3 -lm -lrt
+LIBS     += -lML64i3 -lm -lrt
+#LIBS     += -lML32i3 -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
 LIBS     += -lboost_program_options-mt
