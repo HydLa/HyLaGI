@@ -687,7 +687,9 @@ bool PhaseSimulator::calculate_closure(simulation_todo_sptr_t& state,
           &negative_asks,
           &unknown_asks);
       apply_discrete_causes_to_guard_judgement( state->parent, state->discrete_causes, positive_asks, negative_asks, unknown_asks );
+      timer::Timer set_changing_timer;
       set_changing_variables( state->parent, ms, positive_asks, negative_asks, state->changing_variables );
+      state->profile["FindChangingVariables"] += set_changing_timer.get_elapsed_us();
     }
     else{
       state->changing_variables = state->parent->changed_variables;
