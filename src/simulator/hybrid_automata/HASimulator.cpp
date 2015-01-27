@@ -96,7 +96,7 @@ phase_result_sptr_t HASimulator::simulate()
     phase_result_sptr_t st(new PhaseResult);
     st->phase_type = pr->phase_type;
     st->profile = profile;
-    profile_vector_->push_back(st);
+    profile_vector_->insert(st);
 
     if(opts_->max_phase >= 0 && opts_->max_phase < cnt_phase) {
       HYDLA_LOGGER_DEBUG("fin : max_phase");					

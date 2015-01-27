@@ -324,7 +324,7 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   }
   link_->pre_receive();
   HYDLA_LOGGER_DEBUG("input: \n", link_->get_input_print());
-//  HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
+  //HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
   for(int i = 0; ret_fmt[i] != '\0'; i++)
   {
     void* ret = va_arg(args, void *);
@@ -921,7 +921,6 @@ symbolic_expression::node_sptr Backend::receive_function()
         ret = symbolic_expression::node_sptr(new symbolic_expression::Greater(lhs, rhs));
       else if(equal_ignoring_case(symbol, "GreaterEqual"))
         ret = symbolic_expression::node_sptr(new symbolic_expression::GreaterEqual(lhs, rhs));
-      HYDLA_LOGGER_DEBUG_VAR(symbol);
     }
   }
   else if(equal_ignoring_case(symbol, "derivative"))
@@ -976,7 +975,6 @@ symbolic_expression::node_sptr Backend::receive_node(){
     {
 
       std::string symbol = link_->get_symbol();
-      HYDLA_LOGGER_DEBUG_VAR(symbol);
       if(symbol=="t")
         ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")

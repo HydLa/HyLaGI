@@ -262,6 +262,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     if(phase->simulation_state == SIMULATED)
     {
       phase.reset(new PhaseResult(*phase));
+      phase->profile.clear();
       phase->parent->todo_list.push_back(phase);
     }
     phase->parent->children.push_back(phase);
@@ -729,7 +730,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 time_limit, phase, backend_.get());
                 }
               */
-
+              HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
               backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
               HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint_for_this_guard));
               guard_time_map[guard] = constraint_for_this_guard;

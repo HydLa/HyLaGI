@@ -65,8 +65,11 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
   {
     phase_result_sptr_t todo = current->todo_list.front();
     current->todo_list.pop_front();
-    profile_vector_->push_back(todo);
-    if(todo->simulation_state == NOT_SIMULATED)process_one_todo(todo);
+    profile_vector_->insert(todo);
+    if(todo->simulation_state == NOT_SIMULATED)
+    {
+      process_one_todo(todo);
+    }
     /* TODO: assertion違反が検出された場合の対応
        if(phase->simulation_state == ASSERTION)
        {

@@ -38,7 +38,7 @@ typedef std::vector<variable_map_t>               variable_maps_t;
 std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
 /// プロファイリング結果全体
-typedef phase_result_sptrs_t entire_profile_t;
+typedef std::set<phase_result_sptr_t> entire_profile_t;
 
 class PhaseSimulator;
 
