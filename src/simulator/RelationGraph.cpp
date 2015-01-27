@@ -702,9 +702,13 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     variables = finder.get_variable_set();
     for(auto variable : variables)
     {
-      VariableNode* var_node = add_variable_node(variable);
-      tell_node->edges.push_back(EdgeToVariable(var_node, false));
-      var_node->edges.push_back(EdgeToConstraint(tell_node, false));
+      // for default continuity
+      for(int i=0; i <= variable.get_differential_count(); i++){
+        Variable differentiated_variable(variable.get_name(), i);
+        VariableNode* var_node = add_variable_node(differentiated_variable);
+        tell_node->edges.push_back(EdgeToVariable(var_node, false));
+        var_node->edges.push_back(EdgeToConstraint(tell_node, false));
+      }
     }
 
     variable_set_t prev_variables;

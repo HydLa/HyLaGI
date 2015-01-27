@@ -223,10 +223,12 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
   
   ConstraintStore local_diff_sum = phase->diff_sum;
+  ConstraintStore ip_diff_sum; // TODO: fix this name
   for(auto diff : module_diff)
   {
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
+    ip_diff_sum.add_constraint(diff.first.second);
   }
 
   list<phase_result_sptr_t> result_list;  
@@ -236,7 +238,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore cc_local_always;
 
   consistency_checker->clear_inconsistent_module_sets();
-  bool consistent = calculate_closure(phase, trigger_asks,
+  bool consistent = calculate_closure(phase, trigger_asks, ip_diff_sum,
                                       local_diff_sum, cc_local_positives, cc_local_negatives, cc_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
@@ -437,17 +439,17 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
   consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
-bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
+bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &ip_diff_sum, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
   bool expanded, first_loop = true;
-  PhaseType phase_type = state->phase_type;
+  PhaseType phase_type = phase->phase_type;
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
     timer::Timer entailment_timer;
     
-    variable_set_t discrete_variables;
+    variable_set_t discrete_variables, ip_discrete_variables;
     for(auto constraint: diff_sum)
     {
       VariableFinder finder;
@@ -456,9 +458,18 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, asks_t &trigg
         :finder.get_all_variable_set();
       discrete_variables.insert(variables.begin(), variables.end());
     }
+    if(phase->phase_type == INTERVAL_PHASE)
+    {
+      for(auto constraint: ip_diff_sum)
+      {
+        VariableFinder finder;
+        finder.visit_node(constraint);
+        variable_set_t variables = finder.get_all_variable_set();
+        ip_discrete_variables.insert(variables.begin(), variables.end());
+      }
+    }
     for(auto variable : discrete_variables)
     {
-
       set<ask_t> adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
       for(auto adjacent : adjacents)
       {
@@ -471,22 +482,22 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, asks_t &trigg
 
       if(
         (phase_type == POINT_PHASE
-         // in initial state, conditions about left-hand limits are considered to be invalid
-         && state->parent == result_root.get()
+         // in initial phase, conditions about left-hand limits are considered to be invalid
+         && phase->parent == result_root.get()
          && PrevSearcher().search_prev(ask))
         ||
         // omit judgments of continous asks
-        (state->in_following_step() && judge_continuity(state, ask, discrete_variables))){
+        (phase->in_following_step() && judge_continuity(phase, ask, ip_discrete_variables))){
         ask_it = unknown_asks.erase(ask_it);
         continue;
       }
 
       CheckConsistencyResult check_consistency_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), phase_type, state->profile)){
+      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), phase_type, phase->profile)){
 
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
-        push_branch_states(state, check_consistency_result);
+        push_branch_states(phase, check_consistency_result);
         // Since we choose entailed case in push_branch_states, we go down without break.
       case ENTAILED:
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
@@ -494,12 +505,14 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& state, asks_t &trigg
         {
           if(negative_asks.erase(ask))
           {
+            ip_diff_sum.erase(ask->get_child());
             diff_sum.erase(ask->get_child());
           }
           else
           {
 expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
             positive_asks.insert(ask);
+            ip_diff_sum.add_constraint(ask->get_child());
             diff_sum.add_constraint(ask->get_child());
           }
           relation_graph_->set_entailed(ask, true);
@@ -513,11 +526,13 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
         {
           if(positive_asks.erase(ask))
           {
+            ip_diff_sum.erase(ask->get_child());
             diff_sum.erase(ask->get_child());
           }
           else
           {
             negative_asks.insert(ask);
+            ip_diff_sum.add_constraint(ask->get_child());
             diff_sum.add_constraint(ask->get_child());
           }
           relation_graph_->set_entailed(ask, false);
@@ -530,20 +545,20 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
         ask_it++;
         break;
       }
-      state->profile["# of CheckEntailment"]+= 1;
+      phase->profile["# of CheckEntailment"]+= 1;
     }
-    state->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
+    phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     if(expanded || first_loop)
     {
       timer::Timer consistency_timer;
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, state->profile);
-      state->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-      state->profile["# of CheckConsistency"]++;
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile);
+      phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+      phase->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){
         return false;
       }else if (cc_result.inconsistent_store.consistent()){
-        push_branch_states(state, cc_result);
+        push_branch_states(phase, cc_result);
       }
       first_loop = false;
     }
@@ -561,24 +576,24 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
   return true;
 }
 
-bool PhaseSimulator::judge_continuity(const phase_result_sptr_t &todo, const constraint_t &ask, const variable_set_t &changing_variables)
+bool PhaseSimulator::judge_continuity(const phase_result_sptr_t &todo, const ask_t &ask, const variable_set_t &changing_variables)
 {
-  // TODO: 何かうまく行かないコーナーケースがある気がするので考える．
   for(auto discrete_ask : todo->discrete_asks)
   {
     if(discrete_ask.first == ask) return false;
   }
-  
-  
+
   VariableFinder finder;
-  finder.visit_node(ask);
+  finder.visit_node(ask->get_guard());
   variable_set_t variables(finder.get_all_variable_set());
+
+
 
   for(auto variable : variables){
     auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
     if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
     for(auto cv : changing_variables){
-      if(variable.get_name() == cv.get_name()) return false;
+      if(variable == cv) return false;
     }
   }
   return true;
@@ -817,7 +832,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 if(is_trigger)
                 {
                   pr->discrete_guards.push_back(guard);
-                  HYDLA_LOGGER_DEBUG("discrete_guard: " + get_infix_string(guard));
                 }
               }
             }

@@ -26,11 +26,17 @@ namespace simulator {
 class RelationGraph;
 struct BreakPoint;
 
+class PhaseComparator
+{
+public:
+  bool operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs) const;
+};
+
 typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
 
 typedef hierarchy::ModuleSetContainer             module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
-typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr;
+typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr; 
 typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
                                                   entailed_prev_map_t;
 typedef std::vector<variable_map_t>               variable_maps_t;
@@ -38,7 +44,7 @@ typedef std::vector<variable_map_t>               variable_maps_t;
 std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
 
 /// プロファイリング結果全体
-typedef std::set<phase_result_sptr_t> entire_profile_t;
+typedef std::set<phase_result_sptr_t, PhaseComparator> entire_profile_t;
 
 class PhaseSimulator;
 

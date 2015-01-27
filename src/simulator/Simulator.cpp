@@ -7,7 +7,6 @@
 #include "AffineApproximator.h"
 #include "SymbolicTrajPrinter.h"
 #include "Timer.h"
-#include "VariableFinder.h"
 #include "TimeOutError.h"
 
 #include <iostream>
@@ -19,6 +18,13 @@ using namespace hydla::backend;
 
 namespace hydla{
 namespace simulator{
+
+bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs)const
+{
+  if(lhs == nullptr)return true;
+  if(rhs == nullptr)return false;
+  return rhs->id > lhs->id;
+}
 
 Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
 {
