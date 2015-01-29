@@ -47,12 +47,12 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   return sstr.str();
 }
 
-void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
+void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm, const std::string& post_fix) const
 {
   parameter_map_t::const_iterator it  = pm.begin();
   parameter_map_t::const_iterator end = pm.end();
   if(it != end){
-    ostream << "\n---------parameter condition---------\n";
+    ostream << "\n---------parameter condition" << post_fix << "---------\n";
   }
   for(; it!=end; ++it) {
     ostream << it->first << "\t: " << it->second << "\n";
@@ -91,7 +91,8 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
 
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, vector<std::string> &result, int &case_num, int &phase_num) const{
   if(node->children.size() == 0){
-    ostream << "---------Case " << case_num++ << "---------" << endl;
+    int current_case_num = case_num++;
+    ostream << "---------Case " << current_case_num << "---------" << endl;
     vector<std::string>::const_iterator r_it = result.begin();
     for(;r_it != result.end(); r_it++){
       ostream << *r_it;
@@ -109,7 +110,12 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       ostream << get_state_output(*node);
     }
 
-    output_parameter_map(node->parameter_map);
+    {
+      stringstream sstr;
+      sstr << "(Case " << current_case_num << ")";
+      output_parameter_map(node->parameter_map, sstr.str());
+    }
+
     // print why the simulation was terminated
     switch(node->simulation_state){
       case simulator::INCONSISTENCY:
