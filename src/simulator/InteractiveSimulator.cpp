@@ -380,8 +380,8 @@ int InteractiveSimulator::select_options(){
   cout << "argc : " << argc << endl;
   char input[100], *argv[20], *cp;
   const char *delim = " \t\n"; 
-  argv[0] = "./hyrose";
-  cout << "enter the hyrose option args" << endl;
+  argv[0] = "./hylagi";
+  cout << "enter the hylagi option args" << endl;
   if (fgets(input, sizeof(input), stdin) != NULL) {
     cp = input;
     for (argc = 1; argc < 20; argc++) {

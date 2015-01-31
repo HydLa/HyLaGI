@@ -20,8 +20,8 @@
 
 #include <kv/convert.hpp>
 
-#include <map> //added@hyrose
-#pragma GCC diagnostic ignored "-Wall" // added@hyrose
+#include <map> //added@hylagi
+#pragma GCC diagnostic ignored "-Wall" // added@hylagi
 
 /*
  * define simplicity of affine arithmetic
@@ -1351,14 +1351,14 @@ template <class T> class ep_reduce_v {
 	public:
 	ub::vector<T> v;
 	T score;
-  int index; // added@hyrose to identify intervalized dummy variables
+  int index; // added@hylagi to identify intervalized dummy variables
 	void calc_score() {
 		int s = v.size();
 		int i, j;
 
 		T m1, m2, tmp;
 		using std::abs;
-    if (s<2){score = abs(v(0)); return;} // added@hyrose
+    if (s<2){score = abs(v(0)); return;} // added@hylagi
 		m1 = abs(v(0));
 		m2 = abs(v(1));
 		if (m2 > m1) {
@@ -1386,7 +1386,7 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
 }
 
 //template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
-template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // modified@hyrose
+template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // modified@hylagi
 	int s = x.size();
 	int m = affine<T>::maxnum();
 	int i, j;
@@ -1394,13 +1394,13 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 	std::vector< ep_reduce_v<T>* > pa;
 	ub::vector< affine<T> > r;
 	T tmp;
-  std::map<int, int> result_map; // added@hyrose
+  std::map<int, int> result_map; // added@hylagi
 
 	if (n_limit < n) n_limit = n;
 
 //	if (m <= n_limit) return;
 //	if (n < s) return; // impossible
-  // modified@hyrose
+  // modified@hylagi
 	if (m <= n_limit) return result_map; 
 	if (n < s) return result_map; // impossible
 
@@ -1410,8 +1410,8 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 	for (i=1; i<=m; i++) {
 		a[i-1].v.resize(s);
-    a[i-1].index = i;// added@hyrose
-    result_map.insert(std::make_pair(i, -1)); // added@hyrose
+    a[i-1].index = i;// added@hylagi
+    result_map.insert(std::make_pair(i, -1)); // added@hylagi
 		for (j=0; j<s; j++) {
 			a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;
 		}
@@ -1432,10 +1432,10 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 		for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
 			r(i).a(j+1) = pa[m-1-j]->v(i);
-      result_map[pa[m-1-j]->index] = j+1; // added@hyrose
+      result_map[pa[m-1-j]->index] = j+1; // added@hylagi
 #else
 			r(i).a(j+1) = pa[j]->v(i);
-      result_map[pa[j]->index] = j+1; // added@hyrose
+      result_map[pa[j]->index] = j+1; // added@hylagi
 #endif
 		}
 		tmp = 0.;
@@ -1463,7 +1463,7 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 	x = r;
 	affine<T>::maxnum() = n;
-  return result_map; //added@hyrose
+  return result_map; //added@hylagi
 }
 
 

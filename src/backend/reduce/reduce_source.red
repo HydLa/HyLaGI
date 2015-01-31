@@ -2311,11 +2311,11 @@ begin;
   return {getVarNameFromTuple(tuple_), getExprCode(getRelopFromTuple(tuple_)), getValueFromTuple(tuple_)};
 end;
 
-% hyrose向けのrlstruct
+% hylagi向けのrlstruct
 % @param cons_ 制約のリスト
 % @param vars_ prevの覗かれた変数のリスト, df変数の順序を気にしなくて良い
 % @return      {vの変数表, vで表現した制約の論理式}
-procedure hyroseRlStruct(cons_, vars_)$
+procedure hylagiRlStruct(cons_, vars_)$
 begin;
   scalar ansFormula_, ansMap_, formulaList_, varsMap1_;
   debugWrite("{cons_, vars_}: ", {cons_, vars_});
@@ -2324,7 +2324,7 @@ begin;
 
   ansFormula_:= mymkand formulaList_;
   ansMap_:= for i:= 1:length(vars_) collect mkid(v,i) = part(vars_, i);
-  debugWrite("ans in hyroseRlStruct: ", {ansFormula_, ansMap_});
+  debugWrite("ans in hylagiRlStruct: ", {ansFormula_, ansMap_});
 
   return {ansFormula_, ansMap_};
 end;
@@ -2343,7 +2343,7 @@ begin;
 
   rationalisedCons_:= map(rationalise, cons_);
 
-  structAns_:= hyroseRlStruct(rationalisedCons_, removePrevCons vars_);
+  structAns_:= hylagiRlStruct(rationalisedCons_, removePrevCons vars_);
   formula:= first structAns_;
   vVarsMap_:= second structAns_;
 
@@ -2436,7 +2436,7 @@ begin;
 
   rationalisedCons_:= map(rationalise, cons_);
 
-  structAns_:= hyroseRlStruct(union(rationalisedCons_, {t>0}), union(removePrevCons(vars_), parameters__));
+  structAns_:= hylagiRlStruct(union(rationalisedCons_, {t>0}), union(removePrevCons(vars_), parameters__));
   formula_:= first structAns_;
   debugWrite("formula_: ", formula_);
   vVarsMap_:= second structAns_;

@@ -21,7 +21,7 @@ function timeOutExec(){
 
   if [ -f run.lock ]; then
     echo "$cnt second time out"
-    pkill -TERM hyrose
+    pkill -TERM hylagi
     rm run.lock
   fi
   
@@ -34,6 +34,6 @@ rm ${log}
 for filepath in ${files}
 do
   echo ${filepath} >> ${log}
-  timeOutExec ../hyrose -s r -t 5 ${filepath} --nd -f t >> ${log} 2>&1
+  timeOutExec ../hylagi -s r -t 5 ${filepath} --nd -f t >> ${log} 2>&1
 done
 read wait

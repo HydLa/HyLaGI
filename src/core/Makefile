@@ -1,4 +1,4 @@
-TARGET	 := ../../bin/hyrose
+TARGET	 := ../../bin/hylagi
 
 LIB_DIRS := backend simulator hierarchy parser common io interval symbolic_expression utility
 

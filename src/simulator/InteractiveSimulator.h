@@ -60,7 +60,7 @@ protected:
   int input_and_process_command(phase_result_sptr_t& phase);
 
   /**
-   * hyroseのオプションを自由に変更する
+   * HyLaGIのオプションを自由に変更する
    * 現在debugオプションのみ
    * TODO:他のオプションも指定できるようにする
    */
