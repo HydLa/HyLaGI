@@ -575,6 +575,8 @@ bool PhaseSimulator::judge_continuity(const phase_result_sptr_t &todo, const ask
   variable_set_t variables(finder.get_all_variable_set());
 
   for(auto variable : variables){
+    auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
+    if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
     for(auto cv : changing_variables){
       if(variable == cv) return false;
     }
