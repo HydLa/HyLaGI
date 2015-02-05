@@ -223,12 +223,10 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
   
   ConstraintStore local_diff_sum = phase->diff_sum;
-  ConstraintStore ip_diff_sum; // TODO: fix this name
   for(auto diff : module_diff)
   {
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
-    ip_diff_sum.add_constraint(diff.first.second);
   }
 
   list<phase_result_sptr_t> result_list;  
@@ -238,8 +236,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore cc_local_always;
 
   consistency_checker->clear_inconsistent_module_sets();
-  bool consistent = calculate_closure(phase, trigger_asks, ip_diff_sum,
-                                      local_diff_sum, cc_local_positives, cc_local_negatives, cc_local_always);
+  bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, cc_local_positives, cc_local_negatives, cc_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
 
@@ -442,7 +439,7 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
   consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
-bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &ip_diff_sum, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
+bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
   bool expanded, first_loop = true;
@@ -452,7 +449,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     expanded = false;
     timer::Timer entailment_timer;
     
-    variable_set_t discrete_variables, ip_discrete_variables;
+    variable_set_t discrete_variables;
     for(auto constraint: diff_sum)
     {
       VariableFinder finder;
@@ -461,16 +458,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         :finder.get_all_variable_set();
       discrete_variables.insert(variables.begin(), variables.end());
     }
-    if(phase->phase_type == INTERVAL_PHASE)
-    {
-      for(auto constraint: ip_diff_sum)
-      {
-        VariableFinder finder;
-        finder.visit_node(constraint);
-        variable_set_t variables = finder.get_all_variable_set();
-        ip_discrete_variables.insert(variables.begin(), variables.end());
-      }
-    }
+
     for(auto variable : discrete_variables)
     {
       set<ask_t> adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
@@ -490,7 +478,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
          && PrevSearcher().search_prev(ask))
         ||
         // omit judgments of continous asks
-        (phase->in_following_step() && judge_continuity(phase, ask, ip_discrete_variables))){
+        (phase->in_following_step() && judge_continuity(phase, ask, discrete_variables))){
         ask_it = unknown_asks.erase(ask_it);
         continue;
       }
@@ -508,14 +496,12 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         {
           if(negative_asks.erase(ask))
           {
-            ip_diff_sum.erase(ask->get_child());
             diff_sum.erase(ask->get_child());
           }
           else
           {
 expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
             positive_asks.insert(ask);
-            ip_diff_sum.add_constraint(ask->get_child());
             diff_sum.add_constraint(ask->get_child());
           }
           relation_graph_->set_entailed(ask, true);
@@ -529,13 +515,11 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
         {
           if(positive_asks.erase(ask))
           {
-            ip_diff_sum.erase(ask->get_child());
             diff_sum.erase(ask->get_child());
           }
           else
           {
             negative_asks.insert(ask);
-            ip_diff_sum.add_constraint(ask->get_child());
             diff_sum.add_constraint(ask->get_child());
           }
           relation_graph_->set_entailed(ask, false);
@@ -590,11 +574,7 @@ bool PhaseSimulator::judge_continuity(const phase_result_sptr_t &todo, const ask
   finder.visit_node(ask->get_guard());
   variable_set_t variables(finder.get_all_variable_set());
 
-
-
   for(auto variable : variables){
-    auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
-    if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
     for(auto cv : changing_variables){
       if(variable == cv) return false;
     }
