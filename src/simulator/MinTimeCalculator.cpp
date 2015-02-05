@@ -23,7 +23,7 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
 
   node->accept(this);
 
-
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(current_cons));
   find_min_time_result_t find_min_time_result;
   backend->call("minimizeTime", 1, "en", "f",
                 &current_cons, &find_min_time_result);

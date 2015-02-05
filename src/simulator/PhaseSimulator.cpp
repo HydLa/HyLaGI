@@ -270,12 +270,15 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->parent->children.push_back(phase);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
-    if(create_result.size() != 1)
+    if(create_result.size() == 0)
+    {
+      throw SimulateError("some error occured in creation of variable maps.");
+    }
+    else if(create_result.size() > 1)
     {
       throw SimulateError("result variable map is not single.");
     }
     phase->variable_map = create_result[0];
-
 
     phase->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();

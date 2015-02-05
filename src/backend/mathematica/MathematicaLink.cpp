@@ -169,7 +169,9 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
+        HYDLA_LOGGER_DEBUG("input: ", str);
       }else{
+        HYDLA_LOGGER_DEBUG("trace: ", str);
         debug_print_ += str + "\n";
       }
       break;
@@ -398,7 +400,6 @@ void MathematicaLink::pre_receive()
   get_next();
   int ret_code = get_integer();
   if(ret_code == 0) {
-
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
   if(ret_code == -1) {

@@ -299,10 +299,10 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
       // TODO: 本来はここで論理和を取らないといけない．
       result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
     }
-    // TODO: ここで変数表が必ずしもできるとは限らない．underconstraintの場合があるので対処する．
-    // TODO: 最終的なunderconstraintは通すべきではないのでどうにかする．
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
     result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
+
+    if(result_maps.size() == 0)return; // if result_maps has already been invalidated, skip creation
     vector<variable_map_t> create_result;
     timer::Timer timer;
     if(phase == POINT_PHASE)
@@ -315,6 +315,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     }
     profile["CreateVMInCC"] += timer.get_elapsed_us();
     // TODO: deal with multiple variable map
+    
     if(create_result.size() == 1)
     {
       for(auto var_entry : create_result[0])
@@ -325,6 +326,10 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     else if(create_result.size() > 1)
     {
       throw SimulateError("result variable map is not single.");
+    }
+    else
+    {
+      result_maps.clear(); // invalidate result_maps (caused by over-constrained or under-constrained)
     }
   }
 }

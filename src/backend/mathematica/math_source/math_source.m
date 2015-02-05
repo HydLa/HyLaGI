@@ -141,7 +141,7 @@ publicMethod[
 
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint || sol[[1]] === underConstraint,
-      {},
+      error,
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       ret = {convertExprs[tStore]};
@@ -465,6 +465,7 @@ publicMethod[
       onTime = True,
       ret
     },
+    debugPrint["minT after Minimize:", tCons];
     Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
          onTime = False,
          Minimize::wksol
@@ -704,13 +705,11 @@ Module[
 solveByDSolve[expr_, initExpr_, tVars_] :=
 solveByDSolve[expr, initExpr, tVars] = (* for memoization *)
 Module[
-  {tmpExpr, ini, sol, idx, generalInitValue, swapValue, j},
-  tmpExpr = expr;
+  {ini, sol, idx, generalInitValue, swapValue, j},
   ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
-
   sol = Quiet[
     Check[
-      DSolve[Union[tmpExpr, ini], Map[(#[t])&, tVars], t],
+      DSolve[Union[expr, ini], Map[(#[t])&, tVars], t],
           overConstraint,
       {DSolve::overdet, DSolve::bvimp}
     ],
