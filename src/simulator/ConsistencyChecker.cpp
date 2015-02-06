@@ -216,6 +216,18 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
 
   backend->call("resetConstraintForVariable", 0, "", "");
+
+  if(phase == POINT_PHASE)
+  {
+    VariableFinder finder;
+    finder.visit_node(guard);
+    for(auto variable : finder.get_prev_variable_set())
+    {
+      send_prev_constraint(variable);
+    }
+  }
+
+
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
   backend->call("addConstraint", 1, fmt.c_str(), "", &vm);
 
