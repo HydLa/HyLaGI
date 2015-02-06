@@ -41,8 +41,6 @@ typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
                                                   entailed_prev_map_t;
 typedef std::vector<variable_map_t>               variable_maps_t;
 
-std::ostream& operator<<(std::ostream& s, const SimulationJob& a);
-
 /// プロファイリング結果全体
 typedef std::set<phase_result_sptr_t, PhaseComparator> entire_profile_t;
 

@@ -1,4 +1,5 @@
 #include "Constants.h"
+#include "Logger.h"
 
 using namespace std;
 using namespace hydla::simulator;
@@ -30,7 +31,7 @@ string get_string_for_cause(simulator::SimulationState cause)
   case simulator::INTERRUPTED:
     return "INTERRUPTED";
   default:
-    return "ERROR";
+    return "UNKNOWN";
   }
 }
 

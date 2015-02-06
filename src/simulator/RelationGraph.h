@@ -110,7 +110,9 @@ public:
 
   RelationGraph(const module_set_t &mods);
 
-  virtual ~RelationGraph();  
+  virtual ~RelationGraph();
+
+  void add_guard(constraint_t &guard);
 
   /**
    * Print the structure in graphviz format.
@@ -150,7 +152,7 @@ public:
   /**
    * Get active guards adjacent to given variable
    */
-  std::list<AtomicConstraint *> get_atomic_guards(const ask_t &ask, bool ignore_prev_asks)const;
+  std::list<AtomicConstraint *> get_atomic_guards(const constraint_t &guard)const;
 
   /**
    * Get variables adjacent to given ask
@@ -289,6 +291,7 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::Ask> ask);
   void visit(boost::shared_ptr<symbolic_expression::LogicalOr> logical_or);
   void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
+  void visit(boost::shared_ptr<symbolic_expression::Not> not_node);
   void visit(boost::shared_ptr<symbolic_expression::Always> always); 
   void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> binary_node);
   

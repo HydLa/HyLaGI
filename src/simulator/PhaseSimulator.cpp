@@ -599,6 +599,33 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   return related_vm;
 }
 
+find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
+{
+  std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
+  for(auto atomic_guard : guards)
+  {
+    constraint_t guard = atomic_guard->constraint;
+    constraint_t constraint_for_this_guard;
+    if(!guard_time_map.count(guard))
+    {
+      variable_map_t related_vm = get_related_vm(guard, original_vm);
+      /*
+        TODO: implement
+        if(opts_->epsilon_mode >= 0)
+        {
+        min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
+        time_limit, phase, backend_.get());
+        }
+      */
+      backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
+      guard_time_map[guard] = constraint_for_this_guard;
+    }
+  }
+
+  find_min_time_result_t min_time_for_this_ask;
+  return min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
+}
+
 void
 PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 {
@@ -710,48 +737,22 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         if(checked_variables.count(var_name))continue;
         checked_variables.insert(var_name);
         asks_t asks = relation_graph_->get_adjacent_asks(var_name);
+        
+        
         for(auto ask : asks)
         {
-          std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(ask, false);
-          for(auto atomic_guard : guards)
-          {
-            constraint_t guard = atomic_guard->constraint;
-            HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
-            constraint_t constraint_for_this_guard;
-            if(!guard_time_map.count(guard))
-            {
-              variable_map_t related_vm = get_related_vm(guard, original_vm);
-              /*
-                TODO: implement
-                if(opts_->epsilon_mode >= 0)
-                {
-                min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
-                time_limit, phase, backend_.get());
-                }
-              */
-              backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-              guard_time_map[guard] = constraint_for_this_guard;
-            }
-          }
-          
-          find_min_time_result_t min_time_for_this_ask;
-          if(!calculated_ask_set.count(ask))
-          {
-            min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, ask->get_guard(), relation_graph_->get_entailed(ask));
-            candidate_map[ask] = min_time_for_this_ask;
-            calculated_ask_set.insert(ask);
-          }
+          if(calculated_ask_set.count(ask))continue;
+          calculated_ask_set.insert(ask);
+          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
         }
       }
 
-      /*
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
-        variable_map_t related_vm = get_related_vm(break_point.condition, original_vm);
-        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "f", &break_point.condition, &related_vm, &time_limit, &entry.second);
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
+        entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false);
       }
-      */
 
       pp_time_result_t time_result;
       set<ask_t> checked_asks;
@@ -761,14 +762,12 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
       }
-      /* TODO:implement
       for(auto entry : break_point_list)
       {
-        //integrate this procedure with the one for asks 
         ask_t null_ask;
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
-      */
 
       if(time_result.empty())
       {
@@ -801,7 +800,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             for(auto ask : next_todo->discrete_asks)
             {
               pr->next_pp_candidate_map.erase(ask.first);
-              std::list<AtomicConstraint *> atomic_guards = relation_graph_->get_atomic_guards(ask.first, false);
+              std::list<AtomicConstraint *> atomic_guards = relation_graph_->get_atomic_guards(ask.first->get_guard());
               for(auto atomic_guard : atomic_guards)
               {
                 auto guard = atomic_guard->constraint;
@@ -919,6 +918,7 @@ void PhaseSimulator::apply_diff(const PhaseResult &phase)
 void PhaseSimulator::add_break_point(BreakPoint b)
 {
   break_point_list.push_back(make_pair(b, find_min_time_result_t()));
+  relation_graph_->add_guard(b.condition);
 }
 
 void PhaseSimulator::revert_diff(const PhaseResult &phase)

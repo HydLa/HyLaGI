@@ -50,6 +50,12 @@ void RelationGraph::add(module_t &mod)
   up_to_date = false;
 }
 
+void RelationGraph::add_guard(constraint_t &guard)
+{
+  visit_mode = ADDING_ASK;
+  accept(guard);
+}
+
 void dump_tell_node(TellNode *node, ostream &os)
 {
   string constraint_name = node->get_name();
@@ -468,21 +474,11 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev
   return asks;
 }
 
-list<AtomicConstraint *> RelationGraph::get_atomic_guards(const ask_t &ask, bool ignore_prev_asks)const
+list<AtomicConstraint *> RelationGraph::get_atomic_guards(const constraint_t &guard)const
 {
-  list<AtomicConstraint *> ret;
-  auto node_it = ask_node_map.find(ask);
-  if(node_it == ask_node_map.end())throw HYDLA_SIMULATE_ERROR("AskNode for " + get_infix_string(ask) + " is not found");
-  AskNode *ask_node = node_it->second;
-  if(active(ask_node, ignore_prev_asks))
-  {
-    for(auto atomic_node : ask_node->atomic_guard_list)ret.push_back(&atomic_node->atomic_guard);
-    return ret;
-  }
-  else
-  {
-    return ret;
-  }
+  auto node_it = guard_node_map.find(guard);
+  if(node_it == guard_node_map.end())throw HYDLA_SIMULATE_ERROR("unknown guard");
+  return node_it->second->get_atomic_guards();
 }
 
 set<string> RelationGraph::get_adjacent_variables(const ask_t &ask){
@@ -877,6 +873,24 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalAnd> log
     current_guard_node = new AndGuardNode(lhs_guard, rhs_guard);
     rhs_guard->parent = lhs_guard->parent = current_guard_node;
     guard_node_map[logical_and] = current_guard_node;
+    guard_nodes.push_back(current_guard_node);
+  }
+}
+
+
+void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Not> not_node)
+{
+  if(visit_mode != ADDING_ASK)
+  {
+    accept(not_node->get_child());
+  }
+  else
+  {
+    accept(not_node->get_child());
+    GuardNode* child = current_guard_node;
+    current_guard_node = new NotGuardNode(child);
+    child->parent = current_guard_node;
+    guard_node_map[not_node] = current_guard_node;
     guard_nodes.push_back(current_guard_node);
   }
 }

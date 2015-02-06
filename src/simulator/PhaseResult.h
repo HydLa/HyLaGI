@@ -17,7 +17,6 @@ namespace hydla {
 namespace simulator {
 
 class PhaseResult;
-struct SimulationJob;
 
 /**
  * type for cause of termination of simulation
@@ -35,7 +34,6 @@ typedef enum{
   INTERRUPTED,
   NONE
 }SimulationState;
-
 
 /**
  * type of a phase
