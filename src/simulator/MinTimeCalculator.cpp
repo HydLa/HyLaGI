@@ -11,17 +11,15 @@ MinTimeCalculator::MinTimeCalculator(RelationGraph *rel, Backend *b): relation_g
 {
 }
 
-find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const ask_t &ask_to_be_updated, bool negated)
+find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated)
 {
   // TODO: All guards don't have to be updated.
   // TODO: 原子制約単位ではなく，OrGuardNodeやAndGuardNode単位でも結果の再利用は可能なはず
   guard_time_map = g;
-  AskNode *ask_node = relation_graph->get_ask_node(ask_to_be_updated);
-  GuardNode *node = ask_node->guard_node;
-
-  if(negated) node = (new NotGuardNode(node));
+  GuardNode *node = relation_graph->get_guard_node(guard);
 
   node->accept(this);
+  if(negated)current_cons.reset(new symbolic_expression::Not(current_cons));
 
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(current_cons));
   find_min_time_result_t find_min_time_result;

@@ -266,7 +266,8 @@ public:
   bool referring(const Variable& variable);
 
   AskNode *get_ask_node(const ask_t &ask);
-  
+
+  GuardNode *get_guard_node(const constraint_t &guard);
 
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
@@ -315,7 +316,7 @@ private:
   std::map<module_t, tell_nodes_t>  module_tell_nodes_map;
   std::map<constraint_t, TellNode*> tell_node_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
-  std::map<constraint_t, AtomicGuardNode*> guard_node_map;
+  std::map<constraint_t, GuardNode*> guard_node_map;
   std::map<Variable, VariableNode*> variable_node_map;
   std::map<std::string, std::list<VariableNode*> > var_name_nodes_map;
 

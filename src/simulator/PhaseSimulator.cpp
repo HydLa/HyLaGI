@@ -721,7 +721,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             if(!guard_time_map.count(guard))
             {
               variable_map_t related_vm = get_related_vm(guard, original_vm);
-            
               /*
                 TODO: implement
                 if(opts_->epsilon_mode >= 0)
@@ -730,35 +729,30 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 time_limit, phase, backend_.get());
                 }
               */
-              HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
               backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-              HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint_for_this_guard));
               guard_time_map[guard] = constraint_for_this_guard;
             }
           }
-
           
           find_min_time_result_t min_time_for_this_ask;
           if(!calculated_ask_set.count(ask))
           {
-            
-            min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, ask, relation_graph_->get_entailed(ask));
+            min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, ask->get_guard(), relation_graph_->get_entailed(ask));
             candidate_map[ask] = min_time_for_this_ask;
             calculated_ask_set.insert(ask);
           }
         }
       }
 
-
       /*
-        TODO: implement
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
         variable_map_t related_vm = get_related_vm(break_point.condition, original_vm);
-        backend_->call("findMinTime", 3, "etmvtvlt", "f", &break_point.condition, &related_vm, &time_limit, &entry.second);
+        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "f", &break_point.condition, &related_vm, &time_limit, &entry.second);
       }
       */
+
       pp_time_result_t time_result;
       set<ask_t> checked_asks;
       set<string> min_time_variables;

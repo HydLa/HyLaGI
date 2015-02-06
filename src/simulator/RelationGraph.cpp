@@ -648,6 +648,13 @@ AskNode *RelationGraph::get_ask_node(const ask_t &ask)
   return node_it->second;
 }
 
+GuardNode *RelationGraph::get_guard_node(const constraint_t &guard)
+{
+  auto node_it = guard_node_map.find(guard);
+  if(node_it == guard_node_map.end())return nullptr;
+  return node_it->second;
+}
+
 void RelationGraph::set_ignore_prev(bool ignore)
 {
   ignore_prev = ignore;
@@ -849,6 +856,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalOr> logi
     GuardNode* rhs_guard = current_guard_node;
     current_guard_node = new OrGuardNode(lhs_guard, rhs_guard);
     rhs_guard->parent = lhs_guard->parent = current_guard_node;
+    guard_node_map[logical_or] = current_guard_node;
     guard_nodes.push_back(current_guard_node);
   }
 }
@@ -868,6 +876,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalAnd> log
     GuardNode* rhs_guard = current_guard_node;
     current_guard_node = new AndGuardNode(lhs_guard, rhs_guard);
     rhs_guard->parent = lhs_guard->parent = current_guard_node;
+    guard_node_map[logical_and] = current_guard_node;
     guard_nodes.push_back(current_guard_node);
   }
 }
