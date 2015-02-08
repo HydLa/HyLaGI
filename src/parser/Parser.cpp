@@ -541,6 +541,7 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
   return boost::shared_ptr<ProgramCaller>();
 }
 
+/// parenthesis_program := "(" program ")"
 node_sptr Parser::parenthesis_program(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
@@ -1107,6 +1108,10 @@ node_sptr Parser::diff(){
   return node_sptr();
 }
 
+/**
+ * constant := "Pi"
+ *           | "E"
+ */
 node_sptr Parser::constant(){
   position_t position = lexer.get_current_position();
   if(lexer.get_token() == UPPER_IDENTIFIER){
@@ -1212,6 +1217,7 @@ node_sptr Parser::system_variable(){
   return node_sptr();
 }
 
+/// function_name := [a-z,A-Z]+
 std::string Parser::function_name(){
   position_t position = lexer.get_current_position();
   Token token = lexer.get_token();
@@ -1231,7 +1237,7 @@ std::string Parser::function_name(){
   return std::string();
 }
 
-// unsupported_function := " " " [a-z,A-Z]+ " " "
+/// unsupported_function := " " " function_name " " "
 boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
   position_t position = lexer.get_current_position();
   std::string name;
@@ -1250,7 +1256,7 @@ boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
   return boost::shared_ptr<UnsupportedFunction>(); 
 }
 
-/// function := [a-z,A-Z]+
+/// function := function_name 
 boost::shared_ptr<Function> Parser::function(){
   position_t position = lexer.get_current_position();
   std::string name;
@@ -1275,7 +1281,7 @@ std::string Parser::variable_name(){
 
 
 /**
- * variable := identifier
+ * variable := variable_name
  */
 boost::shared_ptr<Variable> Parser::variable(){
   std::string name;
