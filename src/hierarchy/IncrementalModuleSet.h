@@ -28,7 +28,7 @@ public:
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  std::vector<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
+  std::set<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
 
   /**
    * 並列合成として集合を合成する
@@ -81,12 +81,10 @@ public:
 
   bool has_next(){ return !ms_to_visit_.empty(); }
 
-  ModuleSet get_weaker_module_set(){ return *ms_to_visit_.rbegin(); }
-
-  ModuleSet get_module_set(){
-    ModuleSet ret = get_weaker_module_set();
-    ret.insert(required_ms_);
-    return ret;
+  ModuleSet get_module_set(){ 
+    ModuleSet ret = get_max_module_set();
+    ret.erase(unadopted_module_set());
+    return ret; 
   }
 
   void remove_included_ms_by_current_ms();
@@ -119,10 +117,6 @@ public:
    */
   virtual void init();
 
-  virtual ModuleSet get_circular_ms(ModuleSet, module_t&, module_t&);
-
-  virtual module_set_set_t get_full_ms_list() const;
-
 private:
   /**
    * add << data
@@ -145,10 +139,7 @@ private:
    */ 
   node_relations_data_t stronger_modules_;
   node_relations_data_t weaker_modules_;
-  node_relations_data_t same_modules_;
    
-  /// required module set
-  ModuleSet required_ms_;
 };
 
 

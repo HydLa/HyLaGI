@@ -23,7 +23,6 @@ IncrementalModuleSet::IncrementalModuleSet(const IncrementalModuleSet& im)
 {
   stronger_modules_ = im.stronger_modules_;
   weaker_modules_ = im.weaker_modules_;
-  required_ms_ = im.required_ms_;
   maximal_module_set_ = im.maximal_module_set_;
 }
 
@@ -35,69 +34,60 @@ IncrementalModuleSet::~IncrementalModuleSet()
  * @param current_ms 対象のモジュール集合 
  * @param ms 矛盾の原因となったモジュール集合
  */
-std::vector<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms)
+std::set<ModuleSet> IncrementalModuleSet::get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms)
 {
   HYDLA_LOGGER_DEBUG("%% candidate modules : ", ms.get_name(), "\n");
+  HYDLA_LOGGER_DEBUG("%% current modules : ", current_ms.get_name(), "\n");
   // msは矛盾集合
-  std::vector<ModuleSet> removable;
+  std::set<ModuleSet> removable;
+  std::set<ModuleSet> ret;
 
-  for( auto it : ms ){
-    bool has_weaker = false;
-    for( auto weaker : weaker_modules_[it] ){
-      if(ms.find(weaker) != ms.end()){
-        has_weaker = true;
+  for( auto it : ms )
+  {
+    // Check if "it" is required module 
+    if(!stronger_modules_.count(it)) continue;
+    // Check if "it" is included in current module set 
+    if(current_ms.find(it) != current_ms.end()) continue;
+    ModuleSet removable_modules;
+    // insert "it" to empty set
+    removable_modules.add_module(it);
+    // insert weaker modules than "it" to "removable_modules"
+    removable_modules.insert(weaker_modules_[it]);
+    // "removable_modules" = { M | M = "it" \/ M << "it" }
+    removable.insert(removable_modules);
+  }
+
+  // select minimal module sets
+  for( auto it : removable )
+  {
+    bool is_minimal = true;
+    for( auto it2 : removable )
+    {
+      // If it == it2 then continue roop
+      if(it.including(it2) && it2.including(it)) continue;
+      // Check if it include other module sets in removable 
+      if(it.including(it2))
+      { 
+        is_minimal = false;
         break;
       }
     }
-    if(has_weaker) continue;
-    // one of the removable module set
-    ModuleSet removable_for_it;
-    // a vector which has all modules which is weaker than it
-    std::vector<module_t> childs;
-    childs.push_back(it);
-
-    while(childs.size() > 0){
-      // pop the top of childs
-      auto roop_it = childs.front();
-      removable_for_it.add_module(roop_it);
-      // to prevent recheck, erase childs front
-      childs.erase(childs.begin());
-      // if there are modules which is weaker than roop_it
-      if(weaker_modules_.find(roop_it) != weaker_modules_.end()){
-        for( auto wmit : weaker_modules_[roop_it] ){
-	  // wmit is a module which is weaker than roop_it
-	  // if wmit is included by current module set
-          if(current_ms.find(wmit) != current_ms.end()){
-	    // push wmit to childs
-            childs.push_back(wmit);
-          }
-        }
-      }
-    }
-    if(same_modules_.count(it)) removable_for_it.insert(same_modules_[it]);
-    removable.push_back(removable_for_it);
+    // "ret" are minimal module sets of "removable"
+    if(is_minimal) ret.insert(it);
   }
 
   // string for debug
   std::string str = "";
-  for(auto it : removable){
+  for(auto it : ret){
     str += it.get_name();
     str += " , ";
   }
   HYDLA_LOGGER_DEBUG("%% removable modules : ", str, "\n");
-  return removable;
-}
-
-IncrementalModuleSet::module_set_set_t IncrementalModuleSet::get_full_ms_list() const{
-  module_set_set_t mss;
-  mss.insert(maximal_module_set_);
-  return mss;
+  return ret;
 }
 
 ModuleSet IncrementalModuleSet::unadopted_module_set(){
-  ModuleSet ret = maximal_module_set_;
-  ret.erase(get_weaker_module_set());
-  return ret;
+  return *ms_to_visit_.begin();
 }
 
 
@@ -115,21 +105,10 @@ void IncrementalModuleSet::add_weak(IncrementalModuleSet& weak_module_set_list)
 
   // thisに含まれるすべてのモジュールが
   // weak_module_setに含まれるすべてのモジュールよりも強いという情報を保持
-
-  ModuleSet strong_modules;
-  ModuleSet weak_modules;
   for(auto this_module : maximal_module_set_ ){
-    if(weaker_modules_.count(this_module)) continue;
-    strong_modules.add_module(this_module);
-  }
-  for(auto weaker_module : weak_module_set_list.maximal_module_set_ ){
-    if(stronger_modules_.count(weaker_module)) continue;
-    weak_modules.add_module(weaker_module);
-  }
-  for(auto sm : strong_modules){
-    for(auto wm : weak_modules){
-      stronger_modules_[wm].add_module(sm);
-      weaker_modules_[sm].add_module(wm);
+    for(auto weaker_module : weak_module_set_list.maximal_module_set_ ){
+      stronger_modules_[weaker_module].add_module(this_module);
+      weaker_modules_[this_module].add_module(weaker_module);
     }
   }
 
@@ -154,14 +133,14 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
   s << "  edge [dir=back];" << std::endl;
   module_set_set_t mss;
   while(has_next()){
-    ModuleSet tmp = get_weaker_module_set();
+    ModuleSet tmp = unadopted_module_set();
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
-      if(tmp.including(ms)){
-        ModuleSet parent = tmp;
-        ModuleSet child = ms;
-        parent.insert(required_ms_);
-        child.insert(required_ms_);
+      if(ms.including(tmp)){
+        ModuleSet parent = get_max_module_set();
+        parent.erase(tmp);
+        ModuleSet child = get_max_module_set();
+        child.erase(ms);
         s << "  \"" << parent.get_name() << "\" -> \"" << child.get_name() << "\"" << std::endl;
       }
     }
@@ -175,18 +154,9 @@ std::ostream& IncrementalModuleSet::dump_priority_data_for_graphviz(std::ostream
 {
   s << "digraph priority_data { " << std::endl;
   s << "  edge [dir=back];" << std::endl;
-  for(auto m : required_ms_){
-    s << "  \"" << m.first << "\" [shape=box];" << std::endl;
-  }
   for(auto m : weaker_modules_){
     for(auto wm : m.second){
       s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
-    }
-  }
-  for(auto m : same_modules_){
-    for(auto sm : m.second){
-      s << "  \"" << m.first.first << "\" -> \"" << sm.first << "\" [style=dotted];" << std::endl;
-      s << "  \"" << sm.first << "\" -> \"" << m.first.first << "\" [style=dotted];" << std::endl;
     }
   }
   s << "}" << std::endl;
@@ -227,73 +197,20 @@ void IncrementalModuleSet::update_by_new_mss(module_set_set_t &new_mss)
   }
 }
 
-ModuleSet IncrementalModuleSet::get_circular_ms(ModuleSet root, module_t &origin, module_t &module)
-{
-  ModuleSet ret;
-  if(origin == module){
-    ret.add_module(module);
-    return ret;
-  }
-  if(root.find(module) != root.end()){
-    return ret;
-  }
-  root.add_module(module);
-  ModuleSet ms;
-  if(weaker_modules_.count(module)){
-    for(auto weak : weaker_modules_[module]){
-      ms = get_circular_ms(root,origin,weak);
-      if(!ms.empty()){
-        ret.insert(ms);
-      }
-    }
-  }
-  if(!ret.empty()) ret.add_module(module);
-  return ret;
-}
-
 void IncrementalModuleSet::init()
 {
-  full_module_set_set_.clear();
-  full_module_set_set_.insert(maximal_module_set_);
-
-  for(auto m : maximal_module_set_){
-    if(!stronger_modules_.count(m)){ 
-      required_ms_.add_module(m);
-    }
-  }
-  maximal_module_set_.erase(required_ms_);
-
-  for(auto m : maximal_module_set_){
-    ModuleSet ms;
-    ms.add_module(m);
-    for(auto weak : weaker_modules_[m]){
-      ModuleSet circular = get_circular_ms(ms, m, weak);
-      if(!circular.empty()){
-        same_modules_[m].insert(circular);
-      }
-    }
-  }
-  for(auto m : maximal_module_set_){
-    if(same_modules_.count(m)){
-      stronger_modules_[m].erase(same_modules_[m]);
-      weaker_modules_[m].erase(same_modules_[m]);
-      same_modules_[m].erase(m);
-    }
-  }
-
-  HYDLA_LOGGER_DEBUG("%% required modules : ", required_ms_.get_name());
 }
 
 void IncrementalModuleSet::remove_included_ms_by_current_ms(){
   /// current は現在のモジュール集合
-  ModuleSet current = get_weaker_module_set();
+  ModuleSet current = unadopted_module_set();
   module_set_set_t::iterator lit = ms_to_visit_.begin();
   while(lit!=ms_to_visit_.end()){
     /**
      * ms_to_visit_内のモジュール集合で
      * currentが包含するモジュール集合を削除
      */
-    if(current.including(*lit)){
+    if(lit->including(current)){
       lit = ms_to_visit_.erase(lit);
     }
     else lit++;
@@ -317,25 +234,24 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
   // 結果用のモジュール集合の集合
   module_set_set_t new_mss;
   ModuleSet inconsistent_ms = ms;
-  inconsistent_ms.erase(required_ms_);
   for( auto lit : ms_to_visit_ ){
     // 探索対象のモジュール集合がmsを含んでいる場合
     // そのモジュール集合は矛盾するため
     // 新たなモジュール集合を生成する
-    if(lit.including(inconsistent_ms)){
+    if(lit.disjoint(inconsistent_ms)){
       // get vector of removable module set
-      std::vector<ModuleSet> rm = get_removable_module_sets(lit,inconsistent_ms);
+      std::set<ModuleSet> rm = get_removable_module_sets(lit,inconsistent_ms);
       for(auto removable_module_set : rm){
         // remove removable module set of lit.
         // make new module set
         // The set has no module which is in removable module set
         ModuleSet new_ms = lit;
-        new_ms.erase(removable_module_set);
+        new_ms.insert(removable_module_set);
         // check weather the new_ms is included by maximal consistent module sets.
         bool checked = false;
         for( auto mcs : mcss ){
          // 生成されたモジュール集合が極大無矛盾集合に包含されている場合checkedをtrueにしておく
-          if(mcs.disjoint(new_ms)){
+          if(new_ms.including(mcs)){
             checked = true;
             break;
           }
@@ -360,7 +276,6 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
 /// 最も要素数の多いモジュール集合を返す
   ModuleSet IncrementalModuleSet::get_max_module_set() const{
     ModuleSet ret = maximal_module_set_;
-    ret.insert(required_ms_);
     return ret;
   }
 
@@ -371,7 +286,8 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
 
 // 探索対象を初期状態に戻す
   void IncrementalModuleSet::reset(){
-    ms_to_visit_ = get_full_ms_list();
+    ms_to_visit_.clear();
+    ms_to_visit_.insert(ModuleSet());
   }
 
 } // namespace hierarchy
