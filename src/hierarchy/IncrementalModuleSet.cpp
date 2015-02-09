@@ -132,16 +132,16 @@ std::ostream& IncrementalModuleSet::dump_module_sets_for_graphviz(std::ostream& 
   s << "digraph module_set { " << std::endl;
   s << "  edge [dir=back];" << std::endl;
   module_set_set_t mss;
+  s << "  \"" << get_max_module_set().get_name() << "\"" << std::endl;
   while(has_next()){
-    ModuleSet tmp = unadopted_module_set();
+    ModuleSet tmp = get_max_module_set();
+    tmp.erase(unadopted_module_set());
     generate_new_ms(mss, tmp);
     for(auto ms : ms_to_visit_){
-      if(ms.including(tmp)){
-        ModuleSet parent = get_max_module_set();
-        parent.erase(tmp);
-        ModuleSet child = get_max_module_set();
-        child.erase(ms);
-        s << "  \"" << parent.get_name() << "\" -> \"" << child.get_name() << "\"" << std::endl;
+      ModuleSet child = get_max_module_set();
+      child.erase(ms);
+      if(tmp.including(child)){
+        s << "  \"" << tmp.get_name() << "\" -> \"" << child.get_name() << "\"" << std::endl;
       }
     }
   }
