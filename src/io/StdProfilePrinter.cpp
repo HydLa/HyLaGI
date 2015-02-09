@@ -37,7 +37,9 @@ void StdProfilePrinter::print_profile(const entire_profile_t& result) const
     for(auto entry : phase->profile){
       cout << entry.first; 
       for(int i = entry.first.length(); i < max_characters; i++) cout << " "; 
-      cout << " : " << entry.second << endl;
+      cout << " : ";
+      for(int i = 0; i < max_digits - std::to_string(entry.second).length(); i++) cout << " ";
+      cout << entry.second << endl;
     }
     cout << endl;
   }
