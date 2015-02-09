@@ -11,7 +11,6 @@ LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib
 
 LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2回やって順序による依存関係の問題を解消
-#LIBS     += -lrealpaver -lrealpaverbasic  
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)

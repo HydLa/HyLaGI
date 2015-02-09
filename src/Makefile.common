@@ -9,7 +9,7 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system -lncurses -lboost_thread-mt -lpthread
+LIBS += -lboost_system -lboost_thread-mt -lpthread
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
