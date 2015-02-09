@@ -225,7 +225,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     ha_converter.initialize(parse_tree);
 
   	ha_converter.simulate();
-  	hac_timer.elapsed("HAConverter Time");
+    std::cout << "HAConverter Time : " << hac_timer.get_elapsed_s() << " s" << std::endl;
 
     HASimulator* ha_simulator = new HASimulator(opts);
     ha_simulator->set_ha_results(ha_converter.get_results());

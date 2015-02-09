@@ -117,8 +117,8 @@ void hydla_main(int argc, char* argv[])
   simulate(pt);
 
   if(po.get<string>("tm") != "n"){
-    simulation_timer.elapsed("Simulation Time");
-    main_timer.elapsed("Finish Time");
+    std::cout << "Simulation Time : " << simulation_timer.get_elapsed_us() << std::endl;
+    std::cout << "Finish Time : " << main_timer.get_elapsed_us() << std::endl;
     cout << endl;
   }
 

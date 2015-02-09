@@ -128,7 +128,7 @@ phase_result_sptr_t HASimulator::simulate()
 		
   HYDLA_LOGGER_DEBUG("%% simulation end");
 
-  has_timer.elapsed("\n\nHASimulator Time");
+  std::cout << "\n\nHASimulator Time : " << has_timer.get_elapsed_s() << std::endl;
   return result_root_;
 }
 	
