@@ -14,13 +14,13 @@ LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) 
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
-LIBS     += -lboost_program_options
-LIBS     += -lML64i3 -lm -lrt
+LIBS     += -Wl,-Bstatic -lboost_program_options
+LIBS     += -Wl,-Bdynamic -lML64i3 -lm -lrt
 #LIBS     += -lML32i3 -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
-LIBS     += -lboost_program_options-mt
-LIBS     += -lMLi3 -lm -lstdc++.6.0.9
+LIBS     += -Wl,-Bstatic -lboost_program_options-mt
+LIBS     += -Wl,-Bdynamic -lMLi3 -lm -lstdc++.6.0.9
 endif
 
 CXX_OPT  += 

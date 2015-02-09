@@ -9,14 +9,14 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system -lboost_thread-mt -lpthread
+LIBS += -Wl,-Bstatic -lboost_system -lboost_thread-mt -Wl,-Bdynamic -lpthread
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
 INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++11 -static
+CXX_OPT  += -Wall -std=c++11
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 endif
 ifeq ($(UNAME),Darwin)
