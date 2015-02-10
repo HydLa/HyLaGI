@@ -10,7 +10,7 @@ namespace simulator {
 
 using namespace std;
 
-SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts), printer()
+SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts), printer(backend)
 {
 }
 

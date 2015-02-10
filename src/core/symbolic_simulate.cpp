@@ -83,11 +83,7 @@ void output_result(Simulator& ss, Opts& opts){
   JsonWriter writer;
   writer.write(*simulator_, of_name);
 
-<<<<<<< HEAD
   if(opts.epsilon_mode >= 0){
-=======
-  if(opts.epsilon_mode){
->>>>>>> prepare for general programs
     writer.set_epsilon_mode(backend_, true);
     std::string of_name = po.get<string>("output_name");
     if(of_name.empty())
@@ -150,11 +146,7 @@ void setup_simulator_opts(Opts& opts)
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
-<<<<<<< HEAD
   opts.epsilon_mode = po.get<int>("epsilon");
-=======
-  opts.epsilon_mode = po.get<int>("epsilon") >= 0;
->>>>>>> prepare for general programs
   opts.interval_newton = po.count("interval_newton")>0;
   opts.max_ip_width = po.get<double>("max_ip_width");
   /*

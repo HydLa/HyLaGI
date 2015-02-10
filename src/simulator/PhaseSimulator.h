@@ -108,7 +108,7 @@ private:
   bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
-  int                                   phase_sum_;
+  int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
   boost::shared_ptr<ValueModifier>      value_modifier;

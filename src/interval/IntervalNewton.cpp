@@ -119,8 +119,6 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     
     for(int i=0;i<100;i++)
     {
-      itvd f_result;
-
       std::cout.precision(17);
       
       itvd m = itvd(mid(current_value));

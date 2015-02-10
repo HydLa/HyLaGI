@@ -178,8 +178,9 @@ bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
 {
   phase->simulation_state = ASSERTION;
   HYDLA_LOGGER_DEBUG_VAR(*phase);
+  Simulator *simulator = (Simulator *)bp.tag;
   cout << "Assertion failed!" << endl;
-  cout << io::SymbolicTrajPrinter().get_state_output(*phase);
+  cout << io::SymbolicTrajPrinter(simulator->backend).get_state_output(*phase);
   return false;
 }
 
