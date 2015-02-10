@@ -32,5 +32,9 @@ bool show_existence(itvd x, node_sptr exp, node_sptr dexp);
 
 itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_);
 
+
+/// calculate all solution intervals included by "init"
+std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_);
+
 } // namespace interval
 } // namespace hydla

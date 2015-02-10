@@ -46,6 +46,7 @@ struct Opts {
   int optimization_level;
   std::string analysis_mode;
   std::string analysis_file;
+  double max_ip_width;
   int timeout;
   int timeout_phase;
   int timeout_case;

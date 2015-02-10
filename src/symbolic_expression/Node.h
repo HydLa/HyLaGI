@@ -9,7 +9,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace hydla { 
+namespace hydla {
+
+namespace simulator{
+class Parameter;
+}
+
 namespace symbolic_expression {
 
 class Node;
@@ -1091,6 +1096,8 @@ public:
   Parameter(const std::string& name, const int& differential_count, const int& id) : 
     name_(name), differential_count_(differential_count), phase_id_(id)
   {}
+
+  Parameter(const simulator::Parameter& parameter);
     
   virtual ~Parameter(){}
 

@@ -353,6 +353,8 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
     i += read_args_fmt(args_fmt, i, arg);
   }
   link_->pre_receive();
+  HYDLA_LOGGER_DEBUG("input: \n", link_->get_input_print());
+  HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
   for(int i = 0; ret_fmt[i] != '\0'; i++)
   {
     void* ret = va_arg(args, void *);

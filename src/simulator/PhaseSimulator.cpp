@@ -16,10 +16,9 @@
 #include "MinTimeCalculator.h"
 
 #include "Backend.h"
-// for dubug 
+
 #include "TreeInfixPrinter.h"
 
-// for interval newton method
 #include "IntervalNewton.h"
 
 namespace hydla
@@ -741,7 +740,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       guard_time_map_t guard_time_map;
 
-<<<<<<< HEAD
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
       for(auto variable : diff_variables)
@@ -758,53 +756,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
-=======
-          if(opts_->interval_newton)
-          {
-            node_sptr exp;
-            node_sptr dexp;
-            symbolic_expression::TreeInfixPrinter foo;
-            backend_->call("relationToFunction", 2, "etmvt", "et", &trigger, &related_vm, &exp);
-            backend_->call("differentiateWithTime", 1, "et", "et", &exp, &dexp);
-            std::cout << "exp:" << foo.get_infix_string(exp) << "\n";
-            std::cout << "dexp:" << foo.get_infix_string(dexp) << "\n";
-            // 初期値は適当
-            itvd init = itvd(0.,100.);
-            itvd test;
-            
-            // if(phase->parent->diff_positive_asks.count(ask) > 0 || phase->parent->diff_negative_asks.count(ask) > 0)
-            // {
-            //   test = hydla::interval::calculate_interval_newton(init, exp, dexp, phase->parameter_map); 
-            // }
-            
-            test = hydla::interval::calculate_interval_newton(init, exp, dexp, phase->parameter_map); 
-            std::cout << "test : " << test << "\n";
-            // phase->paraent->diff_positive_asks, phase->parent->diff_negative_asks を使う
-            
-            // test の結果をパラメータにしたい！
-            value_t lower(test.lower());
-            backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
-            value_t upper(test.upper());
-            backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
-            ValueRange range (lower, upper);
-            Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
-            parameter_map_t parameter_map = phase->parameter_map;
-            parameter_map[parameter] = range;
-            min_time_for_this_ask.push_back(FindMinTimeCandidate(value_t(parameter), true, parameter_map));
-          }
-          else
-          {
-            backend_->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &related_vm, &time_limit, &min_time_for_this_ask);
-          }
-          calculated_pp_time_map[ask] = min_time_for_this_ask;
-          set<string> adjacent_var_names = relation_graph_->get_adjacent_variables(ask);
-          for(auto adjacent_var_name : adjacent_var_names)
-          {
-            if(adjacent_var_name == var_name)continue;
-            HYDLA_LOGGER_DEBUG_VAR(adjacent_var_name);
-            candidate_map[adjacent_var_name] = compare_min_time(candidate_map[adjacent_var_name], min_time_for_this_ask, ask);
-          }
->>>>>>>  On branch Hyrose_Newton
         }
       }
 
@@ -841,7 +792,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         auto time_it = time_result.begin();
         while(true)
         {
-<<<<<<< HEAD
           DCCandidate &candidate = *time_it;
           // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
           for(auto par_entry : candidate.parameter_map ){
@@ -859,16 +809,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->discrete_asks = candidate.discrete_asks;
             for(auto ask : next_todo->discrete_asks)
-=======
-          assert(next_todo->discrete_asks.size() <= 1);
-          for(auto ask: next_todo->discrete_asks)
-          {
-            VariableFinder finder;
-            finder.visit_node(ask.first->get_guard());
-            HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask.first));
-            variable_set_t variables = finder.get_all_variable_set();
-            if(variables.size() == 1)
->>>>>>> fix for equations without zero crossing
             {
               pr->next_pp_candidate_map.erase(ask.first);
               std::list<AtomicConstraint *> atomic_guards = relation_graph_->get_atomic_guards(ask.first->get_guard());
@@ -1015,6 +955,98 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   {
     relation_graph_->set_expanded_atomic(always, false);
   }
+}
+
+
+
+constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, phase_result_sptr_t &phase)
+{
+  int sign = -1;
+  if(sign == 0)return constraint_t(new symbolic_expression::True());
+  node_sptr exp;
+  node_sptr dexp;
+  backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
+  backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
+  itvd init = itvd(0.,opts_->max_ip_width); 
+  list<itvd> result_intervals =
+    interval::calculate_interval_newton_nd(init, exp, dexp, phase->parameter_map);
+  for(auto res : result_intervals)HYDLA_LOGGER_DEBUG_VAR(res);
+  list<Parameter> parameters;
+  for(auto res : result_intervals)
+  {
+    value_t lower(res.lower());
+    backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+    value_t upper(res.upper());
+    backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+    ValueRange range (lower, upper);
+    Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
+    parameters.push_back(parameter);
+    phase->parameter_map[parameter] = range;
+  }
+  const type_info &guard_type = typeid(*guard);
+  constraint_t ret;
+  if(guard_type == typeid(symbolic_expression::Equal) || guard_type == typeid(symbolic_expression::UnEqual))
+  {
+    for(Parameter parameter : parameters)
+    {
+      constraint_t lhs;
+      if(guard_type == typeid(symbolic_expression::UnEqual))      lhs.reset(new symbolic_expression::UnEqual(constraint_t(new symbolic_expression::SymbolicT()), constraint_t(new symbolic_expression::Parameter(parameter))));
+      else       lhs.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT()), constraint_t( new symbolic_expression::Parameter(parameter))));
+
+      if(ret.get() == nullptr)
+      {
+        ret = lhs;
+      }
+      else
+      {
+        ret.reset(
+          new symbolic_expression::LogicalOr(lhs, ret));
+      }
+    }
+  }
+  else
+  {
+    assert(guard_type == typeid(symbolic_expression::LessEqual) ||
+           guard_type == typeid(symbolic_expression::Less) ||
+           guard_type == typeid(symbolic_expression::Greater) ||
+           guard_type == typeid(symbolic_expression::GreaterEqual));
+    if(guard_type == typeid(symbolic_expression::Less) || guard_type == typeid(symbolic_expression::LessEqual))sign *= -1;
+
+    bool upper = sign > 0;
+    list<constraint_t> constraint_list;
+    constraint_t lb;
+    for(Parameter parameter : parameters)
+    {
+      if(upper)
+      {
+        constraint_t ub;
+        if(guard_type == typeid(symbolic_expression::LessEqual) || guard_type == typeid(symbolic_expression::GreaterEqual)) ub.reset(new symbolic_expression::LessEqual(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
+        else ub.reset(new symbolic_expression::Less(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
+        if(lb == nullptr)constraint_list.push_back(ub);
+        else
+        {
+          constraint_list.push_back(constraint_t(new LogicalAnd(lb , ub)));
+          lb = nullptr;
+        }
+      }
+      else
+      {
+        if(guard_type == typeid(symbolic_expression::LessEqual) || guard_type == typeid(symbolic_expression::GreaterEqual)) lb.reset(new symbolic_expression::LessEqual(constraint_t( new symbolic_expression::Parameter(parameter)), constraint_t( new symbolic_expression::SymbolicT())));
+        else lb.reset(new symbolic_expression::Less(constraint_t( new symbolic_expression::Parameter(parameter)), constraint_t( new symbolic_expression::SymbolicT())));
+      }
+      upper = !upper;
+    }
+    if(lb != nullptr)constraint_list.push_back(lb);
+    while(!constraint_list.empty())
+    {
+      if(ret == nullptr)ret = constraint_list.front();
+      else ret.reset(new symbolic_expression::LogicalOr(ret, constraint_list.front()));
+      constraint_list.pop_front();
+    }
+  }
+  return ret;
 }
 
 }

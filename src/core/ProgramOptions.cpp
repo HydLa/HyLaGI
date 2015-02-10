@@ -151,7 +151,13 @@ void ProgramOptions::init_descriptions()
 
     ("interval_newton",
      "using Interval Newton method")
+
+    ("max_ip_width",
+     value<double>()->default_value(100),
+     " assumption for time interval of each ip"
+     " invalid if interval_newton is not specified")
     
+
      /*
     ("timeout",
      value<int>()->default_value(-1),

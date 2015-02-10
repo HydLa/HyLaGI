@@ -1,5 +1,6 @@
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
+#include "Logger.h"
 
 namespace hydla
 {
@@ -11,9 +12,8 @@ void debug_print(std::string str, itvd x)
   std::cout << str << x << "\n";
 }
 
-
 // 「区間が等しい」を定義
-bool itvd_eqal(itvd x, itvd y)
+bool itvd_equal(itvd x, itvd y)
 {
   if(x.lower() == y.lower() && x.upper() == y.upper())
   {
@@ -105,32 +105,21 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
 {
   bool parted;
   itvd initial_interval, current_value, prev_value, div1, div2, tmp1, tmp2, x1, x2;
-  itvs *candidate_stack;
+  itvs candidate_stack;
 
   // 暫定的な初期区間
   initial_interval = init;
 
-  candidate_stack = new itvs();
-  candidate_stack->push(initial_interval);
+  candidate_stack.push(initial_interval);
   
-  while(!candidate_stack->empty())
+  while(!candidate_stack.empty())
   {
-    current_value = candidate_stack->top();
-    candidate_stack->pop();
+    current_value = candidate_stack.top();
+    candidate_stack.pop();
     
     for(int i=0;i<100;i++)
     {
       itvd f_result;
-      // if(i==0)
-      // {
-      //   IntervalTreeVisitor f_visitor(itvd(current_value.lower() + 0.1), phase_map_);
-      //   f_result = f_visitor.get_interval_value(exp);
-      // }
-      // else 
-      // {
-      //   IntervalTreeVisitor f_visitor = IntervalTreeVisitor(itvd(mid(current_value)), phase_map_);
-      //   f_result = f_visitor.get_interval_value(exp);
-      // }
 
       std::cout.precision(17);
       
@@ -171,7 +160,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
         
         if(!(x1 == itvd(0.,0.)))
         {
-          candidate_stack->push(x1);
+          candidate_stack.push(x1);
           std::cout << "Push candidate!\n";
         }
         
@@ -189,7 +178,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       }
 
       // stopping criteria
-      if(itvd_eqal(prev_value, current_value))
+      if(itvd_equal(prev_value, current_value))
       {
         printf("Criteria prev == present.\n");
         printf("Stopping at %d times\n", i+1);
@@ -213,6 +202,83 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
   // 解探索失敗
   return itvd(0.,0.);
 }
+
+
+std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
+{
+  bool parted;
+  itvd current_interval, prev_interval, div1, div2, nx, nx2, x2;
+  itvs candidate_stack;
+  std::list<itvd> result_intervals;
+
+  std::cout.precision(17);
+
+  candidate_stack.push(init);
+  
+  while(!candidate_stack.empty())
+  {
+    current_interval = candidate_stack.top();
+    candidate_stack.pop();
+
+    HYDLA_LOGGER_DEBUG("pop new interval: ", current_interval);
+    for(int i=0;i<100;i++)
+    {
+          
+      if(current_interval == itvd(0.,0.))
+      {
+        HYDLA_LOGGER_DEBUG("Wrong Interval");
+        break;
+      }
+
+      prev_interval = current_interval;
+      IntervalTreeVisitor visitor;
+
+      itvd m = itvd(mid(current_interval));
+      itvd f_result = visitor.get_interval_value(exp, &m, &phase_map_);
+      itvd d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
+
+      
+      if(in(0.,f_result) && in(0.,d_result))
+      {
+        m = m + 1./4.*width(current_interval);
+        f_result = visitor.get_interval_value(exp, &m, &phase_map_);
+      }
+      nx = m - division_part1(f_result, d_result, parted);
+      HYDLA_LOGGER_DEBUG_VAR(m);
+      HYDLA_LOGGER_DEBUG_VAR(f_result);
+      HYDLA_LOGGER_DEBUG_VAR(d_result);
+      HYDLA_LOGGER_DEBUG_VAR(nx);
+      HYDLA_LOGGER_DEBUG_VAR(prev_interval);
+
+      current_interval = intersect_interval(prev_interval, nx);
+      if(parted)
+      {
+        HYDLA_LOGGER_DEBUG("push candidate: ", current_interval);
+        candidate_stack.push(current_interval);
+        nx2 = m - division_part2(f_result, d_result);
+        HYDLA_LOGGER_DEBUG_VAR(nx2);
+        current_interval = intersect_interval(prev_interval, nx2);
+      }
+
+      // stopping criteria
+      if(itvd_equal(prev_interval, current_interval))
+      {
+        HYDLA_LOGGER_DEBUG("Stopped at step ", i+1);
+        break;
+      }
+    }
+    
+    if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
+    {
+      HYDLA_LOGGER_DEBUG("FIND");
+      HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
+      result_intervals.push_back(current_interval);
+    }
+  }
+
+  return result_intervals;
+}
+
 
 }// namespcae interval
 }// namespace hydla

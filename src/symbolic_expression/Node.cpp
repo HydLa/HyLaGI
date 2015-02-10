@@ -6,11 +6,13 @@
 #include "BaseNodeVisitor.h"
 #include "TreeInfixPrinter.h"
 #include "Logger.h"
+#include "Parameter.h"
 
 using namespace std;
 using namespace boost;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
+
 
 namespace hydla { 
 namespace symbolic_expression {
@@ -640,6 +642,11 @@ node_sptr Definition::clone()
   n->child_ = child_->clone();
 
   return n;
+}
+
+Parameter::Parameter(const simulator::Parameter &p):
+  Parameter(p.get_name(), p.get_differential_count(), p.get_phase_id())
+{
 }
 
 /**
