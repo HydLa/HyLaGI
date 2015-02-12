@@ -53,7 +53,7 @@ void output_result(Simulator& ss, Opts& opts){
 
 
   hydla::io::SymbolicTrajPrinter Printer(backend_, opts.output_variables, sstr, opts.interval_newton);
-  if(opts.epsilon_mode){Printer.set_epsilon_mode(backend_,true);}
+  if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_,true);}
 
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());

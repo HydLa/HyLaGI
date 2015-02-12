@@ -5,4 +5,3 @@ FORCE2 <=> [](x- > 1 => x''=-4/3*Pi*r*g).
 FORCE3 <=> [](x- < -1 => x''=4/3*Pi*r*g).
 
 INIT(0.5), CONST, FORCE1 << (FORCE2, FORCE3).
-

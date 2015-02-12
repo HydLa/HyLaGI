@@ -612,7 +612,7 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   return related_vm;
 }
 
-find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
+find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm)
 {
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   for(auto atomic_guard : guards)
@@ -630,7 +630,16 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         time_limit, phase, backend_.get());
         }
       */
-      backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
+      bool by_newton = false;
+      if(opts_->interval_newton)
+      {
+        cout << "apply Interval Newton method to " << get_infix_string(guard) << "?" << endl;
+        char c;
+        cin >> c;
+        by_newton = c == 'y';
+      }
+      if(by_newton) constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
+      else backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
       guard_time_map[guard] = constraint_for_this_guard;
     }
   }
@@ -756,7 +765,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
-          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
+          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase->parameter_map);
         }
       }
 
@@ -764,7 +773,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       {
         auto break_point = entry.first;
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
-        entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false);
+        entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false,  phase->parameter_map);
       }
 
       pp_time_result_t time_result;
@@ -787,7 +796,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         phase->simulation_state = simulator::TIME_LIMIT;
         phase->end_time = max_time;
       }
-      // else
+      else
       {
         phase_result_sptr_t pr = phase;
         auto time_it = time_result.begin();
@@ -960,7 +969,7 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
 
 
 
-constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, phase_result_sptr_t &phase)
+constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm)
 {
   int sign = -1;
   if(sign == 0)return constraint_t(new symbolic_expression::True());
@@ -972,7 +981,7 @@ constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constr
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
   itvd init = itvd(0.,opts_->max_ip_width); 
   list<itvd> result_intervals =
-    interval::calculate_interval_newton_nd(init, exp, dexp, phase->parameter_map);
+    interval::calculate_interval_newton_nd(init, exp, dexp, pm);
   for(auto res : result_intervals)HYDLA_LOGGER_DEBUG_VAR(res);
   list<Parameter> parameters;
   for(auto res : result_intervals)
@@ -984,7 +993,7 @@ constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constr
     ValueRange range (lower, upper);
     Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
     parameters.push_back(parameter);
-    phase->parameter_map[parameter] = range;
+    pm[parameter] = range;
   }
   const type_info &guard_type = typeid(*guard);
   constraint_t ret;

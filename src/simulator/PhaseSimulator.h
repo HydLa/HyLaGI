@@ -79,7 +79,7 @@ private:
   void push_branch_states(phase_result_sptr_t &original,
                           CheckConsistencyResult &result);
 
-  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
+  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm);
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
 
@@ -90,7 +90,7 @@ private:
 
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);
 
-  constraint_t calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, phase_result_sptr_t &phase);
+  constraint_t calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
 
   Simulator* simulator_;
 
