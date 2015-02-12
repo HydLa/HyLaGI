@@ -507,7 +507,7 @@ void VariadicNode::accept(node_sptr own,
 std::ostream& Range::dump(std::ostream& s) const
 {
   Node::dump(s);
-  s << "[" << get_string() << "]";
+  s << "[" << get_header() << "]";
   s << "[" << *get_lhs() << "," << *get_rhs() << "]";
   return s;
 }
@@ -535,7 +535,7 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
 std::ostream& VariadicNode::dump(std::ostream& s) const 
 {
   Node::dump(s);
-  s << "[" << get_string() << "]";
+  s << "[" << get_name() << "]";
   s << "[";
   for(unsigned int i=0;i<arguments_.size();i++){
      s << *arguments_[i] << ",";

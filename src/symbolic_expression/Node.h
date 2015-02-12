@@ -1258,10 +1258,6 @@ public:
     string_ = str;
   }
   
-  std::string get_string() const
-  {
-    return string_;
-  }
  
   void set_args(const std::string& str) 
   {
@@ -1294,11 +1290,7 @@ public:
     string_ = str;
   }
   
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
+
   void set_args(const std::string& str) 
   {
     args_ = str;
@@ -1447,11 +1439,7 @@ public:
     string_ = str;
   }
   
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
+
   void set_args(const std::string& str) 
   {
     args_ = str;
@@ -1503,12 +1491,7 @@ public:
   {
     string_ = str;
   }
-  
-  std::string get_string() const
-  {
-    return string_;
-  }
- 
+
   void set_args(const std::string& str) 
   {
     args_ = str;
@@ -1596,6 +1579,7 @@ public:
   
   int get_arguments_size();
   node_sptr get_argument(int number);
+  virtual std::string get_name() const = 0;
   
   protected:
   std::vector<node_sptr> arguments_;
@@ -1697,6 +1681,8 @@ public:
     return "ExpressionList";
   }
 
+  virtual std::string get_name() const{return get_list_name();}
+  
   void set_list_name(const std::string& str){list_name_ = str;}
   virtual std::string get_list_name() const{return list_name_;}
   /// Whether the contents of this list are nameless or not
@@ -1725,6 +1711,8 @@ public:
   virtual std::string get_node_type_name() const {
     return "ConditionalExpressionList";
   }
+
+  virtual std::string get_name() const{return get_list_name();}
 
   virtual void set_expression(node_sptr node){ expression_ = node;}
   node_sptr get_expression() const { return expression_; }
@@ -1758,7 +1746,7 @@ public:
 
   void set_list_name(const std::string& str){list_name_ = str;}
   virtual std::string get_list_name() const{return list_name_;}
-
+  virtual std::string get_name() const{return get_list_name();}
 private:
   std::string list_name_;
 };
@@ -1780,7 +1768,7 @@ public:
   virtual std::string get_node_type_name() const {
     return "ConditionalProgramList";
   }
-
+  virtual std::string get_name() const{return get_list_name();}
   void set_program(node_sptr node){ program_ = node;}
   node_sptr get_program() const { return program_; }
   void set_list_name(const std::string& str){list_name_ = str;}

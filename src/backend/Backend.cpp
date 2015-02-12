@@ -599,10 +599,10 @@ void Backend::visit(boost::shared_ptr<Function> node)
   string name;
   int arg_cnt = node->get_arguments_size();
   bool converted;
-  name = link_->convert_function(node->get_string(), true, converted);
+  name = link_->convert_function(node->get_name(), true, converted);
   if(!converted)
   {
-    throw InterfaceError(node->get_string() + " is not suppported in " + link_->backend_name());
+    throw InterfaceError(get_infix_string(node) + " is not suppported in " + link_->backend_name());
   }
   link_->put_function(name, arg_cnt);
   for(int i=0; i < arg_cnt;i++){
@@ -612,7 +612,7 @@ void Backend::visit(boost::shared_ptr<Function> node)
 
 void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)              
 {
-  link_->put_function(node->get_string().c_str(), 1);
+  link_->put_function(node->get_name().c_str(), 1);
   link_->put_function("Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
   for(int i=0; i<node->get_arguments_size();i++){
     accept(node->get_argument(i));

@@ -202,7 +202,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
 
 //関数
 void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
-  (*output_stream_) << node->get_string() << "[";
+  (*output_stream_) << node->get_name() << "[";
   int i=0;
   while(true){
     accept(node->get_argument(i));
@@ -213,7 +213,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
-  (*output_stream_) << "\"" << node->get_string() << "\"[";
+  (*output_stream_) << "\"" << node->get_name() << "\"[";
   int i=0;
   while(true){
     
