@@ -141,8 +141,8 @@ SetAttributes[publicMethod, HoldAll];
 
 (* MathLinkでDerivativeの送信がややこしいのでこっちで変換する *)
 
-derivativeInit[cnt_, var_] := Derivative[cnt][var][t];
-derivativeTime[cnt_, var_] := Derivative[cnt][var][0];
+derivativeInit[cnt_, var_] := Derivative[cnt][var][0];
+derivativeTime[cnt_, var_] := Derivative[cnt][var][t];
 derivative[cnt_, var_] := Derivative[cnt][var];
 
 
