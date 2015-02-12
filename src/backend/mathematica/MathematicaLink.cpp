@@ -8,7 +8,6 @@ namespace hydla{
 namespace backend{
 namespace mathematica{
 
-const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
 
 
@@ -474,40 +473,6 @@ int MathematicaLink::get_arg_count()
   on_next_ = false;
   return c;
 }
-
-
-void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
-{
-  if(variable_arg == VF_PREV){
-    put_function(prev_prefix.c_str(), 2);
-    put_symbol(name);
-    put_integer(diff_count);
-  }else{
-    std::string derivative_str;
-    derivative_str = convert_function("derivative", true);
-    if(variable_arg == VF_NONE)
-    {
-      put_function(derivative_str.c_str(), 2);
-      put_integer(diff_count);
-      put_symbol(name);
-    }
-    else
-    {
-      put_function(derivative_str.c_str(), 3);
-      put_integer(diff_count);
-      put_symbol(name);
-      if(variable_arg == VF_TIME)
-      {
-        put_symbol("t");
-      }
-      else
-      {
-        put_integer(0);
-      }
-    }
-  }
-}
-  
 
 void MathematicaLink::post_receive()
 {

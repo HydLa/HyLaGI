@@ -110,50 +110,6 @@ void REDUCELink::put_parameter(const std::string& name, int diff_count, int id)
   post_put();
 }
 
-
-void REDUCELink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
-{
-  std::ostringstream var_str;
-  std::string prefixed_name = var_prefix + name;
-
-  if(variable_arg == VF_ZERO){
-    var_str << "init";
-    var_str << prefixed_name;
-    if(diff_count > 0){
-      var_str << "_"
-              << diff_count;
-    }
-    var_str << "lhs";
-  }else{
-    if (diff_count > 0 && variable_arg == VF_PREV){
-      var_str << "(prev (df "
-              << prefixed_name
-              << " t "    
-              << diff_count
-              << "))";
-    }
-    else if (diff_count > 0){
-      var_str << "(df "
-              << prefixed_name
-              << " t "    
-              << diff_count
-              << ")";
-    }
-    else if (variable_arg == VF_PREV) {
-      var_str << "(prev "
-              << prefixed_name
-              << ")";
-    }
-    else {
-      var_str << prefixed_name;
-    }
-  }
-
-  send_buffer_ += var_str.str();
-  post_put();
-}
-
-
 std::string REDUCELink::get_debug_print()
 {
   return "Debug messages are not implemented";

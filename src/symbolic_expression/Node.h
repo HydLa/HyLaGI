@@ -1595,7 +1595,6 @@ public:
   virtual std::ostream& dump(std::ostream& s) const;
   
   int get_arguments_size();
-  virtual std::string get_string() const = 0;
   node_sptr get_argument(int number);
   
   protected:
@@ -1628,8 +1627,8 @@ public:
     return "Range";
   }
 
-  void set_string(std::string str){ header = str; }
-  std::string get_string() const { return header; }
+  void set_header(std::string str){ header = str; }
+  std::string get_header() const { return header; }
 private:
   std::string header;
 };
@@ -1698,8 +1697,8 @@ public:
     return "ExpressionList";
   }
 
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  void set_list_name(const std::string& str){list_name_ = str;}
+  virtual std::string get_list_name() const{return list_name_;}
   /// Whether the contents of this list are nameless or not
   bool has_nameless_contents(){return arguments_.size() == 0;}
   void set_nameless_arguments(int list_size);
@@ -1729,8 +1728,8 @@ public:
 
   virtual void set_expression(node_sptr node){ expression_ = node;}
   node_sptr get_expression() const { return expression_; }
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  void set_list_name(const std::string& str){list_name_ = str;}
+  virtual std::string get_list_name() const{return list_name_;}
 
 private:
   std::string list_name_;
@@ -1757,8 +1756,8 @@ public:
     return "ProgramList";
   }
 
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  void set_list_name(const std::string& str){list_name_ = str;}
+  virtual std::string get_list_name() const{return list_name_;}
 
 private:
   std::string list_name_;
@@ -1784,8 +1783,8 @@ public:
 
   void set_program(node_sptr node){ program_ = node;}
   node_sptr get_program() const { return program_; }
-  void set_string(const std::string& str){list_name_ = str;}
-  virtual std::string get_string() const{return list_name_;}
+  void set_list_name(const std::string& str){list_name_ = str;}
+  virtual std::string get_list_name() const{return list_name_;}
 
 private:
   std::string list_name_;
@@ -1830,7 +1829,7 @@ public:
   {}
   
   Function(const std::string& str) : 
-    string_(str)
+    name_(str)
   {}
 
   virtual ~Function()
@@ -1844,20 +1843,14 @@ public:
     return "Function";
   }
   
-  void set_string(const std::string& str){string_ = str;}
+  void set_name(const std::string& str){name_ = str;}
   
-  virtual std::string get_string() const{return string_;}
+  virtual std::string get_name() const{return name_;}
 
 private:
-  std::string string_;
+  std::string name_;
 };
 
-
-/*
- * サポート外関数．
- * ソルバ間差異などに対応できないが，一応ソルバ特有の関数を任意で呼び出せるようにしておく．
- * 動作保証はできない．
- */
 
 class UnsupportedFunction : public VariadicNode {
 public:
@@ -1867,7 +1860,7 @@ public:
   {}
   
   UnsupportedFunction(const std::string& str) : 
-    string_(str)
+    name_(str)
   {}
 
   virtual ~UnsupportedFunction()
@@ -1882,12 +1875,12 @@ public:
   }
   
   
-  void set_string(const std::string& str){string_ = str;}
+  void set_name(const std::string& str){name_ = str;}
   
-  virtual std::string get_string() const{return string_;}
+  virtual std::string get_name() const{return name_;}
 
 private:
-  std::string string_;
+  std::string name_;
 };
 
 

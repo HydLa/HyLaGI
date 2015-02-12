@@ -141,8 +141,9 @@ SetAttributes[publicMethod, HoldAll];
 
 (* MathLinkでDerivativeの送信がややこしいのでこっちで変換する *)
 
+derivativeInit[cnt_, var_] := Derivative[cnt][var][t];
+derivativeTime[cnt_, var_] := Derivative[cnt][var][0];
 derivative[cnt_, var_] := Derivative[cnt][var];
-derivative[cnt_, var_, suc_] := Derivative[cnt][var][suc];
 
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
@@ -176,7 +177,6 @@ publicMethod[
   arg,
   toReturnForm[Simplify[arg]]
 ];
-
 
 
 toReturnForm[expr_] := 

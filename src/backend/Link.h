@@ -13,16 +13,6 @@ class Link
   virtual ~Link(){}
 
   /// Type of Datas(used for receive)
-
-  enum VariableForm
-  {
-    VF_NONE,
-    VF_IGNORE_PREV,
-    VF_PREV,
-    VF_TIME,
-    VF_ZERO
-  };
-
   enum DataType
   {
     DT_FUNC,
@@ -31,8 +21,6 @@ class Link
     DT_SYM,
     DT_NONE
   };
-
-  typedef VariableForm        variable_form_t;
 
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str){put_symbol(str.c_str());}
@@ -44,7 +32,6 @@ class Link
   void put_number(const std::string &val){put_number(val.c_str());}
   virtual void put_function(const char *name, int arg_cnt) = 0;
   void put_function(const std::string &name, int arg_cnt){put_function(name.c_str(), arg_cnt);}
-  virtual void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg) = 0;
   virtual void put_parameter(const std::string& name, int diff_count, int id) = 0;
 
   virtual int get_integer() = 0;

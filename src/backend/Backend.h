@@ -18,7 +18,6 @@ typedef simulator::variable_set_t  variable_set_t;
 typedef simulator::ConstraintStore constraint_store_t;
 typedef simulator::find_min_time_result_t find_min_time_result_t;
 typedef simulator::CompareMinTimeResult compare_min_time_result_t;
-typedef Link::VariableForm        variable_form_t;
 typedef symbolic_expression::node_sptr      node_sptr;
 typedef simulator::CheckConsistencyResult check_consistency_result_t;
 typedef std::vector<variable_map_t>       create_vm_t;
@@ -32,6 +31,18 @@ struct MidpointRadius
 
 class Backend : public symbolic_expression::DefaultTreeVisitor
 {
+
+
+  enum VariableForm
+  {
+    VF_NONE,
+    VF_IGNORE_PREV,
+    VF_PREV,
+    VF_TIME,
+    VF_ZERO
+  };
+
+  
   public:
 
   Backend(Link *link);
@@ -82,17 +93,17 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   }
 
   private:
-  static const std::string var_prefix;
+  static const std::string var_prefix, prev_prefix, par_prefix;
   /// throw an exception for an invalid format
   void invalid_fmt(const char* fmt, int idx);
   void invalid_ret();
 
   std::string remove_prefix(const std::string &original, const std::string &prefix);
 
-  int send_variable_map(const variable_map_t& vm, const variable_form_t &form, const bool &send_derivative);
+  int send_variable_map(const variable_map_t& vm, const VariableForm &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
 
-  int send_value(const simulator::value_t& val, const variable_form_t &var);
+  void send_value(const simulator::value_t& val, const VariableForm &var);
 
 
   int receive_map(variable_map_t &vm);
@@ -113,21 +124,21 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    * ノードの送信をおこなう際は直接visit関数を呼ばずに，
    * 必ずこの関数を経由すること
    */
-  int send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form);
+  int send_node(const symbolic_expression::node_sptr& node, const VariableForm &form);
 
 
   /**
    * 変数の送信
    */
-  int send_variable(const variable_t &var, const variable_form_t& variable_arg);
-  int send_variable(const std::string& variable_name, int diff_count, const variable_form_t& variable_arg);
+  void send_variable(const variable_t &var, const VariableForm& variable_arg);
+  void send_variable(const std::string& variable_name, int diff_count, const VariableForm& variable_arg);
 
 
   int read_args_fmt(const char* args_fmt, const int& idx, void* arg);
   int read_ret_fmt(const char* ret_fmt, const int& idx, void* ret);
 
   
-  bool get_form(const char &form_c, variable_form_t &form);
+  bool get_form(const char &form_c, VariableForm &form);
 
   // Ask制約
   virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
@@ -201,6 +212,11 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   
   // 無限大
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
+
+  
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+
+  VariableForm adapt_variable_form(VariableForm orig, bool in_prev);
   
   // Differentialノードを何回通ったか
   int differential_count_;
@@ -223,7 +239,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
 
   boost::shared_ptr<Link> link_;
 
-  variable_form_t variable_arg_;
+  VariableForm variable_arg_;
 
   //valと関係演算子を元に、rangeを設定する
   void set_range(const simulator::value_t &val, simulator::range_t &range, const int& relop);

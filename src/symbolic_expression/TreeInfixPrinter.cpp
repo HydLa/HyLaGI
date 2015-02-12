@@ -213,16 +213,16 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
-  (*output_stream_) << "\"" << node->get_string() << "\"" << "[";
+  (*output_stream_) << "\"" << node->get_string() << "\"[";
   int i=0;
   while(true){
+    
     accept(node->get_argument(i));
     if(++i >= node->get_arguments_size())break;
     (*output_stream_) << ",";
   }
   (*output_stream_) << "]";
 }
-
 
 // 自然対数の底
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){

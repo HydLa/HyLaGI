@@ -1700,7 +1700,7 @@ node_sptr Parser::program_list_factor(){
               boost::shared_ptr<Range> range(
                 new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
                           boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
-                range->set_string(str.substr(0,num1+1));
+                range->set_header(str.substr(0,num1+1));
                 return range;
             }else{
               error_occurred(right_position, "expected \"}\"");
@@ -1895,7 +1895,7 @@ node_sptr Parser::expression_list_factor(){
               boost::shared_ptr<Range> range(
                 new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
                           boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
-                range->set_string(str.substr(0,num1+1));
+                range->set_header(str.substr(0,num1+1));
                 return range;
             }else{
               error_occurred(right_position, "expected \"}\"");

@@ -14,7 +14,8 @@ using namespace symbolic_expression;
 
 const std::string Backend::var_prefix = "u";
 // use different prefix to distinct variables and constants
-const std::string par_prefix = "p";
+const std::string Backend::par_prefix = "p";
+const std::string Backend::prev_prefix = "prev";
 
 // check equivalence ignoring whether upper or lower case
 static bool equal_ignoring_case(std::string lhs, std::string rhs)
@@ -71,7 +72,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   case 'e':
   {
     symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr *)arg;
-    variable_form_t form;
+    VariableForm form;
     if(!get_form(args_fmt[++i], form))
     {
       invalid_fmt(args_fmt, i);
@@ -89,7 +90,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     {
     case 's':
     {
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(args_fmt[++i], form))
       {
         invalid_fmt(args_fmt, i);
@@ -127,7 +128,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       {
         form_char = args_fmt[i];
       }
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(form_char, form))
       {
         invalid_fmt(args_fmt, i);
@@ -159,7 +160,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     if(args_fmt[++i] == 'l')
     {
       value_t *val = (value_t *)arg;
-      variable_form_t vf;
+      VariableForm vf;
       if(!get_form(args_fmt[++i], vf))
       {
         invalid_fmt(args_fmt, i);
@@ -170,7 +171,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     else
     {
       variable_t *var = (variable_t*)arg;
-      variable_form_t vf;
+      VariableForm vf;
       if(!get_form(args_fmt[i], vf))
       {
         invalid_fmt(args_fmt, i);
@@ -236,7 +237,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 'v':
     {
       variable_map_t* vm = (variable_map_t*)ret;
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(ret_fmt[++i], form))
       {
         invalid_fmt(ret_fmt, i);
@@ -335,31 +336,31 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   return 0;
 }
 
-bool Backend::get_form(const char &form_c, variable_form_t &form)
+bool Backend::get_form(const char &form_c, VariableForm &form)
 {
   switch(form_c)
   {
   case 'p':
-    form = Link::VF_PREV;
+    form = VF_PREV;
     return true;
   case 'c':
-    form = Link::VF_IGNORE_PREV;
+    form = VF_IGNORE_PREV;
     return true;
   case 'n':
-    form = Link::VF_NONE;
+    form = VF_NONE;
     return true;
   case 'z':
-    form = Link::VF_ZERO;
+    form = VF_ZERO;
     return true;
   case 't':
-    form = Link::VF_TIME;
+    form = VF_TIME;
     return true;
   default:
     return false;
   }
 }
 
-int Backend::send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form)
+int Backend::send_node(const symbolic_expression::node_sptr& node, const VariableForm &form)
 {
   differential_count_ = 0;
   in_prev_ = false;
@@ -369,7 +370,7 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const variabl
   return 0;
 }
 
-int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
+int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf, const bool &send_derivative)
 {
   int size_to_sent = 0;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
@@ -458,7 +459,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-      send_value(value, Link::VF_PREV);
+      send_value(value, VF_PREV);
     }else{
       for(uint i=0; i < it->second.get_lower_cnt();i++)
       {
@@ -474,7 +475,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
           link_->put_converted_function("GreaterEqual", 2);
         }
         link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-        send_value(value, Link::VF_PREV);
+        send_value(value, VF_PREV);
       }
       for(uint i=0; i < it->second.get_upper_cnt();i++)
       {
@@ -490,7 +491,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
           link_->put_converted_function("LessEqual", 2);
         }
         link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-        send_value(value, Link::VF_PREV);
+        send_value(value, VF_PREV);
       }
     }
   }
@@ -629,21 +630,7 @@ DEFINE_VISIT_FACTOR(E, E)
 void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
 {
   // 変数の送信
-  variable_form_t va;
-  if(variable_arg_== Link::VF_NONE && in_prev_)
-  {
-    va = Link::VF_PREV;
-  }
-  else{
-    if(variable_arg_ == Link::VF_IGNORE_PREV)
-    {
-      va = Link::VF_NONE;
-    }
-    else
-    {
-      va = variable_arg_;
-    }
-  }
+  VariableForm va = adapt_variable_form(variable_arg_, in_prev_);
 
   send_variable(node->get_name(), differential_count_, va);
 }
@@ -674,23 +661,41 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
-int Backend::send_value(const value_t &val, const variable_form_t& var)
+void Backend::send_value(const value_t &val, const VariableForm& var)
 {
   send_node(val.get_node(), var);
-  return 0;
 }
 
-int Backend::send_variable(const variable_t &var, const variable_form_t &variable_arg)
+void Backend::send_variable(const variable_t &var, const VariableForm &variable_arg)
 {
-  return send_variable(var.get_name(), var.get_differential_count(), variable_arg);
+  send_variable(var.get_name(), var.get_differential_count(), variable_arg);
 }
 
 
-int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
+void Backend::send_variable(const std::string& name, int diff_count, const VariableForm &variable_arg)
 {
-  std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
-  link_->put_variable(prefix + name, diff_count, variable_arg);
-  return 0;
+  if(variable_arg == VF_PREV){
+    link_->put_function(prev_prefix.c_str(), 2);
+    link_->put_symbol(par_prefix + name);
+    link_->put_integer(diff_count);
+  }else{
+    switch(variable_arg)
+    {
+    case VF_ZERO:
+      link_->put_function("derivativeInit", 2);
+      break;
+    case VF_TIME:
+      link_->put_function("derivativeTime", 2);
+      break;
+    case VF_NONE:
+      link_->put_function("derivative", 2);
+      break;
+    default:
+      throw InterfaceError("Invalid VariableForm");
+    }
+    link_->put_integer(diff_count);
+    link_->put_symbol(var_prefix + name);
+  }
 }
 
 
@@ -704,21 +709,79 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::False> node){link_->p
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
-    case 0://Equal
+  case 0://Equal
     range.set_unique_value(val);
     break;
-    case 1://Less
+  case 1://Less
     range.add_upper_bound(val, false);
     break;
-    case 2://Greater
+  case 2://Greater
     range.add_lower_bound(val, false);
     break;
-    case 3://LessEqual
+  case 3://LessEqual
     range.add_upper_bound(val, true);
     break;
-    case 4://GreaterEqual
+  case 4://GreaterEqual
     range.add_lower_bound(val, true);
     break;
+  }
+}
+
+Backend::VariableForm Backend::adapt_variable_form(VariableForm form, bool in_prev)
+{
+  if(form == VF_NONE && in_prev)
+  {
+    return VF_PREV;
+  }
+  else{
+    if(form == VF_IGNORE_PREV)
+    {
+      return VF_NONE;
+    }
+    else
+    {
+      return form;
+    }
+  }
+}
+
+void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
+{
+
+  boost::shared_ptr<symbolic_expression::ExpressionList> el = boost::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs());
+  if(el && el->has_nameless_contents())
+  {
+    // send this element as a variable
+    if(variable_arg_ == VF_PREV){
+      link_->put_function(prev_prefix.c_str(), 2);
+      link_->put_function("namelessVariable", 2);
+      link_->put_symbol(el->get_list_name());
+      accept(node->get_rhs());
+      link_->put_integer(differential_count_);
+    }else{
+      switch(variable_arg_)
+      {
+      case VF_ZERO:
+        link_->put_function("derivativeInit", 2);
+        break;
+      case VF_TIME:
+        link_->put_function("derivativeTime", 2);
+        break;
+      case VF_NONE:
+        link_->put_function("derivative", 2);
+        break;
+      default:
+        throw InterfaceError("Invalid VariableForm");
+      }
+      link_->put_integer(differential_count_);
+      link_->put_function("namelessVariable", 2);
+      link_->put_symbol(el->get_list_name());
+      accept(node->get_rhs());
+    }
+  }
+  else
+  {
+    throw InterfaceError("ExpressionList has an invalid form");
   }
 }
 

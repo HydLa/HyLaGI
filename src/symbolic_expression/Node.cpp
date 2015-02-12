@@ -435,7 +435,7 @@ std::ostream& Definition::dump(std::ostream& s) const
 
 node_sptr Range::clone(){
   node_type_sptr n(new Range(get_lhs()->clone(),get_rhs()->clone()));
-  n->set_string(get_string());
+  n->set_header(get_header());
   return n;
 }
 
@@ -480,7 +480,7 @@ node_sptr ConditionalProgramList::clone(){
 }
 
 node_sptr Function::clone(){
-  node_type_sptr n(new Function(string_));
+  node_type_sptr n(new Function(name_));
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
@@ -489,7 +489,7 @@ node_sptr Function::clone(){
 
 
 node_sptr UnsupportedFunction::clone(){
-  node_type_sptr n(new UnsupportedFunction(string_));
+  node_type_sptr n(new UnsupportedFunction(name_));
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
