@@ -131,10 +131,10 @@ boost::shared_ptr<ProgramList> ListExpander::expand_list(boost::shared_ptr<Condi
   return ret;
 }
 
-boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Range> node){
+boost::shared_ptr<VariadicNode> ListExpander::expand_list(boost::shared_ptr<Range> node){
   bool original_in_list_element = in_list_element;
   in_list_element = true;
-  boost::shared_ptr<ArbitraryNode> ret;
+  boost::shared_ptr<VariadicNode> ret;
   node_sptr lhs, rhs;
   accept(node->get_lhs());
   if(new_child){
@@ -178,8 +178,8 @@ boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Ran
   return ret;
 }
 
-boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Union> node){
-  boost::shared_ptr<ArbitraryNode> ret;
+boost::shared_ptr<VariadicNode> ListExpander::expand_list(boost::shared_ptr<Union> node){
+  boost::shared_ptr<VariadicNode> ret;
   boost::shared_ptr<ExpressionList> el;
   accept(node->get_lhs());
   if(new_child){
@@ -247,8 +247,8 @@ boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Uni
   return ret;
 }
 
-boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Intersection> node){
-  boost::shared_ptr<ArbitraryNode> ret;
+boost::shared_ptr<VariadicNode> ListExpander::expand_list(boost::shared_ptr<Intersection> node){
+  boost::shared_ptr<VariadicNode> ret;
   boost::shared_ptr<ExpressionList> el;
   accept(node->get_lhs());
   if(new_child){
@@ -319,7 +319,7 @@ boost::shared_ptr<ArbitraryNode> ListExpander::expand_list(boost::shared_ptr<Int
 }
 
 
-void ListExpander::expand_conditional_list(boost::shared_ptr<ArbitraryNode> ret, node_sptr element, boost::shared_ptr<ArbitraryNode> list, int idx){
+void ListExpander::expand_conditional_list(boost::shared_ptr<VariadicNode> ret, node_sptr element, boost::shared_ptr<VariadicNode> list, int idx){
 
   boost::shared_ptr<BinaryNode> bn;
   if(list->get_arguments_size() == idx){
@@ -331,7 +331,7 @@ void ListExpander::expand_conditional_list(boost::shared_ptr<ArbitraryNode> ret,
       ret->add_argument(element);
     }
     accept(ret);
-    if(new_child) ret = boost::dynamic_pointer_cast<ArbitraryNode>(new_child);
+    if(new_child) ret = boost::dynamic_pointer_cast<VariadicNode>(new_child);
     return;
   }
 
@@ -364,7 +364,7 @@ void ListExpander::expand_conditional_list(boost::shared_ptr<ArbitraryNode> ret,
   bn = boost::dynamic_pointer_cast<EachElement>(list->get_argument(idx)->clone());
   if(bn){
     node_sptr local_var = bn->get_lhs();
-    boost::shared_ptr<ArbitraryNode> each_list;
+    boost::shared_ptr<VariadicNode> each_list;
     accept(bn->get_rhs());
     if(new_child){
       each_list = boost::dynamic_pointer_cast<ExpressionList>(new_child->clone());
@@ -620,13 +620,13 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::Power> node){
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node){
   bool original_in_list_element = in_list_element;
   in_list_element = true;
-  boost::shared_ptr<ArbitraryNode> list;
+  boost::shared_ptr<VariadicNode> list;
   boost::shared_ptr<Number> num;
   accept(node->get_lhs()->clone());
   if(new_child){
-    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child->clone());
+    list = boost::dynamic_pointer_cast<VariadicNode>(new_child->clone());
     new_child.reset();
-  }else list = boost::dynamic_pointer_cast<ArbitraryNode>(node->get_lhs()->clone());
+  }else list = boost::dynamic_pointer_cast<VariadicNode>(node->get_lhs()->clone());
   accept(node->get_rhs()->clone());
   if(new_child){
     num = boost::dynamic_pointer_cast<Number>(new_child->clone());
@@ -643,13 +643,13 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListEl
 
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node){
   in_list_element = true;
-  boost::shared_ptr<ArbitraryNode> list;
+  boost::shared_ptr<VariadicNode> list;
   boost::shared_ptr<Number> num;
   accept(node->get_lhs()->clone());
   if(new_child){
-    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child->clone());
+    list = boost::dynamic_pointer_cast<VariadicNode>(new_child->clone());
     new_child.reset();
-  }else list = boost::dynamic_pointer_cast<ArbitraryNode>(node->get_lhs()->clone());
+  }else list = boost::dynamic_pointer_cast<VariadicNode>(node->get_lhs()->clone());
   accept(node->get_rhs()->clone());
   if(new_child){
     num = boost::dynamic_pointer_cast<Number>(new_child->clone());
@@ -692,12 +692,12 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListCa
 
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::SizeOfList> node){
   accept(node->get_child());
-  boost::shared_ptr<ArbitraryNode> list;
+  boost::shared_ptr<VariadicNode> list;
   if(new_child){
-    list = boost::dynamic_pointer_cast<ArbitraryNode>(new_child->clone());
+    list = boost::dynamic_pointer_cast<VariadicNode>(new_child->clone());
     new_child.reset();
   }else{
-    list = boost::dynamic_pointer_cast<ArbitraryNode>(node->get_child()->clone());
+    list = boost::dynamic_pointer_cast<VariadicNode>(node->get_child()->clone());
   }
   new_child = boost::shared_ptr<Number>(new Number(std::to_string(list->get_arguments_size())));
 }

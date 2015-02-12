@@ -1572,21 +1572,21 @@ public:
 /**
  * 任意個の引数を持つノード
  */
-class ArbitraryNode : public Node {
+class VariadicNode : public Node {
 public:
-  typedef boost::shared_ptr<ArbitraryNode> node_type_sptr;
+  typedef boost::shared_ptr<VariadicNode> node_type_sptr;
 
-  ArbitraryNode()
+  VariadicNode()
   {}
 
-  virtual ~ArbitraryNode()
+  virtual ~VariadicNode()
   {}
 
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
   virtual void accept(node_sptr own, TreeVisitor* visitor) = 0;
 
   virtual std::string get_node_type_name() const {
-    return "ArbitraryNode";
+    return "VariadicNode";
   }
   
   void add_argument(node_sptr node);
@@ -1681,7 +1681,7 @@ DEFINE_UNARY_NODE(SumOfList)
 /**
  * Expression List
  */
-class ExpressionList : public ArbitraryNode {
+class ExpressionList : public VariadicNode {
 public:
   typedef boost::shared_ptr<ExpressionList> node_type_sptr;
 
@@ -1700,12 +1700,16 @@ public:
 
   void set_string(const std::string& str){list_name_ = str;}
   virtual std::string get_string() const{return list_name_;}
+  /// Whether the contents of this list are nameless or not
+  bool has_nameless_contents(){return arguments_.size() == 0;}
+  void set_nameless_arguments(int list_size);
 
 private:
   std::string list_name_;
+  int nameless_contents_size;
 };
 
-class ConditionalExpressionList : public ArbitraryNode {
+class ConditionalExpressionList : public VariadicNode {
 public:
   typedef boost::shared_ptr<ConditionalExpressionList> node_type_sptr;
 
@@ -1736,7 +1740,7 @@ private:
 /**
  * Program List
  */
-class ProgramList : public ArbitraryNode {
+class ProgramList : public VariadicNode {
 public:
   typedef boost::shared_ptr<ProgramList> node_type_sptr;
 
@@ -1760,7 +1764,7 @@ private:
   std::string list_name_;
 };
 
-class ConditionalProgramList : public ArbitraryNode {
+class ConditionalProgramList : public VariadicNode {
 public:
   typedef boost::shared_ptr<ConditionalProgramList> node_type_sptr;
 
@@ -1818,7 +1822,7 @@ DEFINE_BINARY_NODE(DifferentVariable);
 /*
  * 関数
  */
-class Function : public ArbitraryNode {
+class Function : public VariadicNode {
 public:
   typedef boost::shared_ptr<Function> node_type_sptr;
 
@@ -1855,7 +1859,7 @@ private:
  * 動作保証はできない．
  */
 
-class UnsupportedFunction : public ArbitraryNode {
+class UnsupportedFunction : public VariadicNode {
 public:
   typedef boost::shared_ptr<UnsupportedFunction> node_type_sptr;
 

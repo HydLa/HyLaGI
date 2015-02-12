@@ -153,7 +153,7 @@ private:
   void dump_node(boost::shared_ptr<symbolic_expression::FactorNode> node);
   void dump_node(boost::shared_ptr<symbolic_expression::UnaryNode> node);
   void dump_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
-  void dump_node(boost::shared_ptr<symbolic_expression::ArbitraryNode> node);
+  void dump_node(boost::shared_ptr<symbolic_expression::VariadicNode> node);
 
   typedef int         node_id_t;
   typedef std::string graph_node_info_t;

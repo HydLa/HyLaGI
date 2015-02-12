@@ -1143,7 +1143,7 @@ node_sptr Parser::factor(){
   // sum_of_list
   if((ret = sum_of_list())){ return ret;}
 
-  boost::shared_ptr<ArbitraryNode> func;
+  boost::shared_ptr<VariadicNode> func;
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"
   if((func = function()) || (func = unsupported_function())){
     // "("

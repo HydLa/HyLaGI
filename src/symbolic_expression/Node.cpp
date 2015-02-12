@@ -447,6 +447,12 @@ node_sptr ExpressionList::clone(){
   return n;
 }
 
+void ExpressionList::set_nameless_arguments(int list_size)
+{
+  arguments_.clear();
+  nameless_contents_size = list_size;
+}
+
 node_sptr ConditionalExpressionList::clone(){
   node_type_sptr n(new ConditionalExpressionList(list_name_));
   n->set_expression(expression_);
@@ -491,11 +497,11 @@ node_sptr UnsupportedFunction::clone(){
 }
 
 
-void ArbitraryNode::accept(node_sptr own, 
+void VariadicNode::accept(node_sptr own, 
                    BaseNodeVisitor* visitor) 
 {
   assert(this == own.get()); 
-  visitor->visit(boost::dynamic_pointer_cast<ArbitraryNode>(own));
+  visitor->visit(boost::dynamic_pointer_cast<VariadicNode>(own));
 }
 
 std::ostream& Range::dump(std::ostream& s) const
@@ -526,7 +532,7 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& ArbitraryNode::dump(std::ostream& s) const 
+std::ostream& VariadicNode::dump(std::ostream& s) const 
 {
   Node::dump(s);
   s << "[" << get_string() << "]";
@@ -539,21 +545,21 @@ std::ostream& ArbitraryNode::dump(std::ostream& s) const
 }
 
 
-void ArbitraryNode::add_argument(node_sptr node){
+void VariadicNode::add_argument(node_sptr node){
   arguments_.push_back(node);
 }
 
 
-void ArbitraryNode::set_argument(node_sptr node, int i){
+void VariadicNode::set_argument(node_sptr node, int i){
   arguments_[i] = node;
 }
 
 
-int ArbitraryNode::get_arguments_size(){
+int VariadicNode::get_arguments_size(){
   return arguments_.size();
 }
 
-node_sptr ArbitraryNode::get_argument(int i){
+node_sptr VariadicNode::get_argument(int i){
   return arguments_[i];
 }
 

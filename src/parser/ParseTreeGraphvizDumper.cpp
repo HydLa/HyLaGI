@@ -99,7 +99,7 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<BinaryNode> node)
 }
 
 
-void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<ArbitraryNode> node)
+void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<VariadicNode> node)
 {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_string()));

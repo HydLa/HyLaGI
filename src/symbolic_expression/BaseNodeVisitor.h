@@ -34,7 +34,7 @@ public:
   virtual void visit(boost::shared_ptr<BinaryNode> node);
   
   /// 2つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<ArbitraryNode> node);
+  virtual void visit(boost::shared_ptr<VariadicNode> node);
 };
 
 } //namespace symbolic_expression

@@ -29,9 +29,9 @@ public:
 
   boost::shared_ptr<symbolic_expression::ExpressionList> expand_list(boost::shared_ptr<symbolic_expression::ConditionalExpressionList>);
   boost::shared_ptr<symbolic_expression::ProgramList> expand_list(boost::shared_ptr<symbolic_expression::ConditionalProgramList>);
-  boost::shared_ptr<symbolic_expression::ArbitraryNode> expand_list(boost::shared_ptr<symbolic_expression::Range>);
-  boost::shared_ptr<symbolic_expression::ArbitraryNode> expand_list(boost::shared_ptr<symbolic_expression::Union>);
-  boost::shared_ptr<symbolic_expression::ArbitraryNode> expand_list(boost::shared_ptr<symbolic_expression::Intersection>);
+  boost::shared_ptr<symbolic_expression::VariadicNode> expand_list(boost::shared_ptr<symbolic_expression::Range>);
+  boost::shared_ptr<symbolic_expression::VariadicNode> expand_list(boost::shared_ptr<symbolic_expression::Union>);
+  boost::shared_ptr<symbolic_expression::VariadicNode> expand_list(boost::shared_ptr<symbolic_expression::Intersection>);
   symbolic_expression::node_sptr expand_list(boost::shared_ptr<symbolic_expression::ExpressionListElement>);
   symbolic_expression::node_sptr expand_list(boost::shared_ptr<symbolic_expression::ProgramListElement>);
   boost::shared_ptr<symbolic_expression::Number> expand_list(boost::shared_ptr<symbolic_expression::SizeOfList>);
@@ -103,7 +103,7 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList>);
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList>);
 private:
-  void expand_conditional_list(boost::shared_ptr<symbolic_expression::ArbitraryNode>, symbolic_expression::node_sptr, boost::shared_ptr<symbolic_expression::ArbitraryNode>, int);
+  void expand_conditional_list(boost::shared_ptr<symbolic_expression::VariadicNode>, symbolic_expression::node_sptr, boost::shared_ptr<symbolic_expression::VariadicNode>, int);
 
   bool in_list_element = false;
 

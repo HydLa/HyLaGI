@@ -934,7 +934,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else{
     // その他の関数
-    boost::shared_ptr<symbolic_expression::ArbitraryNode> f;
+    boost::shared_ptr<symbolic_expression::VariadicNode> f;
     if(converted)
     {
       // 対応している関数
