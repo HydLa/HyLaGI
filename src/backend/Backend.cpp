@@ -1,8 +1,8 @@
 #include "Backend.h"
 #include <stdarg.h>
-#include "InterfaceError.h"
 #include <sstream>
 #include <boost/lexical_cast.hpp>
+#include "HydLaError.h"
 
 using namespace std;
 
@@ -46,7 +46,7 @@ void Backend::invalid_fmt(const char* fmt, int idx)
 {
   std::stringstream sstr;
   sstr << "invalid format \"" << fmt << "\" at " << idx;
-  throw InterfaceError(sstr.str().c_str());
+  throw HYDLA_ERROR(sstr.str().c_str());
 }
 
 int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
@@ -500,7 +500,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
 
 void Backend::visit(boost::shared_ptr<Ask> node)                   
 {
-  throw InterfaceError("ask node cannot be sent to backend");
+  throw HYDLA_ERROR("ask node cannot be sent to backend");
 }
 
 void Backend::visit(boost::shared_ptr<Tell> node)
@@ -602,7 +602,7 @@ void Backend::visit(boost::shared_ptr<Function> node)
   name = link_->convert_function(node->get_name(), true, converted);
   if(!converted)
   {
-    throw InterfaceError(get_infix_string(node) + " is not suppported in " + link_->backend_name());
+    throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
   }
   link_->put_function(name, arg_cnt);
   for(int i=0; i < arg_cnt;i++){
@@ -691,7 +691,7 @@ void Backend::send_variable(const std::string& name, int diff_count, const Varia
       link_->put_function("derivative", 2);
       break;
     default:
-      throw InterfaceError("Invalid VariableForm");
+      throw HYDLA_ERROR("Invalid VariableForm");
     }
     link_->put_integer(diff_count);
     link_->put_symbol(var_prefix + name);
@@ -771,7 +771,7 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
         link_->put_function("derivative", 2);
         break;
       default:
-        throw InterfaceError("Invalid VariableForm");
+        throw HYDLA_ERROR("Invalid VariableForm");
       }
       link_->put_integer(differential_count_);
       link_->put_function("namelessVariable", 2);
@@ -781,7 +781,7 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
   }
   else
   {
-    throw InterfaceError("ExpressionList has an invalid form");
+    throw HYDLA_ERROR("ExpressionList has an invalid form");
   }
 }
 
@@ -882,7 +882,7 @@ find_min_time_result_t Backend::receive_find_min_time_result()
 
 std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {
-  if(original.length() <= prefix.length())throw InterfaceError("invalid name: " + original);
+  if(original.length() <= prefix.length())throw HYDLA_ERROR("invalid name: " + original);
   return original.substr(prefix.length());
 }
 
@@ -1077,7 +1077,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
 
 void Backend::invalid_ret()
 {
-  throw InterfaceError("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
+  throw HYDLA_ERROR("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
 }
 
 void Backend::receive_bool(bool &b)
@@ -1087,7 +1087,7 @@ void Backend::receive_bool(bool &b)
   else
   {
     if(s_name == "False")b = false;
-    else throw InterfaceError("invalid return value");
+    else throw HYDLA_ERROR("invalid return value");
   }
 }
 
@@ -1116,7 +1116,7 @@ int Backend::receive_map(variable_map_t& map)
     value_range_t tmp_range = map[variable];
     set_range(symbolic_value, tmp_range, rel);
     if(symbolic_value.undefined()){
-      throw InterfaceError("invalid value");
+      throw HYDLA_ERROR("invalid value");
     }
     map[variable] = tmp_range;  
   }
@@ -1169,7 +1169,7 @@ MidpointRadius Backend::receive_midpoint_radius()
   link_->get_function(func_name, size);
   if(func_name != "midpointRadius" || size != 2)
   {
-    throw InterfaceError("invalid as midpoint_radius");
+    throw HYDLA_ERROR("invalid as midpoint_radius");
   }
   mr.midpoint = receive_value();
   mr.radius = receive_value();

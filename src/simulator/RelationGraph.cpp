@@ -2,7 +2,7 @@
 #include <iostream>
 #include "VariableFinder.h"
 #include "Logger.h"
-#include "SimulateError.h"
+#include "HydLaError.h"
 
 using namespace std;
 
@@ -322,7 +322,7 @@ void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore
 
 void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
   VariableNode *var_node = variable_node_map[var];
-  if(var_node == nullptr)throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
+  if(var_node == nullptr)throw HYDLA_ERROR("VariableNode is not found");
   variable_set_t vars;
   visit_node(var_node, constraints, module_set, vars);
 }
@@ -377,7 +377,7 @@ int RelationGraph::get_connected_count()
 
 void RelationGraph::set_adopted(const module_t &mod, bool adopted)
 {
-  if(!module_tell_nodes_map.count(mod))throw HYDLA_SIMULATE_ERROR("module " + mod.first + " is not found");
+  if(!module_tell_nodes_map.count(mod))throw HYDLA_ERROR("module " + mod.first + " is not found");
   for(auto tell_node : module_tell_nodes_map[mod]) tell_node->module_adopted = adopted;
   for(auto ask_node : module_ask_nodes_map[mod]) ask_node->module_adopted = adopted;
   up_to_date = false;
@@ -398,7 +398,7 @@ void RelationGraph::set_expanded_atomic(constraint_t cons, bool expanded)
   if(constraint_node_it != constraint_node_map.end())
   {
     constraint_node_it->second->expanded = expanded;
-  }else throw HYDLA_SIMULATE_ERROR("constraint_node not found");
+  }else throw HYDLA_ERROR("constraint_node not found");
   up_to_date = false;
 }
 
@@ -419,7 +419,7 @@ void RelationGraph::set_entailed(const ask_t &ask, bool entailed)
     set_expanded_recursive(node_it->second->ask->get_child(), entailed);
     up_to_date = false;
   }
-  else throw HYDLA_SIMULATE_ERROR("AtomicGuardNode for " + get_infix_string(ask) + " is not found");
+  else throw HYDLA_ERROR("AtomicGuardNode for " + get_infix_string(ask) + " is not found");
 }
 
 
@@ -427,14 +427,14 @@ void RelationGraph::set_entailed(const ask_t &ask, bool entailed)
 ConstraintStore RelationGraph::get_always_list(const ask_t &ask)const
 {
   auto it = ask_node_map.find(ask);
-  if(it == ask_node_map.end())throw HYDLA_SIMULATE_ERROR("AskNode for " + get_infix_string(ask) + " is not found");
+  if(it == ask_node_map.end())throw HYDLA_ERROR("AskNode for " + get_infix_string(ask) + " is not found");
   return it->second->always_children;
 }
 
 bool RelationGraph::get_entailed(const ask_t &ask)const
 {
   auto node_it = ask_node_map.find(ask);
-  if(node_it == ask_node_map.end()) throw HYDLA_SIMULATE_ERROR("AskNode is not found");
+  if(node_it == ask_node_map.end()) throw HYDLA_ERROR("AskNode is not found");
   return node_it->second->entailed;
 }
 
@@ -460,7 +460,7 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev
   {
     var_nodes.push_back(node);
   }
-  if(var_nodes.empty())throw HYDLA_SIMULATE_ERROR("VariableNode is not found");
+  if(var_nodes.empty())throw HYDLA_ERROR("VariableNode is not found");
   for(auto var_node : var_nodes)
   {
     for(auto ask_node : var_node->ask_edges)
@@ -477,7 +477,7 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev
 list<AtomicConstraint *> RelationGraph::get_atomic_guards(const constraint_t &guard)const
 {
   auto node_it = guard_node_map.find(guard);
-  if(node_it == guard_node_map.end())throw HYDLA_SIMULATE_ERROR("unknown guard");
+  if(node_it == guard_node_map.end())throw HYDLA_ERROR("unknown guard");
   return node_it->second->get_atomic_guards();
 }
 
@@ -559,7 +559,7 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
 variable_set_t RelationGraph::get_variables(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  if(index >= connected_variables_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
+  if(index >= connected_variables_vector.size())throw HYDLA_ERROR("index is out of range");
   return connected_variables_vector[index];
 }
 
@@ -573,7 +573,7 @@ bool RelationGraph::active(const AskNode *ask, bool ignore_prev) const
 ConstraintStore RelationGraph::get_constraints(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  if(index >= connected_constraints_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
+  if(index >= connected_constraints_vector.size())throw HYDLA_ERROR("index is out of range");
   return connected_constraints_vector[index];
 }
 
@@ -632,7 +632,7 @@ asks_t RelationGraph::get_all_asks()
 module_set_t RelationGraph::get_modules(unsigned int index)
 {
   if(!up_to_date) check_connected_components();
-  if(index >= connected_modules_vector.size())throw HYDLA_SIMULATE_ERROR("index is out of range");
+  if(index >= connected_modules_vector.size())throw HYDLA_ERROR("index is out of range");
   return connected_modules_vector[index];
 }
 
@@ -815,7 +815,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   else
   {
     auto ask_node_it = ask_node_map.find(ask);
-    if(ask_node_it == ask_node_map.end())throw HYDLA_SIMULATE_ERROR("ask_node not found");
+    if(ask_node_it == ask_node_map.end())throw HYDLA_ERROR("ask_node not found");
     if(visit_mode == EXPANDING)
     {
       ask_node_it->second->expanded = true;
@@ -824,7 +824,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     {
       ask_node_it->second->expanded = false;
     }
-    else throw HYDLA_SIMULATE_ERROR("unknown visit_mode");
+    else throw HYDLA_ERROR("unknown visit_mode");
   }
 }
 

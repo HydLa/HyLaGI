@@ -3,6 +3,7 @@
 #include "Simulator.h"
 #include "TimeOutError.h"
 #include "Utility.h"
+#include "LinkError.h"
 
 namespace hydla{
 namespace backend{

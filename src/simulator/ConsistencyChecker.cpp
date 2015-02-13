@@ -7,7 +7,7 @@
 
 #include "VariableFinder.h"
 #include "VariableReplacer.h"
-#include "SimulateError.h"
+#include "HydLaError.h"
 #include "Timer.h"
 
 using namespace std;
@@ -337,7 +337,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     }
     else if(create_result.size() > 1)
     {
-      throw SimulateError("result variable map is not single.");
+      throw HYDLA_ERROR("result variable map is not single.");
     }
     else
     {

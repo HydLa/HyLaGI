@@ -8,7 +8,7 @@
 #include "PrevReplacer.h"
 #include "VariableFinder.h"
 #include "PrevSearcher.h"
-#include "Exceptions.h"
+#include "HydLaError.h"
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
 #include "ValueModifier.h"
@@ -269,11 +269,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if(create_result.size() == 0)
     {
-      throw SimulateError("some error occured in creation of variable maps.");
+      throw HYDLA_ERROR("some error occured in creation of variable maps.");
     }
     else if(create_result.size() > 1)
     {
-      throw SimulateError("result variable map is not single.");
+      throw HYDLA_ERROR("result variable map is not single.");
     }
     phase->variable_map = create_result[0];
 
@@ -558,7 +558,7 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
     {
       error_msg += get_infix_string(ask) + ";";
     }
-    throw SimulateError(error_msg);
+    throw HYDLA_ERROR("hoge");
   }
   return true;
 }
