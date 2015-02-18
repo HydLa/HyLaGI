@@ -154,22 +154,22 @@ boost::shared_ptr<VariadicNode> ListExpander::expand_list(boost::shared_ptr<Rang
   lhs_num = boost::dynamic_pointer_cast<Number>(lhs->clone());
   rhs_num = boost::dynamic_pointer_cast<Number>(rhs->clone());
   if(lhs_num && rhs_num){
-    if(node->get_string().length() == 0){
+    if(node->get_header().length() == 0){
       ret = boost::shared_ptr<ExpressionList>(new ExpressionList());
       for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
         ret->add_argument(boost::shared_ptr<Number>(new Number(std::to_string(i))));
       }
-    }else if('A' <= node->get_string()[0] && node->get_string()[0] <= 'Z'){
+    }else if('A' <= node->get_header()[0] && node->get_header()[0] <= 'Z'){
       ret = boost::shared_ptr<ProgramList>(new ProgramList());
       for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
         boost::shared_ptr<ConstraintCaller> caller = boost::shared_ptr<ConstraintCaller>(new ConstraintCaller());
-        caller->set_name(node->get_string()+std::to_string(i));
+        caller->set_name(node->get_header()+std::to_string(i));
         ret->add_argument(caller);
       }
     }else{
       ret = boost::shared_ptr<ExpressionList>(new ExpressionList());
       for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
-        boost::shared_ptr<Variable> variable = boost::shared_ptr<Variable>(new Variable(node->get_string()+std::to_string(i)));
+        boost::shared_ptr<Variable> variable = boost::shared_ptr<Variable>(new Variable(node->get_header()+std::to_string(i)));
         ret->add_argument(variable);
       }
     }
