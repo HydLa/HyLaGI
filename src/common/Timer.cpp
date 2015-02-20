@@ -1,45 +1,58 @@
 #include "Timer.h"
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 namespace hydla{
-  namespace timer{
+namespace timer{
 
-    Timer::Timer(){
-      restart();
-    }
+using namespace std;
+
+Timer::Timer(){
+  restart();
+}
     
-    Timer::~Timer(){}
+Timer::~Timer(){}
 
-    void Timer::restart() {
-      start_point_ = std::chrono::steady_clock::now();
-    }
+void Timer::restart() {
+  start_point_ = chrono::steady_clock::now();
+}
 
-    std::chrono::nanoseconds Timer::get_time(){
-      auto end_point = std::chrono::steady_clock::now();
-      return std::chrono::duration_cast<std::chrono::nanoseconds>(end_point-start_point_);
-    }
+string Timer::get_time_string() const
+{
+  double time_double;
+  time_double = get_elapsed_us() / 1000000.0;
+  stringstream sstr;
+  sstr << fixed;
+  sstr << setprecision(6) << time_double << " s" ;
+  return sstr.str();
+}
 
-    unsigned int Timer::get_elapsed_h(){
-      return std::chrono::duration_cast<std::chrono::hours>(get_time()).count();
-    }
-    unsigned int Timer::get_elapsed_m(){
-      return std::chrono::duration_cast<std::chrono::minutes>(get_time()).count();
-    }
-    unsigned int Timer::get_elapsed_s(){
-      return std::chrono::duration_cast<std::chrono::seconds>(get_time()).count();
-    }
-    unsigned int Timer::get_elapsed_ms(){
-      return std::chrono::duration_cast<std::chrono::milliseconds>(get_time()).count();
-    }
-    unsigned int Timer::get_elapsed_us(){
-      return std::chrono::duration_cast<std::chrono::microseconds>(get_time()).count();
-    }
-    unsigned int Timer::get_elapsed_ns(){
-      return get_time().count();
-    }
+chrono::nanoseconds Timer::get_time() const{
+  auto end_point = chrono::steady_clock::now();
+  return chrono::duration_cast<chrono::nanoseconds>(end_point-start_point_);
+}
 
-  }
+unsigned int Timer::get_elapsed_h() const{
+  return chrono::duration_cast<chrono::hours>(get_time()).count();
+}
+unsigned int Timer::get_elapsed_m() const{
+  return chrono::duration_cast<chrono::minutes>(get_time()).count();
+}
+unsigned int Timer::get_elapsed_s() const{
+  return chrono::duration_cast<chrono::seconds>(get_time()).count();
+}
+unsigned int Timer::get_elapsed_ms() const{
+  return chrono::duration_cast<chrono::milliseconds>(get_time()).count();
+}
+unsigned int Timer::get_elapsed_us() const{
+  return chrono::duration_cast<chrono::microseconds>(get_time()).count();
+}
+unsigned int Timer::get_elapsed_ns() const{
+  return get_time().count();
+}
+
+}
 }
 
 

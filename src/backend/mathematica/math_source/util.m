@@ -51,3 +51,9 @@ publicMethod[
   expr,
   toReturnForm[Rationalize[N[expr], approxPrecision] ]
 ];
+
+
+publicMethod[
+  getSizeOfConstraint,
+  ByteCount[constraint && initConstraint && prevConstraint && pConstraint]
+];

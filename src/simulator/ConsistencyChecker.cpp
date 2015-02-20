@@ -326,6 +326,10 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
       backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
     }
     profile["CreateVMInCC"] += timer.get_elapsed_us();
+    int size_of_constraint;
+    backend->call("getSizeOfConstraint", 0, "", "i", &size_of_constraint);
+    profile["SizeOfConstraint"] += size_of_constraint;
+    
     // TODO: deal with multiple variable map
     
     if(create_result.size() == 1)

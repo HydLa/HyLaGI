@@ -18,7 +18,7 @@ namespace hydla{
       /**
        * 呼ばれた時点での経過時刻を得る
        */
-      std::chrono::nanoseconds get_time();
+      std::chrono::nanoseconds get_time() const;
 
       /**
        * 計測した時間を文字列で返す
@@ -28,12 +28,12 @@ namespace hydla{
       /**
        * 経過時刻を対応する単位で返す
        */ 
-      unsigned int get_elapsed_h();
-      unsigned int get_elapsed_m();
-      unsigned int get_elapsed_s();
-      unsigned int get_elapsed_ms();
-      unsigned int get_elapsed_us();
-      unsigned int get_elapsed_ns();
+      unsigned int get_elapsed_h() const;
+      unsigned int get_elapsed_m() const;
+      unsigned int get_elapsed_s() const;
+      unsigned int get_elapsed_ms() const;
+      unsigned int get_elapsed_us() const;
+      unsigned int get_elapsed_ns() const;
 
     private:
       /**
