@@ -1687,11 +1687,14 @@ public:
   virtual std::string get_list_name() const{return list_name_;}
   /// Whether the contents of this list are nameless or not
   bool has_nameless_contents(){return arguments_.size() == 0;}
+  node_sptr get_nameless_expression_arguments(){return nameless_expression;}
   void set_nameless_arguments(int list_size);
+  void set_nameless_expression_arguments(node_sptr expr);
 
 private:
   std::string list_name_;
   int nameless_contents_size;
+  node_sptr nameless_expression;
 };
 
 class ConditionalExpressionList : public VariadicNode {

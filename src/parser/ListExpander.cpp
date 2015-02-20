@@ -620,13 +620,13 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::Power> node){
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node){
   bool original_in_list_element = in_list_element;
   in_list_element = true;
-  boost::shared_ptr<VariadicNode> list;
+  boost::shared_ptr<ExpressionList> list;
   boost::shared_ptr<Number> num;
   accept(node->get_lhs()->clone());
   if(new_child){
-    list = boost::dynamic_pointer_cast<VariadicNode>(new_child->clone());
+    list = boost::dynamic_pointer_cast<ExpressionList>(new_child->clone());
     new_child.reset();
-  }else list = boost::dynamic_pointer_cast<VariadicNode>(node->get_lhs()->clone());
+  }else list = boost::dynamic_pointer_cast<ExpressionList>(node->get_lhs()->clone());
   accept(node->get_rhs()->clone());
   if(new_child){
     num = boost::dynamic_pointer_cast<Number>(new_child->clone());
@@ -634,7 +634,18 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListEl
   }else num = boost::dynamic_pointer_cast<Number>(node->get_rhs()->clone());
   if(list && num){
     int idx = std::stoi(num->get_number());
-    new_child = list->get_argument(idx-1);
+    if((list->get_nameless_expression_arguments()))
+    {
+      node->set_rhs(num->clone());
+      accept(list->get_nameless_expression_arguments());
+      num = boost::dynamic_pointer_cast<Number>(new_child->clone());
+      if(num)
+      {
+        list->set_nameless_arguments(std::stoi(num->get_number()));
+      }
+      node->set_lhs(list);
+      new_child = node;
+    }else new_child = list->get_argument(idx-1);
   }else{
     new_child = node;
   }
@@ -688,12 +699,32 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListCa
 
   new_child = circular_check(deftype,cons_def);
   accept(new_child);
+
+  boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(new_child->clone());
+  if(el)
+  {
+    el->set_list_name(node->get_name());
+    new_child = el;
+  }
 }
 
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::SizeOfList> node){
   accept(node->get_child());
   boost::shared_ptr<VariadicNode> list;
   if(new_child){
+    boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(new_child);
+    if(el)
+    {
+      if((el->get_nameless_expression_arguments()))
+      {
+        bool tmp_in_list = in_list_element;
+        in_list_element = true;
+        accept(el->get_nameless_expression_arguments());
+        in_list_element = tmp_in_list;
+        boost::shared_ptr<Number> num = boost::dynamic_pointer_cast<Number>(new_child);
+        if(num) return;
+      }
+    }
     list = boost::dynamic_pointer_cast<VariadicNode>(new_child->clone());
     new_child.reset();
   }else{

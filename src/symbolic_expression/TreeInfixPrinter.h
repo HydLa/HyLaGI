@@ -148,11 +148,12 @@ class TreeInfixPrinter:
   // False
   virtual void visit(boost::shared_ptr<False> node);
 
+  // ExpresssionListElement
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node);
   // List 
   /*
   virtual void visit(boost::shared_ptr<ExpressionList> node);
   virtual void visit(boost::shared_ptr<ExpressionListCaller> node);
-  virtual void visit(boost::shared_ptr<ExpressionListElement> node);
   virtual void visit(boost::shared_ptr<ProgramList> node);
   virtual void visit(boost::shared_ptr<ProgramListCaller> node);
   virtual void visit(boost::shared_ptr<ProgramListElement> node);

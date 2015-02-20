@@ -444,7 +444,13 @@ node_sptr ExpressionList::clone(){
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
+  n->set_nameless_expression_arguments(nameless_expression);
   return n;
+}
+
+void ExpressionList::set_nameless_expression_arguments(node_sptr expression)
+{
+  nameless_expression = expression;
 }
 
 void ExpressionList::set_nameless_arguments(int list_size)

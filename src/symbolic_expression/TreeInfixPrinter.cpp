@@ -114,6 +114,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
   print_binary_node(*node, ",");
 }
 
+//式リスト要素
+void TreeInfixPrinter::visit(boost::shared_ptr<ExpressionListElement> node){
+  boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(node->get_lhs());
+  if(el) (*output_stream_) << el->get_name();
+  (*output_stream_) << "[";
+  accept(node->get_rhs());
+  (*output_stream_) << "]";
+}
 
 // 算術二項演算子
 void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){

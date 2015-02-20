@@ -215,6 +215,12 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
       apply_definition(deftype, node, expr_list_def));
       */
     new_child_ = apply_definition(deftype,node,expr_list_def);
+    boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(new_child_->clone());
+    if(el)
+    {
+      el->set_list_name(node->get_name());
+      new_child_ = el;
+    }
   }
 }
 
@@ -512,7 +518,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> 
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
 {
   node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
+  boost::shared_ptr<ExpressionListElement> ele = boost::dynamic_pointer_cast<ExpressionListElement>(ret);
+  if(!(ele)) accept(ret);
   if(!new_child_) new_child_ = ret;
 }
 

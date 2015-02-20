@@ -98,6 +98,7 @@ public:
   node_sptr program_list_factor();
   boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> program_list_caller();
   boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> program_list_callee();
+  node_sptr nameless_list();
   node_sptr conditional_expression_list();
   node_sptr expression_list();
   node_sptr expression_list_term();

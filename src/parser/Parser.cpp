@@ -1788,6 +1788,42 @@ node_sptr Parser::conditional_expression_list(){
   lexer.set_current_position(position);
   return node_sptr();
 }
+
+/**
+ * nameless_list := "$" "List" "[" expression "]"
+ */ 
+node_sptr Parser::nameless_list(){
+  node_sptr ret;
+  position_t position = lexer.get_current_position();
+  position_t tmp_position;
+  if(lexer.get_token() == SYSTEM){
+    if(lexer.get_token() == UPPER_IDENTIFIER){
+      if(lexer.get_current_token_string() == "List"){
+        tmp_position = lexer.get_current_position();
+        if(lexer.get_token() == LEFT_BOX_BRACKETS){
+          if((ret = expression())){
+            tmp_position = lexer.get_current_position();
+            if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+              boost::shared_ptr<ExpressionList> el(new ExpressionList());
+              el->set_nameless_expression_arguments(ret);
+              return el;
+            }
+            else
+            {
+              error_occurred(tmp_position, "expected \"]\" after expression");
+            }
+          }else error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
+        }
+        else
+        {
+          error_occurred(tmp_position, "expected \"[\" after \"$List\"");
+        }
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
 /**
  * expression_list := expression_list_term ("or" expression_list_term )*
  */
@@ -1839,7 +1875,8 @@ node_sptr Parser::expression_list_term(){
   return node_sptr();
 }
 /**
- * expression_list_factor := conditional_expression_list
+ * expression_list_factor := nameless_list
+ *                         | conditional_expression_list
  *                         | "{"expression ("," expression)* "}"
  *                         | identifier number ".." identifier number
  *                         | number ".." number
@@ -1850,6 +1887,8 @@ node_sptr Parser::expression_list_factor(){
   node_sptr ret;
   // conditional_expression_list
   position_t position = lexer.get_current_position();
+  // nameless_list
+  if((ret = nameless_list())) return ret;
   // "{" expression ("," expression)* "}"
   if((ret = conditional_expression_list())) return ret;
   if(lexer.get_token() == LEFT_BRACES){
