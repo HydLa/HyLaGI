@@ -150,6 +150,11 @@ public:
   asks_t get_adjacent_asks(const std::string &variable_name, bool ignore_prev_asks = false);
 
   /**
+   * Get active asks adjacent to given variable
+   */
+  asks_t get_adjacent_asks2var_and_derivatives(const Variable &variable, bool ignore_prev_asks = false);
+
+  /**
    * Get active guards adjacent to given variable
    */
   std::list<AtomicConstraint *> get_atomic_guards(const constraint_t &guard)const;

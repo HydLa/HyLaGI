@@ -137,6 +137,7 @@ public:
   constraints_t                diff_positive_guards, diff_negative_guards;
   ConstraintStore              initial_constraint_store; /// 暫定的に場合分けとかで使う.TODO:別の方法を考える
   ConstraintStore              diff_sum;
+  std::map<std::string, int>   discrete_differential_map;
   
   module_diff_t                module_diff;
 

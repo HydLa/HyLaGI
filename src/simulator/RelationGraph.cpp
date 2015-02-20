@@ -474,6 +474,23 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev
   return asks;
 }
 
+asks_t RelationGraph::get_adjacent_asks2var_and_derivatives(const Variable &var, bool ignore_prev_asks){
+  asks_t asks;
+  Variable tmp_var(var.get_name(), var.get_differential_count());
+  for(int n = tmp_var.get_differential_count()+1; variable_node_map.find(tmp_var) != variable_node_map.end(); n++){
+    VariableNode* var_node = variable_node_map[tmp_var];
+    for(auto ask_node : var_node->ask_edges)
+    {
+      if(active(ask_node, ignore_prev_asks))
+      {
+        asks.insert(ask_node->ask);
+      }
+    }
+    tmp_var = Variable(tmp_var.get_name(), n);
+  }
+  return asks;
+}
+
 list<AtomicConstraint *> RelationGraph::get_atomic_guards(const constraint_t &guard)const
 {
   auto node_it = guard_node_map.find(guard);
