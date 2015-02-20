@@ -18,9 +18,7 @@ RelationGraph::RelationGraph(const module_set_t &ms)
   }
   current_guard_node = nullptr;
   ignore_prev = true;
-  up_to_date = false;
 }
-
 
 RelationGraph::~RelationGraph()
 {
@@ -47,7 +45,6 @@ void RelationGraph::add(module_t &mod)
   visit_mode = ADDING;
   parent_ask = nullptr;
   accept(mod.second);
-  up_to_date = false;
 }
 
 void RelationGraph::add_guard(constraint_t &guard)
@@ -186,10 +183,15 @@ bool ConstraintNode::is_active() const
 
 bool RelationGraph::referring(const Variable& var)
 {
-  if(!up_to_date) check_connected_components();
-  return referred_variables.count(var) > 0;
+  auto var_it = variable_node_map.find(var);
+  if(var_it == variable_node_map.end())return false;
+  VariableNode *var_node = var_it->second;
+  for(auto edge : var_node->edges)
+  {
+    if(edge.tell_node->is_active())return true;
+  }
+  return false;
 }
-
 
 void RelationGraph::initialize_node_visited()
 {
@@ -199,7 +201,6 @@ void RelationGraph::initialize_node_visited()
 }
 
 void RelationGraph::get_related_constraints_vector(const ConstraintStore &constraint_store, vector<ConstraintStore> &constraints_vector, vector<module_set_t> &module_set_vector){
-  if(!up_to_date) check_connected_components();
   initialize_node_visited();
   constraints_vector.clear();
   module_set_vector.clear();
@@ -282,7 +283,6 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 
 
 void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
-  if(!up_to_date) check_connected_components();
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -311,7 +311,6 @@ void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintS
 
 
 void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
-  if(!up_to_date) check_connected_components();
   initialize_node_visited();
   constraints.clear();
   module_set.clear();
@@ -327,28 +326,6 @@ void RelationGraph::get_related_constraints_core(const Variable &var, Constraint
   visit_node(var_node, constraints, module_set, vars);
 }
 
-
-void RelationGraph::check_connected_components(){
-  connected_constraints_vector.clear();
-  connected_modules_vector.clear();
-  connected_variables_vector.clear();
-  referred_variables.clear();
-  initialize_node_visited();
-
-  for(auto tell_node : tell_nodes){
-    module_set_t ms;
-    ConstraintStore constraints;
-    variable_set_t vars;
-    if(!tell_node->visited && tell_node->is_active()){
-      visit_node(tell_node, constraints, ms, vars);
-      connected_constraints_vector.push_back(constraints);
-      connected_modules_vector.push_back(ms);
-      connected_variables_vector.push_back(vars);
-      referred_variables.insert(vars.begin(), vars.end());
-    }
-  }
-  up_to_date = true;
-}
 
 void RelationGraph::visit_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars){
   node->visited = true;
@@ -369,18 +346,11 @@ void RelationGraph::visit_node(VariableNode* node, ConstraintStore &constraints,
   }
 }
 
-int RelationGraph::get_connected_count()
-{
-  if(!up_to_date) check_connected_components();
-  return connected_constraints_vector.size();
-}
-
 void RelationGraph::set_adopted(const module_t &mod, bool adopted)
 {
   if(!module_tell_nodes_map.count(mod))throw HYDLA_ERROR("module " + mod.first + " is not found");
   for(auto tell_node : module_tell_nodes_map[mod]) tell_node->module_adopted = adopted;
   for(auto ask_node : module_ask_nodes_map[mod]) ask_node->module_adopted = adopted;
-  up_to_date = false;
 }
 
 void RelationGraph::set_adopted(const module_set_t &ms, bool adopted)
@@ -399,7 +369,6 @@ void RelationGraph::set_expanded_atomic(constraint_t cons, bool expanded)
   {
     constraint_node_it->second->expanded = expanded;
   }else throw HYDLA_ERROR("constraint_node not found");
-  up_to_date = false;
 }
 
 
@@ -407,7 +376,6 @@ void RelationGraph::set_expanded_recursive(constraint_t cons, bool expanded)
 {
   visit_mode = expanded?EXPANDING:UNEXPANDING;
   accept(cons);
-  up_to_date = false;
 }
 
 void RelationGraph::set_entailed(const ask_t &ask, bool entailed)
@@ -417,7 +385,6 @@ void RelationGraph::set_entailed(const ask_t &ask, bool entailed)
   {
     node_it->second->entailed = entailed;
     set_expanded_recursive(node_it->second->ask->get_child(), entailed);
-    up_to_date = false;
   }
   else throw HYDLA_ERROR("AtomicGuardNode for " + get_infix_string(ask) + " is not found");
 }
@@ -447,7 +414,6 @@ bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed)
   {
     node_it->second->entailed = entailed;
     set_expanded_recursive(node_it->second->ask->get_child(), entailed);
-    up_to_date = false;
     return true;
   }
   return false;
@@ -531,7 +497,6 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
   ConstraintStore constraints;
   module_set_t modules;
 
-  if(!up_to_date) check_connected_components();
   initialize_node_visited();
     
   if(tell_node_map.count(cons) == 0)
@@ -555,31 +520,14 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
   return vars;
 }
 
-
-variable_set_t RelationGraph::get_variables(unsigned int index)
-{
-  if(!up_to_date) check_connected_components();
-  if(index >= connected_variables_vector.size())throw HYDLA_ERROR("index is out of range");
-  return connected_variables_vector[index];
-}
-
 bool RelationGraph::active(const AskNode *ask, bool ignore_prev) const
 {
   // TODO: activeという名前が重複しているのでどうにかする
   return ask->is_active() && !(ignore_prev && ask->prev);
 }
 
-
-ConstraintStore RelationGraph::get_constraints(unsigned int index)
-{
-  if(!up_to_date) check_connected_components();
-  if(index >= connected_constraints_vector.size())throw HYDLA_ERROR("index is out of range");
-  return connected_constraints_vector[index];
-}
-
 ConstraintStore RelationGraph::get_constraints()
 {
-  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto tell_node : tell_nodes)
   {
@@ -593,7 +541,6 @@ ConstraintStore RelationGraph::get_constraints()
 
 ConstraintStore RelationGraph::get_expanded_constraints()
 {
-  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto tell_node : tell_nodes)
   {
@@ -607,7 +554,6 @@ ConstraintStore RelationGraph::get_expanded_constraints()
 
 ConstraintStore RelationGraph::get_adopted_constraints()
 {
-  if(!up_to_date) check_connected_components();
   ConstraintStore constraints;
   for(auto tell_node : tell_nodes)
   {
@@ -629,14 +575,6 @@ asks_t RelationGraph::get_all_asks()
   return asks;
 }
 
-module_set_t RelationGraph::get_modules(unsigned int index)
-{
-  if(!up_to_date) check_connected_components();
-  if(index >= connected_modules_vector.size())throw HYDLA_ERROR("index is out of range");
-  return connected_modules_vector[index];
-}
-
-
 AskNode *RelationGraph::get_ask_node(const ask_t &ask)
 {
   auto node_it = ask_node_map.find(ask);
@@ -654,7 +592,6 @@ GuardNode *RelationGraph::get_guard_node(const constraint_t &guard)
 void RelationGraph::set_ignore_prev(bool ignore)
 {
   ignore_prev = ignore;
-  up_to_date = false;
 }
 
 constraints_t RelationGraph::get_all_guards()
