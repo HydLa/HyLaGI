@@ -85,8 +85,6 @@ private:
 
   bool calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks,   ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore always);
 
-  bool judge_continuity(const phase_result_sptr_t &job, const ask_t &ask, const variable_set_t &changing_variables);
-
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
 

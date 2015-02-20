@@ -475,34 +475,23 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       discrete_variables.insert(variables.begin(), variables.end());
     }
 
+    set<ask_t> adjacents;
     if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
-      for(auto variable : discrete_variables)
-      {
-        set<ask_t> adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
-        for(auto adjacent : adjacents)
-        {
-          unknown_asks.insert(adjacent);
-        }
-      }
+      for(auto variable : discrete_variables) adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
     }else{
       std::map<std::string, int> &d_map = phase->parent->discrete_differential_map;
       for(auto variable : discrete_variables)
       {
         if(d_map.find(variable.get_name()) != d_map.end()){
           Variable discrete_differential(variable.get_name(), d_map[variable.get_name()]);
-          set<ask_t> adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(discrete_differential, phase_type == POINT_PHASE);
-          for(auto adjacent : adjacents)
-          {
-            unknown_asks.insert(adjacent);
-          }
-        }else{
-          set<ask_t> adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
-          for(auto adjacent : adjacents)
-          {
-            unknown_asks.insert(adjacent);
-          }
+          adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(discrete_differential, phase_type == POINT_PHASE);
         }
+        else adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
       }
+    }
+    for(auto adjacent : adjacents)
+    {
+      unknown_asks.insert(adjacent);
     }
 
     for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
@@ -594,27 +583,6 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
       error_msg += get_infix_string(ask) + ";";
     }
     throw HYDLA_ERROR("hoge");
-  }
-  return true;
-}
-
-bool PhaseSimulator::judge_continuity(const phase_result_sptr_t &todo, const ask_t &ask, const variable_set_t &changing_variables)
-{
-  for(auto discrete_ask : todo->discrete_asks)
-  {
-    if(discrete_ask.first == ask) return false;
-  }
-
-  VariableFinder finder;
-  finder.visit_node(ask->get_guard());
-  variable_set_t variables(finder.get_all_variable_set());
-
-  for(auto variable : variables){
-    auto differential_pair = todo->parent->variable_map.find(Variable(variable.get_name(), variable.get_differential_count() + 1));
-    if(differential_pair == todo->parent->variable_map.end() || differential_pair->second.undefined()) return false;
-    for(auto cv : changing_variables){
-      if(variable == cv) return false;
-    }
   }
   return true;
 }
