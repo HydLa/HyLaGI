@@ -217,25 +217,9 @@ public:
    */
   variable_set_t get_related_variables(constraint_t constraint);
 
-  /**
-   * Get variabes included by connected component specified by index
-   */
-  variable_set_t get_variables(unsigned int index);
-
-  
   /// Entail the guard if it is prev_guard
   /// @return true if the guard is prev_guard
   bool entail_if_prev(const ask_t &ask, bool entailed);
-
-  /**
-   * Get constraints corresponding to the connected component specified by index.
-   */
-  ConstraintStore get_constraints(unsigned int index);
-
-  /**
-   * Get a ModuleSet included by the connected component specified by index.
-   */ 
-  module_set_t get_modules(unsigned int index);
 
   /**
    * Get constraints which related to given variables
@@ -316,11 +300,6 @@ private:
     ADDING_ASK
   }VisitMode;
 
-  std::vector<ConstraintStore>    connected_constraints_vector;
-  std::vector<module_set_t>       connected_modules_vector;
-  std::vector<variable_set_t>     connected_variables_vector;
-  variable_set_t referred_variables;
-  bool up_to_date;     /// if false, recalculation of connected components is necessary
   std::map<module_t, tell_nodes_t>  module_tell_nodes_map;
   std::map<constraint_t, TellNode*> tell_node_map;
   std::map<constraint_t, ConstraintNode*> constraint_node_map;
