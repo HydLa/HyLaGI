@@ -80,6 +80,10 @@ public:
   
   std::map<std::string, int> get_differential_map(variable_set_t &);
 
+  bool check_continuity(Variable& var, variable_map_t &vm);
+
+  void send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode);
+
 
 private:
   CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);

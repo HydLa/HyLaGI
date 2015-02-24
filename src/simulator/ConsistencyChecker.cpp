@@ -27,30 +27,34 @@ using namespace backend;
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr), backend_check_consistency_count(0), backend_check_consistency_time(0){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
-void ConsistencyChecker::send_prev_constraint(Variable &var)
+void ConsistencyChecker::send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode)
 {
-  if(!prev_map->count(var))return;
-  auto range = prev_map->find(var)->second;
+  if(!vm.count(var))return;
+  std::string fmt = prev_mode ? "vpvlp" : "vnvln";
+  auto range = vm.find(var)->second;
   if(range.unique())
   {
     value_t value = range.get_unique_value();
-    backend->call("addPrevEqual", 2, "vpvlp", "", &var, &value);
+    std::string name = prev_mode ? "addPrevEqual" : "addEquation";
+    backend->call(name.c_str(), 2, fmt.c_str(), "", &var, &value);
   }
   else
   {
     // replace variables in the range with their values
-    VariableReplacer v_replacer(*prev_map);
+    VariableReplacer v_replacer(vm);
     v_replacer.replace_range(range);
     if(range.get_upper_cnt())
     {
       value_t value = range.get_upper_bound().value;
       if(range.get_upper_bound().include_bound)
       {
-        backend->call("addPrevLessEqual", 2, "vpvlp", "", &var, &value);
+        std::string name = prev_mode ? "addPrevLessEqual" : "addLessEqual";
+        backend->call(name.c_str(), 2, fmt.c_str(), "", &var, &value);
       }
       else
       {
-        backend->call("addPrevLess", 2, "vpvlp", "", &var, &value);       
+        std::string name = prev_mode ? "addPrevLess" : "addLess";
+        backend->call(name.c_str(), 2, fmt.c_str(), "", &var, &value);
       }
     }
     if(range.get_lower_cnt())
@@ -58,14 +62,20 @@ void ConsistencyChecker::send_prev_constraint(Variable &var)
       value_t value = range.get_lower_bound().value;
       if(range.get_lower_bound().include_bound)
       {
-        backend->call("addPrevGreaterEqual", 2, "vpvlp", "", &var, &value);               
+        std::string name = prev_mode ? "addPrevGreaterEqual" : "addGreaterEqual";
+        backend->call(name.c_str(), 2, fmt.c_str(), "", &var, &value);
       }
       else
       {
-        backend->call("addPrevGreater", 2, "vpvlp", "", &var, &value);       
+        std::string name = prev_mode ? "addPrevGreater" : "addGreater";
+        backend->call(name.c_str(), 2, fmt.c_str(), "", &var, &value);
       }
     }
   }
+}
+
+void ConsistencyChecker::send_prev_constraint(Variable &var){
+  send_range_constraint(var, *prev_map, true);
 }
 
 void ConsistencyChecker::send_init_equation(Variable &var, string fmt)
@@ -74,6 +84,24 @@ void ConsistencyChecker::send_init_equation(Variable &var, string fmt)
   backend->call("addInitEquation", 2, fmt.c_str(), "", &var, &var);
 }
 
+bool ConsistencyChecker::check_continuity(Variable &var, variable_map_t &vm){
+  if(!vm.count(var)) return false;
+
+  backend->call("resetConstraintForVariable", 0, "", "");
+  send_init_equation(var, "vn");
+  send_prev_constraint(var);
+  send_range_constraint(var, vm, false);
+
+  symbolic_expression::node_sptr var_node = symbolic_expression::node_sptr(new symbolic_expression::Variable(var.get_name()));
+  for(int i=0; i<var.get_differential_count(); i++){
+    var_node = symbolic_expression::node_sptr(new symbolic_expression::Differential(var_node));
+  }
+  symbolic_expression::node_sptr prev_node = symbolic_expression::node_sptr(new symbolic_expression::Previous(var_node));
+  symbolic_expression::node_sptr eq_node = symbolic_expression::node_sptr(new symbolic_expression::Equal(var_node, prev_node));
+  CheckConsistencyResult cc_result = call_backend_check_consistency(POINT_PHASE, ConstraintStore(eq_node));
+  if(cc_result.consistent_store.consistent()) return true;
+  return false;
+}
 
 void ConsistencyChecker::add_continuity(const VariableFinder& finder, const PhaseType &phase){
   assert(prev_map != nullptr);
@@ -160,8 +188,6 @@ map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
   }
   return dm;
 }
-
-
 
 CheckEntailmentResult ConsistencyChecker::check_entailment(
   RelationGraph &relation_graph,

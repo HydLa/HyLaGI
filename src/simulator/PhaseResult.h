@@ -61,6 +61,7 @@ typedef Variable                                          variable_t;
 typedef Parameter                                         parameter_t;
 
 typedef std::map<variable_t, range_t, VariableComparator>                    variable_map_t;
+typedef std::set<variable_t, VariableComparator>                             variable_set_t;
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
 
@@ -137,7 +138,7 @@ public:
   constraints_t                diff_positive_guards, diff_negative_guards;
   ConstraintStore              initial_constraint_store; /// 暫定的に場合分けとかで使う.TODO:別の方法を考える
   ConstraintStore              diff_sum;
-  std::map<std::string, int>   discrete_differential_map;
+  variable_set_t               discrete_differential_set;
   
   module_diff_t                module_diff;
 

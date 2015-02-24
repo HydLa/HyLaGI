@@ -298,19 +298,27 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     result_list.push_back(phase);
 
     if(phase->phase_type == POINT_PHASE && phase->in_following_step()){
-      ConstraintStore cs,tmp_cs;
-      module_set_t tmp_ms;
-      for(auto constraint : local_diff_sum){
-        relation_graph_->get_related_constraints(constraint, tmp_cs, tmp_ms);
-        cs.add_constraint_store(tmp_cs);
-      }
       VariableFinder finder;
-      for(auto constraint : cs){
+      for(auto constraint : local_diff_sum){
         finder.visit_node(constraint);
       }
-      variable_set_t tmp_vs = finder.get_variable_set();
-      phase->discrete_differential_map = consistency_checker->get_differential_map(tmp_vs);
-
+      variable_set_t tmp_vs = finder.get_variable_set(), discrete_vs;
+      std::map<std::string, int> tmp_vm = consistency_checker->get_differential_map(tmp_vs);
+      for(auto pair : tmp_vm){
+        int max_d_count = -1;
+        for(int i = pair.second; i>=0; i--){
+          Variable var(pair.first, i);
+          if(phase->variable_map.count(var)){
+            max_d_count = i;
+            break;
+          }
+        }
+        assert(max_d_count >= 0);
+        Variable var(pair.first, max_d_count);
+        if(!consistency_checker->check_continuity(var, phase->variable_map))
+          discrete_vs.insert(var);
+      }
+      phase->discrete_differential_set = discrete_vs;
     }
     phase->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   }
@@ -479,21 +487,16 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
       for(auto variable : discrete_variables) adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
     }else{
-      std::map<std::string, int> &d_map = phase->parent->discrete_differential_map;
       for(auto variable : discrete_variables)
       {
-        if(d_map.find(variable.get_name()) != d_map.end()){
-          Variable discrete_differential(variable.get_name(), d_map[variable.get_name()]);
-          adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(discrete_differential, phase_type == POINT_PHASE);
-        }
-        else adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
+        if(phase->parent->discrete_differential_set.count(variable))
+          adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(variable, phase_type == POINT_PHASE);
       }
     }
     for(auto adjacent : adjacents)
     {
       unknown_asks.insert(adjacent);
     }
-
     for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
     {
       auto& ask = *ask_it;

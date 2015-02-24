@@ -283,6 +283,11 @@ addPrevLess[var_, expr_] := addPrevConstraint[var <= expr];
 addPrevGreaterEqual[var_, expr_] := addPrevConstraint[var >= expr];
 addPrevGreater[var_, expr_] := addPrevConstraint[var > expr];
 
+addLessEqual[var_, expr_] := addConstraint[var <= expr];
+addLess[var_, expr_] := addConstraint[var <= expr];
+addGreaterEqual[var_, expr_] := addConstraint[var >= expr];
+addGreater[var_, expr_] := addConstraint[var > expr];
+
 publicMethod[
   addPrevEqual,
   var, expr,
@@ -364,6 +369,7 @@ publicMethod[
     constraint = constraint && cons;
   ]
 ];
+
 
 publicMethod[
   addParameterConstraint,
