@@ -32,7 +32,7 @@ public:
 
   virtual ~ConsistencyChecker();
 
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, bool following_step);
 
   /**
    * Get inconsistent module sets in the last check_consistency
@@ -95,7 +95,7 @@ private:
     profile_t &profile
     );
 
-  void check_consistency(const ConstraintStore& constraint_store, RelationGraph &relation_graph, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile);
+  void check_consistency(const ConstraintStore& constraint_store, RelationGraph &relation_graph, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(Variable &var);

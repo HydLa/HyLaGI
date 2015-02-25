@@ -566,7 +566,7 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
     {
       timer::Timer consistency_timer;
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile);
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
       phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
       phase->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){

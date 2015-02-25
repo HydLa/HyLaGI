@@ -157,7 +157,9 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
 
   case 'v':
   {
-    if(args_fmt[++i] == 'l')
+    switch(args_fmt[++i])
+    {
+    case 'l':
     {
       value_t *val = (value_t *)arg;
       VariableForm vf;
@@ -167,9 +169,24 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
         break;
       }
       send_value(*val, vf);
+      break;
     }
-    else
+    case 's':
     {
+      VariableForm vf;
+      if(!get_form(args_fmt[++i], vf))
+      {
+        invalid_fmt(args_fmt, i);
+      }else{
+        variable_set_t *vs = (variable_set_t *)arg;
+        link_->put_converted_function("List", vs->size());
+        for(auto var : *vs){
+          send_variable(var.get_name(), var.get_differential_count(), vf);
+        }
+      }
+      break;
+    }
+    default:
       variable_t *var = (variable_t*)arg;
       VariableForm vf;
       if(!get_form(args_fmt[i], vf))
@@ -178,6 +195,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
         break;
       }
       send_variable(var->get_name(), var->get_differential_count(), vf);
+      break;
     }
   }
   break;

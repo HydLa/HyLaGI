@@ -311,7 +311,8 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
                                            module_set_t &module_set,
                                            CheckConsistencyResult &result,
                                            const PhaseType& phase,
-                                           profile_t &profile)
+                                           profile_t &profile,
+                                           bool following_step)
 {
   VariableFinder finder;
   for(auto constraint : constraints)
@@ -347,10 +348,19 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     {
       backend->call("createVariableMap", 0, "", "cv", &create_result);
     }
-    else
+    else if(following_step)
     {
-      backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
-    }
+      variable_set_t vars = finder.get_all_variable_set();
+      std::map<std::string, int> dm = get_differential_map(vars);
+      variable_set_t send_vars;
+      for(auto pair : dm){
+        for(int i=0; i<=pair.second; i++){
+          send_vars.insert(Variable(pair.first, i));
+        }
+      }
+      backend->call("createVariableMapInterval", 1, "vst", "cv", &send_vars, &create_result);
+    }else backend->call("createVariableMapInterval", 0, "", "cv", &create_result);
+
     profile["CreateVMInCC"] += timer.get_elapsed_us();
     int size_of_constraint;
     backend->call("getSizeOfConstraint", 0, "", "i", &size_of_constraint);
@@ -376,7 +386,7 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile, bool following_step)
 {
   CheckConsistencyResult result;
   result_maps.clear();
@@ -391,7 +401,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
     HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
-    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile);
+    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile, following_step);
   }
 
   
@@ -422,6 +432,16 @@ vector<module_set_t> ConsistencyChecker::get_inconsistent_module_sets()
 CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase, profile_t &profile)
 {
   timer::Timer timer;
+  // PPでは変数表を全変数について作成する必要があるので，特定変数だけ解くようにするのは難しい．
+  // variable_set_t vars = finder.get_all_variable_set();
+  // std::map<std::string, int> dm = get_differential_map(vars);
+  // variable_set_t send_vars;
+  // for(auto pair : dm){
+  //   for(int i=0; i<=pair.second; i++){
+  //     send_vars.insert(Variable(pair.first, i));
+  //   }
+  // }
+  // backend->set_variable_set(send_vars);
   backend->call("resetConstraintForVariable", 0, "", "");
   add_continuity(finder, phase);
   profile["AddContinuity"] += timer.get_elapsed_us();

@@ -77,6 +77,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    f: find_min_time_result_t (receive only)
    *    p: parameter_t (send only)
    *    v(n, p, z, t): variable_t: variable (Characters after them are the same as 'e') (send only)
+   *    vs(n, p, z, t): variable_set_t: variable set
    *  example: call("Add", "ii", "i", &lhs, &rhs, &res)
    *  Caution: In Mathematica, '_' cannot be used as name of symbols
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
@@ -84,6 +85,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   int call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 
   void set_variable_set(variable_set_t& v){
+    call("resetVariables", 0, "", "");
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
         std::string name = var_prefix + it->get_name();

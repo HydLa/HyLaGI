@@ -131,7 +131,10 @@ publicMethod[
 
 
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint , timeVariables];
+createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables];
+
+createVariableMapInterval[tvars_] := createVariableMapInterval[constraint, initConstraint, tvars];
+
 publicMethod[
   createVariableMapInterval,
   cons, initCons, vars,
@@ -345,6 +348,16 @@ setVariables[vars_] := (
   Protect[variables, prevVariables, timeVariables, initVariables];
 );
 
+
+publicMethod[
+  resetVariables,
+  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  variables = {};
+  prevVariables = {};
+  timeVariables = {};
+  initVariables = {};
+  Protect[variables, prevVariables, timeVariables, initVariables];
+];
 
 
 publicMethod[
