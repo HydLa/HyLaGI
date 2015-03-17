@@ -19,6 +19,14 @@ namespace hydla{
 class Parser{
 public:
 
+  #define IS_DEFINED_AS(name, size, defs, ret) \
+    for(auto D : defs){ \
+      if(name == D->get_name() && size == D->bound_variable_size()){ \
+        ret = D; \
+        break; \
+      } \
+    } \
+
   Parser();
   Parser(std::string);
   Parser(std::vector<std::string>);
