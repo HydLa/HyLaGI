@@ -1,7 +1,7 @@
 #include "ValueNumerizer.h"
 #include <exception>
 #include <cmath>
-#include "SimulateError.h"
+#include "HydLaError.h"
 #include "Logger.h"
 
 using namespace hydla::symbolic_expression;
@@ -313,7 +313,7 @@ void ValueNumerizer::visit(shared_ptr<symbolic_expression::Parameter> node)
 
 void ValueNumerizer::invalid_node(Node &node)
 {
-  throw SimulateError("invalid node: " + node.get_string());
+  throw HYDLA_ERROR("invalid node: " + node.get_string());
 }
 
 
