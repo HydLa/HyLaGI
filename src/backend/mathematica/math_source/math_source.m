@@ -415,8 +415,8 @@ removeDash[var_] := Module[
 ];
 
 
-(* Piecewiseの第二要素を，その条件とともに第一要素に付加してリストにする．条件がFalseなら削除
-   ついでに othersを各条件に対して付加 *)
+(* Piecewiseの第二要素（第一要素以外を除いた場合）に対し，
+othersと第一要素中の全条件の否定の論理積を取って条件とし，第一要素の末尾に付加する*)
 
 makeListFromPiecewise[minT_, others_] := Module[
   {tmpCondition = False, retMinT},
@@ -486,7 +486,6 @@ publicMethod[
       onTime = True,
       ret
     },
-    debugPrint["minT after Minimize:", tCons];
     Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
          onTime = False,
          Minimize::wksol
@@ -503,6 +502,8 @@ publicMethod[
       ret = makeListFromPiecewise[minT, pCons];
       (* 時刻が0となる場合はinfとする．*)
       ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+
+      ret = Select[ret, (#[[2]] =!= False)&];
 
       (* 整形して結果を返す *)
       resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
