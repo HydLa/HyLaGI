@@ -230,7 +230,7 @@ void ValueNumerizer::visit(shared_ptr<Float> node)
 
 void ValueNumerizer::visit(shared_ptr<Function> node)
 {
-  std::string name = node->get_string();
+  std::string name = node->get_name();
   if(name == "sin")
   {
     if(node->get_arguments_size() != 1)

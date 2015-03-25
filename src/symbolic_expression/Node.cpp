@@ -525,7 +525,8 @@ std::ostream& ConditionalProgramList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_program() << "]";
   s << "[";
-  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -535,7 +536,8 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_expression() << "]";
   s << "[";
-  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -545,9 +547,8 @@ std::ostream& VariadicNode::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << get_name() << "]";
   s << "[";
-  for(unsigned int i=0;i<arguments_.size();i++){
-     s << *arguments_[i] << ",";
-  }
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }

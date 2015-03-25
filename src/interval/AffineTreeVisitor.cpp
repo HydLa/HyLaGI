@@ -279,7 +279,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Floa
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Function> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
-  std::string name = node->get_string();
+  std::string name = node->get_name();
   HYDLA_LOGGER_DEBUG(name);
   if(name == "log")
   {
