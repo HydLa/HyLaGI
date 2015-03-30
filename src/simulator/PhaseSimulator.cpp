@@ -34,6 +34,8 @@ using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
 
+namespace se = symbolic_expression;
+
 typedef interval::itvd itvd;
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts) {
@@ -431,9 +433,9 @@ void PhaseSimulator::initialize(variable_set_t &v,
   relation_graph_is_taken_over = true;
 
   if(opts_->max_time != ""){
-    max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
+    max_time = node_sptr(new se::Number(opts_->max_time));
   }else{
-    max_time = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
+    max_time = node_sptr(new se::Infinity());
   }
 
   aborting = false;
@@ -635,6 +637,22 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   return related_vm;
 }
 
+
+list<itvd> PhaseSimulator::interval_newton_nd(node_sptr guard, double ub, variable_map_t &related_vm, parameter_map_t &pm)
+{
+  node_sptr exp;
+  node_sptr dexp;
+  backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
+  backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
+  itvd init = itvd(0.,ub); 
+  list<itvd> result_intervals =
+    interval::calculate_interval_newton_nd(init, exp, dexp, pm);
+  for(auto res : result_intervals)HYDLA_LOGGER_DEBUG_VAR(res);
+  return result_intervals;
+}
+
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm)
 {
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
@@ -642,6 +660,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
   list<Parameter> parameters;
   constraint_t guard_for_newton;
   variable_map_t related_vm_for_newton;
+  AtomicConstraint *interval_guard = nullptr;
   for(auto atomic_guard : guards)
   {
     constraint_t g = atomic_guard->constraint;
@@ -663,7 +682,25 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
         char c;
         cin >> c;
-        by_newton = c == 'y';
+        if(c == 'y')
+        {
+          by_newton = true;
+          interval_guard = atomic_guard;
+        }
+      }
+      if(!by_newton)
+      {
+        variable_map_t related_vm = get_related_vm(guard, original_vm);
+        /*
+          TODO: implement
+          if(opts_->epsilon_mode >= 0)
+          {
+          min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
+          time_limit, phase, backend_.get());
+          }
+        */
+        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
+        guard_time_map[guard] = constraint_for_this_guard;
       }
       if(by_newton)
       {
@@ -728,10 +765,10 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         constraint_t lb, ub;
         lb.reset(new Less(constraint_t(new Number(low_value)), constraint_t(new SymbolicT())));
         ub.reset(new Less(constraint_t(new SymbolicT()), constraint_t(new Number(get_infix_string(val)))));
-        constraint_t bounce;
-        bounce.reset(new LogicalAnd(lb, ub));
+        constraint_t time_bound;
+        time_bound.reset(new LogicalAnd(lb, ub));
         backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
-        min_time_for_this_ask = min_time_calculator.calculate_min_time_newton(&guard_time_map, guard, bounce, entailed);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_bound);
         if(!min_time_for_this_ask.empty()) 
         {
           for(auto min_time : min_time_for_this_ask) HYDLA_LOGGER_DEBUG_VAR((min_time.time));
@@ -1085,6 +1122,7 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
     ret.push_back(constraint_t(new symbolic_expression::True()));
     return ret;
   }
+
   node_sptr exp;
   node_sptr dexp;
   backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
@@ -1114,8 +1152,8 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
     for(Parameter parameter : parameters)
     {
       constraint_t lhs;
-      if(guard_type == typeid(symbolic_expression::UnEqual))      lhs.reset(new symbolic_expression::UnEqual(constraint_t(new symbolic_expression::SymbolicT()), constraint_t(new symbolic_expression::Parameter(parameter))));
-      else       lhs.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT()), constraint_t( new symbolic_expression::Parameter(parameter))));
+      if(guard_type == typeid(se::UnEqual))      lhs.reset(new se::UnEqual(constraint_t(new se::SymbolicT()), constraint_t(new se::Parameter(parameter))));
+      else       lhs.reset(new se::Equal(constraint_t(new se::SymbolicT()), constraint_t( new se::Parameter(parameter))));
 
       ret.push_back(lhs);
       // if(ret.get() == nullptr)
@@ -1131,11 +1169,11 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
   }
   else
   {
-    assert(guard_type == typeid(symbolic_expression::LessEqual) ||
-           guard_type == typeid(symbolic_expression::Less) ||
-           guard_type == typeid(symbolic_expression::Greater) ||
-           guard_type == typeid(symbolic_expression::GreaterEqual));
-    if(guard_type == typeid(symbolic_expression::Less) || guard_type == typeid(symbolic_expression::LessEqual))sign *= -1;
+    assert(guard_type == typeid(se::LessEqual) ||
+           guard_type == typeid(se::Less) ||
+           guard_type == typeid(se::Greater) ||
+           guard_type == typeid(se::GreaterEqual));
+    if(guard_type == typeid(se::Less) || guard_type == typeid(se::LessEqual))sign *= -1;
 
     bool upper = sign > 0;
     list<constraint_t> constraint_list;
@@ -1145,8 +1183,8 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
       if(upper)
       {
         constraint_t ub;
-        if(guard_type == typeid(symbolic_expression::LessEqual) || guard_type == typeid(symbolic_expression::GreaterEqual)) ub.reset(new symbolic_expression::LessEqual(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
-        else ub.reset(new symbolic_expression::Less(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
+        if(guard_type == typeid(se::LessEqual) || guard_type == typeid(se::GreaterEqual)) ub.reset(new se::LessEqual(constraint_t(new se::SymbolicT), constraint_t (new se::Parameter(parameter))));
+        else ub.reset(new se::Less(constraint_t(new se::SymbolicT), constraint_t (new se::Parameter(parameter))));
         if(lb == nullptr)constraint_list.push_back(ub);
         else
         {
@@ -1156,8 +1194,8 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
       }
       else
       {
-        if(guard_type == typeid(symbolic_expression::LessEqual) || guard_type == typeid(symbolic_expression::GreaterEqual)) lb.reset(new symbolic_expression::LessEqual(constraint_t( new symbolic_expression::Parameter(parameter)), constraint_t( new symbolic_expression::SymbolicT())));
-        else lb.reset(new symbolic_expression::Less(constraint_t( new symbolic_expression::Parameter(parameter)), constraint_t( new symbolic_expression::SymbolicT())));
+        if(guard_type == typeid(se::LessEqual) || guard_type == typeid(se::GreaterEqual)) lb.reset(new se::LessEqual(constraint_t( new se::Parameter(parameter)), constraint_t( new se::SymbolicT())));
+        else lb.reset(new se::Less(constraint_t( new se::Parameter(parameter)), constraint_t( new se::SymbolicT())));
       }
       upper = !upper;
     }

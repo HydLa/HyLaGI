@@ -275,6 +275,7 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
       result_intervals.push_back(current_interval);
+      break;
     }
   }
 

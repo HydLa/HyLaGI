@@ -83,7 +83,18 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
   }
   break;
-    
+  
+  case 'd':
+  {
+    if(args_fmt[++i] == 'b')
+    {
+      double *db = (double*)arg;
+      link_->put_double(*db);
+      break;
+    }
+    else invalid_fmt(args_fmt, i);
+  }
+  break;
 
   case 'c':
     switch(args_fmt[++i])

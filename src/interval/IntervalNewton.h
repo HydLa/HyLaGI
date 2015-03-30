@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stack>
-/* 柏木先生の区間演算用のライブラリ */
 #include "kv/interval.hpp"
 #include "kv/rdouble.hpp"
 #include "kv/dd.hpp"

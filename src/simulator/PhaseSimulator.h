@@ -10,8 +10,14 @@
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
 
+namespace kv
+{
+template <class T> class interval;
+}
+
 namespace hydla {
 namespace simulator {
+
 
 class ValueModifier;
 class MinTimeCalculator;
@@ -91,6 +97,8 @@ private:
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);
 
   std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, std::list<Parameter> &parameters);
+
+  std::list<kv::interval<double> > interval_newton_nd(node_sptr guard, double ub, variable_map_t &related_vm, parameter_map_t &pm);
 
   Simulator* simulator_;
 

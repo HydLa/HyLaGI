@@ -563,6 +563,15 @@ void VariadicNode::set_argument(node_sptr node, int i){
   arguments_[i] = node;
 }
 
+void VariadicNode::add_argument(Node *node){
+  arguments_.push_back(node_sptr(node));
+}
+
+
+void VariadicNode::set_argument(Node *node, int i){
+  arguments_[i].reset(node);
+}
+
 
 int VariadicNode::get_arguments_size(){
   return arguments_.size();
