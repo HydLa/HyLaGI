@@ -474,11 +474,11 @@ publicMethod[
   ]
 ];
 
-minimizeTime[tCons_] := minimizeTime[tCons, pConstraint];
+minimizeTime[tCons_, minLimit_, maxLimit_] := minimizeTime[tCons, minLimit, maxLimit, pConstraint, parameters];
 
 publicMethod[
   minimizeTime,
-  tCons, pCons,  
+  tCons, minLimit, maxLimit, pCons, pars, 
   Module[
     {
       minT,
@@ -486,7 +486,7 @@ publicMethod[
       onTime = True,
       ret
     },
-    Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
+    Quiet[Check[minT = Minimize[{t, t > minLimit && tCons && pCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
@@ -502,6 +502,8 @@ publicMethod[
       ret = makeListFromPiecewise[minT, pCons];
       (* 時刻が0となる場合はinfとする．*)
       ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+      (* exclude cases where t doesn't satisfy globalCons *)
+      ret = Select[ret, (Reduce[ForAll[pars, pCons, #[[1]] <= maxLimit] ])&];
 
       ret = Select[ret, (#[[2]] =!= False)&];
 

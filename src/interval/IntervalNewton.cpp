@@ -246,10 +246,6 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
         f_result = visitor.get_interval_value(exp, &m, &phase_map_);
       }
       nx = m - division_part1(f_result, d_result, parted);
-      HYDLA_LOGGER_DEBUG_VAR(m);
-      HYDLA_LOGGER_DEBUG_VAR(f_result);
-      HYDLA_LOGGER_DEBUG_VAR(d_result);
-      HYDLA_LOGGER_DEBUG_VAR(nx);
       HYDLA_LOGGER_DEBUG_VAR(prev_interval);
 
       current_interval = intersect_interval(prev_interval, nx);
@@ -275,7 +271,6 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
       result_intervals.push_back(current_interval);
-      break;
     }
   }
 

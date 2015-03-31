@@ -13,7 +13,6 @@ MinTimeCalculator::MinTimeCalculator(RelationGraph *rel, Backend *b): relation_g
 
 find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated, const constraint_t &time_bound)
 {
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   // TODO: All guards don't have to be updated.
   // TODO: 原子制約単位ではなく，OrGuardNodeやAndGuardNode単位でも結果の再利用は可能なはず
   guard_time_map = g;
@@ -23,11 +22,9 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(current_cons));
   if(time_bound.get() != nullptr)current_cons.reset(new symbolic_expression::LogicalAnd(current_cons, time_bound));
 
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(current_cons));
   find_min_time_result_t find_min_time_result;
-  backend->call("minimizeTime", 1, "en", "f",
+  backend->call("minimizeTime", 3, "envlnvln", "f",
                 &current_cons, &find_min_time_result);
-
   return find_min_time_result;
 }
 
