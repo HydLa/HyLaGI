@@ -919,7 +919,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false,  phase->parameter_map);
       }
-
+      HYDLA_LOGGER_DEBUG("");
       pp_time_result_t time_result;
       set<ask_t> checked_asks;
       set<string> min_time_variables;
@@ -934,7 +934,17 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
-
+      if(opts_->interval_newton)
+      {
+        Value max_time(opts_->max_ip_width);
+        for(auto result : time_result)
+        {
+          bool is_valid_time;
+          backend_->call("alwaysLess", 3, "vlnvlnmp", "b", &result.time, &max_time, &result.parameter_map, &is_valid_time);
+          // TODO: implement appropriate error handling
+          if(!is_valid_time)assert(0);
+        }
+      }
       if(time_result.empty())
       {
         phase->simulation_state = simulator::TIME_LIMIT;
