@@ -474,11 +474,11 @@ publicMethod[
   ]
 ];
 
-minimizeTime[tCons_, minLimit_, maxLimit_] := minimizeTime[tCons, minLimit, maxLimit, pConstraint, parameters];
+minimizeTime[tCons_] := minimizeTime[tCons, pConstraint];
 
 publicMethod[
   minimizeTime,
-  tCons, minLimit, maxLimit, pCons, pars, 
+  tCons, pCons,  
   Module[
     {
       minT,
@@ -486,29 +486,23 @@ publicMethod[
       onTime = True,
       ret
     },
-    (* Check in advance (Because Minimize fails for constraints such as Minimize[{t, t > 0 && t <= 0 && p[py, 0, 1] == 1}, t]) *)
-    If[Quiet[Reduce[t > minLimit && tCons && pCons]] === False, minT = Infinity,
-      Quiet[Check[minT = Minimize[{t, t > minLimit && tCons && pCons}, {t}],
-          onTime = False,
-          Minimize::wksol
-        ],
-        {Minimize::wksol, Minimize::infeas}
-      ];
-      (* When minimize failed *)
-      If[Head[minT] === Minimize, Message[findMinTime::minimizeFailure]];
-      (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-      simplePrint[minT];
-      minT = First[minT];
+    Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
+         onTime = False,
+         Minimize::wksol
+       ],
+       {Minimize::wksol, Minimize::infeas}
     ];
+    (* When minimize failed *)
+    If[Head[minT] === Minimize, Message[findMinTime::minimizeFailure]];
+    (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
+    simplePrint[minT];
+    minT = First[minT];
     If[minT === Infinity, 
       {},
       ret = makeListFromPiecewise[minT, pCons];
       (* 時刻が0となる場合はinfとする．*)
       ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
-      simplePrint[ret];
-      (* exclude cases where t doesn't satisfy globalCons *)
-      ret = Select[ret, (Reduce[ForAll[pars, #[[2]], #[[1]] <= maxLimit] ])&];
-      simplePrint[ret];
+
       ret = Select[ret, (#[[2]] =!= False)&];
 
       (* 整形して結果を返す *)
@@ -520,6 +514,7 @@ publicMethod[
     ]
   ]
 ];
+
 
 createParameterMapList[cons_] := 
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];

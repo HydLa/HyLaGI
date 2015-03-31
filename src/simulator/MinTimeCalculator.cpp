@@ -23,7 +23,7 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
   if(time_bound.get() != nullptr)current_cons.reset(new symbolic_expression::LogicalAnd(current_cons, time_bound));
 
   find_min_time_result_t find_min_time_result;
-  backend->call("minimizeTime", 3, "envlnvln", "f",
+  backend->call("minimizeTime", 1, "en", "f",
                 &current_cons, &find_min_time_result);
   return find_min_time_result;
 }

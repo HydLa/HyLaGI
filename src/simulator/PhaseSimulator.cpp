@@ -637,22 +637,6 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   return related_vm;
 }
 
-
-list<itvd> PhaseSimulator::interval_newton_nd(node_sptr guard, double ub, variable_map_t &related_vm, parameter_map_t &pm)
-{
-  node_sptr exp;
-  node_sptr dexp;
-  backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
-  backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
-  itvd init = itvd(0.,ub); 
-  list<itvd> result_intervals =
-    interval::calculate_interval_newton_nd(init, exp, dexp, pm);
-  for(auto res : result_intervals)HYDLA_LOGGER_DEBUG_VAR(res);
-  return result_intervals;
-}
-
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm)
 {
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
@@ -687,20 +671,6 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           by_newton = true;
           interval_guard = atomic_guard;
         }
-      }
-      if(!by_newton)
-      {
-        variable_map_t related_vm = get_related_vm(guard, original_vm);
-        /*
-          TODO: implement
-          if(opts_->epsilon_mode >= 0)
-          {
-          min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
-          time_limit, phase, backend_.get());
-          }
-        */
-        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-        guard_time_map[guard] = constraint_for_this_guard;
       }
       if(by_newton)
       {
@@ -1121,8 +1091,6 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   }
 }
 
-
-
 list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, list<Parameter> &parameters)
 {
   int sign = -1;
@@ -1210,13 +1178,6 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
       upper = !upper;
     }
     if(lb != nullptr)constraint_list.push_back(lb);
-    // while(!constraint_list.empty())
-    // {
-    //   if(ret == nullptr)ret = constraint_list.front();
-    //   else ret.reset(new symbolic_expression::LogicalOr(ret, constraint_list.front()));
-    //   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint_list.front()));
-    //   constraint_list.pop_front();
-    // }
     ret = constraint_list;
   }
   return ret;
