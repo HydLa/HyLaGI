@@ -633,7 +633,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       bool by_newton = false;
       if(opts_->interval_newton)
       {
-        cout << "apply Interval Newton method to " << get_infix_string(guard) << "?" << endl;
+        cout << "apply Interval Newton method to " << get_infix_string(guard) << "?('y' or 'n')" << endl;
         char c;
         cin >> c;
         by_newton = c == 'y';

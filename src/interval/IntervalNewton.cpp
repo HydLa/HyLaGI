@@ -56,13 +56,17 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
     
-  tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)) - 1);            
-  tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)) - 1);
+  tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)));            
+  tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)));
 
+  // tmp.lower() = nextafter(candidate.lower(), -100.0);
+  // tmp.upper() = nextafter(candidate.upper(), 100.0);
+  
   std::cout << "\n" << "width : " << width(candidate) << "\n";
   std::cout << "log(width) : " << log10(width(candidate)) << "\n";
   std::cout << "(int)log(width) : " << (int)log10(width(candidate)) << "\n";
 
+  debug_print("candidate : ", candidate);
   debug_print("tmp : ", tmp);
   
   itvd n_x, div;
