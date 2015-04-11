@@ -1,7 +1,7 @@
 /* ref:  A. Fehnker and F. Ivancic : Benchmarks for hybrid systems verification, Hy-
 brid Systems Computation and Control, 2004, pp. 381-397.
 */
-// u: ³°µ¤²¹
+// u: outside temparature
 // s: 0 -> off 
 //     1 -> on & room1
 //     2 -> on & room2

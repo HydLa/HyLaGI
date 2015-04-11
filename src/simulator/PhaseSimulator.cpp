@@ -276,6 +276,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       throw HYDLA_ERROR("result variable map is not single.");
     }
     phase->variable_map = create_result[0];
+    
+    if(opts_->epsilon_mode >= 0){
+      cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
+    }
+    
 
     phase->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
@@ -283,9 +288,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
     backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
 
-    if(opts_->epsilon_mode >= 0){
-      cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
-    }
     
     phase->diff_positive_asks.insert(cc_local_positives.begin(), cc_local_positives.end());
     phase->diff_negative_asks.insert(cc_local_negatives.begin(), cc_local_negatives.end());
@@ -615,14 +617,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     if(!guard_time_map.count(guard))
     {
       variable_map_t related_vm = get_related_vm(guard, original_vm);
-      /*
-        TODO: implement
-        if(opts_->epsilon_mode >= 0)
-        {
-        min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
-        time_limit, phase, backend_.get());
-        }
-      */
+
       backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
       guard_time_map[guard] = constraint_for_this_guard;
     }
@@ -679,12 +674,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
 
-/* TODO:implement
-   if(opts_->epsilon_mode){
-   time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
-   }
-*/
-
+    
     variable_map_t original_vm = phase->variable_map;
     phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
 
@@ -749,6 +739,13 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
+                  
+          if(opts_->epsilon_mode >= 0)
+          {
+            candidate_map[ask] = find_min_time_epsilon(ask->get_guard(), original_vm,
+                                                 time_limit, phase, backend_.get());
+          }
+
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
         }
       }
@@ -757,6 +754,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       {
         auto break_point = entry.first;
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
+
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false);
       }
 
@@ -774,6 +772,11 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
+      /*
+      if(opts_->epsilon_mode){
+        time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
+      }*/
+
 
       if(time_result.empty())
       {

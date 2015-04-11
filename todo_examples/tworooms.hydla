@@ -1,11 +1,10 @@
 // tworooms.hydla
-// -*- coding: utf-8 -*-
-// ２つの部屋を１つのヒーターで暖める例題
-// SO: ヒーターなし
-// S1: 部屋Aを暖める
-// S2: 部屋Bを暖める
-// ヒーターの移動に1/100秒かかるとする
-// 部屋の温度に上限と下限を設けて一定の範囲の温度に保つ
+// tworooms with one heater.
+// SO: heater doesn't work
+// S1: heating room1
+// S2: heating room2
+// It takes 1/100 time unit to move the heater
+// Each room has an upper bound and a lower bound of the temperature
 
 
 S0 <=> [](

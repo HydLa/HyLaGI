@@ -1,4 +1,4 @@
-// 方形波 (square wave)
+// square wave
 
 INIT   <=> f=10 & t=0.
 CHANGE <=> [](t- = 2 => (t=0 & f = 10 + - f-)). 
