@@ -585,7 +585,7 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
     {
       error_msg += get_infix_string(ask) + ";";
     }
-    throw HYDLA_ERROR("hoge");
+    throw HYDLA_ERROR(error_msg);
   }
   return true;
 }

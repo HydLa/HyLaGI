@@ -7,7 +7,7 @@ $MaxExtraPrecision = 1000;
  * global variables
  * constraint: 現在のフェーズでの制約
  * pConstraint: 定数についての制約
- * prevIneqs: constraints of inequalities of left-hand limits
+ * prevConstraint: constraint for previ variables
  * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
@@ -189,13 +189,13 @@ Module[
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p, Return[expr] ];
+
   ret = ToRadicals[expr];
 
-  (* return Root[] as string. because it's difficult to handle *)
+  (* return Root[] as string. because it's difficult to handle as formulas in C++*)
   If[Head[ret] === Root, Return[ToString[ret] ] ];
 
   ret = Map[toReturnForm, ret];
-  ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];
   ret = Replace[ret, (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )];
   ret = Replace[ret, (x_Integer :> replaceIntegerToString[x])];
   ret

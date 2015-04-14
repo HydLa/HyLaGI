@@ -16,7 +16,7 @@ publicMethod[
     {cpTrue, cpFalse},
 
     Quiet[
-      cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
+         cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -89,6 +89,7 @@ publicMethod[
       timeVars = Map[(#[t])&, getVariables[cons] ];
       prevVars = getPrevVariables[initCons];
       debugPrint["sol after exDSolve", sol];
+
       If[sol === overConstraint,
         {{False}, {LogicalExpand[pCons]}},
         tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
@@ -462,12 +463,11 @@ publicMethod[
       ret
     },
     tStore = Map[(Rule@@#)&, cons];  
-    timeAppliedCause = cause /. tStore;
+    timeAppliedCause = ToRadicals[cause /. tStore];
     simplePrint[timeAppliedCause];
     
     maxCons = If[maxTime === Infinity, True, t < maxTime];
-    resultCons = Reduce[timeAppliedCause && maxCons, Reals];
-    simplePrint[resultCons];
+    resultCons = timeAppliedCause && maxCons;
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
@@ -646,16 +646,15 @@ Module[
         Continue[]
       ];
       resultRule = Union[resultRule, rules[[1]] ];
-      listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-      listExpr = Map[(If[!hasVariable[#], Reduce[#, Reals], #])&, listExpr];
+       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       listExpr = Select[listExpr, (#=!=True)&];
-      resultCons = applyDSolveResult[resultCons, rules[[1]] ];
+      resultCons = applyDSolveResult[resultCons, resultRule]; 
       If[resultCons === False, Return[overConstraint] ];
     ]
   ];
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstraint, solved];
-  restCond = LogicalExpand[And@@listExpr && resultCons];
+  restCond = LogicalExpand[And@@listExpr && applyDSolveResult[resultCons, resultRule]];
   restCond = Or2or[restCond];
   restCond = Map[(And2and[#])&, restCond];
   { retCode, restCond, resultRule}
@@ -733,7 +732,7 @@ Module[
           overConstraint,
       {DSolve::overdet, DSolve::bvimp}
     ],
-   {DSolve::overdet, DSolve::bvimp}
+  {DSolve::overdet, DSolve::bvimp, Solve::svars}
   ];
   sol
 ];
