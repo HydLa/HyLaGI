@@ -1,7 +1,5 @@
 /*
-重力と磁力の影響を考えたボールの動き
-磁力は重力と逆向きに働き、スイッチでＯＮ／ＯＦＦできる
-スイッチは１秒ごとに切り替えられる可能性がある
+a model of a ball with gravity and a switching magnetic force.
 */
 
 INIT <=> y=10 & y'=0 & mag=0 & timer=0.

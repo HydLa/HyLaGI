@@ -1,4 +1,4 @@
-// @1300 時刻4までならシミュレーション可能
+// @1300 can be simulated up to 4 time units
 
 INIT  <=> px = 1/2 /\ py = 3/2 /\ vx = 1/2 /\ vy = 1/2 /\ vdx = 0 /\ vdy = -1.
 LOW   <=> [](vdx' = 0 /\ vdy' = 0).

@@ -1,5 +1,4 @@
-// -*- coding: utf-8 -*-
-// ノコギリ波 (sawtooth wave)
+// sawtooth wave
 
 INIT     <=> f=0.
 INCREASE <=> [](f'=3).

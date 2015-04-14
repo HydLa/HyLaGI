@@ -1,5 +1,4 @@
-// -*- coding: utf-8 -*-
-// ステップ関数
+// step function
 
 INIT   <=> f=0 & t=0.
 TIMER  <=> [](t'=1).

@@ -41,6 +41,30 @@ checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. pre
 );
 
 
+(* 条件を満たす最小の時刻と，その条件の組を求める *)
+findMinTime[causeAndID_, condition_] :=
+Module[
+  {
+    id,
+    cause,
+    minT,
+    ret
+  },
+  id = causeAndID[[2]];
+  cause = causeAndID[[1]];
+  sol = Reduce[cause && condition && t > 0, t, Reals];
+  checkMessage[];
+  If[sol === False, Return[{}] ];
+  (* 成り立つtの最小値を求める *)
+  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
+  ret = makeListFromPiecewise[minT, condition];
+  (* 時刻が0となる場合を取り除く．*)
+  ret = Select[ret, (#[[1]] =!= 0)&];
+  (* append id for each time *)
+  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
+  ret
+];
+
 ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {

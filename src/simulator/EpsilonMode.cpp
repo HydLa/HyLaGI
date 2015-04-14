@@ -123,12 +123,13 @@ find_min_time_result_t reduce_unsuitable_case(find_min_time_result_t original_re
 
 find_min_time_result_t hydla::simulator::find_min_time_epsilon(node_sptr trigger, variable_map_t &vm, value_t time_limit, phase_result_sptr_t& phase, Backend * backend)
 {
-  
   //結果の保存(ret)
   find_min_time_result_t time_result;
 
-  time_result = calculate_tmp_result(phase,time_limit, trigger, backend, vm);
+  HYDLA_LOGGER_DEBUG_VAR("");
 
+  time_result = calculate_tmp_result(phase,time_limit, trigger, backend, vm);
+  HYDLA_LOGGER_DEBUG_VAR("");
   for(auto &tmp_candidate : time_result)
   {
     backend->call("simplify", 1, "vln", "vl", &tmp_candidate.time, &tmp_candidate.time);
@@ -145,8 +146,9 @@ find_min_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_
   bool same_id = false;
 
   find_min_time_result_t find_result, ret;
+  HYDLA_LOGGER_DEBUG_VAR("");
   backend->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &vm, &time_limit, &find_result);
-
+  HYDLA_LOGGER_DEBUG_VAR("");
   for(auto find_candidate : find_result)
   {
     value_t time = find_candidate.time;
