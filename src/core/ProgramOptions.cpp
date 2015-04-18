@@ -124,8 +124,9 @@ void ProgramOptions::init_descriptions()
      "simulation time for the model\n"
      "  empty: infinity")
 
-    ("ignore_warnings", "ignore warnings. \n"
-     "Warnings are mainly caused by errors of calculations")
+    ("ignore_warnings", "ignore warnings created by Backend solvers. \n"
+     "(current canidates: DSolve::bvnul, Reduce::ztest1)"
+      )
 
     ("phase,p",
      value<int>()->default_value(-1),
