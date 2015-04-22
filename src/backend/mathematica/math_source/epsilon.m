@@ -1,3 +1,73 @@
+publicMethod[aho, v1,v2, p1,p2,
+             Module[{tmp},
+                    tmp = v1 == v2;
+                    Reduce[ForAll[getParameters[p1],p1,Exists[getParameters[p2],p2,tmp]]]
+                                        ]
+             ];
+
+publicMethod[checkInclude, past, now, pConstraintPast, pConstraintNow,
+             Module[{minPast, maxPast, minNow, maxNow, tmp, reduceExprPast, reduceExprNow, tmpresult},
+                    minPast = Quiet[Minimize[{past, And@@pConstraintPast && t > 0},
+                                             If[Union[getParameters[past && pConstraintPast]] =!= {},
+                                                Union[getParameters[past && pConstraintPast]], {tmp}],
+                                             Reals], {Minimize::wksol, Minimize::infeas}];
+                    simplePrint[minPast];
+                    maxPast = Quiet[Maximize[{past, And@@pConstraintPast && t > 0},
+                                             If[Union[getParameters[past && pConstraintPast]] =!= {},
+                                                Union[getParameters[past && pConstraintPast]], {tmp}],
+                                             Reals], {Maximize::wksol, Maximize::infeas}];
+                    simplePrint[maxPast];
+                    minNow = Quiet[Minimize[{now, And@@pConstraintNow && t > 0},
+                                            If[Union[getParameters[now && pConstraintNow]] =!= {},
+                                               Union[getParameters[now && pConstraintNow]], {tmp}],
+                                            Reals], {Minimize::wksol, Minimize::infeas}];
+                    simplePrint[minNow];
+                    maxNow = Quiet[Maximize[{now, And@@pConstraintNow && t > 0},
+                                            If[Union[getParameters[now && pConstraintNow]] =!= {},
+                                               Union[getParameters[now && pConstraintNow]], {tmp}],
+                                            Reals], {Maximize::wksol, Maximize::infeas}];
+                    simplePrint[maxNow];
+                                   (* not (minPast < tmp < maxPast) && minNow < tmp <
+                                                    maxNow (=ã¯checkIncludeã®æ»ãå¤ã§å¤æ­) *)
+                    debugPrint["# minPast # : ",Refine[minPast,t>0][[1]]];
+                    minPast = Refine[minPast,t>0][[1]];
+                    debugPrint["# maxPast # : ",Refine[maxPast,t>0][[1]]];
+                    maxPast = Refine[maxPast,t>0][[1]];
+                    debugPrint["# minNow # : ",Refine[minNow,t>0][[1]]];
+                    minNow = Refine[minNow,t>0][[1]];
+                    debugPrint["# maxNow # : ",Refine[maxNow,t>0][[1]]];
+                    maxNow = Refine[maxNow,t>0][[1]];
+                    tmpresult = Reduce[minPast <= minNow && maxPast >= maxNow];
+                    debugPrint["# result # : ",tmpresult];
+                    tmpresult
+                    (* If[Reduce[minPast <= minNow && maxPast >= maxNow], True , False]*)
+                    (*
+                     minPast = checkInclude[minPast][[2]];
+                     maxPast = checkInclude[maxPast][[2]];
+                     minNow = checkInclude[minNow][[2]];
+                     maxNow = checkInclude[maxNow][[2]];
+                     If[minPast[[1]] == maxPast[[1]],
+                        reduceExprPast = tmp == minPast[[1]];,
+                        If[minPast[[2]] == 0, reduceExprPast = minPast[[1]] < tmp;,
+                           reduceExprPast = minPast[[1]] <= tmp;];
+                        If[maxPast[[2]] == 0,
+                           reduceExprPast = reduceExprPast && tmp < maxPast[[1]];,
+                           reduceExprPast = reduceExprPast && tmp <= maxPast[[1]];];
+                        ];
+                     If[minNow[[1]] == maxNow[[1]], reduceExprNow = tmp == minNow[[1]];,
+                        If[minNow[[2]] == 0, reduceExprNow = minNow[[1]] < tmp;,
+                           reduceExprNow = minNow[[1]] <= tmp;];
+                        If[maxNow[[2]] == 0,
+                           reduceExprNow = reduceExprNow && tmp < maxNow[[1]];,
+                           reduceExprNow = reduceExprNow && tmp <= maxNow[[1]];];
+                        ];
+                     simplePrint[reduceExprPast && reduceExprNow];
+                                    If[Reduce[
+                                              Not[reduceExprPast] && reduceExprNow] === False, True,
+                                                         False]
+                     *)
+                                        ]
+             ];
 
 (* ポイントフェーズにおける無矛盾性判定 *)
 checkConsistencyPointEpsilon[] := (

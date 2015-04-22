@@ -25,21 +25,21 @@ void ProgramOptions::init_descriptions()
     ("version", "display version")
     ("debug,d", "enable debug mode\n")
     ("parse_only", "only parse hydla program")
-    ("dump_parse_tree", 
+    ("dump_parse_tree",
      "output parse tree")
     ("dump_module_set_list",
      "output set of module sets\n"
      "  which might be solution\n"
      "  by list representation")
 
-    ("dump_module_set_graph", 
+    ("dump_module_set_graph",
      "output set of module sets\n"
      "  which might be solution\n"
      "  by graph representation")
     ("dump_module_priority_graph",
      "output priorities of modules\n"
      "  by graphviz format")
-    ("dump_relation_graph", 
+    ("dump_relation_graph",
      "output relation of constraints and variables\n"
      "  by graphviz format")
     ("dump_in_progress",
@@ -56,7 +56,7 @@ void ProgramOptions::init_descriptions()
      "solver:\n"
      "  m or Mathematica\n"
      "  r or Reduce")
-     
+
     ("static_generation_of_module_sets", "simulation with static generation of module sets")
 
     ("nd", "nondeterministic mode")
@@ -103,14 +103,14 @@ void ProgramOptions::init_descriptions()
      "analysis file name\n"
      "  empty - standard out or standard in\n")
 
-    ("precision", 
-     value<int>()->default_value(10), 
+    ("precision",
+     value<int>()->default_value(10),
      "precision of approximation\n"
      "0 or negative number means best-effort for precision\n"
      "(invalid if \"without_validation\" isn't specified ")
 
-    ("time_delta", 
-     value<int>()->default_value(10), 
+    ("time_delta",
+     value<int>()->default_value(10),
      "exponent of minimum time step, e.g. 5 means 1.0E5, 10 means 1.0E10 \n"
      "0 or negative number means that time step equals to 0\n"
      "(invalid if \"without_validation\" isn't specified)")
@@ -143,6 +143,9 @@ void ProgramOptions::init_descriptions()
     ("epsilon,e",
      value<int>()->default_value(-1),
      "epsilon mode")
+
+    ("ltl,l", "ltl model check mode")
+
      /*
     ("timeout",
      value<int>()->default_value(-1),

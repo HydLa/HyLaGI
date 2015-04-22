@@ -7,6 +7,7 @@
 #include "CsvProfilePrinter.h"
 #include "HAConverter.h"
 #include "HASimulator.h"
+#include "LTLModelChecker.h"
 #include "MathematicaLink.h"
 #include "REDUCELinkFactory.h"
 #include "Backend.h"
@@ -146,6 +147,7 @@ void setup_simulator_opts(Opts& opts)
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
   opts.epsilon_mode = po.get<int>("epsilon");
+  opts.ltl_model_check_mode = po.count("ltl")>0;
   /*
   opts.output_interval = po.get<std::string>("output_interval");
   */
@@ -167,7 +169,7 @@ void setup_simulator_opts(Opts& opts)
   */
   opts.timeout_calc= po.get<int>("timeout_calc");
 
-  
+
   //opts.max_loop_count= po.get<int>("mlc");
 
   // select search method (dfs or bfs)
@@ -185,7 +187,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   Opts opts;
   ProgramOptions &po = ProgramOptions::instance();
   setup_simulator_opts(opts);
-  
+
 
   boost::shared_ptr<Backend> backend;
 
@@ -230,6 +232,10 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     HASimulator* ha_simulator = new HASimulator(opts);
     ha_simulator->set_ha_results(ha_converter.get_results());
     simulator_ = ha_simulator;
+  }
+  else if(opts.ltl_model_check_mode)
+  {
+    simulator_ = new LTLModelChecker(opts);
   }
   else
   {
