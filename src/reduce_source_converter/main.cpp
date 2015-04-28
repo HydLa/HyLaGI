@@ -6,8 +6,9 @@ void conv()
   std::istreambuf_iterator<char> in_itr(std::cin);
   std::ostreambuf_iterator<char> out_itr(std::cout);
   
-  *out_itr++ = '<';
-  *out_itr++ = '<';
+  *out_itr++ = ' ';
+  *out_itr++ = ' ';
+  *out_itr++ = ' ';
   *out_itr++ = ' ';
   *out_itr++ = '\"';
   
@@ -35,8 +36,9 @@ void conv()
         *out_itr++ = 'n';
         *out_itr++ = '\"';
         *out_itr++ = '\n';
-        *out_itr++ = '<';
-        *out_itr++ = '<';
+        *out_itr++ = ' ';
+        *out_itr++ = ' ';
+        *out_itr++ = ' ';
         *out_itr++ = ' ';
         *out_itr++ = '\"';
         c = *in_itr++;   
@@ -69,7 +71,7 @@ int main(int argc, char *argv[])
     "#include \"" << argv[1] << ".h\"\n\n"
         "const std::string " << argv[1] << "() {\n"
         "  std::ostringstream s; \n"
-        "  s\n";
+        "  s <<\n";
   conv();
   std::cout << 
     ";\n\n"
