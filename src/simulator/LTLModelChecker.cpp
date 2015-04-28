@@ -40,28 +40,61 @@ phase_result_sptr_t LTLModelChecker::simulate()
       consistency_checker.reset(new ConsistencyChecker(backend));
       //Property Automaton initialize
       int id = 0;
-      PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+
+      //[bouncing ball 1]
+      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
+      // property_init->addLink(true_node,property_init);
+      // property_init->addLink(y_geq_15,node1);
+      // node1->addLink(true_node,node1);
+
+      //[bouncing ball 2]
+      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-      // PropertyNode *node3 = new PropertyNode(id++,NOMAL);
-      // PropertyNode *node4 = new PropertyNode(id++,NOMAL);
-      // PropertyNode *node5 = new PropertyNode(id++,NOMAL);
-      // PropertyNode *node6 = new PropertyNode(id++,NOMAL);
-      // PropertyNode *node7 = new PropertyNode(id++,ACCEPTANCE_STATE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
+      // node_sptr y_neq_0 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
+      // property_init->addLink(true_node,property_init);
+      // property_init->addLink(y_eq_0,node1);
+      // property_init->addLink(y_neq_0,node2);
+      // node1->addLink(y_eq_0,node1);
+      // node2->addLink(y_neq_0,node2);
+
+      //[hot air balloon]
+      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_ng_0 = node_sptr(new Not(node_sptr(new Greater(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
+      // property_init->addLink(true_node,property_init);
+      // property_init->addLink(y_ng_0,node1);
+      // node1->addLink(true_node,node1);
+
+      //[water tank 1]
+      // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
+      // property_init->addLink(y_neq_12,property_init);
+
+      //[water tank 2]
+      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      // Propertynode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_neq_6 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
+      // property_init->addLink(true_node,property_init);
+      // property_init->addLink(y_neq_6,node1);
+      // node1->addLink(y_neq_6,node1);
+
+      //[Artificial Example]
+      PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       node_sptr true_node = node_sptr(new True());
-      node_sptr y_eq_0 = node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-      node_sptr y_neq_0 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
-      node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
-      property_init->addLink(y_neq_12,property_init);
-      // property_init->addLink(y_neq_0,node1);
-      // property_init->addLink(y_eq_0,node2);
-      // node1->addLink(y_neq_0,node1);
-      // node2->addLink(y_eq_0,node2);
-      // property_init->addLink(y_neq_0,node3);
-      // node3->addLink(true_node,node4);
-      // node4->addLink(true_node,node5);
-      // node5->addLink(true_node,node6);
-      // node6->addLink(true_node,node7);
+      node_sptr y_geq_3 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("3"))));
+      property_init->addLink(true_node,property_init);
+      property_init->addLink(y_geq_3,node1);
+      node1->addLink(true_node,node1);
+
       property_init->dot();
       PropertyNode *PropertyZero = new PropertyNode(0,ZERO);
       LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
@@ -114,8 +147,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
       profile_vector_->insert(todo);
       if(todo->simulation_state == NOT_SIMULATED){
         process_one_todo(todo);
-        /* TODO: assertion違反が検出された場合の対応
-        */
+        /* TODO: assertion違反が検出された場合の対応 */
         if(ltl_current.empty()){
           // cout << "come ltl search : 1" << endl;
           //初期化
