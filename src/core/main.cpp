@@ -35,8 +35,8 @@ using namespace std;
 
 // prototype declarations
 int main(int argc, char* argv[]);
-void hydla_main(int argc, char* argv[]);
-void simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
+int hydla_main(int argc, char* argv[]);
+int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 
@@ -52,15 +52,11 @@ int main(int argc, char* argv[])
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-  int ret = 0;
-
-  hydla_main(argc, argv);
-
-  return ret;
+  return hydla_main(argc, argv);
 }
 
 
-void hydla_main(int argc, char* argv[])
+int hydla_main(int argc, char* argv[])
 {
   ProgramOptions &po = ProgramOptions::instance();
   po.parse(argc, argv);
@@ -79,12 +75,12 @@ void hydla_main(int argc, char* argv[])
   
   if(po.count("help")) {     // ヘルプ表示して終了
     po.help_msg(cout);
-    return;
+    return 0;
   }
 
   if(po.count("version")) {  // バージョン表示して終了
     cout << Version::description() << endl;
-    return;
+    return 0;
   }
   // ParseTreeの構築
   // ファイルを指定されたらファイルから
@@ -104,24 +100,24 @@ void hydla_main(int argc, char* argv[])
   if(po.count("parse_only"))
   {
     cout << "successfully parsed" << endl;
-    return;
+    return 0;
   }
   
   // いろいろと表示
   if(dump(pt)) {
-    return;
+    return 0;
   }
 
   Timer simulation_timer;
   // シミュレーション開始
-  simulate(pt);
+  int simulation_result = simulate(pt);
 
   if(po.get<string>("tm") != "n"){
     std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
     std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
     cout << endl;
   }
-
+  return simulation_result;
 }
 
 /**

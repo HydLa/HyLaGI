@@ -1,6 +1,5 @@
 #include "SExpParser.h"
 
-#include "../../../parser/CommentGrammar.h"
 #include <cstring>
 #include <sstream>
 
@@ -11,13 +10,12 @@ namespace hydla {
 namespace parser {
 SExpParser::tree_info_t SExpParser::parse(const std::string& input_str){
   SExpGrammar                   sg;
-  CommentGrammar                cg;
 
   const char* str = input_str.c_str();
 
   pos_iter_t positBegin(str, str + strlen(str));
   pos_iter_t positEnd;
-  tree_info_t ast_tree = ast_parse(positBegin, positEnd, sg, cg);
+  tree_info_t ast_tree = ast_parse(positBegin, positEnd, sg);
 
   return (ast_tree);
 }

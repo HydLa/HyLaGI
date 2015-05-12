@@ -180,12 +180,11 @@ void setup_simulator_opts(Opts& opts)
   }
 }
 
-void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   Opts opts;
   ProgramOptions &po = ProgramOptions::instance();
   setup_simulator_opts(opts);
-  
 
   boost::shared_ptr<Backend> backend;
 
@@ -244,6 +243,7 @@ void simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   {
     output_result(*simulator_, opts);
   }
-
+  int simulation_status = simulator_->get_exit_status();
   delete simulator_;
+  return simulation_status;
 }

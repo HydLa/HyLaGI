@@ -101,6 +101,9 @@ public:
    */
   entire_profile_t get_profile(){return *profile_vector_;}
 
+  
+  int get_exit_status();
+
   // TODO: publicメンバが多すぎる気がする
 
   /**
@@ -149,6 +152,8 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
+
+  int exit_status;
 
   interval::AffineApproximator* affine_transformer_;
 private:
