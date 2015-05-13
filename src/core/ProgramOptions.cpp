@@ -189,12 +189,15 @@ void ProgramOptions::parse(string src_str)
   char dummy_hydla[1]{'\0'};
   argv[0] = dummy_hydla;
   int argc = 1;
-  argv[argc] = strtok(dst_str, " ");
-  while(argv[argc] != nullptr)
+  if(src_str.length() > 0)
   {
-    argc++;
-    argv[argc] = strtok(nullptr, " ");
+    argv[argc] = strtok(dst_str, " ");
+    while(argv[argc] != nullptr){
+      ++argc;
+      argv[argc] = strtok(nullptr, " ");
+    }
   }
+
   parse(argc, argv);
 }
 

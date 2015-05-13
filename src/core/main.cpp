@@ -109,9 +109,9 @@ int hydla_main(int argc, char* argv[])
     {
       option_string = input.substr(1, pos - 1);
       input = input.substr(pos + 1);
-      options_in_source.parse(option_string);
     }
   }
+  options_in_source.parse(option_string);
   setup_simulator_opts(opts, options_in_source, true);
   pt->parse_string(input);
 
