@@ -5,6 +5,7 @@
 namespace hydla {
 
 using namespace boost::program_options;
+using namespace std;
 
 ProgramOptions::ProgramOptions() : visible_desc_(LINE_LENGTH)
 {
@@ -143,22 +144,6 @@ void ProgramOptions::init_descriptions()
     ("epsilon,e",
      value<int>()->default_value(-1),
      "epsilon mode")
-     /*
-    ("timeout",
-     value<int>()->default_value(-1),
-     "timeout (not implemented)"
-     " negative or zero - infinity")
-
-    ("timeout_phase",
-     value<int>()->default_value(-1),
-     "timeout for each phase(not implemented)"
-     " negative or zero - infinity")
-
-    ("timeout_case",
-     value<int>()->default_value(-1),
-     "timeout for each case(not implemented)"
-     " negative or zero - infinity")
-     */
 
     ("timeout_calc",
      value<int>()->default_value(-1),
@@ -167,12 +152,6 @@ void ProgramOptions::init_descriptions()
 
     ("fail_stop",
      "stop all simulation cases when assertion fails")
-
-    /*
-		("mlc",
-     value<int>()->default_value(1),
-     "HAConverter: Max Loop Count")
-     */
 
     ("math_name",
      value<std::string>()->default_value("math"),
@@ -200,9 +179,23 @@ void ProgramOptions::parse(int argc, char* argv[])
   notify(vm_);
 }
 
-ProgramOptions& ProgramOptions::instance() {
-  static ProgramOptions inst;
-  return inst;
+void ProgramOptions::parse(string src_str)
+{
+  char dst_str[src_str.length()];
+  strcpy(dst_str, src_str.c_str());
+  // TODO: reserve possibly smallest array
+  char* argv[src_str.length() + 1];
+  // Set the first element(program name) to dummy
+  char dummy_hydla[1]{'\0'};
+  argv[0] = dummy_hydla;
+  int argc = 1;
+  argv[argc] = strtok(dst_str, " ");
+  while(argv[argc] != nullptr)
+  {
+    argc++;
+    argv[argc] = strtok(nullptr, " ");
+  }
+  parse(argc, argv);
 }
 
 } //namespace hydla

@@ -501,7 +501,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     }
     for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
     {
-      auto& ask = *ask_it;
+      const auto ask = *ask_it;
 
       if(phase_type == POINT_PHASE
          // in initial phase, conditions about left-hand limits are considered to be invalid
@@ -617,7 +617,6 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     if(!guard_time_map.count(guard))
     {
       variable_map_t related_vm = get_related_vm(guard, original_vm);
-
       backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
       guard_time_map[guard] = constraint_for_this_guard;
     }
@@ -745,12 +744,12 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             candidate_map[ask] = find_min_time_epsilon(ask->get_guard(), original_vm,
                                                  time_limit, phase, backend_.get());
           }
-
+          
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
         }
       }
 
-      for(auto &entry : break_point_list)
+      for(auto entry : break_point_list)
       {
         auto break_point = entry.first;
         HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));

@@ -36,6 +36,7 @@ using namespace std;
 Simulator* simulator_;
 Opts opts;
 backend_sptr_t backend_;
+ProgramOptions options;
 
 static string get_file_without_ext(const string &path)
 {
@@ -48,7 +49,6 @@ static string get_file_without_ext(const string &path)
 }
 
 void output_result(Simulator& ss, Opts& opts){
-  ProgramOptions &po = ProgramOptions::instance();
   std::stringstream sstr;
 
   hydla::io::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
@@ -59,13 +59,13 @@ void output_result(Simulator& ss, Opts& opts){
   std::cout << sstr.str();
 
   // TODO: use boost (for compatibility)
-  std::string of_name = po.get<string>("output_name");
+  std::string of_name = options.get<string>("output_name");
   if(of_name.empty())
   {
     const std::string hydat_dir = "./hydat/";
-    if(po.count("input-file"))
+    if(options.count("input-file"))
     {
-      std::string if_name = po.get<string>("input-file");
+      std::string if_name = options.get<string>("input-file");
       of_name = hydat_dir + get_file_without_ext(if_name) + ".hydat";
     }
     else
@@ -84,13 +84,13 @@ void output_result(Simulator& ss, Opts& opts){
 
   if(opts.epsilon_mode >= 0){
     writer.set_epsilon_mode(backend_, true);
-    std::string of_name = po.get<string>("output_name");
+    std::string of_name = options.get<string>("output_name");
     if(of_name.empty())
       {
         const std::string hydat_dir = "./hydat/";
-        if(po.count("input-file"))
+        if(options.count("input-file"))
           {
-            std::string if_name = po.get<string>("input-file");
+            std::string if_name = options.get<string>("input-file");
             of_name = hydat_dir + get_file_without_ext(if_name) + "_diff.hydat";
           }
         else
@@ -107,10 +107,10 @@ void output_result(Simulator& ss, Opts& opts){
     writer.write(*simulator_, of_name);
   }
 
-  if(po.get<std::string>("tm") == "s") {
+  if(options.get<std::string>("tm") == "s") {
     hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
-  } else if(po.get<std::string>("tm") == "c") {
-    std::string csv_name = po.get<std::string>("csv");
+  } else if(options.get<std::string>("tm") == "c") {
+    std::string csv_name = options.get<std::string>("csv");
     if(csv_name == ""){
       hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
     }else{
@@ -122,14 +122,12 @@ void output_result(Simulator& ss, Opts& opts){
   }
 }
 
-void setup_simulator_opts(Opts& opts)
+void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
-  ProgramOptions &po = ProgramOptions::instance();
-
-  opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
+  if(use_default || !po.defaulted("math_name"))opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
-  opts.max_time      = po.get<std::string>("time");
-  opts.max_phase      = po.get<int>("phase");
+  if(use_default || !po.defaulted("time"))opts.max_time      = po.get<std::string>("time");
+  if(use_default || !po.defaulted("phase"))opts.max_phase      = po.get<int>("phase");
   opts.nd_mode       = po.count("nd") > 0;
   opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") > 0;
   opts.dump_in_progress = po.count("dump_in_progress")>0;
@@ -139,36 +137,17 @@ void setup_simulator_opts(Opts& opts)
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.ha_convert_mode = po.count("ha")>0;
   opts.ha_simulator_mode = po.count("hs")>0;
-  //opts.profile_mode  = po.count("profile")>0;
   opts.parallel_mode = po.count("parallel")>0;
-  opts.parallel_number   = po.get<int>("pn");
+  if(use_default || po.defaulted("pn"))opts.parallel_number   = po.get<int>("pn");
   opts.reuse = po.count("reuse")>0;
   opts.approx = po.count("approx")>0;
   opts.cheby = po.count("change")>0;
-  opts.epsilon_mode = po.get<int>("epsilon");
-  /*
-  opts.output_interval = po.get<std::string>("output_interval");
-  */
-  opts.analysis_mode = po.get<std::string>("analysis_mode");
-  opts.analysis_file = po.get<std::string>("analysis_file");
-  opts.stop_at_failure = po.count("fail_stop") == 1;
+  if(use_default || po.defaulted("epsilon"))opts.epsilon_mode = po.get<int>("epsilon");
+
+  opts.stop_at_failure = po.count("fail_stop") > 0;
   opts.solver        = po.get<std::string>("solver");
-  /*opts.optimization_level = po.get<int>("optimization_level");
-  if(opts.optimization_level < 0 || opts.optimization_level > 4){
-    throw std::runtime_error(std::string("invalid option - optimization_level"));
-  }
-  */
-  opts.optimization_level = 0;
 
-  /*
-  opts.timeout = po.get<int>("timeout");
-  opts.timeout_case = po.get<int>("timeout_case");
-  opts.timeout_phase = po.get<int>("timeout_phase");
-  */
   opts.timeout_calc= po.get<int>("timeout_calc");
-
-  
-  //opts.max_loop_count= po.get<int>("mlc");
 
   // select search method (dfs or bfs)
   if(po.get<std::string>("search") == "d"){
@@ -182,14 +161,12 @@ void setup_simulator_opts(Opts& opts)
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  Opts opts;
-  ProgramOptions &po = ProgramOptions::instance();
-  setup_simulator_opts(opts);
+  setup_simulator_opts(opts, options, false);
 
   boost::shared_ptr<Backend> backend;
 
   if(opts.solver == "m" || opts.solver == "Mathematica") {
-    backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.timeout_calc, po.get<int>("precision"), po.count("without_validation")==0?0:po.get<int>("time_delta"))));
+    backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.timeout_calc, options.get<int>("precision"), options.count("without_validation")==0?0:options.get<int>("time_delta"))));
   }else{
     REDUCELinkFactory rlf;
     REDUCELink *reduce_link  = rlf.createInstance(opts);
@@ -202,12 +179,6 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   {
     simulator_ = new InteractiveSimulator(opts);
   }
-/* TODO: implement
-  else if(opts.parallel_mode)
-  {
-    simulator_ = new ParallelSimulator(opts);
-  }
-*/
   else if(opts.ha_convert_mode)
   {
     simulator_ = new HAConverter(backend, opts);

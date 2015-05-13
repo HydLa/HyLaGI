@@ -31,17 +31,10 @@ public:
   /**
    * ParseTreeを構築する
    */
-  template<typename NodeFactoryT>
-  void parse(std::istream& s)
-  {
-    parse(s, boost::make_shared<NodeFactoryT>());
-  }
-
-  template<typename NodeFactoryT>
   void parse_string(std::string str)
   {
     std::istringstream stream(str);
-    parse<NodeFactoryT>(stream);
+    parse(stream);
   }
     
   void parse(std::istream& s);
