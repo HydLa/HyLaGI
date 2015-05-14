@@ -11,7 +11,6 @@ $MaxExtraPrecision = 1000;
  * prevRules:      rules converted from equalities of left-hand limits
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
- * timeDelta: 1ステップで進む最低時刻
  * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
  * timeVariables: variables内の変数を，ux[t]のようにしたもの
  * initVariables: variables内の変数を，ux[0]のようにしたもの
@@ -23,9 +22,7 @@ $MaxExtraPrecision = 1000;
  * profileList: プロファイリング結果のリスト
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
- * timeOutS: タイムアウトまでの時間．秒単位．
  * opt...: 各種オプションのON/OFF．
- * approxPrecision: 近似精度．
  *)
 
 
@@ -155,17 +152,13 @@ publicMethod[name_, args___, define_] := (
   name[Sequence@@Map[(Pattern[#, Blank[]])&, {args}]] := (
     inputPrint[ToString[name], args];
     CheckAbort[
-      TimeConstrained[
-        timeFuncStart[];
-        Module[{publicRet},
-          publicRet = define;
-          simplePrint[publicRet];
-          timeFuncEnd[name];
-          checkMessage;
-          {1, publicRet}
-        ],
-        Evaluate[timeOutS],
-        {-1}
+      timeFuncStart[];
+      Module[{publicRet},
+        publicRet = define;
+        simplePrint[publicRet];
+        timeFuncEnd[name];
+        checkMessage;
+        {1, publicRet}
       ],
       simplePrint[$MessageList];{0}
     ]

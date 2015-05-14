@@ -21,6 +21,7 @@
 #include "SequentialSimulator.h"
 #include "Logger.h"
 #include "SignalHandler.h"
+#include "Utility.h"
 
 // namespace
 using namespace boost;
@@ -100,16 +101,16 @@ int hydla_main(int argc, char* argv[])
     istreambuf_iterator<char> it(cin), last;
     input = string(it, last);
   }
+  string comment = utility::remove_comment(input);
   ProgramOptions options_in_source;
+  const string option_header = "#hylagi";
   string option_string;
-  if(input.length() > 0 && input[0] == '#')
+  string::size_type option_pos = comment.find(option_header);
+  if(option_pos != string::npos)
   {
-    auto pos = input.find_first_of('\n');
-    if(pos != -1)
-    {
-      option_string = input.substr(1, pos - 1);
-      input = input.substr(pos + 1);
-    }
+    option_pos += option_header.length();
+    string::size_type pos = comment.find('\n', option_pos + 1);
+    option_string = comment.substr(option_pos, pos==string::npos?string::npos:pos - option_pos - 1);
   }
   options_in_source.parse(option_string);
   setup_simulator_opts(opts, options_in_source, true);

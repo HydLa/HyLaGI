@@ -51,7 +51,6 @@ void InteractiveSimulator::print_end(phase_result_sptr_t& p)
  */
 phase_result_sptr_t InteractiveSimulator::simulate()
 {
-  printer_.set_output_variables(opts_->output_variables);
   phase_result_sptr_t todo(make_initial_todo());
   unsigned int todo_num = 1; // 連続して処理するTODOの残数
 

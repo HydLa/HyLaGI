@@ -12,7 +12,7 @@ namespace mathematica{
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings) : env_(0), link_(0)
 {
 
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
@@ -40,53 +40,6 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
   
-  // タイムアウト時間
-  MLPutFunction("Set",2);
-  MLPutSymbol("timeOutS"); 
-  if(timeout > 0){
-    MLPutInteger(timeout);
-  }else{
-    MLPutSymbol("Infinity");
-  }
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-
-  // 近似精度
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxPrecision"); 
-  if(precision > 0)
-  {
-    MLPutFunction("Power", 2);
-    MLPutInteger(10);
-    MLPutInteger(-precision);
-  }
-  else
-  {
-    MLPutInteger(0);
-  }
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // 最小タイムステップ 
-  MLPutFunction("Set",2);
-  MLPutSymbol("timeDelta"); 
-  if(time_delta > 0)
-  {
-    MLPutFunction("Power", 2);
-    MLPutInteger(10);
-    MLPutInteger(-time_delta);
-  }
-  else
-  {
-    MLPutInteger(0);
-  }
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
 
   MLPutFunction("ToExpression", 1);
   MLPutString(math_source());  

@@ -1,9 +1,10 @@
 // bouncing particle
 
+
 INIT <=> y = 10 & y' = 0.
 FALL <=> [](y'' = -10).
 BOUNCE <=> [](y- = 0 => y' = -4/5 * y'-).
 
 INIT, FALL << BOUNCE.
 
-// @option -p 8 --nd --ignore_warnings
+// #hylagi -p 8 --ignore_warnings

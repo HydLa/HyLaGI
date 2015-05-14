@@ -23,7 +23,7 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
 
   public:
 
-  PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator& simulator, bool approx);
+  PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator& simulator);
 
   virtual ~PrevReplacer();
   
@@ -96,7 +96,6 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   parameter_map_t& parameter_map;
   PhaseResult& prev_phase;
   Simulator &simulator;
-  bool approx;
   bool replaced;
 
   symbolic_expression::node_sptr new_child;

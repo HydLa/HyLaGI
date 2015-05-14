@@ -34,6 +34,12 @@ std::string replace(std::string original,
 std::string to_string(int n);
 
 
+/**
+ * remove comment from given string
+ * @return removed comment
+ */
+std::string remove_comment(std::string &src);
+
 
 }  //  namespace utility
 }  //  namespace hydla

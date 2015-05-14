@@ -8,7 +8,6 @@
 #include "HAConverter.h"
 #include "HASimulator.h"
 #include "MathematicaLink.h"
-#include "REDUCELinkFactory.h"
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
@@ -28,7 +27,6 @@ using namespace hydla::hierarchy;
 using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
-using namespace hydla::backend::reduce;
 using namespace hydla::io;
 using namespace std;
 
@@ -51,14 +49,13 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   std::stringstream sstr;
 
-  hydla::io::SymbolicTrajPrinter Printer(opts.output_variables, sstr);
+  hydla::io::SymbolicTrajPrinter Printer(sstr);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
 
   Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
-  // TODO: use boost (for compatibility)
   std::string of_name = options.get<string>("output_name");
   if(of_name.empty())
   {
@@ -133,21 +130,12 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
   opts.dump_in_progress = po.count("dump_in_progress")>0;
   opts.dump_relation = po.count("dump_relation_graph")>0;
   opts.interactive_mode = po.count("in")>0;
-  opts.use_unsat_core = po.count("use_unsat_core")>0;
   opts.ignore_warnings = po.count("ignore_warnings")>0;
   opts.ha_convert_mode = po.count("ha")>0;
   opts.ha_simulator_mode = po.count("hs")>0;
-  opts.parallel_mode = po.count("parallel")>0;
-  if(use_default || po.defaulted("pn"))opts.parallel_number   = po.get<int>("pn");
-  opts.reuse = po.count("reuse")>0;
-  opts.approx = po.count("approx")>0;
-  opts.cheby = po.count("change")>0;
   if(use_default || po.defaulted("epsilon"))opts.epsilon_mode = po.get<int>("epsilon");
 
-  opts.stop_at_failure = po.count("fail_stop") > 0;
-  opts.solver        = po.get<std::string>("solver");
-
-  opts.timeout_calc= po.get<int>("timeout_calc");
+  opts.stop_at_failure = po.count("fail_on_stop") > 0;
 
   // select search method (dfs or bfs)
   if(po.get<std::string>("search") == "d"){
@@ -165,13 +153,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   boost::shared_ptr<Backend> backend;
 
-  if(opts.solver == "m" || opts.solver == "Mathematica") {
-    backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.timeout_calc, options.get<int>("precision"), options.count("without_validation")==0?0:options.get<int>("time_delta"))));
-  }else{
-    REDUCELinkFactory rlf;
-    REDUCELink *reduce_link  = rlf.createInstance(opts);
-    backend.reset(new Backend(reduce_link));
-  }
+  backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
 
   if(opts.epsilon_mode >= 0){backend_ = backend;}
 

@@ -419,7 +419,7 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
                                             parameter_map_t &parameter_map)
 {
   assert(phase.parent != nullptr);
-  PrevReplacer replacer(parameter_map, phase, *simulator_, opts_->approx);
+  PrevReplacer replacer(parameter_map, phase, *simulator_);
   for(auto var_entry : vm)
   {
     ValueRange range = var_entry.second;

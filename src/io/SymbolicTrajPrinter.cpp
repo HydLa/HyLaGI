@@ -14,8 +14,8 @@ using namespace simulator;
 using namespace backend;
 using namespace std;
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(set<string> vars, std::ostream& ost):
-  ostream(ost), output_variables(vars){
+SymbolicTrajPrinter::SymbolicTrajPrinter(std::ostream& ost):
+  ostream(ost){
 }
 
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{

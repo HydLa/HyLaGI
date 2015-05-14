@@ -1,6 +1,7 @@
 #include "Utility.h"
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 using namespace std;
 
@@ -68,6 +69,30 @@ string replace(string original, const string &substr, const string &dest )
   return original;
 }
 
+string remove_comment(string &src)
+{
+  std::string comment;
+  for(uint i = 0; i < src.length(); i++) {
+    if(src[i]=='/'&&(i+1)<src.length()&&src[i+1]=='/') {
+      i+=2;
+      uint start_point = i;
+      while(i<src.length()&&src[i]!='\n')i++;
+      comment += src.substr(start_point, i-start_point - 1);
+      comment += '\n';
+      src.erase(start_point - 2, i - start_point + 2);
+      i = start_point - 2;
+    } else if(src[i]=='/'&&(i+1)<src.length()&&src[i+1]=='*') {
+      i+=2;
+      uint start_point = i;
+      while(i<src.length()&&!(src[i]=='*'&&(i+1)<src.length()&&src[i+1]=='/'))i++;
+      comment += src.substr(start_point, i-start_point);
+      i+=2;
+      src.erase(start_point - 2, i - start_point + 2);
+      i = start_point - 2;
+    }
+  }
+  return comment;
+}
 
 }
 }
