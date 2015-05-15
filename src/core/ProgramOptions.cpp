@@ -34,22 +34,20 @@ void ProgramOptions::init_descriptions()
   options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options",
                                    LINE_LENGTH);
   generic_desc.add_options()
-    ("help,h", "produce help message (this option)")
+    ("help,h", "display help message (this option)")
     ("version", "display version")
 
-    ("parse_only", "only parse hydla program")
-    ("dump_parse_tree", 
-     "output parse tree")
+    ("parse_only", "only try to parse given program")
+    ("dump_parse_tree", "only output parse tree")
 
-    ("dump_module_set_graph", 
-     "output candidate sets of module sets\n"
-     "  by graph representation")
+    ("dump_module_set_graph", "only output candidate sets of module sets\n"
+     "  in graph representation")
     ("dump_module_priority_graph",
-     "output priorities of modules\n"
-     "  by graphviz format")
+     "only output priorities of modules\n"
+     "  in graphviz format")
     ("dump_relation_graph", 
-     "output relation of constraints and variables\n"
-     "  by graphviz format")
+     "only output relation of constraints and variables\n"
+     "  in graphviz format")
 
     ("search",
      value<std::string>()->default_value("d"),
@@ -57,27 +55,25 @@ void ProgramOptions::init_descriptions()
      "  d: Depth First Search\n"
      "  b: Breadth First Search")
 
-
-
     ("tm",
      value<std::string>()->default_value("n"),
      "time measurement:\n"
      "  n - not measured\n"
-     "  s - output standard format\n"
-     "  c - output csv format\n")
+     "  s - output in standard format\n"
+     "  c - output in csv format\n")
 
     ("csv",
      value<std::string>()->default_value(""),
-     "csv file name for \"--tm c\":\n"
+     "name of csv file for \"--tm c\":\n"
      " empty - standard out\n")
 
     ("output_name,o",
      value<std::string>()->default_value(""),
-     "file name for hydat output (if empty ./hydat/<program_name>.hydat)")
+     "file name for hydat output (if empty \"./hydat/<program_name>.hydat)\"")
 
     ("time,t",
      value<std::string>()->default_value(""),
-     "simulation time for the model\n"
+     "time limit of the model\n"
      "  empty: infinity")
     ("debug,d", "display debug trace\n")
 
@@ -98,14 +94,9 @@ void ProgramOptions::init_descriptions()
     ;
 
 
-  options_description hidden_desc("Hidden options");
-  hidden_desc.add_options()
-    ("input-file", value<std::string>(), "input file")
-    ;
-
   options_description toggle_desc("Flag options\n"
                                   "(can be specified \"--f[name]\" or \"--[name] y\""
-                                  " and can be invalidated \"--fno-[name]\" or \"--[name] n\"");
+                                  " and can be invalidated \"--fno-[name]\" or \"--[name] n\")");
   toggle_desc.add_options()  
     ("nd", value<std::string>()->default_value("n"), "nondeterministic mode")
 
@@ -113,21 +104,29 @@ void ProgramOptions::init_descriptions()
 
     ("ha", value<std::string>()->default_value("n"), "convert to HA")
 
-    ("hs", value<std::string>()->default_value("n"), "simulation using HA")
+    ("hs", value<std::string>()->default_value("n"), "simulate using HA")
 
     ("fail_on_stop",value<std::string>()->default_value("n"),
      "stop all simulation cases when assertion fails")
 
-    ("static_generation_of_module_sets", value<std::string>()->default_value("n"),"simulation with static generation of module sets")
+    ("static_generation_of_module_sets", value<std::string>()->default_value("n"),"simulate with static generation of module sets")
 
-    ("ignore_warnings", value<std::string>()->default_value("n"), "ignore warnings created by Backend solvers. \n"
+    ("ignore_warnings", value<std::string>()->default_value("n"), "ignore warnings created by backend solvers. \n"
      "(current canidates: DSolve::bvnul, Reduce::ztest1)"
       )
 
 
     ("dump_in_progress", value<std::string>()->default_value("n"),
-     "goutput each phase in progress")
+     "output each phase in progress")
     ;
+
+
+  
+  options_description hidden_desc("Hidden options");
+  hidden_desc.add_options()
+    ("input-file", value<std::string>(), "input file")
+    ;
+
 
   visible_desc_.add(generic_desc).add(toggle_desc);
   cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
