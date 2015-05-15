@@ -7,4 +7,4 @@ BOUNCE <=> [](y- = 0 => y' = -4/5 * y'-).
 
 INIT, FALL << BOUNCE.
 
-// #hylagi -p 8 --ignore_warnings
+// #hylagi -p 8 -t 8 --dump_in_progress n

@@ -110,7 +110,7 @@ int hydla_main(int argc, char* argv[])
   {
     option_pos += option_header.length();
     string::size_type pos = comment.find('\n', option_pos + 1);
-    option_string = comment.substr(option_pos, pos==string::npos?string::npos:pos - option_pos - 1);
+    option_string = comment.substr(option_pos, pos==string::npos?string::npos:pos - option_pos);
   }
   options_in_source.parse(option_string);
   setup_simulator_opts(opts, options_in_source, true);

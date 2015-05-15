@@ -70,6 +70,9 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     if(todo->simulation_state == NOT_SIMULATED)
     {
       process_one_todo(todo);
+      if(opts_->dump_in_progress){
+        printer.output_one_phase(todo);
+      }
     }
     /* TODO: assertion違反が検出された場合の対応
        if(phase->simulation_state == ASSERTION)
@@ -79,9 +82,6 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
        else continue;
        }
     */
-    if(opts_->dump_in_progress){
-      printer.output_one_phase(todo);
-    }
     dfs(todo);
   }
   phase_simulator_->revert_diff(*current);

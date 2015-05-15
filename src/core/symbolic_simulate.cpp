@@ -119,31 +119,33 @@ void output_result(Simulator& ss, Opts& opts){
   }
 }
 
+#define IF_SPECIFIED(X) if(use_default || !po.defaulted(X))
+
 void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
-  if(use_default || !po.defaulted("math_name"))opts.mathlink      = "-linkmode launch -linkname '" + po.get<std::string>("math_name") + " -mathlink'";
+  IF_SPECIFIED("math_name")opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
-  if(use_default || !po.defaulted("time"))opts.max_time      = po.get<std::string>("time");
-  if(use_default || !po.defaulted("phase"))opts.max_phase      = po.get<int>("phase");
-  opts.nd_mode       = po.count("nd") > 0;
-  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") > 0;
-  opts.dump_in_progress = po.count("dump_in_progress")>0;
+  IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
+  IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
+  IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<string>("nd") == "y";
+  IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<string>("static_generation_of_module_sets") == "y";
+  IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<string>("dump_in_progress") == "y";
   opts.dump_relation = po.count("dump_relation_graph")>0;
-  opts.interactive_mode = po.count("in")>0;
-  opts.ignore_warnings = po.count("ignore_warnings")>0;
-  opts.ha_convert_mode = po.count("ha")>0;
-  opts.ha_simulator_mode = po.count("hs")>0;
-  if(use_default || po.defaulted("epsilon"))opts.epsilon_mode = po.get<int>("epsilon");
+  IF_SPECIFIED("in")opts.interactive_mode = po.count("in")>0 && po.get<string>("in") == "y";
+  IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<string>("ignore_warnings") == "y";
+  IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<string>("ha") == "y";
+  IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<string>("hs") == "y";
+  IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
 
-  opts.stop_at_failure = po.count("fail_on_stop") > 0;
+  IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<string>("fail_on_stop") == "y";
 
   // select search method (dfs or bfs)
-  if(po.get<std::string>("search") == "d"){
+  if(po.get<string>("search") == "d"){
     opts.search_method = DFS;
-  }else if(po.get<std::string>("search") == "b"){
+  }else if(po.get<string>("search") == "b"){
     opts.search_method = BFS;
   }else{
-    throw std::runtime_error(std::string("invalid option - search"));
+    throw runtime_error(string("invalid option - search"));
   }
 }
 
@@ -177,7 +179,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     ha_converter.initialize(parse_tree);
 
   	ha_converter.simulate();
-    std::cout << "HAConverter Time : " << hac_timer.get_elapsed_s() << " s" << std::endl;
+    cout << "HAConverter Time : " << hac_timer.get_elapsed_s() << " s" << endl;
 
     HASimulator* ha_simulator = new HASimulator(opts);
     ha_simulator->set_ha_results(ha_converter.get_results());

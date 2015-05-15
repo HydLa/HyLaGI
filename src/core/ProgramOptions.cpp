@@ -16,15 +16,27 @@ ProgramOptions::~ProgramOptions()
 {
 }
 
+pair<string, string> reg_toggle(const string& s)
+{
+  if (s.find("--f") == 0) {
+    if (s.substr(3, 3) == "no-")
+      return make_pair(s.substr(6), string("n"));
+    else
+      return make_pair(s.substr(3), string("y"));
+  } else {
+    return make_pair(string(), string());
+  }
+}
+
 // TODO:コメントアウトしてあるオプションについて考える
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options:",
+  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options",
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "produce help message (this option)")
     ("version", "display version")
-    ("debug,d", "display debug trace\n")
+
     ("parse_only", "only parse hydla program")
     ("dump_parse_tree", 
      "output parse tree")
@@ -38,24 +50,14 @@ void ProgramOptions::init_descriptions()
     ("dump_relation_graph", 
      "output relation of constraints and variables\n"
      "  by graphviz format")
-    ("dump_in_progress",
-     "output each phase in progress")
 
     ("search",
      value<std::string>()->default_value("d"),
      "search method:\n"
      "  d: Depth First Search\n"
      "  b: Breadth First Search")
-     
-    ("static_generation_of_module_sets", "simulation with static generation of module sets")
 
-    ("nd", "nondeterministic mode")
 
-    ("in", "interactive mode")
-
-    ("ha", "convert to HA")
-
-    ("hs", "simulation using HA")
 
     ("tm",
      value<std::string>()->default_value("n"),
@@ -77,10 +79,7 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""),
      "simulation time for the model\n"
      "  empty: infinity")
-
-    ("ignore_warnings", "ignore warnings created by Backend solvers. \n"
-     "(current canidates: DSolve::bvnul, Reduce::ztest1)"
-      )
+    ("debug,d", "display debug trace\n")
 
     ("phase,p",
      value<int>()->default_value(-1),
@@ -93,21 +92,45 @@ void ProgramOptions::init_descriptions()
      value<int>()->default_value(-1),
      "epsilon mode")
 
-    ("fail_on_stop",
-     "stop all simulation cases when assertion fails")
-
     ("math_name",
      value<std::string>()->default_value("math"),
      "name of mathematica command")
     ;
+
 
   options_description hidden_desc("Hidden options");
   hidden_desc.add_options()
     ("input-file", value<std::string>(), "input file")
     ;
 
-  visible_desc_.add(generic_desc);
-  cmdline_desc_.add(generic_desc).add(hidden_desc);
+  options_description toggle_desc("Flag options\n"
+                                  "(can be specified \"--f[name]\" or \"--[name] y\""
+                                  " and can be invalidated \"--fno-[name]\" or \"--[name] n\"");
+  toggle_desc.add_options()  
+    ("nd", value<std::string>()->default_value("n"), "nondeterministic mode")
+
+    ("in", value<std::string>()->default_value("n"), "interactive mode")
+
+    ("ha", value<std::string>()->default_value("n"), "convert to HA")
+
+    ("hs", value<std::string>()->default_value("n"), "simulation using HA")
+
+    ("fail_on_stop",value<std::string>()->default_value("n"),
+     "stop all simulation cases when assertion fails")
+
+    ("static_generation_of_module_sets", value<std::string>()->default_value("n"),"simulation with static generation of module sets")
+
+    ("ignore_warnings", value<std::string>()->default_value("n"), "ignore warnings created by Backend solvers. \n"
+     "(current canidates: DSolve::bvnul, Reduce::ztest1)"
+      )
+
+
+    ("dump_in_progress", value<std::string>()->default_value("n"),
+     "goutput each phase in progress")
+    ;
+
+  visible_desc_.add(generic_desc).add(toggle_desc);
+  cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
 }
 
 
@@ -118,7 +141,7 @@ void ProgramOptions::parse(int argc, char* argv[])
 
   store(command_line_parser(argc, argv).
             options(cmdline_desc_).
-            positional(positional_opt).run(), vm_);
+        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
   notify(vm_);
 }
 
