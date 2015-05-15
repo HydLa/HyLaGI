@@ -90,7 +90,7 @@ private:
 
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);
 
-  constraint_t calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
+  std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, std::list<Parameter> &parameters);
 
   Simulator* simulator_;
 
