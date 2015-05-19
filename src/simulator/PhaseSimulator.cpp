@@ -658,8 +658,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
   {
     constraint_t constraint_for_this_ask;
     list<constraint_t> constraints_for_newton;
-    parameter_map_t pm_for_newton = pm;
-    constraints_for_newton = calculate_approximated_time_constraint(guard_for_newton, related_vm_for_newton, pm, parameters);
+    parameter_map_t pm_for_newton;
+    constraints_for_newton = calculate_approximated_time_constraint(guard_for_newton, related_vm_for_newton, pm, pm_for_newton, parameters);
     // backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
     const type_info &guard_type = typeid(*guard_for_newton);
     string low_value = "0";
@@ -681,16 +681,16 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
                guard_type == typeid(symbolic_expression::Less) ||
                guard_type == typeid(symbolic_expression::Greater) ||
                guard_type == typeid(symbolic_expression::GreaterEqual));
-        
+
         if(constraint_type == typeid(LogicalAnd))
         {
           p_for_newton.push_back(parameters.front());
-          pm_for_newton[parameters.front()] = pm[parameters.front()];
+          pm[parameters.front()] = pm_for_newton[parameters.front()];
           parameters.pop_front();
         }
         p_for_newton.push_back(parameters.front());
-        ValueRange range = pm[parameters.front()];
-        pm_for_newton[parameters.front()] = pm[parameters.front()];
+        ValueRange range = pm_for_newton[parameters.front()];
+        pm[parameters.front()] = pm_for_newton[parameters.front()];
         parameters.pop_front();
         node_sptr val;
         if(range.get_lower_cnt())
@@ -698,12 +698,16 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           val = range.get_lower_bound(0).value.get_node();
           // HYDLA_LOGGER_DEBUG_VAR(get_infix_string(val));
         }
+        // else if(range.get_upper_cnt() && constraint_type != typeid(LogicalAnd))
+        // {
+        //   val = range.get_upper_bound(0).value.get_node();
+        // }
         constraint_t lb, ub;
         lb.reset(new Less(constraint_t(new Number(low_value)), constraint_t(new SymbolicT())));
         ub.reset(new Less(constraint_t(new SymbolicT()), constraint_t(new Number(get_infix_string(val)))));
         constraint_t bounce;
         bounce.reset(new LogicalAnd(lb, ub));
-        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm_for_newton);
+        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
         min_time_for_this_ask = min_time_calculator.calculate_min_time_newton(&guard_time_map, guard, bounce, entailed);
         if(!min_time_for_this_ask.empty()) 
         {
@@ -713,39 +717,15 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         else 
         {
           low_value = get_infix_string(val);
-          pm_for_newton.erase(p_for_newton.front());
+          pm.erase(p_for_newton.front());
           p_for_newton.pop_front();
-          pm_for_newton.erase(p_for_newton.front());
+          pm.erase(p_for_newton.front());
           p_for_newton.pop_front();
         }
 
       }
       constraints_for_newton.pop_front();
     }
-    // constraint_for_this_ask = constraint_for_newton;
-    // for(Parameter parameter : parameters)
-    // {
-    //   if(parameter.to_string() == "p[t, -1, 2]")
-    //   {
-    //     ValueRange range = pm[parameter];
-    //     node_sptr val;
-    //     if(range.get_lower_cnt())
-    //     {
-    //       val = range.get_lower_bound(0).value.get_node();
-    //       HYDLA_LOGGER_DEBUG_VAR(get_infix_string(val));
-    //       // break;
-    //     }
-    //     constraint_t lb, ub;
-    //     lb.reset(new Less(constraint_t(new Number("0")), constraint_t(new SymbolicT())));
-    //     ub.reset(new Less(constraint_t(new SymbolicT()), constraint_t(new Number(get_infix_string(val)))));
-    //     constraint_t bounce;
-    //     bounce.reset(new LogicalAnd(lb, ub));
-    //     constraint_for_this_ask.reset(new LogicalAnd(constraint_for_this_ask, bounce));
-    //     HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint_for_this_ask));
-    //     guard_time_map[guard] = constraint_for_this_ask;
-    //     break;
-    //   }
-    // }
   }
   else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
   return min_time_for_this_ask;
@@ -1072,7 +1052,7 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
 
 
 
-list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, list<Parameter> &parameters)
+list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, list<Parameter> &parameters)
 {
   int sign = -1;
   list<constraint_t> ret;
@@ -1101,7 +1081,7 @@ list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const 
     ValueRange range (lower, upper);
     Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
     parameters.push_back(parameter);
-    pm[parameter] = range;
+    pm_for_newton[parameter] = range;
   }
   // for(auto parameter : parameters) HYDLA_LOGGER_DEBUG_VAR(pm[parameter]);
   const type_info &guard_type = typeid(*guard);
