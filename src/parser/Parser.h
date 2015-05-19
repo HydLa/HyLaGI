@@ -73,7 +73,6 @@ public:
   node_sptr guard_term();
   node_sptr logical_not();
   node_sptr comparison();
-  node_sptr command();
   node_sptr expression();
   node_sptr arithmetic();
   node_sptr arith_term();

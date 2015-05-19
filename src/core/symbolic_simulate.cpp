@@ -34,7 +34,7 @@ using namespace std;
 Simulator* simulator_;
 Opts opts;
 backend_sptr_t backend_;
-ProgramOptions options;
+ProgramOptions cmdline_options;
 
 static string get_file_without_ext(const string &path)
 {
@@ -56,13 +56,13 @@ void output_result(Simulator& ss, Opts& opts){
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
-  std::string of_name = options.get<string>("output_name");
+  std::string of_name = cmdline_options.get<string>("output_name");
   if(of_name.empty())
   {
     const std::string hydat_dir = "./hydat/";
-    if(options.count("input-file"))
+    if(cmdline_options.count("input-file"))
     {
-      std::string if_name = options.get<string>("input-file");
+      std::string if_name = cmdline_options.get<string>("input-file");
       of_name = hydat_dir + get_file_without_ext(if_name) + ".hydat";
     }
     else
@@ -81,13 +81,13 @@ void output_result(Simulator& ss, Opts& opts){
 
   if(opts.epsilon_mode >= 0){
     writer.set_epsilon_mode(backend_, true);
-    std::string of_name = options.get<string>("output_name");
+    std::string of_name = cmdline_options.get<string>("output_name");
     if(of_name.empty())
       {
         const std::string hydat_dir = "./hydat/";
-        if(options.count("input-file"))
+        if(cmdline_options.count("input-file"))
           {
-            std::string if_name = options.get<string>("input-file");
+            std::string if_name = cmdline_options.get<string>("input-file");
             of_name = hydat_dir + get_file_without_ext(if_name) + "_diff.hydat";
           }
         else
@@ -104,10 +104,10 @@ void output_result(Simulator& ss, Opts& opts){
     writer.write(*simulator_, of_name);
   }
 
-  if(options.get<std::string>("tm") == "s") {
+  if(cmdline_options.get<std::string>("tm") == "s") {
     hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
-  } else if(options.get<std::string>("tm") == "c") {
-    std::string csv_name = options.get<std::string>("csv");
+  } else if(cmdline_options.get<std::string>("tm") == "c") {
+    std::string csv_name = cmdline_options.get<std::string>("csv");
     if(csv_name == ""){
       hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
     }else{
@@ -123,21 +123,20 @@ void output_result(Simulator& ss, Opts& opts){
 
 void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
-  IF_SPECIFIED("math_name")opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
+  opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
   IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
-  IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<string>("nd") == "y";
-  IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<string>("static_generation_of_module_sets") == "y";
-  IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<string>("dump_in_progress") == "y";
+  IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
+  IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
+  IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<char>("dump_in_progress") == 'y';
   opts.dump_relation = po.count("dump_relation_graph")>0;
-  IF_SPECIFIED("in")opts.interactive_mode = po.count("in")>0 && po.get<string>("in") == "y";
-  IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<string>("ignore_warnings") == "y";
-  IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<string>("ha") == "y";
-  IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<string>("hs") == "y";
+  IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<char>("ignore_warnings") == 'y';
+  IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
+  IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
 
-  IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<string>("fail_on_stop") == "y";
+  IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
 
   // select search method (dfs or bfs)
   if(po.get<string>("search") == "d"){
@@ -151,7 +150,7 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  setup_simulator_opts(opts, options, false);
+  setup_simulator_opts(opts, cmdline_options, false);
 
   boost::shared_ptr<Backend> backend;
 
@@ -159,11 +158,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   if(opts.epsilon_mode >= 0){backend_ = backend;}
 
-  if(opts.interactive_mode)
-  {
-    simulator_ = new InteractiveSimulator(opts);
-  }
-  else if(opts.ha_convert_mode)
+  if(opts.ha_convert_mode)
   {
     simulator_ = new HAConverter(backend, opts);
   }

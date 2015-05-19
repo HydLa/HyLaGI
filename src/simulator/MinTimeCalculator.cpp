@@ -13,8 +13,6 @@ MinTimeCalculator::MinTimeCalculator(RelationGraph *rel, Backend *b): relation_g
 
 find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated)
 {
-  // TODO: All guards don't have to be updated.
-  // TODO: 原子制約単位ではなく，OrGuardNodeやAndGuardNode単位でも結果の再利用は可能なはず
   guard_time_map = g;
   GuardNode *node = relation_graph->get_guard_node(guard);
 

@@ -104,8 +104,6 @@ public:
   
   int get_exit_status();
 
-  // TODO: publicメンバが多すぎる気がする
-
   /**
    * template of variable maps
    */

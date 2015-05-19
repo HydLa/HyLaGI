@@ -96,20 +96,14 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
   backend_->call("resetConstraint", 0, "", "");
   backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
-  backend_->call("addParameterConstraint", 1, "csn", "", &todo->initial_constraint_store);
+  backend_->call("addParameterConstraint", 1, "csn", "", &todo->additional_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
   asks_t nonprev_trigger_asks;
-  if(!relation_graph_is_taken_over)
-  {
-    // TODO: relation_graph_の状態が親フェーズから直接引き継いだものでない場合は，差分を用いることができないので全制約に関して設定する必要がある．
-    // TODO: 並列実行とかしなければ現状でも問題はない
-    assert(0);
-  }
-  else if(todo->phase_type == POINT_PHASE)
+  if(todo->phase_type == POINT_PHASE)
   {
     for(auto trigger : todo->discrete_asks)
     {
@@ -333,10 +327,10 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
   phase_result_sptr_t branch_state_false(new PhaseResult(*original));
   branch_state_false->id = ++phase_sum_;
-  branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
+  branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
-  original->initial_constraint_store.add_constraint_store(result.consistent_store);
-  backend_->call("resetConstraintForParameter", 1, "csn", "", &original->initial_constraint_store);
+  original->additional_constraint_store.add_constraint_store(result.consistent_store);
+  backend_->call("resetConstraintForParameter", 1, "csn", "", &original->additional_constraint_store);
 }
 
 
@@ -398,9 +392,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
   FullInformation root_information;
   root_information.negative_asks = relation_graph_->get_all_asks();
   result_root->set_full_information(root_information);
-
-  // TODO: manage relation_graph_is_taken_over appropriately for parallel processing and resuming simulation
-  relation_graph_is_taken_over = true;
 
   if(opts_->max_time != ""){
     max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
@@ -700,7 +691,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           for(auto &candidate : entry.second)
           {
-            // TODO: implement lighter calculation
             candidate.time -= (phase->current_time - phase->parent->parent->current_time);
           }
         }
@@ -772,7 +762,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
       /*
-      if(opts_->epsilon_mode){
+      if(opts_->epsilon_mode >= 0){
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
       }*/
 
@@ -840,7 +830,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 */
           if(++time_it == time_result.end())break;
       
-          // TODO: 全部コピーしなくていい気がするので何をコピーすべきか考える
           pr.reset(new PhaseResult(*pr));
           pr->id = ++phase_sum_;
           pr->parent->children.push_back(pr);

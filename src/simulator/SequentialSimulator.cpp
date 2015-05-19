@@ -38,17 +38,6 @@ phase_result_sptr_t SequentialSimulator::simulate()
     std::cout << error_str;
     exit_status = EXIT_FAILURE;
   }
-
-
-  if(signal_handler::interrupted){
-    // // TODO: 各未実行フェーズを適切に処理
-    // while(!todo_stack_->empty())
-    // {
-    //   simulation_job_sptr_t todo(todo_stack_->pop_todo());
-    //   todo->parent->simulation_state = INTERRUPTED;
-    //   // TODO: restart simulation from each interrupted phase
-    // }
-  }
   
   HYDLA_LOGGER_DEBUG("%% simulation ended");
   return result_root_;

@@ -200,13 +200,10 @@ node_sptr Parser::conditional_constraint(){
 
 /**
  * atomic_constraint := compare_expression
- *                    | command
  *                    | tautology
  */
 node_sptr Parser::atomic_constraint(){
   node_sptr ret;
-  // command
-  if((ret = command())){ return ret;}
   // tautology
   if((ret = tautology())){ return ret;}
   // compare_expression

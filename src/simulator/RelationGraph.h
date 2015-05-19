@@ -168,9 +168,6 @@ public:
    * Get all active asks
    */
   asks_t get_active_asks(bool ignore_prev_asks = false);
-
-  bool active(const AskNode* ask, bool ignore_prev)const;
-
   
   /**
    * Get the number of connected component in the graph.
@@ -268,6 +265,8 @@ private:
   void get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set);
   
   VariableNode* add_variable_node(Variable &);
+
+  bool to_be_considered(const AskNode* ask, bool ignore_prev)const;
   
   void check_connected_components();
 

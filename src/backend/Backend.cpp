@@ -336,21 +336,27 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   link_->put_converted_function(name, arg_cnt);
   va_list args;
   va_start(args, ret_fmt);
-  for(int i = 0; args_fmt[i] != '\0'; i++)
+  try
   {
-    void* arg = va_arg(args, void *);
-    i += read_args_fmt(args_fmt, i, arg);
-  }
-  link_->pre_receive();
-  for(int i = 0; ret_fmt[i] != '\0'; i++)
+    for(int i = 0; args_fmt[i] != '\0'; i++)
+    {
+      void* arg = va_arg(args, void *);
+      i += read_args_fmt(args_fmt, i, arg);
+    }
+    link_->pre_receive();
+    for(int i = 0; ret_fmt[i] != '\0'; i++)
+    {
+      void* ret = va_arg(args, void *);
+      i += read_ret_fmt(ret_fmt, i, ret);
+    }
+    link_->post_receive();
+    va_end(args);
+  }catch(...)
   {
-    void* ret = va_arg(args, void *);
-    i += read_ret_fmt(ret_fmt, i, ret);
+    va_end(args);
+    throw;
   }
-  link_->post_receive();
 
-  // TODO: 例外投げた場合もva_endを呼び出すように
-  va_end(args);
   return 0;
 }
 
@@ -814,7 +820,6 @@ ConstraintStore Backend::receive_cs()
     symbolic_expression::node_sptr constraint;
   
     constraint = receive_node();
-    // TODO: avoid string comparison
     string constraint_string = get_infix_string(constraint);
     if(constraint_string == "False")
     {
@@ -918,7 +923,6 @@ check_consistency_result_t Backend::receive_cc()
 
 symbolic_expression::node_sptr Backend::receive_function()
 {
-// TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
   symbolic_expression::node_sptr ret;
   std::string symbol;

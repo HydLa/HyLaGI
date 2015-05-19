@@ -15,7 +15,6 @@ bool num_denom_str(double val,
                    string &denominator)
 {
   stringstream sstr;
-  // TODO: carefully handle precision
   sstr << setiosflags(ios::fixed) << val;
   return num_denom_str(sstr.str(), numerator, denominator);
 }

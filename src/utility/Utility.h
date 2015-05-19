@@ -8,6 +8,7 @@ namespace utility{
 /**
  * get string of numerator and denominator
  * from given real value
+ * !Warning! There is no insurance for accuracy
  * @return denominator is necessary
  * @param val given real value
  * @param numerator numerator string (output variable)

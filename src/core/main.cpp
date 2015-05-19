@@ -42,7 +42,7 @@ bool dump(boost::shared_ptr<ParseTree> pt);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 void setup_simulator_opts(Opts& opts, ProgramOptions& p, bool use_default);
 
-extern ProgramOptions options;
+extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
 extern Opts opts;
 
@@ -61,26 +61,26 @@ int main(int argc, char* argv[])
 
 int hydla_main(int argc, char* argv[])
 {
-  options.parse(argc, argv);
+  cmdline_options.parse(argc, argv);
   
   signal(SIGINT, signal_handler::interrupt_handler);
   signal(SIGTERM, signal_handler::term_handler);
   
   Timer main_timer;
   
-  if(options.count("debug")){                 // デバッグ出力
+  if(cmdline_options.count("debug")){                 // デバッグ出力
     Logger::instance().set_log_level(Logger::Debug);
   }else {                              // 警告のみ出力
     Logger::instance().set_log_level(Logger::Warn);
   }
   
   
-  if(options.count("help")) {     // ヘルプ表示して終了
-    options.help_msg(cout);
+  if(cmdline_options.count("help")) {     // ヘルプ表示して終了
+    cmdline_options.help_msg(cout);
     return 0;
   }
 
-  if(options.count("version")) {  // バージョン表示して終了
+  if(cmdline_options.count("version")) {  // バージョン表示して終了
     cout << Version::description() << endl;
     return 0;
   }
@@ -89,8 +89,8 @@ int hydla_main(int argc, char* argv[])
   // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   string input;
-  if(options.count("input-file")) {
-    string filename(options.get<string>("input-file"));
+  if(cmdline_options.count("input-file")) {
+    string filename(cmdline_options.get<string>("input-file"));
     ifstream in(filename.c_str());
     if (!in) {
       throw runtime_error(string("cannot open \"") + filename + "\"");
@@ -114,10 +114,11 @@ int hydla_main(int argc, char* argv[])
   }
   options_in_source.parse(option_string);
   setup_simulator_opts(opts, options_in_source, true);
+
   pt->parse_string(input);
 
 
-  if(options.count("parse_only"))
+  if(cmdline_options.count("parse_only"))
   {
     cout << "successfully parsed" << endl;
     return 0;
@@ -131,7 +132,7 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  if(options.get<string>("tm") != "n"){
+  if(cmdline_options.get<string>("tm") != "n"){
     std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
     std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
     cout << endl;
@@ -146,19 +147,19 @@ int hydla_main(int argc, char* argv[])
 bool dump(boost::shared_ptr<ParseTree> pt)
 {
 
-  if(options.count("dump_parse_tree")>0) {
+  if(cmdline_options.count("dump_parse_tree")>0) {
     pt->to_graphviz(cout);
     return true;
   }
 
-  if(options.count("dump_module_set_graph")>0) {
+  if(cmdline_options.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_module_sets_for_graphviz(cout);
     return true;
   }
 
-  if(options.count("dump_module_priority_graph")>0) {
+  if(cmdline_options.count("dump_module_priority_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_priority_data_for_graphviz(cout);

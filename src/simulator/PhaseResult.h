@@ -136,7 +136,7 @@ public:
   parameter_map_t              parameter_map;
   asks_t                       diff_positive_asks, diff_negative_asks;
   constraints_t                diff_positive_guards, diff_negative_guards;
-  ConstraintStore              initial_constraint_store; /// 暫定的に場合分けとかで使う.TODO:別の方法を考える
+  ConstraintStore              additional_constraint_store; /// use for case analysis
   ConstraintStore              diff_sum;
   variable_set_t               discrete_differential_set;
   

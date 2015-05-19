@@ -431,7 +431,7 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name, bool ignore_prev
   {
     for(auto ask_node : var_node->ask_edges)
     {
-      if(active(ask_node, ignore_prev_asks))
+      if(to_be_considered(ask_node, ignore_prev_asks))
       {
         asks.insert(ask_node->ask);
       }
@@ -447,7 +447,7 @@ asks_t RelationGraph::get_adjacent_asks2var_and_derivatives(const Variable &var,
     VariableNode* var_node = variable_node_map[tmp_var];
     for(auto ask_node : var_node->ask_edges)
     {
-      if(active(ask_node, ignore_prev_asks))
+      if(to_be_considered(ask_node, ignore_prev_asks))
       {
         asks.insert(ask_node->ask);
       }
@@ -480,25 +480,10 @@ asks_t RelationGraph::get_active_asks(bool ignore_prev_asks)
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    if(active(ask_node, ignore_prev_asks))asks.insert(ask_node->ask);
+    if(to_be_considered(ask_node, ignore_prev_asks))asks.insert(ask_node->ask);
   }
   return asks;
 }
-
-/*
-AtomicConstraint* RelationGraph::OrGuardNode::get_next_atomic_guard()
-{
-  AtomicConstraint* guard = lhs->get_next_atomic_guard();
-  if(!guard || guard->state)return guard;
-}
-*/
-
-/*
-AtomicConstraint* RelationGraph::AndGuardNode::get_next_atomic_guard()
-{
-}
-*/
-
 
 AskNode::AskNode(const ask_t &a, const module_t &mod, GuardNode *g):ConstraintNode(mod), ask(a), entailed(false), guard_node(g)
 {
@@ -537,9 +522,8 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
   return vars;
 }
 
-bool RelationGraph::active(const AskNode *ask, bool ignore_prev) const
+bool RelationGraph::to_be_considered(const AskNode *ask, bool ignore_prev) const
 {
-  // TODO: activeという名前が重複しているのでどうにかする
   return ask->is_active() && !(ignore_prev && ask->prev);
 }
 

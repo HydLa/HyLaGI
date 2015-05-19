@@ -10,12 +10,6 @@ namespace hydla{
 
 using namespace symbolic_expression;
 
-/// command := "@" identifier "(" (identifier ("," identifier)* )? ")"
-node_sptr Parser::command(){
-  // TODO: implement
-  return node_sptr();
-}
-
 /**
  * constant := "Pi"
  *           | "E"

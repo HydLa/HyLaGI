@@ -28,7 +28,6 @@ pair<string, string> reg_toggle(const string& s)
   }
 }
 
-// TODO:コメントアウトしてあるオプションについて考える
 void ProgramOptions::init_descriptions()
 {
   options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options",
@@ -49,12 +48,6 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("search",
-     value<std::string>()->default_value("d"),
-     "search method:\n"
-     "  d: Depth First Search\n"
-     "  b: Breadth First Search")
-
     ("tm",
      value<std::string>()->default_value("n"),
      "time measurement:\n"
@@ -71,11 +64,27 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""),
      "file name for hydat output (if empty \"./hydat/<program_name>.hydat)\"")
 
+    ("debug,d", "display debug trace\n")
+
+    ("math_name",
+     value<std::string>()->default_value("math"),
+     "name of mathematica command")
+
+  
+    ("search",
+     value<std::string>()->default_value("d"),
+     "search method:\n"
+     "  d: Depth First Search\n"
+     "  b: Breadth First Search");
+
+
+  options_description config_desc("Following options also can be specified in comments in the form of \"#hylagi <options>\"");
+
+  config_desc.add_options()
     ("time,t",
      value<std::string>()->default_value(""),
      "time limit of the model\n"
      "  empty: infinity")
-    ("debug,d", "display debug trace\n")
 
     ("phase,p",
      value<int>()->default_value(-1),
@@ -83,40 +92,35 @@ void ProgramOptions::init_descriptions()
      "  positive value: number of phases\n"
      "  negative value: infinity")
 
-    // TODO: fix message
     ("epsilon,e",
      value<int>()->default_value(-1),
-     "epsilon mode")
-
-    ("math_name",
-     value<std::string>()->default_value("math"),
-     "name of mathematica command")
-    ;
-
+     "perform 2 additional processed below\n"
+     "1. prune branches where the value of epsilon is not in neighborhood of 0\n"
+     "2. approximate expressions by cutting off higher order terms about epsilon"
+     "  non-negative value: order of approximation\n"
+     "  negative value: invalidate this option\n");
 
   options_description toggle_desc("Flag options\n"
                                   "(can be specified \"--f[name]\" or \"--[name] y\""
                                   " and can be invalidated \"--fno-[name]\" or \"--[name] n\")");
   toggle_desc.add_options()  
-    ("nd", value<std::string>()->default_value("n"), "nondeterministic mode")
+    ("nd", value<char>()->default_value('n'), "nondeterministic mode")
 
-    ("in", value<std::string>()->default_value("n"), "interactive mode")
+    ("ha", value<char>()->default_value('n'), "convert to HA")
 
-    ("ha", value<std::string>()->default_value("n"), "convert to HA")
+    ("hs", value<char>()->default_value('n'), "simulate using HA")
 
-    ("hs", value<std::string>()->default_value("n"), "simulate using HA")
-
-    ("fail_on_stop",value<std::string>()->default_value("n"),
+    ("fail_on_stop",value<char>()->default_value('n'),
      "stop all simulation cases when assertion fails")
 
-    ("static_generation_of_module_sets", value<std::string>()->default_value("n"),"simulate with static generation of module sets")
+    ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
-    ("ignore_warnings", value<std::string>()->default_value("n"), "ignore warnings created by backend solvers. \n"
+    ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
      "(current canidates: DSolve::bvnul, Reduce::ztest1)"
       )
 
 
-    ("dump_in_progress", value<std::string>()->default_value("n"),
+    ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
     ;
 
@@ -128,8 +132,8 @@ void ProgramOptions::init_descriptions()
     ;
 
 
-  visible_desc_.add(generic_desc).add(toggle_desc);
-  cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
+  visible_desc_.add(generic_desc).add(config_desc).add(toggle_desc);
+  cmdline_desc_.add(generic_desc).add(config_desc).add(toggle_desc).add(hidden_desc);
 }
 
 
@@ -139,8 +143,9 @@ void ProgramOptions::parse(int argc, char* argv[])
   positional_opt.add("input-file", -1);
 
   store(command_line_parser(argc, argv).
-            options(cmdline_desc_).
-        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
+        options(cmdline_desc_).
+        positional(positional_opt).run(), vm_);
+//        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
   notify(vm_);
 }
 
@@ -148,8 +153,7 @@ void ProgramOptions::parse(string src_str)
 {
   char dst_str[src_str.length()];
   strcpy(dst_str, src_str.c_str());
-  // TODO: reserve possibly smallest array
-  char* argv[src_str.length() + 1];
+  char* argv[(src_str.length() + 1)/2 + 1];
   // Set the first element(program name) to dummy
   char dummy_hydla[1]{'\0'};
   argv[0] = dummy_hydla;

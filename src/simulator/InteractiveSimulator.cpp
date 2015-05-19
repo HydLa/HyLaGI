@@ -105,7 +105,6 @@ phase_result_sptr_t InteractiveSimulator::simulate()
       {
         todo_num = input_and_process_command(todo);
       }
-      // TODO:現状だと，result_root_のところまで戻ると変なことになるのでそこまでは巻き戻せないようにしておく
       all_todo_.push_back(todo);
       */
       if(signal_handler::interrupted) break;
