@@ -44,7 +44,7 @@ struct EdgeToConstraint
 
 struct ConstraintNode{
   module_t module; /// module which the constraint belongs to
-  bool visited;
+  bool collected;
   bool module_adopted; /// whether the module is in ms
   bool expanded;
   bool always;
@@ -102,9 +102,6 @@ struct VariableNode{
  * Graph to represent relations of constraints and variables
  */
 class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
-
-
-// TODO: 数式のnodeとグラフ上のnodeが混じって大変なことになっているので分離したい
 
 public:
 
@@ -271,17 +268,17 @@ private:
   void check_connected_components();
 
   asks_t set_entailed(AtomicGuardNode *node, bool entailed, bool if_prev = false);
-  void visit_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
-  void visit_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
-  void initialize_node_visited();
+  void collect_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
+  void collect_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
+  void initialize_node_collected();
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings
   void visit(boost::shared_ptr<symbolic_expression::Ask> ask);
   void visit(boost::shared_ptr<symbolic_expression::LogicalOr> logical_or);
   void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
-  void visit(boost::shared_ptr<symbolic_expression::Not> not_node);
+  void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
   void visit(boost::shared_ptr<symbolic_expression::Always> always); 
-  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> binary_node);
+  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> binary);
   
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;

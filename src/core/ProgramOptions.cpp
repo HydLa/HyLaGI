@@ -144,8 +144,7 @@ void ProgramOptions::parse(int argc, char* argv[])
 
   store(command_line_parser(argc, argv).
         options(cmdline_desc_).
-        positional(positional_opt).run(), vm_);
-//        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
+        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
   notify(vm_);
 }
 
