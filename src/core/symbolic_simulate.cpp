@@ -5,8 +5,6 @@
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
-#include "HAConverter.h"
-#include "HASimulator.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
@@ -158,32 +156,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   if(opts.epsilon_mode >= 0){backend_ = backend;}
 
-  if(opts.ha_convert_mode)
-  {
-    simulator_ = new HAConverter(backend, opts);
-  }
-  else if(opts.ha_simulator_mode)
-  {
-    opts.nd_mode = true;
-
-  	timer::Timer hac_timer;
-
-  	HAConverter ha_converter(backend, opts);
-    ha_converter.set_backend(backend);
-    ha_converter.set_phase_simulator(new PhaseSimulator(&ha_converter, opts));
-    ha_converter.initialize(parse_tree);
-
-  	ha_converter.simulate();
-    cout << "HAConverter Time : " << hac_timer.get_elapsed_s() << " s" << endl;
-
-    HASimulator* ha_simulator = new HASimulator(opts);
-    ha_simulator->set_ha_results(ha_converter.get_results());
-    simulator_ = ha_simulator;
-  }
-  else
-  {
-    simulator_ = new SequentialSimulator(opts);
-  }
+  simulator_ = new SequentialSimulator(opts);
 
   simulator_->set_backend(backend);
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
