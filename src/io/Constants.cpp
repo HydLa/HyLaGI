@@ -30,8 +30,10 @@ string get_string_for_cause(simulator::SimulationState cause)
     return "NOT_SIMULATED";
   case simulator::INTERRUPTED:
     return "INTERRUPTED";
-  default:
-    return "UNKNOWN";
+  case simulator::SIMULATED:
+    return "SIMULATED";
+  defalut:
+    assert(0);
   }
 }
 
@@ -47,7 +49,8 @@ simulator::SimulationState get_cause_for_string(const string& str)
   else if(str == "NOT_UNIQUE_IN_INTERVAL")return NOT_UNIQUE_IN_INTERVAL;
   else if(str == "NOT_SIMULATED")return NOT_SIMULATED;
   else if(str == "INTERRUPTED")return INTERRUPTED;
-  else return NONE;
+  else if(str == "SIMULATED")return SIMULATED;
+  assert(0);
 }
 
 
