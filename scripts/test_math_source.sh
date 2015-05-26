@@ -1,3 +1,3 @@
 #!/bin/sh
 
-rlwrap math -run "<<test_math_source.m"
+rlwrap math -run "<<./scripts/test_math_source.m"
