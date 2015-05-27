@@ -496,20 +496,23 @@ publicMethod[
     ];
     debugPrint["minT after Minimize:", minT];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-    minT = First[minT];
-    If[minT === Infinity, 
-      {},
-      ret = makeListFromPiecewise[minT, pCons];
-      (* 時刻が0となる場合はinfとする．*)
-      ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
-
-      ret = Select[ret, (#[[2]] =!= False)&];
-
-      (* 整形して結果を返す *)
-      resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
-      resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-      resultList = Map[({toReturnForm[#[[1]] ], #[[2]], createMap[#[[3]], isParameter, hasParameter, {}] })&, resultList ];
-      resultList
+    If[Head[minT] === Minimize,
+      error,
+      minT = First[minT];
+      If[minT === Infinity, 
+        {},
+        ret = makeListFromPiecewise[minT, pCons];
+        (* 時刻が0となる場合はinfとする．*)
+          ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+          
+        ret = Select[ret, (#[[2]] =!= False)&];
+        
+        (* 整形して結果を返す *)
+            resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
+            resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+            resultList = Map[({toReturnForm[#[[1]] ], #[[2]], createMap[#[[3]], isParameter, hasParameter, {}] })&, resultList ];
+        resultList
+      ]
     ]
   ]
 ];

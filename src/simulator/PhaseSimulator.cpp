@@ -337,8 +337,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->additional_constraint_store.add_constraint_store(result.consistent_store);
-  backend_->call("resetConstraintForParameter", 1, "pm", "", &original->parameter_map);
-  backend_->call("addParameterCoinstraint", 1, "csn", "", &original->additional_constraint_store);
+    backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
 }
 
 
@@ -795,7 +794,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           DCCandidate &candidate = *time_it;
           // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
-          // TODO: ここで、ありえない場合の除去（別の場合分けによってありえなくなった候補の削除）が必要
           for(auto par_entry : candidate.parameter_map ){
             pr->parameter_map[par_entry.first] = par_entry.second;
           }
