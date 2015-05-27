@@ -32,7 +32,7 @@ string get_string_for_cause(simulator::SimulationState cause)
     return "INTERRUPTED";
   case simulator::SIMULATED:
     return "SIMULATED";
-  defalut:
+  default:
     assert(0);
   }
 }

@@ -18,10 +18,10 @@ class MinTimeCalculator;
 
 struct CompareMinTimeResult
 {
-  std::vector<parameter_map_t> less_maps, greater_maps, equal_maps;
+  std::list<parameter_map_t> less_maps, greater_maps, equal_maps;
 };
 
-typedef std::vector<parameter_map_t>                       parameter_maps_t;
+typedef std::list<parameter_map_t>                       parameter_maps_t;
 typedef symbolic_expression::node_sptr                     node_sptr;
 
 

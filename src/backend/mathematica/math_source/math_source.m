@@ -40,31 +40,6 @@ checkConsistencyInterval[] :=  (
 checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
-
-(* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTime[causeAndID_, condition_] :=
-Module[
-  {
-    id,
-    cause,
-    minT,
-    ret
-  },
-  id = causeAndID[[2]];
-  cause = causeAndID[[1]];
-  sol = Reduce[cause && condition && t > 0, t, Reals];
-  checkMessage[];
-  If[sol === False, Return[{}] ];
-  (* 成り立つtの最小値を求める *)
-  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
-  ret = makeListFromPiecewise[minT, condition];
-  (* 時刻が0となる場合を取り除く．*)
-  ret = Select[ret, (#[[1]] =!= 0)&];
-  (* append id for each time *)
-  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
-  ret
-];
-
 ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {
@@ -189,13 +164,18 @@ ruleOutException[list_] := Module[
   ret
 ];
 
-createParameterMap[] := createParameterMap[pConstraint];
+publicMethod[
+  productWithGlobalParameterConstraint,
+  map,
+  createMap[map && pConstraint, isParameter, hasParameter, {}]
+];
+
+createParameterMaps[] := createParameterMaps[pConstraint];
 
 publicMethod[
-  createParameterMap,
+  createParameterMaps,
   pCons,
-  (* TODO: the size of the result of createMap may not be 1 *)
-  createMap[pCons, isParameter, hasParameter, {}][[1]]
+  createMap[pCons, isParameter, hasParameter, {}]
 ];
 
 createMap[cons_, judge_, hasJudge_, vars_] :=
@@ -528,8 +508,7 @@ publicMethod[
       (* 整形して結果を返す *)
       resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
       resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-      resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
-      resultList = Map[({toReturnForm[#[[1]] ], #[[2]], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList ];
+      resultList = Map[({toReturnForm[#[[1]] ], #[[2]], createMap[#[[3]], isParameter, hasParameter, {}] })&, resultList ];
       resultList
     ]
   ]
@@ -580,7 +559,6 @@ publicMethod[
     lhs = lhs /. t->time;
     reduced = Reduce[lhs == 0 && pCons];
     negated = Reduce[!reduced && pCons];
-    simplePrint[reduced, negated];
     (* Can result be some expression other than True or False ?*)
     If[negated === False, True, False]
   ]

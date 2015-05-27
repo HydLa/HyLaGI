@@ -9,7 +9,8 @@ namespace simulator {
 
 struct CheckConsistencyResult
 {
-  ConstraintStore consistent_store, inconsistent_store;
+  ConstraintStore consistent_store; // Constraints for parameter which make the given constraints "consistent"
+  ConstraintStore inconsistent_store; // Constraints for parameter which make the given constraints "inconsistent"
 };
 
 typedef enum{
@@ -32,14 +33,16 @@ public:
 
   virtual ~ConsistencyChecker();
 
+  /**
+   * Check whether the constraints related to diff_constraints are consistent or not.
+   */
   CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, bool following_step);
 
   /**
    * Get inconsistent module sets in the last check_consistency
    */
   std::vector<module_set_t> get_inconsistent_module_sets();
-
-  void add_continuity(const VariableFinder&, const PhaseType &phase);
+  std::list<ConstraintStore> get_inconsistent_constraints();
 
   /**
    * Check whether a guard is entailed or not.
@@ -66,7 +69,6 @@ public:
 
   void set_prev_map(const variable_map_t *);
 
-
   std::vector<variable_map_t> get_result_maps();
 
   /// reset internal counters
@@ -76,29 +78,32 @@ public:
 
   int get_backend_check_consistency_time();
 
-  void clear_inconsistent_module_sets();
+  void clear_inconsistent_constraints();
   
   std::map<std::string, int> get_differential_map(variable_set_t &);
 
   bool check_continuity(Variable& var, variable_map_t &vm);
 
-  void send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode);
-
 
 private:
-  CheckConsistencyResult check_consistency(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);
 
-  CheckEntailmentResult check_entailment_core(
+  CheckEntailmentResult check_entailment_essential(
     CheckConsistencyResult &cc_result,
     const symbolic_expression::node_sptr &guard,
     const PhaseType &phase,
     profile_t &profile
     );
+  
+  void add_continuity(const VariableFinder&, const PhaseType &phase);
 
-  void check_consistency(const ConstraintStore& constraint_store, RelationGraph &relation_graph, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
+  void check_consistency_foreach(const ConstraintStore& constraint_store, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(Variable &var);
+
+  void send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode);
+
 
   backend_sptr_t backend;
 
@@ -107,6 +112,7 @@ private:
   int backend_check_consistency_count;
   int backend_check_consistency_time;
   std::vector<module_set_t> inconsistent_module_sets;
+  std::list<ConstraintStore> inconsistent_constraints;
 };
 
 

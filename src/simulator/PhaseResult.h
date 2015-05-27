@@ -102,11 +102,9 @@ struct DCCandidate{
 
   DCCandidate(const value_t                &t,
               const std::map<ask_t, bool> &d,
-//              const std::map<constraint_t, bool> &g,
               const parameter_map_t &p)
                 :time(t),
                  discrete_asks(d),
-//                 discrete_guards(g),
                  parameter_map(p)
     {}
   DCCandidate(){}
@@ -144,9 +142,12 @@ public:
 
   module_set_t                 unadopted_ms;
   module_set_set_t             unadopted_mss;
+  std::list<module_set_t>  inconsistent_module_sets;
+  std::list<ConstraintStore>   inconsistent_constraints;
   next_pp_candidate_map_t      next_pp_candidate_map;
   guard_time_map_t             guard_time_map;
   ConstraintStore              always_list;
+
 
   SimulationState              simulation_state;
   PhaseResult                 *parent;
@@ -155,7 +156,6 @@ public:
 
   // trigger conditions
   std::map<ask_t, bool>        discrete_asks;
-  std::list<constraint_t>      discrete_guards;
   
   profile_t                    profile;
 
@@ -176,6 +176,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);
+std::ostream& operator<<(std::ostream& s, const FindMinTimeCandidate& pr);
 std::ostream& operator<<(std::ostream& s, const variable_map_t& vm);
 std::ostream& operator<<(std::ostream& s, const parameter_map_t& pm);
 std::ostream& operator<<(std::ostream& s, const asks_t& a);
