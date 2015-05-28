@@ -21,15 +21,10 @@ namespace simulator {
 using namespace std;
 using namespace symbolic_expression;
 
-LTLModelChecker::LTLModelChecker(Opts &opts):Simulator(opts), printer()
-{
-}
+LTLModelChecker::LTLModelChecker(Opts &opts):Simulator(opts), printer(){}
 
-LTLModelChecker::~LTLModelChecker()
-{
-}
+LTLModelChecker::~LTLModelChecker(){}
 
-int loop;
 phase_result_sptr_t LTLModelChecker::simulate()
 {
   std::string error_str = "";
@@ -106,7 +101,6 @@ phase_result_sptr_t LTLModelChecker::simulate()
       PropertyNode *PropertyZero = new PropertyNode(0,ZERO);
       LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
       ltl_node_list_t ltl_start;
-      loop = 0;
       LTLsearch(result_root_,ltl_start,LTLZero,property_init);
       //LTLZero->dot();
       cout << "========== result ltl search ==========" << endl;
@@ -140,7 +134,6 @@ phase_result_sptr_t LTLModelChecker::simulate()
 
 void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init,PropertyNode* property_init)
 {
-  loop++;
   if(signal_handler::interrupted)
     {
       current->simulation_state = INTERRUPTED;
@@ -163,7 +156,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
           ltl_current.push_back(FirstState);
         }else{
           // cout << "come ltl search : n" << endl;
-          ltl_current = transition(ltl_current,todo,backend,consistency_checker);
+          ltl_current = transition(ltl_current,todo,consistency_checker);
         }
       }
       if(opts_->dump_in_progress){
@@ -179,15 +172,13 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
   phase_simulator_->revert_diff(*current);
 }
 
-ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result_sptr_t phase,backend_sptr_t backend,consistency_checker_t consistency_checker){
+ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
   ltl_node_list_t next_search;
-  // cout << "loop num " << loop << endl;
   // for(auto para : phase->parameter_map) cout << "true ? : " << para.first.get_name() << ":" << para.second << endl;
-
   for(ltl_node_list_t::iterator current_LTL_node = current.begin();current_LTL_node != current.end();current_LTL_node++){
     for(Property_link_t::iterator property_link = (*current_LTL_node)->property->link.begin();property_link != (*current_LTL_node)->property->link.end();property_link++){
       //phase と propertylink->first で成否判定する
-      if(check_edge_guard(phase,property_link->first,backend,consistency_checker)){
+      if(check_edge_guard(phase,property_link->first,consistency_checker)){
         LTLNode* nextNode = new LTLNode(phase,property_link->second);
         //acceptanceCycleの探索
         LTLNode* loop_node = nextNode->detectAcceptanceCycle(*current_LTL_node,backend);
@@ -199,6 +190,7 @@ ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result
         }
         //通常ループの探索
         loop_node = nextNode->detectLoop(*current_LTL_node,backend);
+        //ループの場合
         if(loop_node!=NULL){
           (*current_LTL_node)->addLink(loop_node);
         }
@@ -223,7 +215,7 @@ ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result
   return next_search;
 }
 
-bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller, backend_sptr_t backend){
+bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){
   // bool LTLNode::will_include(LTLNode* check,backend_sptr_t backend){
   //   // A->will_include(B) <=> A ) B
   //   bool ret;
@@ -335,7 +327,7 @@ bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller, backend_
 
 
 
-bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard,backend_sptr_t backend,consistency_checker_t consistency_checker){
+bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker){
   bool ret = false;
   if(guard->get_node_type_name() == "True"){
     return true;
