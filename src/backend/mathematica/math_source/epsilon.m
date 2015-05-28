@@ -1,8 +1,80 @@
-publicMethod[aho, v1,v2, p1,p2,
-             Module[{tmp},
-                    tmp = v1 == v2;
-                    Reduce[ForAll[getParameters[p1],p1,Exists[getParameters[p2],p2,tmp]]]
-                                        ]
+publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
+             Module[{ret,i,tmpLargeTime,tmpSmallTime,tmpSmallVm,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+                    ret = True;
+                    tmpLargeVm = largeVm //. p -> p1;
+                    tmpSmallVm = smallVm //. p -> p2;
+                    tmpLargeTime = largeTime //. p -> p1;
+                    tmpSmallTime = smallTime //. p -> p2;
+                    (* debugPrint["# tmpLargeVm", tmpLargeVm];
+                     debugPrint["# tmpSmallVm", tmpSmallVm]; *)
+                    (* compare variable num *)
+                    If[Length[tmpLargeVm] == Length[tmpSmallVm],
+                       ret = And[ret,True],
+                       ret = And[ret,False]
+                       ];
+                    For[i=1,And[ret, Length[tmpLargeVm] >= i],i++,
+                        (* debugPrint["# largeVm[i]",tmpLargeVm[[i]]];
+                         debugPrint["# largeVm[i][0]",tmpLargeVm[[i]][[0]]];
+                         debugPrint["# largeVm[i][1]",tmpLargeVm[[i]][[1]]];
+                         debugPrint["# largeVm[i][2]",tmpLargeVm[[i]][[2]]];
+                         debugPrint["# smallVm[i]",tmpSmallVm[[i]]];
+                         debugPrint["# smallVm[i][0]",tmpSmallVm[[i]][[0]]];
+                         debugPrint["# smallVm[i][1]",tmpSmallVm[[i]][[1]]];
+                         debugPrint["# smallVm[i][2]",tmpSmallVm[[i]][[2]]]; *)
+                        (* compare variable name *)
+                        If[tmpLargeVm[[i]][[1]] == tmpSmallVm[[i]][[1]],
+                           ret = And[ret,True],
+                           ret = And[ret,False]
+                           ];
+                        (* correct expr : large.2 == small.2 *)
+                        (* debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]; *)
+                        If[i == 1,
+                           allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime],
+                           allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]
+                           ];
+                        ];
+                    allExpr = Simplify[allExpr];
+                    debugPrint["# all Expr from vm", allExpr];
+                    tmpLargePm = largePm //. p -> p1;
+                    tmpSmallPm = smallPm //. p -> p2;
+                    (* debugPrint["# tmpLargePm", tmpLargePm];
+                     debugPrint["# tmpSmallPm", tmpSmallPm]; *)
+                    listLarge = {};
+                    listSmall = {};
+                    For[i=1,And[ret,Length[tmpLargePm] >= i],i++,
+                        (* debugPrint["# largePm[i]",tmpLargePm[[i]]];
+                         debugPrint["# largePm[i][0]",tmpLargePm[[i]][[0]]];
+                         debugPrint["# largePm[i][1]",tmpLargePm[[i]][[1]]];
+                         debugPrint["# largePm[i][2]",tmpLargePm[[i]][[2]]]; *)
+                        listLarge = Append[listLarge,tmpLargePm[[i]][[1]]];
+                        ];
+                    listLarge = DeleteDuplicates[listLarge];
+                    (* debugPrint["# large list",listLarge]; *)
+                    For[i=1,And[ret,Length[tmpSmallPm] >= i],i++,
+                        (* debugPrint["# smallPm[i]",tmpSmallPm[[i]]];
+                         debugPrint["# smallPm[i][0]",tmpSmallPm[[i]][[0]]];
+                         debugPrint["# smallPm[i][1]",tmpSmallPm[[i]][[1]]];
+                         debugPrint["# smallPm[i][2]",tmpSmallPm[[i]][[2]]]; *)
+                        listSmall = Append[listSmall,tmpSmallPm[[i]][[1]]];
+                        ];
+                    listSmall = DeleteDuplicates[listSmall];
+                    (* debugPrint["# small list",listSmall]; *)
+                    (* tmpLargePm = And[tmpLargePm, t>0];
+                     tmpSmallPm = And[tmpSmallPm, t>0]; *)
+                    If[ret,
+                       (* debugPrint["#listLarge",listLarge];
+                        debugPrint["#listSmall",listSmall];
+                        debugPrint["#tmpLargePm",tmpLargePm];
+                        debugPrint["#tmpSmallPm",tmpSmallPm];
+                        debugPrint["#allExpr",allExpr];
+                        debugPrint["#forall exists",forAll[evaluate[listSmall],tmpSmallPm,exists[evaluate[listLarge],tmpLargePm,allExpr]]]; *)
+                       ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]]],
+                       ret = False
+                       ];
+                    If[ret =!= True,ret = False,ret = True];
+                    (* debugPrint["# final return", ret]; *)
+                    ret
+                    ]
              ];
 
 publicMethod[checkInclude, past, now, pConstraintPast, pConstraintNow,
