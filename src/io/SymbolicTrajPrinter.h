@@ -2,6 +2,7 @@
 
 #include "TrajPrinter.h"
 #include "LTLNode.h"
+#include "PropertyNode.h"
 
 namespace hydla{
 namespace io{
@@ -25,6 +26,8 @@ public:
 
   void set_output_variables(const std::set<std::string>& ovs){output_variables = ovs;}
 
+  void output_property_automaton(PropertyNode* node);
+  void dump_property_automaton(PropertyNode* node);
   void output_ltl_node(LTLNode* node);
   void dump_ltl_node(LTLNode* node);
 

@@ -100,6 +100,9 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node1->addLink(true_node,node1);
 
       property_init->dot();
+      cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
+      printer.output_property_automaton(property_init);
+      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
       PropertyNode *PropertyZero = new PropertyNode(0,ZERO);
       LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
       ltl_node_list_t ltl_start;
