@@ -94,15 +94,17 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->addLink(y_geq_3,node1);
       // node1->addLink(true_node,node1);
 
-      property_init->dot();
-      cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
-      printer.output_property_automaton(property_init);
-      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+      //init LTL search
       PropertyNode *PropertyZero = new PropertyNode(0,ZERO);
       LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
       ltl_node_list_t ltl_start;
+
+      // property_init->dot();
+      cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
+      printer.output_property_automaton(property_init);
+      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
       LTLsearch(result_root_,ltl_start,LTLZero,property_init);
-      //LTLZero->dot();
+      // LTLZero->dot();
       cout << "========== result ltl search ==========" << endl;
       printer.output_ltl_node(LTLZero);
       cout << "=======================================" << endl;
@@ -174,14 +176,13 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
 
 ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
   ltl_node_list_t next_search;
-  // for(auto para : phase->parameter_map) cout << "true ? : " << para.first.get_name() << ":" << para.second << endl;
   for(ltl_node_list_t::iterator current_LTL_node = current.begin();current_LTL_node != current.end();current_LTL_node++){
     for(Property_link_t::iterator property_link = (*current_LTL_node)->property->link.begin();property_link != (*current_LTL_node)->property->link.end();property_link++){
       //phase と propertylink->first で成否判定する
       if(check_edge_guard(phase,property_link->first,consistency_checker)){
         LTLNode* nextNode = new LTLNode(phase,property_link->second);
-        //acceptanceCycleの探索
-        LTLNode* loop_node = nextNode->detectAcceptanceCycle(*current_LTL_node,backend);
+        //acceptance cycleの探索
+        LTLNode* loop_node = detect_acceptance_cycle(nextNode,*current_LTL_node);
         if(loop_node!=NULL){
           (*current_LTL_node)->addLink(loop_node);
           (*current_LTL_node)->setRed();
@@ -189,7 +190,7 @@ ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result
           return next_search;
         }
         //通常ループの探索
-        loop_node = nextNode->detectLoop(*current_LTL_node,backend);
+        loop_node = detect_loop_in_pass(nextNode,(*current_LTL_node)->pass);
         //ループの場合
         if(loop_node!=NULL){
           (*current_LTL_node)->addLink(loop_node);
@@ -216,116 +217,59 @@ ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result
 }
 
 bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){
-  // bool LTLNode::will_include(LTLNode* check,backend_sptr_t backend){
-  //   // A->will_include(B) <=> A ) B
-  //   bool ret;
-  //   //property_automaton
-  //   int old_property = property->id;
-  //   int now_property = check->property->id;
-  //   if(old_property != now_property){
-  //     return false;
-  //   }
-  //   //phase
-  //   // if(compare_phase_result(phase,check->phase)){
-  //   //   ret = check_subset(phase,check->phase,backend);
-  //   // }
-  //   // cout << phase->phase_type << endl;
-  //   //phase typeの比較
-  //   if(phase->phase_type != check->phase->phase_type){return false;}
-  //   //phase の変数表の大きさの比較
-  //   if(phase->variable_map.size() != check->phase->variable_map.size()){return false;}
+  bool include_ret;
+  //property_automaton
+  int larger_property = larger->property->id;
+  int smaller_property = smaller->property->id;
+  if(larger_property != smaller_property){
+    // cout << "different property automaton :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+    return false;
+  }
+  //phase typeの比較
+  if(larger->phase->phase_type != smaller->phase->phase_type){
+    // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+    return false;
+  }
+  //phase の変数表の大きさの比較
+  if(larger->phase->variable_map.size() != smaller->phase->variable_map.size()){
+    // cout << "different size of variable map :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+    return false;
+  }
 
-  //   // cout << "come here0" << endl;
-  //   //変数表の時刻を戻す
-  //   value_t time_old, time_now;
-  //   variable_map_t old_vm, now_vm;
-  //   // variable_map_t shifted_vm_now, shifted_vm_old;
-  //   ValueModifier modifier(*backend);
-  //   time_old = phase->current_time;
-  //   time_now = check->phase->current_time;
-  //   old_vm = modifier.substitute_time(time_old,phase->variable_map);
-  //   now_vm = modifier.substitute_time(time_now,check->phase->variable_map);
-
-  //   // tmp_old = node_sptr(new Number("-1"));
-  //   // tmp_old = node_sptr(new Times(tmp_old, phase->current_time.get_node()));
-  //   // tmp_new = node_sptr(new Number("-1"));
-  //   // tmp_new = node_sptr(new Times(tmp_new, phase->current_time.get_node()));
-  //   // shifted_vm_old = modifier.apply_function("exprTimeshift", tmp_old, old_vm);
-  //   // shifted_vm_new = modifier.apply_function("exprTimeshift", tmp_new, new_vm);
-  //   // cout << "come here1" << endl;
-
-  //   // backend->call("resetConstraintForVariable", 0, "", "");
-  //   // backend->call("addConstraint", 1, "mv0t", "", &shifted_vm);
-
-  //   // auto var_old = phase->variable_map.begin();
-  //   // auto var_new = check->phase->variable_map.begin();
-
-  //   bool testret;
-  //   cout << "testing" << endl;
-  //   backend->call("aho", 2, "mvtmp", "", &old_vm, &(phase->parameter_map));
-  //   cout << "end" << endl;
-
-  //   // comparing variable
-  //   auto var_old = old_vm.begin();
-  //   auto var_now = now_vm.begin();
-  //   cout << "compare variables" << endl;
-  //   int parametercount = 0;
-  //   while(var_old != old_vm.end() && var_now != now_vm.end()){
-  //     ret = false;
-  //     // cout<<"o" << (var_old->first) << endl;
-  //     // cout<<"n" << (var_now->first) << endl;
-  //     //もし変数名が違う場合
-  //     if(var_old->first != var_now->first){
-  //       cout << "not include : name " << endl;
-  //       return false;
-  //     }
-  //     value_t tmp_variable_now = var_now->second.get_unique_value();
-  //     value_t tmp_variable_old = var_old->second.get_unique_value();
-  //     // cout << "finding parameter : now => ";
-  //     // search_parameter(tmp_variable_now);
-  //     // cout << "finding parameter : old => ";
-  //     // search_parameter(tmp_variable_old);
-
-  //     cout << var_old->first << "\t: " << var_old->second << "\t <=> \t" << var_now->second << endl;
-
-  //     if(search_parameter(tmp_variable_old) || search_parameter(tmp_variable_now)){
-  //       parametercount++;
-  //     }
-  //     if(parametercount > 1){
-  //       cout << "not include : parameter " << endl;
-  //       return false;
-  //     }
-
-
-  //     // for(auto oldpara : phase->parameter_map) cout << "parameter map old : " << oldpara.first.get_name() << ":" << oldpara.second << endl;
-  //     // for(auto nowpara : check->phase->parameter_map) cout << "parameter map now : " << nowpara.first.get_name() << ":" << nowpara.second << endl;
-  //     backend->call("checkInclude", 4, "vlnvlnmpmp", "b", &tmp_variable_old, &tmp_variable_now, &(phase->parameter_map), &(check->phase->parameter_map), &ret);
-  //     cout << "\t:" ;
-  //     if(ret) cout << "true" << endl;
-  //     else  cout << "false" << endl;
-  //     if(!ret){
-  //       cout << "not include : value " << endl;
-  //       return false;
-  //     }
-  //     var_old++;
-  //     var_now++;
-  //   }
-  //   // if(var_now != check->phase->variable_map.end()){return false;}
-  //   // char in;
-  //   // cin >> in;
-  //   // if(in == 'y'){ret = true;}
-  //   // else {ret = false;}
-  //   // int a = (phase->id) % 7;
-  //   // int b = ((check->phase->id)) % 7;
-  //   // ret = (a==b);
-  //   cout << "\"" << id << "\" includes \"" << check->id << "\"" << endl;
-  //   return true;
-  // }
-
-
+  //compareing set of variables
+  backend->call("checkInclude", 6, "vlnmvtmpvlnmvtmp", "b",
+                &(larger->phase->current_time), &(larger->phase->variable_map), &(larger->phase->parameter_map),
+                &(smaller->phase->current_time), &(smaller->phase->variable_map), &(smaller->phase->parameter_map), &include_ret);
+  if(include_ret){
+    // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
+  }
+  else{
+    // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+  }
+  return include_ret;
 }
 
+LTLNode* LTLModelChecker::detect_acceptance_cycle(LTLNode* new_node,LTLNode* parent_node){
+  LTLNode* ret = NULL;
+  for(pass_list_t::iterator acceptance_pass = parent_node->acceptance_passes.begin();acceptance_pass != parent_node->acceptance_passes.end();acceptance_pass++){
+    ret = detect_loop_in_pass(new_node, *acceptance_pass);
+    if(ret!=NULL){
+      return ret;
+    }
+  }
+  return ret;
+}
 
+LTLNode* LTLModelChecker::detect_loop_in_pass(LTLNode* new_node, ltl_node_list_t pass){
+  LTLNode* ret = NULL;
+  for(ltl_node_list_t::iterator it = pass.begin();it != pass.end();it++){
+    if(check_including(*it,new_node)){
+      ret = *it;
+      return ret;
+    }
+  }
+  return ret;
+}
 
 bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker){
   bool ret = false;

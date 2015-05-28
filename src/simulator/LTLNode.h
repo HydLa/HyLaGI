@@ -41,7 +41,6 @@ typedef std::map<parameter_t, range_t, hydla::simulator::ParameterComparator>   
 
 typedef std::set<std::string> change_variables_t;
 
-
 typedef std::map<hydla::simulator::constraint_t, bool> constraint_diff_t;
 typedef std::map<module_set_t::module_t, bool>     module_diff_t;
 typedef hydla::hierarchy::ModuleSet                      module_set_t;
@@ -59,13 +58,14 @@ class LTLNode
   pass_list_t acceptance_passes;
   int write;
   int red;
+  bool checked_next_link;
   LTLNode(hydla::simulator::phase_result_sptr_t set_phase,PropertyNode* set_property);
   /* ~LTLNode(); */
   bool acceptanceState();
   bool acceptanceCycle();
-  bool will_include(LTLNode* check,hydla::simulator::backend_sptr_t backend);
-  LTLNode* detectLoop(LTLNode* parent_node,hydla::simulator::backend_sptr_t backend);
-  LTLNode* detectAcceptanceCycle(LTLNode* parent_node,hydla::simulator::backend_sptr_t backend);
+  /* bool will_include(LTLNode* check,hydla::simulator::backend_sptr_t backend); */
+  /* LTLNode* detectLoop(LTLNode* parent_node,hydla::simulator::backend_sptr_t backend); */
+  /* LTLNode* detectAcceptanceCycle(LTLNode* parent_node,hydla::simulator::backend_sptr_t backend); */
   void addLink(LTLNode* child);
   void setRed();
   void trace();

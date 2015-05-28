@@ -20,6 +20,8 @@ private:
   void LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init,PropertyNode* property_init);
   ltl_node_list_t transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker);
   bool check_including(LTLNode* larger,LTLNode* smaller);
+  LTLNode* detect_acceptance_cycle(LTLNode* new_node,LTLNode* parent_node);
+  LTLNode* detect_loop_in_pass(LTLNode* new_node, ltl_node_list_t pass);
   bool check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker);
 
   io::SymbolicTrajPrinter printer;
