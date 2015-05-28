@@ -630,15 +630,30 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         time_limit, phase, backend_.get());
         }
       */
-      bool by_newton = false;
       if(opts_->interval_newton)
       {
-        cout << "apply Interval Newton method to " << get_infix_string(guard) << "?('y' or 'n')" << endl;
-        char c;
-        cin >> c;
-        by_newton = c == 'y';
+        node_sptr exp;
+        node_sptr dexp;
+        backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
+        backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
+
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
+        itvd init = itvd(0.,opts_->max_ip_width); 
+        itvd result_interval =
+          interval::calculate_interval_newton(init, exp, dexp, pm);
+        value_t lower(result_interval.lower());
+        backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+        value_t upper(result_interval.upper());
+        backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+        ValueRange range (lower, upper);
+        Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
+        HYDLA_LOGGER_DEBUG_VAR(range);
+        pm[parameter] = range;
+        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
+        constraint_for_this_guard.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
       }
-      if(by_newton) constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
+      //    constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
       else backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
       guard_time_map[guard] = constraint_for_this_guard;
     }
@@ -1038,7 +1053,7 @@ constraint_t PhaseSimulator::calculate_approximated_time_constraint(const constr
         else
         {
           constraint_list.push_back(constraint_t(new LogicalAnd(lb , ub)));
-          lb = nullptr;
+          lb.reset();
         }
       }
       else
