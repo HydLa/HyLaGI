@@ -164,10 +164,12 @@ ruleOutException[list_] := Module[
   ret
 ];
 
+productWithGlobalParameterConstraint[cons_] := productWithGlobalParameterConstraint[cons, pConstraint];
+
 publicMethod[
   productWithGlobalParameterConstraint,
-  map,
-  createMap[map && pConstraint, isParameter, hasParameter, {}]
+  map, pCons,
+  createMap[map && pCons, isParameter, hasParameter, {}]
 ];
 
 createParameterMaps[] := createParameterMaps[pConstraint];
@@ -182,14 +184,16 @@ createMap[cons_, judge_, hasJudge_, vars_] :=
 createMap[cons, judge, hasJudge, vars] = (* for memoization *)
 Module[
   {map},
-  If[cons === True, Return[{{}}] ];
-  If[cons === False, Return[{}] ];
+
   (* Remove unnecessary Constraints*)
   map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
   map = Reduce[map, vars, Reals];
 
   (* Remove unnecessary Constraints*)
   map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+
+  If[map === True, Return[{{}}] ];
+  If[map === False, Return[{}] ];
 
   map = LogicalExpand[map];
   map = applyListToOr[map];
