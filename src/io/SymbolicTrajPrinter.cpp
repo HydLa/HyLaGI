@@ -23,24 +23,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   if(result.phase_type == INTERVAL_PHASE){
     sstr << "---------IP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
-    if(!result.inconsistent_module_sets.empty())
-    {
-      for(auto module_set : result.inconsistent_module_sets)
-      {
-        sstr << "inconsistent modules: " << module_set.get_name() << endl;
-      }
-    }
-    if(!result.inconsistent_constraints.empty())
-    {
-      sstr << "inconsistent constraints: ";
-      bool first = true;
-      for(auto constraint: result.inconsistent_constraints)
-      {
-        if(!first)sstr << "\t\t";
-        sstr << constraint << endl;
-        first = false;
-      }
-    }
+    output_inconsistent_constraints(sstr, result);
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
     }else{
@@ -49,24 +32,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   }else{
     sstr << "---------PP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
-    if(!result.inconsistent_module_sets.empty())
-    {
-      for(auto module_set : result.inconsistent_module_sets)
-      {
-        sstr << "inconsistent modules: " << module_set.get_name() << endl;
-      }
-    }
-    if(!result.inconsistent_constraints.empty())
-    {
-      sstr << "inconsistent constraints: ";
-      bool first = true;
-      for(auto constraint: result.inconsistent_constraints)
-      {
-        if(!first)sstr << "\t\t";
-        sstr << constraint << endl;
-        first = false;
-      }
-    }
+    output_inconsistent_constraints(sstr, result);
     sstr << "t\t: " << result.current_time << "\n";
   }
 
@@ -81,6 +47,32 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
   return sstr.str();
+}
+
+void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const 
+{
+  if(!phase.inconsistent_module_sets.empty())
+  {
+    stream << "unsat mod\t: ";
+    bool first = true;
+    for(auto module_set : phase.inconsistent_module_sets)
+    {
+      if(!first)stream << "\t\t  ";
+      stream << module_set.get_name() << endl;
+      first = false;
+    }
+  }
+  if(!phase.inconsistent_constraints.empty())
+  {
+    stream << "unsat cons\t: ";
+    bool first = true;
+    for(auto constraint: phase.inconsistent_constraints)
+    {
+      if(!first)stream << "\t\t  ";
+      stream <<  constraint << endl;
+      first = false;
+    }
+  }
 }
 
 void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm, const std::string& post_fix) const

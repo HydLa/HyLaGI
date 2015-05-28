@@ -14,6 +14,7 @@ public:
   void output_one_phase(const phase_result_const_sptr_t&)const;
 
   std::string get_state_output(const phase_result_t& result) const;
+  
 
   void output_parameter_map(const parameter_map_t& pm, const std::string &post_fix= "") const;
 
@@ -28,6 +29,8 @@ public:
   void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
 
 private:
+
+  void output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const;
 
   std::ostream& ostream;
   simulator::backend_sptr_t backend;
