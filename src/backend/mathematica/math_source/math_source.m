@@ -41,7 +41,7 @@ checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. pre
 );
 
 
-ccIntervalForEach[cond_, initRules_, pCons_] :=
+ccIntervalForEach[cond_, initRules_, pCons_, pars_] :=
 Module[
   {
     operator,
@@ -51,29 +51,32 @@ Module[
     ltSol,
     trueCond
   },
-  inputPrint["ccIntervalForEach", cond, initRules, pCons];
+  inputPrint["ccIntervalForEach", cond, initRules, pCons, pars];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}]; 
-  simplePrint[lhs, pCons];
+  simplePrint[lhs];
+  simplePrint[operator];
   (* caused by underConstraint *)
   If[hasVariable[lhs], Return[pCons] ];
 
   trueCond = False;
 
-  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
+  eqSol = Quiet[Reduce[lhs == 0 && pCons, pars, Reals] ];
   If[eqSol =!= False,
-    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
+     eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol, pars];
     trueCond = trueCond || eqSol
   ];
   If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
-    gtSol = Quiet[Reduce[lhs > 0 && pCons, Reals] ];
+     gtSol = Quiet[Reduce[lhs > 0 && pCons, pars, Reals] ];
+     simplePrint[gtSol];
     trueCond = trueCond || gtSol
   ];
   If[MemberQ[{Unequal, Less, LessEqual}, operator],
-    ltSol = Quiet[Reduce[lhs < 0 && pCons, Reals] ];
+     ltSol = Quiet[Reduce[lhs < 0 && pCons, pars, Reals] ];
     trueCond = trueCond || ltSol
   ];
+  If[trueCond =!= False, trueCond = True];
   trueCond
 ];
 
@@ -100,12 +103,17 @@ publicMethod[
           conj = tCons[[i]];
           eachCpTrue = prevCons && pCons;
           For[j = 1, j <= Length[conj], j++,
-            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
+              eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue, pars]
           ];
           cpTrue = cpTrue || eachCpTrue
         ];
         cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-        toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+         simplePrint[cpTrue];
+         simplePrint[cpFalse];
+         If[Reduce[cpTrue] =!= False,
+            toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[False]}}],
+            toReturnForm[{{LogicalExpand[False]}, {LogicalExpand[cpFalse]}}]
+         ]
       ]
     ]
   ]
@@ -185,6 +193,7 @@ Module[
 
   (* Remove unnecessary Constraints*)
   map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+
 
   map = LogicalExpand[map];
   map = applyListToOr[map];

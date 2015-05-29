@@ -1,9 +1,9 @@
 (* calculate the value of given variable which satisfies given equation *)
 publicMethod[
   calculateConsistentValue,
-  equation, variable, variableMap, parameterCondition,
+  rel, variable, variableMap, parameterCondition,
   Module[
-    {rules, sol, originalValue, range, originalRange, intervalRules},
+         {equation,rules, sol, originalValue, range, originalRange, intervalRules},
     (* ignore entry of variableMap for given variable *)
     rules = Select[variableMap, (#[[1]] =!= variable)&];
     rules = Map[(Rule@@#)&, rules];
@@ -13,7 +13,7 @@ publicMethod[
     simplePrint[rules, originalValue];
 
     intervalRules = createIntervalRules[parameterCondition];
-  
+    equation = Equal@@rel;
     sol = Solve[equation //. rules, {variable}];
     simplePrint[sol];
     originalRange = N[originalValue /. intervalRules];

@@ -115,6 +115,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     // TODO: 並列実行とかしなければ現状でも問題はない
     assert(0);
   }
+  /*
   else if(todo->phase_type == POINT_PHASE)
   {
     for(auto trigger : todo->discrete_asks)
@@ -138,19 +139,30 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
             todo->diff_positive_asks.insert(ask);
           }
         }
-        
         else
         {
+
           nonprev_trigger_asks.insert(ask);
         }
       }
     }
-  }
+    for(auto ask: relation_graph_->get_all_asks())
+    {
+      bool is_trigger = false;
+      for(auto trigger : todo->discrete_asks)
+      {
+        if(trigger.first == ask)is_trigger = true;
+      }
+      if(!is_trigger)nonprev_trigger_asks.insert(ask);
+    }
+  }*/
   else
   {
-    for(auto trigger : todo->discrete_asks)
+//    for(auto trigger : todo->discrete_asks)
+    for(auto ask: relation_graph_->get_all_asks())
     {
-      nonprev_trigger_asks.insert(trigger.first);
+      relation_graph_->set_entailed(ask, false);
+      nonprev_trigger_asks.insert(ask);
     }
   }
   
@@ -325,9 +337,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
           discrete_vs.insert(var);
       }
       phase->discrete_differential_set = discrete_vs;
+
     }
     phase->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   }
+  
 
   revert_diff(cc_local_positives, cc_local_negatives, cc_local_always, module_diff);
 
@@ -473,11 +487,23 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
-  bool expanded, first_loop = true;
+  bool expanded;
   PhaseType phase_type = phase->phase_type;
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
+    {
+      timer::Timer consistency_timer;
+      CheckConsistencyResult cc_result;
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
+      phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+      phase->profile["# of CheckConsistency"]++;
+      if(!cc_result.consistent_store.consistent()){
+        return false;
+      }else if (cc_result.inconsistent_store.consistent()){
+        push_branch_states(phase, cc_result);
+      }
+    }
     timer::Timer entailment_timer;
     
     variable_set_t discrete_variables;
@@ -569,20 +595,7 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
       phase->profile["# of CheckEntailment"]+= 1;
     }
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-    if(expanded || first_loop)
-    {
-      timer::Timer consistency_timer;
-      CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
-      phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-      phase->profile["# of CheckConsistency"]++;
-      if(!cc_result.consistent_store.consistent()){
-        return false;
-      }else if (cc_result.inconsistent_store.consistent()){
-        push_branch_states(phase, cc_result);
-      }
-      first_loop = false;
-    }
+
   }while(expanded);
 
   // TODO: implement branching here
@@ -632,6 +645,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       */
       if(opts_->interval_newton)
       {
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+        HYDLA_LOGGER_DEBUG_VAR(pm);
         node_sptr exp;
         node_sptr dexp;
         backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
@@ -642,6 +657,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         itvd init = itvd(0.,opts_->max_ip_width); 
         itvd result_interval =
           interval::calculate_interval_newton(init, exp, dexp, pm);
+        HYDLA_LOGGER_DEBUG("interval_newton: ", result_interval);
         value_t lower(result_interval.lower());
         backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
         value_t upper(result_interval.upper());
@@ -652,15 +668,15 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm[parameter] = range;
         backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
         constraint_for_this_guard.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
-
-
-
-
-        
+        guard_time_map[guard] = constraint_for_this_guard;
+        return min_time_calculator.calculate_min_time(&guard_time_map, guard, false);
       }
       //    constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
-      else backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-      guard_time_map[guard] = constraint_for_this_guard;
+      else
+      {
+        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
+        guard_time_map[guard] = constraint_for_this_guard;
+      }
     }
   }
 
@@ -772,7 +788,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
-      for(auto variable : diff_variables)
+/*      for(auto variable : diff_variables)
       {
         string var_name = variable.get_name();
         // 既にチェック済みの変数なら省略（x'とxはどちらもxとして扱うため，二回呼ばれないようにする）
@@ -780,30 +796,21 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         checked_variables.insert(var_name);
         asks_t asks = relation_graph_->get_adjacent_asks(var_name);
         
-        
         for(auto ask : asks)
         {
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase->parameter_map);
-          if(opts_->interval_newton)
-          {
-            //Check whether the condition has approximated variable
-            simulator::VariableFinder finder;
-            constraint_t guard = ask->get_guard();
-            finder.visit_node(guard);
-            variable_set_t variables = finder.get_variable_set();
-            if(variables.size() > 0)
-            {
-              // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない（現状だと離散変化条件が直接言及している変数しか考慮していない）
-              Value consistent_value;
-              Variable var = *variables.begin();
-              backend_->call("calculateConsistentValue", 4,
-                                       "ecvnmvnmp", "vl",
-                                       &guard, &var, &phase->variable_map, &phase->parameter_map, &consistent_value);
-              phase->variable_map[var] = consistent_value;
-            }
-          }
+
+        }
+        }*/
+      {
+
+        asks_t asks = relation_graph_->get_all_asks();
+        
+        for(auto ask : asks)
+        {
+          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase->parameter_map);
         }
       }
 
@@ -856,25 +863,34 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           else
           {
             next_todo->discrete_asks = candidate.discrete_asks;
-            for(auto ask : next_todo->discrete_asks)
-            {
-              pr->next_pp_candidate_map.erase(ask.first);
-              std::list<AtomicConstraint *> atomic_guards = relation_graph_->get_atomic_guards(ask.first->get_guard());
-              for(auto atomic_guard : atomic_guards)
-              {
-                auto guard = atomic_guard->constraint;
-                variable_map_t related_vm = get_related_vm(guard, pr->variable_map);
-                bool is_trigger;
-                backend_->call("isTriggerGuard", 4, "etmvtmpvlt", "b", &guard, &related_vm, &pr->parameter_map, &pr->end_time, &is_trigger);
-                if(is_trigger)
-                {
-                  pr->discrete_guards.push_back(guard);
-                }
-              }
-            }
+
+
             next_todo->parameter_map = pr->parameter_map;
             next_todo->parent = pr.get();
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+            if(opts_->interval_newton)
+            {
+              assert(next_todo->discrete_asks.size() == 1);
+              ask_t ask = next_todo->discrete_asks.begin()->first;
+              //Check whether the condition has approximated variable
+              simulator::VariableFinder finder;
+              constraint_t guard = ask->get_guard();
+              finder.visit_node(guard);
+              variable_set_t variables = finder.get_all_variable_set();
+              HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+              HYDLA_LOGGER_DEBUG_VAR(variables.size());
+              if(variables.size() > 0)
+              {
+                // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない（現状だと離散変化条件が直接言及している変数しか考慮していない）
+                Value consistent_value;
+                Variable var = *variables.begin();
+                HYDLA_LOGGER_DEBUG_VAR(var);
+                backend_->call("calculateConsistentValue", 4,
+                               "ecvnmvnmp", "vl",
+                               &guard, &var, &phase->variable_map, &phase->parameter_map, &consistent_value);
+                next_todo->prev_map[var] = consistent_value;
+              }
+            }
             next_todo->current_time = pr->end_time;
             pr->todo_list.push_back(next_todo);
           }
