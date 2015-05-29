@@ -97,20 +97,20 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   
   typedef function_map_t::value_type f_value_t;
   //HydLaとMathematicaの関数名の対応関係を作っておく．
-  function_map_.insert(f_value_t("sin", "Sin"));
-  function_map_.insert(f_value_t("sinh", "Sinh"));
+  function_map_.insert(f_value_t("Sin", "Sin"));
+  function_map_.insert(f_value_t("Sinh", "Sinh"));
   function_map_.insert(f_value_t("Asin", "ArcSin"));
   function_map_.insert(f_value_t("Asinh","ArcSinh"));
-  function_map_.insert(f_value_t("cos", "Cos"));
-  function_map_.insert(f_value_t("cosh", "Cosh"));
+  function_map_.insert(f_value_t("Cos", "Cos"));
+  function_map_.insert(f_value_t("Cosh", "Cosh"));
   function_map_.insert(f_value_t("Acos", "ArcCos"));
   function_map_.insert(f_value_t("Acosh", "ArcCosh"));
-  function_map_.insert(f_value_t("tan", "Tan"));
-  function_map_.insert(f_value_t("tanh", "Tanh"));
+  function_map_.insert(f_value_t("Tan", "Tan"));
+  function_map_.insert(f_value_t("Tanh", "Tanh"));
   function_map_.insert(f_value_t("Atan", "Arctan"));
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
-  function_map_.insert(f_value_t("log", "Log"));
-  function_map_.insert(f_value_t("ln", "Log"));
+  function_map_.insert(f_value_t("Log", "Log"));
+  function_map_.insert(f_value_t("Ln", "Log"));
   on_next_ = false;
 }
 

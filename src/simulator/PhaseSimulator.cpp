@@ -652,6 +652,11 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm[parameter] = range;
         backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
         constraint_for_this_guard.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
+
+
+
+
+        
       }
       //    constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
       else backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
@@ -781,6 +786,24 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase->parameter_map);
+          if(opts_->interval_newton)
+          {
+            //Check whether the condition has approximated variable
+            simulator::VariableFinder finder;
+            constraint_t guard = ask->get_guard();
+            finder.visit_node(guard);
+            variable_set_t variables = finder.get_variable_set();
+            if(variables.size() > 0)
+            {
+              // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない（現状だと離散変化条件が直接言及している変数しか考慮していない）
+              Value consistent_value;
+              Variable var = *variables.begin();
+              backend_->call("calculateConsistentValue", 4,
+                                       "ecvnmvnmp", "vl",
+                                       &guard, &var, &phase->variable_map, &phase->parameter_map, &consistent_value);
+              phase->variable_map[var] = consistent_value;
+            }
+          }
         }
       }
 

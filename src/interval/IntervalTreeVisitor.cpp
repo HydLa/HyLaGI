@@ -125,7 +125,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fl
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Function> node)
 {
   std::string name = node->get_name();
-  if(name == "sin")
+  if(name == "Sin")
   {
     if(node->get_arguments_size() != 1)
     {
@@ -135,7 +135,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     interval_value = sin(interval_value);
     // debug_print("Sin : ", interval_value);
   }
-  else if(name == "cos")
+  else if(name == "Cos")
   {
     if(node->get_arguments_size() != 1)
     {
@@ -145,7 +145,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     interval_value = cos(interval_value);
     // debug_print("Cos : ", interval_value);
   }
-  else if(name == "tan")
+  else if(name == "Tan")
   {
     if(node->get_arguments_size() != 1)
     {
@@ -154,7 +154,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     accept(node->get_argument(0));
     interval_value = tan(interval_value);
   }
-  else if(name == "log")
+  else if(name == "Log")
   {
     if(node->get_arguments_size() != 1)
     {
