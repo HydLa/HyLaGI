@@ -20,6 +20,7 @@
 #include "TreeInfixPrinter.h"
 
 #include "IntervalNewton.h"
+#include "IntervalTreeVisitor.h"
 
 namespace hydla
 {
@@ -667,9 +668,13 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         HYDLA_LOGGER_DEBUG_VAR(range);
         pm[parameter] = range;
         backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
-        constraint_for_this_guard.reset(new symbolic_expression::Equal(constraint_t(new symbolic_expression::SymbolicT), constraint_t (new symbolic_expression::Parameter(parameter))));
         guard_time_map[guard] = constraint_for_this_guard;
-        return min_time_calculator.calculate_min_time(&guard_time_map, guard, false);
+        FindMinTimeCandidate candidate;
+        candidate.time = Value(parameter);
+        candidate.parameter_map = pm;
+        find_min_time_result_t result;
+        result.push_back(candidate);
+        return result;
       }
       //    constraint_for_this_guard = calculate_approximated_time_constraint(guard, related_vm, pm);
       else
@@ -718,6 +723,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       next_todo->current_time = phase->end_time = phase->current_time;
       next_todo->discrete_asks = phase->discrete_asks;
       next_todo->prev_map = phase->variable_map;
+
       phase->todo_list.push_back(next_todo);
     }
   }
@@ -864,7 +870,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->discrete_asks = candidate.discrete_asks;
 
-
             next_todo->parameter_map = pr->parameter_map;
             next_todo->parent = pr.get();
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
@@ -889,6 +894,42 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                                "ecvnmvnmp", "vl",
                                &guard, &var, &phase->variable_map, &phase->parameter_map, &consistent_value);
                 next_todo->prev_map[var] = consistent_value;
+              }
+
+              while(true)
+              {
+                string var_name;
+                cout << "--next prev map--" << endl << next_todo->prev_map << endl;
+                cout << "input name of a variable to approximate(\".\" to end)" << endl;
+                if(!(cin >> var_name))break;
+                if(var_name == ".")break;
+                Variable var;
+                bool exists = false;
+                for(auto key_value : next_todo->prev_map)
+                {
+                  if(key_value.first.get_string() == var_name)
+                  {
+                    var = key_value.first;
+                    exists = true;
+                  }
+                }
+                if(!exists)cout << "invalid variable name" << endl;
+                else
+                {
+                  interval::IntervalTreeVisitor visitor;
+                  assert(next_todo->prev_map[var].unique());
+                  itvd dummy_itv;
+                  itvd result_interval = visitor.get_interval_value(next_todo->prev_map[var].get_unique_value().get_node(), &dummy_itv, &next_todo->parameter_map);
+                  value_t lower(result_interval.lower());
+                  backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+                  value_t upper(result_interval.upper());
+                  backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+                  ValueRange range (lower, upper);
+                  Parameter parameter = simulator_->introduce_parameter(var.get_name(), var.get_differential_count(), next_todo->id, range);
+                  next_todo->parameter_map[parameter] = range;
+                  backend_->call("resetConstraintForParameter", 1, "mp", "", &next_todo->parameter_map);
+                  next_todo->prev_map[var] = ValueRange(Value(parameter));
+                }
               }
             }
             next_todo->current_time = pr->end_time;
