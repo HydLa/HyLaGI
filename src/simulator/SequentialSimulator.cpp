@@ -72,6 +72,20 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
        }
     */
     dfs(todo);
+    if(!opts_->nd_mode)
+    {
+      while(!current->todo_list.empty())
+      {
+        phase_result_sptr_t not_selected_children = current->todo_list.front();
+        current->todo_list.pop_front();
+        if(not_selected_children->simulation_state != SIMULATED)
+        {
+          current->children.push_back(not_selected_children);
+        }
+        not_selected_children->simulation_state = NOT_SIMULATED;
+      }
+      break;
+    }
   }
   phase_simulator_->revert_diff(*current);
 }

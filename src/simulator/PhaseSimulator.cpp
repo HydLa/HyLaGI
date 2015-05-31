@@ -82,7 +82,6 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       make_next_todo(phase);
       phase->id += phase_num;
       phase_num++;
-      todo->parent->todo_list.push_back(phase);
       if(aborting)break;
     }
   }
@@ -260,6 +259,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
     if(phase->simulation_state == SIMULATED)
     {
+      // branching by multiple maximal consistent modulesets
       phase.reset(new PhaseResult(*phase));
       phase->profile.clear();
       phase->parent->todo_list.push_back(phase);
@@ -634,7 +634,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   apply_diff(*phase);
 
   phase_result_sptr_t next_todo(new PhaseResult());
-  next_todo->id = ++phase_sum_;
+
   next_todo->step = phase->step + 1;
   next_todo->parameter_map = phase->parameter_map;
   if(phase->phase_type == POINT_PHASE)
@@ -653,6 +653,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     check_break_points(phase, phase->variable_map);
     if(!aborting)
     {
+      next_todo->id = ++phase_sum_;
       next_todo->phase_type = INTERVAL_PHASE;
       next_todo->parent = phase.get();
       next_todo->diff_sum = phase->diff_sum;
@@ -758,8 +759,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       for(auto entry : break_point_list)
       {
         auto break_point = entry.first;
-        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first.condition));
-
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false);
       }
 
@@ -787,7 +786,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       }
       else
       {
-        phase_result_sptr_t pr = phase;
 
         auto time_it = time_result.begin();
         while(true)
@@ -795,39 +793,45 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           DCCandidate &candidate = *time_it;
           // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
           for(auto par_entry : candidate.parameter_map ){
-            pr->parameter_map[par_entry.first] = par_entry.second;
+            phase->parameter_map[par_entry.first] = par_entry.second;
           }
-          pr->end_time = pr->current_time + candidate.time;
-          backend_->call("simplify", 1, "vln", "vl", &pr->end_time, &pr->end_time);
+          phase->end_time = phase->current_time + candidate.time;
+          backend_->call("simplify", 1, "vln", "vl", &phase->end_time, &phase->end_time);
           if(candidate.time.undefined() || candidate.time.infinite() )
           {
-            pr->simulation_state = simulator::TIME_LIMIT;
-            pr->end_time = max_time;
+            phase->simulation_state = TIME_LIMIT;
+            phase->end_time = max_time;
           }
           else
           {
+            next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
-            next_todo->next_pp_candidate_map = pr->next_pp_candidate_map;
+            next_todo->next_pp_candidate_map = phase->next_pp_candidate_map;
             for(auto ask : next_todo->discrete_asks)
             {
-              next_todo->next_pp_candidate_map.erase(ask.first);
+next_todo->next_pp_candidate_map.erase(ask.first);
             }
-            next_todo->parameter_map = pr->parameter_map;
-            next_todo->parent = pr.get();
+            next_todo->parameter_map = phase->parameter_map;
+            next_todo->parent = phase.get();
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
-            next_todo->current_time = pr->end_time;
-            pr->todo_list.push_back(next_todo);
+            next_todo->current_time = phase->end_time;
+            phase->simulation_state = SIMULATED;
+            phase->todo_list.push_back(next_todo);
           }
 
           if(++time_it == time_result.end())break;
-      
-          pr.reset(new PhaseResult(*pr));
-          pr->id = ++phase_sum_;
-          pr->parent->children.push_back(pr);
-          pr->parent->todo_list.push_back(pr);
-          pr->todo_list.clear();
-          next_todo.reset(new PhaseResult(*next_todo));
-          next_todo->id = ++phase_sum_;
+          //prepare new PhaseResult
+          phase.reset(new PhaseResult(*phase));
+          phase->id = ++phase_sum_;
+          phase->parent->children.push_back(phase);
+          phase->parent->todo_list.push_back(phase);
+          phase->todo_list.clear();
+          if(!(candidate.time.undefined() || candidate.time.infinite()) )
+          {
+            // prepare new todo
+            next_todo.reset(new PhaseResult(*next_todo));
+            next_todo->id = ++phase_sum_;
+          }
         }
       }
     }
