@@ -64,7 +64,6 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     int phase_num = 0;
     for(auto phase : phase_list)
     {
-      // TOOD: move this block into upper level
       if(phase->parent == result_root.get())
       {
         AlwaysFinder always_finder;
@@ -286,11 +285,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
     consistency_checker->reset_count();
 
-    list<parameter_map_t> parameter_maps;
-    backend_->call("createParameterMaps", 0, "", "mps", &parameter_maps);
-    assert(parameter_maps.size() == 1);
-    phase->parameter_map = parameter_maps.front();
-    
+    phase->parameter_map = get_current_parameter_map();
     phase->diff_positive_asks.insert(cc_local_positives.begin(), cc_local_positives.end());
     phase->diff_negative_asks.insert(cc_local_negatives.begin(), cc_local_negatives.end());
 
@@ -331,10 +326,31 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   return result_list;
 }
 
+parameter_map_t PhaseSimulator::get_current_parameter_map()
+{
+  list<parameter_map_t> parameter_maps;
+  backend_->call("createParameterMaps", 0, "", "mps", &parameter_maps);
+  assert(parameter_maps.size() == 1);
+  return parameter_maps.front();
+}
+
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
-  phase_result_sptr_t branch_state_false(new PhaseResult(*original));
+  phase_result_sptr_t branch_state_false(new PhaseResult());
+  // copy necesarry information for branching
+  branch_state_false->phase_type = original->phase_type;
   branch_state_false->id = ++phase_sum_;
-  branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
+  branch_state_false->step = original->step;
+  branch_state_false->current_time = original->current_time;
+  branch_state_false->prev_map = original->prev_map;
+  branch_state_false->parameter_map =
+    original->parameter_map;
+  branch_state_false->additional_constraint_store = original->additional_constraint_store;
+
+  branch_state_false->discrete_differential_set = original->discrete_differential_set;
+  branch_state_false->parent = original->parent;
+  branch_state_false->discrete_asks = original->discrete_asks;
+  branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
+branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->additional_constraint_store.add_constraint_store(result.consistent_store);
     backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
@@ -357,6 +373,7 @@ void PhaseSimulator::check_break_points(phase_result_sptr_t &phase, variable_map
       case BRANCH_PAR:
         push_branch_states(phase, cc_result);
       case ENTAILED:
+        phase->parameter_map = get_current_parameter_map();
         if(!break_point.call_back(break_point, phase))aborting = true;
         break;
       case CONFLICTING:

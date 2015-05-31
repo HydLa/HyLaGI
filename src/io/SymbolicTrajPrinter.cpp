@@ -127,6 +127,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
 
     if(node->simulation_state==simulator::ASSERTION ||
+       node->simulation_state==simulator::INCONSISTENCY || 
       node->simulation_state==simulator::TIME_LIMIT ||
       node->simulation_state==simulator::NOT_SIMULATED ||
       node->simulation_state==simulator::NONE ||

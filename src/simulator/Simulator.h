@@ -153,6 +153,8 @@ protected:
 
   int exit_status;
 
+  bool assertion_failed;
+
   interval::AffineApproximator* affine_transformer_;
 private:
   static bool assert_call_back(BreakPoint, phase_result_sptr_t);

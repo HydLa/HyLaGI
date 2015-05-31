@@ -180,17 +180,19 @@ publicMethod[
   createMap[pCons, isParameter, hasParameter, {}]
 ];
 
+removeUnnecessaryConstraints[cons_, hasJudge_] :=
+(
+cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
+);
+
 createMap[cons_, judge_, hasJudge_, vars_] :=
 createMap[cons, judge, hasJudge, vars] = (* for memoization *)
 Module[
   {map},
-
-  (* Remove unnecessary Constraints*)
-  map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  map = removeUnnecessaryConstraints[cons, hasJudge];
   map = Reduce[map, vars, Reals];
 
-  (* Remove unnecessary Constraints*)
-  map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  map = removeUnnecessaryConstraints[map, hasJudge];
 
   If[map === True, Return[{{}}] ];
   If[map === False, Return[{}] ];

@@ -51,6 +51,8 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
 
+  assertion_failed = false;
+
   opts_->assertion = parse_tree->get_assertion_node();
   reset_result_root();
 
@@ -179,6 +181,8 @@ bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
 {
   phase->simulation_state = ASSERTION;
   HYDLA_LOGGER_DEBUG_VAR(*phase);
+  Simulator *simulator = (Simulator *)bp.tag;
+  simulator->assertion_failed = true;
   cout << "Assertion failed!" << endl;
   cout << io::SymbolicTrajPrinter().get_state_output(*phase);
   return false;

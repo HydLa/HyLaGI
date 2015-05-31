@@ -70,6 +70,8 @@ private:
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
+  parameter_map_t get_current_parameter_map();
+
   module_diff_t get_module_diff(module_set_t unadopted_ms, module_set_t parent_unadopted);
 
   variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);

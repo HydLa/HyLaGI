@@ -45,6 +45,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
 void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
+    HYDLA_LOGGER_DEBUG_VAR(*current);
   if(signal_handler::interrupted)
   {
     current->simulation_state = INTERRUPTED;
@@ -63,31 +64,30 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
         printer.output_one_phase(todo);
       }
     }
-    /* TODO: assertion違反が検出された場合の対応
-       if(phase->simulation_state == ASSERTION)
-       {
-       HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
-       if(opts_->stop_at_failure)break;
-       else continue;
-       }
-    */
+
     dfs(todo);
-    if(!opts_->nd_mode)
+    if(!opts_->nd_mode || (opts_->stop_at_failure && assertion_failed) )
     {
-      while(!current->todo_list.empty())
-      {
-        phase_result_sptr_t not_selected_children = current->todo_list.front();
-        current->todo_list.pop_front();
-        if(not_selected_children->simulation_state != SIMULATED)
-        {
-          current->children.push_back(not_selected_children);
-        }
-        not_selected_children->simulation_state = NOT_SIMULATED;
-      }
+      omit_following_todos(current);
       break;
     }
   }
   phase_simulator_->revert_diff(*current);
+  HYDLA_LOGGER_DEBUG_VAR(*current);
+}
+
+void SequentialSimulator::omit_following_todos(phase_result_sptr_t current)
+{
+  while(!current->todo_list.empty())
+  {
+    phase_result_sptr_t not_selected_children = current->todo_list.front();
+    current->todo_list.pop_front();
+    if(not_selected_children->simulation_state != SIMULATED)
+    {
+      current->children.push_back(not_selected_children);
+    }
+    not_selected_children->simulation_state = NOT_SIMULATED;
+  }
 }
 
 
