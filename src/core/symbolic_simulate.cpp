@@ -135,15 +135,6 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
 
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
-
-  // select search method (dfs or bfs)
-  if(po.get<string>("search") == "d"){
-    opts.search_method = DFS;
-  }else if(po.get<string>("search") == "b"){
-    opts.search_method = BFS;
-  }else{
-    throw runtime_error(string("invalid option - search"));
-  }
 }
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)

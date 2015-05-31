@@ -25,7 +25,6 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
   try
   {
-    //TODO: implement BFS
     dfs(result_root_);
   }
   catch(const std::runtime_error &se)

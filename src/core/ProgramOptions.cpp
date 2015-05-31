@@ -68,14 +68,7 @@ void ProgramOptions::init_descriptions()
 
     ("math_name",
      value<std::string>()->default_value("math"),
-     "name of mathematica command")
-
-  
-    ("search",
-     value<std::string>()->default_value("d"),
-     "search method:\n"
-     "  d: Depth First Search\n"
-     "  b: Breadth First Search");
+     "name of mathematica command");
 
 
   options_description config_desc("Following options also can be specified in comments in the form of \"#hylagi <options>\"");

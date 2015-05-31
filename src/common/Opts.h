@@ -11,11 +11,6 @@ class Node;
 typedef boost::shared_ptr<Node> node_sptr;
 }
 
-typedef enum{
-  DFS,
-  BFS
-}SearchMethod;
-
 struct Opts {
   std::string mathlink;
   bool debug_mode;
@@ -31,7 +26,6 @@ struct Opts {
   bool ignore_warnings;
   symbolic_expression::node_sptr assertion;
   int max_phase;
-  SearchMethod search_method;
 };
 
 }
