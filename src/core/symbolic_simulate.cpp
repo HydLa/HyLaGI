@@ -1,7 +1,6 @@
 #include "ProgramOptions.h"
 #include "PhaseSimulator.h"
 #include "SequentialSimulator.h"
-#include "InteractiveSimulator.h"
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
@@ -10,6 +9,7 @@
 #include "JsonWriter.h"
 #include "Timer.h"
 #include <sys/stat.h>
+#include <fstream>
 
 #ifdef _MSC_VER
 #include <windows.h>
