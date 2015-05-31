@@ -56,15 +56,17 @@ void VariableReplacer::replace_range(ValueRange &range)
 void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   string v_name = node->get_name();
-  variable_map_t::const_iterator it = variable_map.begin();
-  for(;it != variable_map.end(); it++)
+  for(auto it = variable_map.begin();it != variable_map.end(); it++)
     {
       if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt)
       {
         //TODO: 値が範囲を持っている場合にも対応する
-        //TODO: 使おうとした変数値の数式が更に別の変数を含んでいる場合にも対応する。
         assert(it->second.unique());
-        new_child_ = it->second.get_unique_value().get_node()->clone();
+        node_sptr node = it->second.get_unique_value().get_node()->clone();
+        VariableReplacer replacer(variable_map);
+        replace_node(node);
+        
+        new_child_ = node;
         replace_cnt++;
         // upper_bound to avoid infinite loop (may be caused by circular reference)
         if(replace_cnt >= variable_map.size())

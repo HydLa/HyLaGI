@@ -18,10 +18,10 @@ class MinTimeCalculator;
 
 struct CompareMinTimeResult
 {
-  std::vector<parameter_map_t> less_maps, greater_maps, equal_maps;
+  std::list<parameter_map_t> less_maps, greater_maps, equal_maps;
 };
 
-typedef std::vector<parameter_map_t>                       parameter_maps_t;
+typedef std::list<parameter_map_t>                       parameter_maps_t;
 typedef symbolic_expression::node_sptr                     node_sptr;
 
 
@@ -70,6 +70,8 @@ private:
                               variable_map_t &vm,
                               parameter_map_t &parameter_map);
 
+  parameter_map_t get_current_parameter_map();
+
   module_diff_t get_module_diff(module_set_t unadopted_ms, module_set_t parent_unadopted);
 
   variable_map_t get_related_vm(const node_sptr &node, const variable_map_t &vm);
@@ -102,8 +104,6 @@ private:
   module_set_container_sptr msc_no_init_;
 
   phase_result_sptr_t result_root;
-
-  bool relation_graph_is_taken_over;  /// indicates whether the state of relation_graph_ is taken over from parent phase
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
   int                                   phase_sum_;

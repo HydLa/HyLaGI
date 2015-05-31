@@ -227,7 +227,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   }
   add_continuity(finder, phase);
   backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
-  return check_entailment_core(cc_result, guard, phase, profile);
+  return check_entailment_essential(cc_result, guard, phase, profile);
 }
 
 
@@ -257,11 +257,11 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
   backend->call("addConstraint", 1, fmt.c_str(), "", &vm);
 
-  return check_entailment_core(cc_result, guard, phase, profile);
+  return check_entailment_essential(cc_result, guard, phase, profile);
 }
 
 
-CheckEntailmentResult ConsistencyChecker::check_entailment_core(
+CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
   CheckConsistencyResult &cc_result,
   const constraint_t &guard,
   const PhaseType &phase,
@@ -301,13 +301,13 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_core(
   return ce_result;
 }
 
-void ConsistencyChecker::clear_inconsistent_module_sets()
+void ConsistencyChecker::clear_inconsistent_constraints()
 {
   inconsistent_module_sets.clear();
+  inconsistent_constraints.clear();
 }
 
-void ConsistencyChecker::check_consistency(const ConstraintStore &constraints, 
-                                           RelationGraph &relation_graph,
+void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constraints, 
                                            module_set_t &module_set,
                                            CheckConsistencyResult &result,
                                            const PhaseType& phase,
@@ -322,24 +322,24 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     profile["VisitNode"] += timer.get_elapsed_us();
   }
   CheckConsistencyResult tmp_result;
-  tmp_result = check_consistency(constraints, finder, phase, profile);
+  tmp_result = check_consistency_essential(constraints, finder, phase, profile);
 
-  // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）
   if(!tmp_result.consistent_store.consistent())
   {
-    result.consistent_store = tmp_result.consistent_store;
+    result.consistent_store.set_consistency(false);
     inconsistent_module_sets.push_back(module_set);
+    inconsistent_constraints.push_back(constraints);
   }
   else
   {
     if(tmp_result.inconsistent_store.consistent())
     {
       // There may be some branches.
-      // TODO: 本来はここで論理和を取らないといけない．
+      result.consistent_store.add_constraint_store(tmp_result.consistent_store);
       result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
+      return;
     }
     result.consistent_store.add_constraint_store(tmp_result.consistent_store);
-    result.inconsistent_store.add_constraint_store(tmp_result.inconsistent_store);
 
     if(result_maps.size() == 0)return; // if result_maps has already been invalidated, skip creation
     vector<variable_map_t> create_result;
@@ -401,14 +401,12 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
     HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
-    check_consistency(related_constraints_list[i], relation_graph, related_modules_list[i], result, phase, profile, following_step);
+    check_consistency_foreach(related_constraints_list[i], related_modules_list[i], result, phase, profile, following_step);
+    if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 
   
-  if(result.inconsistent_store.empty())
-  {
-    result.inconsistent_store.set_consistency(false);
-  }
+  if(result.inconsistent_store.empty()) result.inconsistent_store.set_consistency(false);
 
   return result;
 }
@@ -428,8 +426,13 @@ vector<module_set_t> ConsistencyChecker::get_inconsistent_module_sets()
   return inconsistent_module_sets;
 }
 
+list<ConstraintStore> ConsistencyChecker::get_inconsistent_constraints()
+{
+  return inconsistent_constraints;
+}
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase, profile_t &profile)
+
+CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase, profile_t &profile)
 {
   timer::Timer timer;
   // PPでは変数表を全変数について作成する必要があるので，特定変数だけ解くようにするのは難しい．

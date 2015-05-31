@@ -25,7 +25,6 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
   try
   {
-    //TODO: implement BFS
     dfs(result_root_);
   }
   catch(const std::runtime_error &se)
@@ -36,17 +35,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
     error_str += "\n";
     HYDLA_LOGGER_DEBUG_VAR(error_str);
     std::cout << error_str;
-  }
-
-
-  if(signal_handler::interrupted){
-    // // TODO: 各未実行フェーズを適切に処理
-    // while(!todo_stack_->empty())
-    // {
-    //   simulation_job_sptr_t todo(todo_stack_->pop_todo());
-    //   todo->parent->simulation_state = INTERRUPTED;
-    //   // TODO: restart simulation from each interrupted phase
-    // }
+    exit_status = EXIT_FAILURE;
   }
   
   HYDLA_LOGGER_DEBUG("%% simulation ended");
@@ -55,6 +44,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
 void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
+    HYDLA_LOGGER_DEBUG_VAR(*current);
   if(signal_handler::interrupted)
   {
     current->simulation_state = INTERRUPTED;
@@ -69,21 +59,34 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     if(todo->simulation_state == NOT_SIMULATED)
     {
       process_one_todo(todo);
+      if(opts_->dump_in_progress){
+        printer.output_one_phase(todo);
+      }
     }
-    /* TODO: assertion違反が検出された場合の対応
-       if(phase->simulation_state == ASSERTION)
-       {
-       HYDLA_LOGGER_DEBUG("%% Failure of assertion is detected");
-       if(opts_->stop_at_failure)break;
-       else continue;
-       }
-    */
-    if(opts_->dump_in_progress){
-      printer.output_one_phase(todo);
-    }
+
     dfs(todo);
+    if(!opts_->nd_mode || (opts_->stop_at_failure && assertion_failed) )
+    {
+      omit_following_todos(current);
+      break;
+    }
   }
   phase_simulator_->revert_diff(*current);
+  HYDLA_LOGGER_DEBUG_VAR(*current);
+}
+
+void SequentialSimulator::omit_following_todos(phase_result_sptr_t current)
+{
+  while(!current->todo_list.empty())
+  {
+    phase_result_sptr_t not_selected_children = current->todo_list.front();
+    current->todo_list.pop_front();
+    if(not_selected_children->simulation_state != SIMULATED)
+    {
+      current->children.push_back(not_selected_children);
+    }
+    not_selected_children->simulation_state = NOT_SIMULATED;
+  }
 }
 
 

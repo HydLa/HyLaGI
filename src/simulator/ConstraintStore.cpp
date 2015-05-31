@@ -43,10 +43,15 @@ void ConstraintStore::set_consistency(bool cons)
 
 std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store)
 {
+  bool first = true;
+  ost << "{";
   for(auto constraint : store)
   {
-    ost << symbolic_expression::get_infix_string(constraint) << endl;
+    if(!first)ost << ", ";
+    ost << symbolic_expression::get_infix_string(constraint);
+    first = false;
   }
+  ost << "}";
   return ost;
 }
 

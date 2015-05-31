@@ -124,6 +124,29 @@ ostream& operator<<(std::ostream& s, const PhaseResult& phase)
   s << "%% id: " <<  phase.id          << endl;
   s << "%% step: " <<  phase.step << endl;
   
+  if(phase.parent != nullptr)s << "%% parent_id:" << phase.parent->id << endl;
+  else s << "%% no parent" << endl;
+
+  s << "%% unadopted modules: " << phase.unadopted_ms.get_name() << endl;
+  if(!phase.inconsistent_module_sets.empty())
+  {
+    for(auto module_set : phase.inconsistent_module_sets)
+    {
+      s << "%% inconsistent modules: " << module_set.get_name() << endl;
+    }
+  }
+  if(!phase.inconsistent_constraints.empty())
+  {
+    s << "%% inconsistent constraints: ";
+    bool first = true;
+    for(auto constraint: phase.inconsistent_constraints)
+    {
+      if(!first)s << "\t\t";
+      s << constraint << endl;
+      first = false;
+    }
+  }
+  
   if(!phase.current_time.undefined())
   {
     s << "%% current_time: " << phase.current_time << endl;
@@ -211,6 +234,15 @@ ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
     }
     os << endl;
   }
+  return os;
+}
+
+ostream& operator<<(std::ostream& os, const FindMinTimeCandidate& candidate)
+{
+  os << "time: " << candidate.time << endl;
+  os << "on_time: " << candidate.on_time << endl;
+  os << "--- parameter_map ---\n" << candidate.parameter_map << endl;
+
   return os;
 }
 

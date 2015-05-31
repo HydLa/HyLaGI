@@ -40,31 +40,6 @@ checkConsistencyInterval[] :=  (
 checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
-
-(* 条件を満たす最小の時刻と，その条件の組を求める *)
-findMinTime[causeAndID_, condition_] :=
-Module[
-  {
-    id,
-    cause,
-    minT,
-    ret
-  },
-  id = causeAndID[[2]];
-  cause = causeAndID[[1]];
-  sol = Reduce[cause && condition && t > 0, t, Reals];
-  checkMessage[];
-  If[sol === False, Return[{}] ];
-  (* 成り立つtの最小値を求める *)
-  minT = First[Quiet[Minimize[{t, sol}, {t}], Minimize::wksol]];
-  ret = makeListFromPiecewise[minT, condition];
-  (* 時刻が0となる場合を取り除く．*)
-  ret = Select[ret, (#[[1]] =!= 0)&];
-  (* append id for each time *)
-  ret = Map[({timeAndIDs[#[[1]], ids[id] ], #[[2]]})&, ret];
-  ret
-];
-
 ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {
@@ -189,27 +164,38 @@ ruleOutException[list_] := Module[
   ret
 ];
 
-createParameterMap[] := createParameterMap[pConstraint];
+productWithGlobalParameterConstraint[cons_] := productWithGlobalParameterConstraint[cons, pConstraint];
 
 publicMethod[
-  createParameterMap,
-  pCons,
-  (* TODO: the size of the result of createMap may not be 1 *)
-  createMap[pCons, isParameter, hasParameter, {}][[1]]
+  productWithGlobalParameterConstraint,
+  map, pCons,
+  createMap[map && pCons, isParameter, hasParameter, {}]
 ];
+
+createParameterMaps[] := createParameterMaps[pConstraint];
+
+publicMethod[
+  createParameterMaps,
+  pCons,
+  createMap[pCons, isParameter, hasParameter, {}]
+];
+
+removeUnnecessaryConstraints[cons_, hasJudge_] :=
+(
+cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
+);
 
 createMap[cons_, judge_, hasJudge_, vars_] :=
 createMap[cons, judge, hasJudge, vars] = (* for memoization *)
 Module[
   {map},
-  If[cons === True, Return[{{}}] ];
-  If[cons === False, Return[{}] ];
-  (* Remove unnecessary Constraints*)
-  map = cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  map = removeUnnecessaryConstraints[cons, hasJudge];
   map = Reduce[map, vars, Reals];
 
-  (* Remove unnecessary Constraints*)
-  map = map /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True);
+  map = removeUnnecessaryConstraints[map, hasJudge];
+
+  If[map === True, Return[{{}}] ];
+  If[map === False, Return[{}] ];
 
   map = LogicalExpand[map];
   map = applyListToOr[map];
@@ -516,21 +502,23 @@ publicMethod[
     ];
     debugPrint["minT after Minimize:", minT];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
-    minT = First[minT];
-    If[minT === Infinity, 
-      {},
-      ret = makeListFromPiecewise[minT, pCons];
-      (* 時刻が0となる場合はinfとする．*)
-      ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
-
-      ret = Select[ret, (#[[2]] =!= False)&];
-
-      (* 整形して結果を返す *)
-      resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
-      resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-      resultList = Map[({#[[1]], #[[2]], Cases[applyList[#[[3]] ], Except[True]]})&, resultList];
-      resultList = Map[({toReturnForm[#[[1]] ], #[[2]], convertExprs[adjustExprs[#[[3]], isParameter ] ] })&, resultList ];
-      resultList
+    If[Head[minT] === Minimize,
+      error,
+      minT = First[minT];
+      If[minT === Infinity, 
+        {},
+        ret = makeListFromPiecewise[minT, pCons];
+        (* 時刻が0となる場合はinfとする．*)
+          ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+          
+        ret = Select[ret, (#[[2]] =!= False)&];
+        
+        (* 整形して結果を返す *)
+            resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
+            resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
+            resultList = Map[({toReturnForm[#[[1]] ], #[[2]], createMap[#[[3]], isParameter, hasParameter, {}] })&, resultList ];
+        resultList
+      ]
     ]
   ]
 ];
@@ -580,7 +568,6 @@ publicMethod[
     lhs = lhs /. t->time;
     reduced = Reduce[lhs == 0 && pCons];
     negated = Reduce[!reduced && pCons];
-    simplePrint[reduced, negated];
     (* Can result be some expression other than True or False ?*)
     If[negated === False, True, False]
   ]

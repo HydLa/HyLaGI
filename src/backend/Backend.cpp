@@ -148,12 +148,17 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
+
+        
+    
   case 'p':     
   {
     parameter_t* par = (parameter_t *)arg;
     link_->put_parameter(par_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
+
+  
 
   case 'v':
   {
@@ -266,8 +271,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
     case 'p':
     {
-      parameter_map_t* pm = (parameter_map_t*)ret;
-      receive_parameter_map(*pm);
+      if(ret_fmt[++i] == 's')
+      {
+        std::list<parameter_map_t>* pm = (std::list<parameter_map_t>*)ret;
+        receive_parameter_maps(*pm);
+      }
+      else invalid_fmt(ret_fmt, i);
       break;
     }
     default:
@@ -311,6 +320,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
     break;
 
+
   case 'v':
   {
     if(ret_fmt[++i] == 'l')
@@ -336,21 +346,27 @@ int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const cha
   link_->put_converted_function(name, arg_cnt);
   va_list args;
   va_start(args, ret_fmt);
-  for(int i = 0; args_fmt[i] != '\0'; i++)
+  try
   {
-    void* arg = va_arg(args, void *);
-    i += read_args_fmt(args_fmt, i, arg);
-  }
-  link_->pre_receive();
-  for(int i = 0; ret_fmt[i] != '\0'; i++)
+    for(int i = 0; args_fmt[i] != '\0'; i++)
+    {
+      void* arg = va_arg(args, void *);
+      i += read_args_fmt(args_fmt, i, arg);
+    }
+    link_->pre_receive();
+    for(int i = 0; ret_fmt[i] != '\0'; i++)
+    {
+      void* ret = va_arg(args, void *);
+      i += read_ret_fmt(ret_fmt, i, ret);
+    }
+    link_->post_receive();
+    va_end(args);
+  }catch(...)
   {
-    void* ret = va_arg(args, void *);
-    i += read_ret_fmt(ret_fmt, i, ret);
+    va_end(args);
+    throw;
   }
-  link_->post_receive();
 
-  // TODO: 例外投げた場合もva_endを呼び出すように
-  va_end(args);
   return 0;
 }
 
@@ -527,37 +543,37 @@ void Backend::visit(boost::shared_ptr<Tell> node)
 }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)                \
 {                                                                       \
-  link_->put_converted_function(#FUNC_NAME, 2);                                  \
+  link_->put_converted_function(#FUNC_NAME, 2);                         \
   accept(node->get_lhs());                                              \
   accept(node->get_rhs());                                              \
 }
 
-#define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME)        \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  if(!apply_not_)                                                        \
-    link_->put_converted_function(#FUNC_NAME, 2);                       \
-  else                                                                  \
-    link_->put_converted_function(#NOT_NAME, 2);                        \
-  accept(node->get_lhs());                                                \
-  accept(node->get_rhs());                                              \
-}
+#define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME) \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
+  {                                                             \
+    if(!apply_not_)                                             \
+      link_->put_converted_function(#FUNC_NAME, 2);             \
+    else                                                        \
+      link_->put_converted_function(#NOT_NAME, 2);              \
+    accept(node->get_lhs());                                    \
+    accept(node->get_rhs());                                    \
+  }
 
 
-#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  link_->put_converted_function(#FUNC_NAME, 1);                                  \
-  accept(node->get_child());                                            \
-}
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)          \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  {                                                       \
+    link_->put_converted_function(#FUNC_NAME, 1);         \
+    accept(node->get_child());                            \
+  }
 
-#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                       \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  link_->put_symbol(#FUNC_NAME);                                       \
-}
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)         \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  {                                                       \
+    link_->put_symbol(#FUNC_NAME);                        \
+  }
 
 DEFINE_VISIT_BINARY_NOT(Equal, Equal, Unequal)
 DEFINE_VISIT_BINARY_NOT(UnEqual, Unequal, Equal)
@@ -814,7 +830,6 @@ ConstraintStore Backend::receive_cs()
     symbolic_expression::node_sptr constraint;
   
     constraint = receive_node();
-    // TODO: avoid string comparison
     string constraint_string = get_infix_string(constraint);
     if(constraint_string == "False")
     {
@@ -849,27 +864,11 @@ compare_min_time_result_t Backend::receive_compare_min_time_result()
   int list_size; 
   link_->get_function(name, list_size);
   compare_min_time_result_t result;
-  link_->get_function(name, list_size);
-  for(int i = 0; i < list_size; i++)
-  {
-    parameter_map_t pm;
-    receive_parameter_map(pm);
-    result.less_maps.push_back(pm);
-  }
-  link_->get_function(name, list_size);
-  for(int i = 0; i < list_size; i++)
-  {
-    parameter_map_t pm;
-    receive_parameter_map(pm);
-    result.greater_maps.push_back(pm);
-  }
-  link_->get_function(name, list_size);
-  for(int i = 0; i < list_size; i++)
-  {
-    parameter_map_t pm;
-    receive_parameter_map(pm);
-    result.equal_maps.push_back(pm);
-  }
+
+  receive_parameter_maps(result.less_maps);
+  receive_parameter_maps(result.greater_maps);
+  receive_parameter_maps(result.equal_maps);
+
   return result;
 }
 
@@ -891,7 +890,10 @@ find_min_time_result_t Backend::receive_find_min_time_result()
     candidate.on_time = (bool)link_->get_integer();
 
     // 条件を受け取る
-    receive_parameter_map(candidate.parameter_map);
+    list<parameter_map_t> pms;
+    receive_parameter_maps(pms);
+    assert(pms.size() == 1);
+    candidate.parameter_map = pms.front();
     result.push_back(candidate);
   }
   return result;
@@ -918,7 +920,6 @@ check_consistency_result_t Backend::receive_cc()
 
 symbolic_expression::node_sptr Backend::receive_function()
 {
-// TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
   symbolic_expression::node_sptr ret;
   std::string symbol;
@@ -1143,38 +1144,47 @@ int Backend::receive_map(variable_map_t& map)
 
 
 
-int Backend::receive_parameter_map(parameter_map_t& map)
+
+int Backend::receive_parameter_maps(list<parameter_map_t>& maps)
 {
-  map.clear();
+
   string func_name;
-  int condition_size; link_->get_function(func_name, condition_size);
-  for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    string str_buf;
-    int int_buf;
-    link_->get_function(str_buf, int_buf); // List
-    link_->get_function(str_buf, int_buf); // parameter
-    if(str_buf == "p")
-    {
-      std::string name = remove_prefix(link_->get_symbol(), par_prefix);
-      int differential_count = link_->get_integer();
-      int id = link_->get_integer();
-      parameter_t tmp_param(name, differential_count, id);
-      value_range_t tmp_range = map[tmp_param];
-      int relop_code = link_->get_integer();
-      value_t tmp_value = value_t(receive_node());
-      set_range(tmp_value, tmp_range, relop_code);
-      map[tmp_param] = tmp_range;
-    }
-    else
-    {
-      //ignore
-      for(int i = 0; i < int_buf; i++)
+  int map_size;
+  link_->get_function(func_name, map_size);
+  for(int map_it = 0; map_it < map_size; map_it++)
+  {
+    parameter_map_t map;
+    int condition_size;
+    link_->get_function(func_name, condition_size);
+    for(int cond_it = 0; cond_it < condition_size; cond_it++){
+      string str_buf;
+      int int_buf;
+      link_->get_function(str_buf, int_buf); // List
+      link_->get_function(str_buf, int_buf); // parameter
+      if(str_buf == "p")
       {
-        link_->get_next();
+        std::string name = remove_prefix(link_->get_symbol(), par_prefix);
+        int differential_count = link_->get_integer();
+        int id = link_->get_integer();
+        parameter_t tmp_param(name, differential_count, id);
+        value_range_t tmp_range = map[tmp_param];
+        int relop_code = link_->get_integer();
+        value_t tmp_value = value_t(receive_node());
+        set_range(tmp_value, tmp_range, relop_code);
+        map[tmp_param] = tmp_range;
       }
-      link_->get_integer();
-      receive_node();
+      else
+      {
+        //ignore
+        for(int i = 0; i < int_buf; i++)
+        {
+          link_->get_next();
+        }
+        link_->get_integer();
+        receive_node();
+      }
     }
+    maps.push_back(map);
   }
   return 0;
 }

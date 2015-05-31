@@ -101,7 +101,8 @@ public:
    */
   entire_profile_t get_profile(){return *profile_vector_;}
 
-  // TODO: publicメンバが多すぎる気がする
+  
+  int get_exit_status();
 
   /**
    * template of variable maps
@@ -149,6 +150,10 @@ protected:
   phase_result_sptr_t result_root_;
 
   Opts*     opts_;
+
+  int exit_status;
+
+  bool assertion_failed;
 
   interval::AffineApproximator* affine_transformer_;
 private:

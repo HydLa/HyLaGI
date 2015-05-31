@@ -72,7 +72,8 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    cc: check_consistency_result_t (receive only)
    *    cv: create_vm_t (receive only)
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
-   *    mp: parameter_map_t : parameter map (just like variable map)
+   *    mp: parameter_map_t : send only
+   *    mps: std::list<parameter_map_t> : receive only
    *    cp: compare_min_time_result_t (receive only)
    *    f: find_min_time_result_t (receive only)
    *    p: parameter_t (send only)
@@ -110,7 +111,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
 
   int receive_map(variable_map_t &vm);
   void receive_bool(bool &b);
-  int receive_parameter_map(parameter_map_t &pm);
+  int receive_parameter_maps(std::list<parameter_map_t> &pm);
   compare_min_time_result_t receive_compare_min_time_result();
   check_consistency_result_t receive_cc();
   create_vm_t receive_cv();

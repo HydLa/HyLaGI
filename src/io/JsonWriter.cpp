@@ -80,9 +80,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   phase_object["variable_map"] = for_vm(phase->variable_map);
   phase_object["parameter_map"] = for_pm(phase->parameter_map);
   phase_object["children"] = make_children(phase);
-  if(phase->children.size() == 0){
-    phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
-  }
+  phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
   return value(phase_object);
 }
 

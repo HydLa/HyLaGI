@@ -4,7 +4,7 @@ LIB_DIRS := backend simulator hierarchy parser common io interval symbolic_expre
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
-INCLUDES +=  -I../backend/mathematica -I../backend/reduce
+INCLUDES +=  -I../backend/mathematica
 INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))

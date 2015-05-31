@@ -8,6 +8,7 @@ namespace utility{
 /**
  * get string of numerator and denominator
  * from given real value
+ * !Warning! There is no insurance for accuracy
  * @return denominator is necessary
  * @param val given real value
  * @param numerator numerator string (output variable)
@@ -33,6 +34,12 @@ std::string replace(std::string original,
 
 std::string to_string(int n);
 
+
+/**
+ * remove comment from given string
+ * @return removed comment
+ */
+std::string remove_comment(std::string &src);
 
 
 }  //  namespace utility

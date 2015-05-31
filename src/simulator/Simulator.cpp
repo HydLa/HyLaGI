@@ -26,7 +26,7 @@ bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_res
   return rhs->id > lhs->id;
 }
 
-Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts)
+Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts), exit_status(EXIT_SUCCESS)
 {
   affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);
@@ -50,6 +50,8 @@ void Simulator::set_backend(backend_sptr_t back)
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
   init_module_set_container(parse_tree);
+
+  assertion_failed = false;
 
   opts_->assertion = parse_tree->get_assertion_node();
   reset_result_root();
@@ -170,6 +172,7 @@ void Simulator::process_one_todo(phase_result_sptr_t& todo)
     phase_result_sptr_t phase(new PhaseResult(*todo));
     phase->simulation_state = TIME_OUT_REACHED;
     todo->parent->children.push_back(phase);
+    exit_status = EXIT_FAILURE;
   }
   HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
 }
@@ -178,9 +181,16 @@ bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
 {
   phase->simulation_state = ASSERTION;
   HYDLA_LOGGER_DEBUG_VAR(*phase);
+  Simulator *simulator = (Simulator *)bp.tag;
+  simulator->assertion_failed = true;
   cout << "Assertion failed!" << endl;
   cout << io::SymbolicTrajPrinter().get_state_output(*phase);
   return false;
+}
+
+int Simulator::get_exit_status()
+{
+  return exit_status;
 }
 
 }
