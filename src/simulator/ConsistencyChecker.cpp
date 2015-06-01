@@ -163,6 +163,8 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   if(phase == POINT_PHASE)
   {
     backend->call("checkConsistencyPoint", 1, "csn", "cc", &tmp_cons, &ret);
+    for(auto consistent : ret.consistent_store) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(consistent));
+    for(auto consistent : ret.inconsistent_store) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(consistent));
   }
   else
   {
@@ -198,7 +200,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   profile_t &profile
   )
 {
-  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  // HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
 
   backend->call("resetConstraintForVariable", 0, "", "");
 
@@ -239,8 +242,9 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   profile_t &profile
   )
 {
-  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
-
+  // HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
+  
   backend->call("resetConstraintForVariable", 0, "", "");
 
   if(phase == POINT_PHASE)
@@ -256,7 +260,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
   backend->call("addConstraint", 1, fmt.c_str(), "", &vm);
-
   return check_entailment_core(cc_result, guard, phase, profile);
 }
 
@@ -270,7 +273,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_core(
 {
   CheckEntailmentResult ce_result;
 
-  HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  // HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
   
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
@@ -322,6 +326,11 @@ void ConsistencyChecker::check_consistency(const ConstraintStore &constraints,
     profile["VisitNode"] += timer.get_elapsed_us();
   }
   CheckConsistencyResult tmp_result;
+  if(phase == POINT_PHASE)
+  {
+    HYDLA_LOGGER_DEBUG("hogehogeahaha");
+    for(auto constraint : constraints) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint));
+  }
   tmp_result = check_consistency(constraints, finder, phase, profile);
 
   // TODO: consistent_storeしかまともに管理していないので、inconsistent_storeも正しく管理する（閉包計算内での分岐が発生しない限りは問題ない）

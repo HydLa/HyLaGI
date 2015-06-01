@@ -55,9 +55,9 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     }
     todo->diff_sum.add_constraint_store(relation_graph_->get_constraints());
   }
-
+  
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
-
+  for(auto map : todo->parameter_map) HYDLA_LOGGER_DEBUG_VAR(map.second);
   if(phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
@@ -287,8 +287,29 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
     consistency_checker->reset_count();
 
-    backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
+    parameter_map_t before_mp;
+    before_mp = phase->parameter_map;
 
+    HYDLA_LOGGER_DEBUG("simulate_ms before createParameterMap");
+    for(auto map : phase->parameter_map) HYDLA_LOGGER_DEBUG(map.second);
+    backend_->call("createParameterMap", 0, "", "mp", &phase->parameter_map);
+    HYDLA_LOGGER_DEBUG("simulate_ms after createParameterMap");
+    for(auto map : phase->parameter_map) HYDLA_LOGGER_DEBUG(map.second);
+
+    // if(opts_->interval_newton)
+    // {
+    //   HYDLA_LOGGER_DEBUG("replacing map");
+    //   for(auto map : before_mp)
+    //   {
+    //     if(phase->parameter_map.count(map.first) && phase->parameter_map[map.first] != map.second)
+    //     {
+    //       phase->parameter_map[map.first] = map.second;
+    //     }
+    //   }
+    //   for(auto map : before_mp) HYDLA_LOGGER_DEBUG_VAR(map.second);
+    // }
+    
+    
     if(opts_->epsilon_mode >= 0){
       cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
     }
@@ -340,6 +361,8 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->initial_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->initial_constraint_store.add_constraint_store(result.consistent_store);
+  // HYDLA_LOGGER_DEBUG("push_branch_states before reset");
+  // for(auto map : original->initial_constraint_store)HYDLA_LOGGER_DEBUG_VAR(map.second);
   backend_->call("resetConstraintForParameter", 1, "csn", "", &original->initial_constraint_store);
 }
 
@@ -772,9 +795,10 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   {
     PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
     next_todo->phase_type = POINT_PHASE;
-
+    HYDLA_LOGGER_DEBUG("make_next_todo before reset");
+    for(auto map : phase->parameter_map)HYDLA_LOGGER_DEBUG_VAR(map.second);
     backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
-
+    
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
 
