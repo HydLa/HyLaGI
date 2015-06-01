@@ -35,12 +35,12 @@ phase_result_sptr_t LTLModelChecker::simulate()
       consistency_checker.reset(new ConsistencyChecker(backend));
       //Property Automaton initialize
       int id = 0;
-      //[True loop]
+      //[True loop]:For making Hybrid Automaton test : if we detect a acceptance cycle, the cycle is HA
       PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       node_sptr true_node = node_sptr(new True());
       property_init->addLink(true_node,property_init);
 
-      //[bouncing ball 1]
+      //[bouncing ball 1]:Checking [](y<10) don't over first height
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
@@ -49,7 +49,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->addLink(y_geq_15,node1);
       // node1->addLink(true_node,node1);
 
-      //[bouncing ball 2]
+      //[bouncing ball 2]:Checking []<>(y=0) & []<>(y!=0) ball is bouncing repeatedly
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
@@ -62,7 +62,16 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node1->addLink(y_eq_0,node1);
       // node2->addLink(y_neq_0,node2);
 
-      //[hot air balloon]
+      //[bouncing ball 3]:Checking [](y'<10) don't over first speed
+      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
+      // property_init->addLink(true_node,property_init);
+      // property_init->addLink(y_geq_15,node1);
+      // node1->addLink(true_node,node1);
+
+      //[hot air balloon]:Checking flying [](y>0) : don't work
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
@@ -71,21 +80,21 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->addLink(y_ng_0,node1);
       // node1->addLink(true_node,node1);
 
-      //[water tank 1]
+      //[water tank 1]:Checking whether the tank is filled up with water <>(y=12) : don't work
       // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
       // property_init->addLink(y_neq_12,property_init);
 
-      //[water tank 2]
+      //[water tank 2]:Checking wheter water level reach certain value repeatedly []<>(y=6) : need 20 phase, don't work
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
-      // Propertynode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_neq_6 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
       // property_init->addLink(true_node,property_init);
       // property_init->addLink(y_neq_6,node1);
       // node1->addLink(y_neq_6,node1);
 
-      //[Artificial Example]
+      //[Artificial Example]:For testing wheter I can deal with the inclusion of phase correctly
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
@@ -99,11 +108,11 @@ phase_result_sptr_t LTLModelChecker::simulate()
       LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
       ltl_node_list_t ltl_start;
 
+      LTLsearch(result_root_,ltl_start,LTLZero,property_init);
       // property_init->dot();
       cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
       printer.output_property_automaton(property_init);
       cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
-      LTLsearch(result_root_,ltl_start,LTLZero,property_init);
       // LTLZero->dot();
       cout << "========== result ltl search ==========" << endl;
       printer.output_ltl_node(LTLZero);
