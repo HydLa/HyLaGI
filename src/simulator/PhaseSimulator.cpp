@@ -502,12 +502,19 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
 
     set<ask_t> adjacents;
     if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
-      for(auto variable : discrete_variables) adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
+      for(auto variable : discrete_variables)
+      {
+        auto each_adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
+        adjacents.insert(each_adjacents.begin(), each_adjacents.end());
+      }
     }else{
       for(auto variable : discrete_variables)
       {
         if(phase->parent->discrete_differential_set.count(variable))
-          adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(variable, phase_type == POINT_PHASE);
+        {
+          auto each_adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(variable, phase_type == POINT_PHASE);
+          adjacents.insert(each_adjacents.begin(), each_adjacents.end());
+        }
       }
     }
     for(auto adjacent : adjacents)
