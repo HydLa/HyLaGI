@@ -76,7 +76,7 @@ string remove_comment(string &src)
       i+=2;
       uint start_point = i;
       while(i<src.length()&&src[i]!='\n')i++;
-      comment += src.substr(start_point, i-start_point - 1);
+      comment += src.substr(start_point, i-start_point);
       comment += '\n';
       src.erase(start_point - 2, i - start_point + 2);
       i = start_point - 2;
@@ -84,7 +84,7 @@ string remove_comment(string &src)
       i+=2;
       uint start_point = i;
       while(i<src.length()&&!(src[i]=='*'&&(i+1)<src.length()&&src[i+1]=='/'))i++;
-      comment += src.substr(start_point, i-start_point);
+      comment += src.substr(start_point, i-start_point-1);
       i+=2;
       src.erase(start_point - 2, i - start_point + 2);
       i = start_point - 2;
