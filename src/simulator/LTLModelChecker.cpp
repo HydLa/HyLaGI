@@ -80,12 +80,12 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->addLink(y_ng_0,node1);
       // node1->addLink(true_node,node1);
 
-      //[water tank 1]:Checking whether the tank is filled up with water <>(y=12) : don't work
+      //[water tank 1]:Checking whether the tank is filled up with water <>(y=12)
       // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
       // property_init->addLink(y_neq_12,property_init);
 
-      //[water tank 2]:Checking wheter water level reach certain value repeatedly []<>(y=6) : need 20 phase, don't work
+      //[water tank 2]:Checking wheter water level reach certain value repeatedly []<>(y=6) : need 20 phase
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());

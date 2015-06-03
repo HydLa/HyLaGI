@@ -27,7 +27,9 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
                            ret = And[ret,False]
                            ];
                         (* correct expr : large.2 == small.2 *)
-                        (* debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]; *)
+                        debugPrint["# adding expr left : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime]];
+                        debugPrint["# adding expr right : ",Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
+                        debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
                         If[i == 1,
                            allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime],
                            allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]
@@ -35,6 +37,8 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
                         ];
                     allExpr = Simplify[allExpr];
                     debugPrint["# all Expr from vm", allExpr];
+                    If[allExpr === False,
+                       ret = False];
                     tmpLargePm = largePm //. p -> p1;
                     tmpSmallPm = smallPm //. p -> p2;
                     (* debugPrint["# tmpLargePm", tmpLargePm];
