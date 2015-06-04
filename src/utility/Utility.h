@@ -41,6 +41,7 @@ std::string to_string(int n);
  */
 std::string remove_comment(std::string &src);
 
+std::string cr_to_lf(std::string str);
 
 }  //  namespace utility
 }  //  namespace hydla

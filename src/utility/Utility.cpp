@@ -2,6 +2,8 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
+#include <fstream>
 
 using namespace std;
 
@@ -91,6 +93,18 @@ string remove_comment(string &src)
     }
   }
   return comment;
+}
+
+string cr_to_lf(std::string str)
+{
+  string::size_type pos( str.find( "\r" ) );
+
+  while( pos != string::npos )
+  {
+    str.replace( pos, 1, "\n" );
+    pos = str.find( "\r", pos + 1);
+  }
+  return str;
 }
 
 }

@@ -95,12 +95,13 @@ int hydla_main(int argc, char* argv[])
     if (!in) {
       throw runtime_error(string("cannot open \"") + filename + "\"");
     }
-    istreambuf_iterator<char> it(in), last;
-    input = string(it, last);
+    input = string(std::istreambuf_iterator<char>(in), 
+                   std::istreambuf_iterator<char>());
   } else {
-    istreambuf_iterator<char> it(cin), last;
-    input = string(it, last);
+    input = string(std::istreambuf_iterator<char>(cin), 
+                   std::istreambuf_iterator<char>());
   }
+  input = utility::cr_to_lf(input);
   string comment = utility::remove_comment(input);
   ProgramOptions options_in_source;
   const string option_header = "#hylagi";
