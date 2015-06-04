@@ -85,13 +85,13 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     }
   }
 
-  todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();  
+  todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
 }
 
 
 std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_result_sptr_t& todo)
 {
-  std::list<phase_result_sptr_t> result_list;  
+  std::list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", 0, "", "");
@@ -111,13 +111,13 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
       {
         ask_t ask = trigger.first;
         bool entailed = relation_graph_->get_entailed(ask);
-        
+
         if(relation_graph_->entail_if_prev(ask,
                                            !entailed))
         {
           todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
           todo->diff_sum.add_constraint(ask->get_child());
-          
+
           if(entailed)
           {
             todo->diff_negative_asks.insert(ask);
@@ -126,7 +126,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
             todo->diff_positive_asks.insert(ask);
           }
         }
-        
+
         else
         {
           nonprev_trigger_asks.insert(ask);
@@ -141,7 +141,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
       nonprev_trigger_asks.insert(trigger.first);
     }
   }
-  
+
   while(module_set_container->has_next())
   {
     // TODO: unadopted_ms も差分をとるようにして使いたい
@@ -204,7 +204,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms, module_
     if(!duplicate)
     {
       module_diff.insert(make_pair(module, false));
-    } 
+    }
   }
   return module_diff;
 }
@@ -215,7 +215,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
-  
+
   ConstraintStore local_diff_sum = phase->diff_sum;
   for(auto diff : module_diff)
   {
@@ -223,7 +223,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     local_diff_sum.add_constraint(diff.first.second);
   }
 
-  list<phase_result_sptr_t> result_list;  
+  list<phase_result_sptr_t> result_list;
   timer::Timer cc_timer;
 
   asks_t cc_local_positives, cc_local_negatives;
@@ -236,7 +236,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
   for(auto module_set : consistency_checker->get_inconsistent_module_sets()) phase->inconsistent_module_sets.push_back(module_set);
   for(auto constraint_store : consistency_checker->get_inconsistent_constraints()) phase->inconsistent_constraints.push_back(constraint_store);
-      
+
 
   if(!consistent)
   {
@@ -275,11 +275,12 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       throw HYDLA_ERROR("result variable map is not single.");
     }
     phase->variable_map = create_result[0];
-    
+
     if(opts_->epsilon_mode >= 0){
+      for(auto var_entry : phase->variable_map)HYDLA_LOGGER_DEBUG("#epsilon before : ",var_entry.first," : ",var_entry.second);
       cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
+      for(auto var_entry : phase->variable_map)HYDLA_LOGGER_DEBUG("#epsilon ater : ",var_entry.first," : ",var_entry.second);
     }
-    
 
     phase->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
@@ -321,7 +322,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     }
     phase->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   }
-
   revert_diff(cc_local_positives, cc_local_negatives, cc_local_always, module_diff);
   return result_list;
 }
@@ -400,8 +400,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
-  
-  relation_graph_.reset(new RelationGraph(ms)); 
+
+  relation_graph_.reset(new RelationGraph(ms));
 
   if(opts_->dump_relation){
     relation_graph_->dump_graph(cout);
@@ -489,7 +489,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
     timer::Timer entailment_timer;
-    
+
     variable_set_t discrete_variables;
     for(auto constraint: diff_sum)
     {
@@ -630,6 +630,31 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   }
   return related_vm;
 }
+find_min_time_result_t PhaseSimulator::find_min_time_test(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
+{
+  std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
+  for(auto atomic_guard : guards)
+    {
+      constraint_t guard = atomic_guard->constraint;
+      HYDLA_LOGGER_DEBUG("come find min time test");
+      HYDLA_LOGGER_DEBUG(*guard);
+
+      constraint_t constraint_for_this_guard;
+      if(!guard_time_map.count(guard))
+        {
+          variable_map_t related_vm = get_related_vm(guard, original_vm);
+          for(auto var : related_vm){HYDLA_LOGGER_DEBUG("related_vm",var.first," : ",var.second);}
+          backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
+          guard_time_map[guard] = constraint_for_this_guard;
+          HYDLA_LOGGER_DEBUG(*constraint_for_this_guard);
+        }
+    }
+
+  find_min_time_result_t min_time_for_this_ask;
+  min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
+  for(auto time : min_time_for_this_ask) HYDLA_LOGGER_DEBUG(time.time);
+  return min_time_for_this_ask;
+}
 
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
 {
@@ -697,7 +722,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
 
-    
+
     variable_map_t original_vm = phase->variable_map;
     phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
 
@@ -764,19 +789,22 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         if(checked_variables.count(var_name))continue;
         checked_variables.insert(var_name);
         asks_t asks = relation_graph_->get_adjacent_asks(var_name);
-        
+
         for(auto ask : asks)
         {
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
-                  
+
           if(opts_->epsilon_mode >= 0)
           {
-            candidate_map[ask] = find_min_time_epsilon(ask->get_guard(), original_vm,
-                                                 time_limit, phase, backend_.get());
-          }
-          
+            // candidate_map[ask] = find_min_time_epsilon(ask->get_guard(), original_vm,
+            //                                      time_limit, phase, backend_.get());
+            candidate_map[ask] = find_min_time_test(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
+
+          }else{
+
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
+          }
         }
       }
 
@@ -873,7 +901,7 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
       map<ask_t, bool> discrete_asks;
       if(ask.get())discrete_asks[ask] = newcomer.on_time;
       DCCandidate candidate(newcomer.time, discrete_asks,  newcomer.parameter_map);
-      result.push_back(candidate);      
+      result.push_back(candidate);
     }
   }
   else if(newcomers.empty())

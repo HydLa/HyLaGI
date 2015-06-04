@@ -51,7 +51,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   return sstr.str();
 }
 
-void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const 
+void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const
 {
   if(!phase.inconsistent_module_sets.empty())
   {
@@ -129,7 +129,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
 
     if(node->simulation_state==simulator::ASSERTION ||
-       node->simulation_state==simulator::INCONSISTENCY || 
+       node->simulation_state==simulator::INCONSISTENCY ||
       node->simulation_state==simulator::TIME_LIMIT ||
       node->simulation_state==simulator::NOT_SIMULATED ||
       node->simulation_state==simulator::NONE ||

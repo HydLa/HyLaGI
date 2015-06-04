@@ -52,7 +52,7 @@ public:
   void set_backend(backend_sptr_t);
 
   void apply_diff(const PhaseResult &phase);
-  
+
   /// revert diff
   void revert_diff(const PhaseResult &phase);
   void revert_diff(const asks_t &positive_asks, const asks_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff);
@@ -80,6 +80,7 @@ private:
 
   void push_branch_states(phase_result_sptr_t &original,
                           CheckConsistencyResult &result);
+  find_min_time_result_t find_min_time_test(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
   find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 

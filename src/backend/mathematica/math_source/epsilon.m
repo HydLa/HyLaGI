@@ -27,9 +27,9 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
                            ret = And[ret,False]
                            ];
                         (* correct expr : large.2 == small.2 *)
-                        debugPrint["# adding expr left : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime]];
-                        debugPrint["# adding expr right : ",Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
-                        debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
+                        (* debugPrint["# adding expr left : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime]];
+                         debugPrint["# adding expr right : ",Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
+                         debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]; *)
                         If[i == 1,
                            allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime],
                            allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]
@@ -470,6 +470,7 @@ publicMethod[
              expr, var, dcount,
              Module[
                     {sTmp,sCond,dTimes,factorial,dExpr,ret},
+                    (* debugPrint["#epsilon cut high order input",expr]; *)
                     dTimes = 0;
                     factorial = 1;
                     dExpr = expr;
@@ -485,6 +486,7 @@ publicMethod[
                           factorial = factorial * dTimes;
                           If[sCond, ret = ret + sTmp * var ^ dTimes / factorial, ret = expr];
                           ];
+                    (* debugPrint["#epsilon cut high order return",ret]; *)
                     toReturnForm[ret]
                     ]
              ];

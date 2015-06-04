@@ -37,7 +37,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
     std::cout << error_str;
     exit_status = EXIT_FAILURE;
   }
-  
+
   HYDLA_LOGGER_DEBUG("%% simulation ended");
   return result_root_;
 }
