@@ -25,3 +25,5 @@ BOUNCE <=> [](y- = (1/2) * (x-)^2 =>
                             + ( s^2 + (-k) * c^2 ) * y'- ).
 
 INIT, SC, A << BOUNCE.
+
+// #hylagi -p 10

@@ -15,7 +15,8 @@ struct Opts {
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
-  int  epsilon_mode;
+  int epsilon_mode;
+  bool ltl_model_check_mode;
   bool nd_mode;
   bool static_generation_of_module_sets;
   bool ha_convert_mode;

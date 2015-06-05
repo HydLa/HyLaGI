@@ -5,6 +5,8 @@
 #include "Logger.h"
 #include "Backend.h"
 #include "EpsilonMode.h"
+#include "LTLNode.h"
+#include "PropertyNode.h"
 
 
 namespace hydla{
@@ -131,7 +133,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       node->simulation_state==simulator::TIME_LIMIT ||
       node->simulation_state==simulator::NOT_SIMULATED ||
       node->simulation_state==simulator::NONE ||
-       node->simulation_state==simulator::SIMULATED ||  
+       node->simulation_state==simulator::SIMULATED ||
       node->simulation_state==simulator::STEP_LIMIT ||
       node->simulation_state==simulator::SOME_ERROR ||
       node->simulation_state==simulator::INTERRUPTED)
@@ -318,7 +320,89 @@ void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Ba
     }
   }
 }
+void SymbolicTrajPrinter::output_property_automaton(PropertyNode* node)
+{
+  node->write_reset();
+  ostream << "digraph g{" << "\n";
+  ostream << "\"init\"[shape=\"point\"];" << "\n";
+  ostream << "\"init\"" << " -> " << "\"Property" << to_string(node->id) << "\"" << ";" << "\n";
+  dump_property_automaton(node);
+  ostream << "}" << "\n";
+  node->write_reset();
+}
+void SymbolicTrajPrinter::dump_property_automaton(PropertyNode* node){
+  if(node->write == 0){
+    node->write++;
+    string name = "\"Property" + to_string(node->id) + "\"";
+    ostream << name << " ";
+    if(node->type != NOMAL){
+      ostream << "[peripheries=2];" << "\n";
+    }else{
+      ostream << ";" << "\n";
+    }
+    for(Property_link_t::iterator it = node->link.begin();it != node->link.end();it++){
+      if(node->id != it->second->id){
+        ostream << name << " -> " << "\"Property" << it->second->id << "\" ";
+        ostream << "[label=\"" << it->first->get_string() << "\"];" << "\n";
+        dump_property_automaton(it->second);
+      }else{
+        ostream << name << " -> " << name << " ";
+        ostream << "[label=\"" << it->first->get_string() << "\"];" << "\n";
+      }
+    }
+  }
+}
 
+void SymbolicTrajPrinter::output_ltl_node(LTLNode* node)
+{
+  if(node->property->type != ZERO){
+    node->write_reset();
+    ostream << "digraph g{" << "\n";
+    ostream << "\"init\"[shape=\"point\"];" << "\n";
+    ostream << "\"init\"" << " -> " << "\"" << node->id << "\"" << ";" << "\n";
+    dump_ltl_node(node);
+    ostream << "}" << "\n";
+    node->write_reset();
+  }else{
+    ltl_node_list_t::iterator it = node->link.begin();
+    output_ltl_node(*it);
+  }
+}
+void SymbolicTrajPrinter::dump_ltl_node(LTLNode* node){
+  if(node->write == 0){
+    node->write++;
+    ostream << "\"" << node->id << "\"" << " ";
+    if(node->property->type != NOMAL){
+      if(node->red>0){
+        ostream << "[peripheries=2 color=red];" << "\n";
+      }else{
+        ostream << "[peripheries=2];" << "\n";
+      }
+    }else{
+      if(node->red>0){
+        ostream << "[color=red];" << "\n";
+      }else{
+        ostream << ";" << "\n";
+      }
+    }
+    for(ltl_node_list_t::iterator it = node->link.begin();it != node->link.end();it++){
+      if(node->id == (*it)->id){
+        if(node->red>0 && (*it)->red>0){
+          ostream << "\"" << node->id << "\"" << " -> " << "\"" << node->id << "\"" << "[color=red];" << "\n";
+        }else{
+          ostream << "\"" << node->id << "\"" << " -> " << "\"" << node->id << "\"" << ";" << "\n";
+        }
+      }else{
+        if(node->red>0 && (*it)->red>0){
+          ostream << "\"" << node->id << "\"" << " -> " << "\"" << (*it)->id << "\"" << "[color=red];" << "\n";
+        }else{
+          ostream << "\"" << node->id << "\"" << " -> " << "\"" << (*it)->id << "\"" << ";" << "\n";
+        }
+        dump_ltl_node(*it);
+      }
+    }
+  }
+}
 
 } // output
 } // hydla

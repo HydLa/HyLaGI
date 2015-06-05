@@ -1,6 +1,8 @@
 #pragma once
 
 #include "TrajPrinter.h"
+#include "LTLNode.h"
+#include "PropertyNode.h"
 
 namespace hydla{
 namespace io{
@@ -23,6 +25,11 @@ public:
   void output_result_node(const phase_result_const_sptr_t &node,
     std::vector<std::string> &result, int &case_num, int &phase_num) const;
 
+
+  void output_property_automaton(PropertyNode* node);
+  void dump_property_automaton(PropertyNode* node);
+  void output_ltl_node(LTLNode* node);
+  void dump_ltl_node(LTLNode* node);
 
   virtual void set_epsilon_mode(simulator::backend_sptr_t back, bool flag);
   void output_limit_of_time(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result) const;

@@ -4,6 +4,7 @@
 #include "SymbolicTrajPrinter.h"
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
+#include "LTLModelChecker.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
@@ -14,9 +15,6 @@
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
-// parser
-
-
 // namespace
 using namespace hydla;
 using namespace hydla::symbolic_expression;
@@ -123,6 +121,7 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
+  opts.ltl_model_check_mode = po.count("ltl")>0;
   IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
@@ -141,15 +140,18 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   setup_simulator_opts(opts, cmdline_options, false);
 
-  boost::shared_ptr<Backend> backend;
+  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
 
-  backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+  if(opts.ltl_model_check_mode)
+  {
+    simulator_ = new LTLModelChecker(opts);
+  }
+  else
+  {
+    simulator_ = new SequentialSimulator(opts);
+  }
 
-  if(opts.epsilon_mode >= 0){backend_ = backend;}
-
-  simulator_ = new SequentialSimulator(opts);
-
-  simulator_->set_backend(backend);
+  simulator_->set_backend(backend_);
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
