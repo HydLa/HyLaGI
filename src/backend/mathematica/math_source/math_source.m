@@ -53,7 +53,7 @@ Module[
   inputPrint["ccIntervalForEach", cond, initRules, pCons];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
-  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}]; 
+  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs, pCons];
   (* caused by underConstraint *)
   If[hasVariable[lhs], Return[pCons] ];
@@ -437,7 +437,7 @@ makeListFromPiecewise[minT_, others_] := Module[
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
   retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
   If[ tmpCondition === False,
-    retMinT,  
+    retMinT,
     Append[retMinT, {minT[[2]], tmpCondition}]
   ]
 ];
@@ -464,7 +464,7 @@ calculateConsistentTime[cause_, cons_, maxTime_] := calculateConsistentTime[caus
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, pCons, maxTime,  
+  cause, cons, pCons, maxTime,
   Module[
     {
       resultCons,
@@ -472,21 +472,22 @@ publicMethod[
       maxCons,
       ret
     },
-    tStore = Map[(Rule@@#)&, cons];  
+    tStore = Map[(Rule@@#)&, cons];
     timeAppliedCause = ToRadicals[cause /. tStore];
     simplePrint[timeAppliedCause];
-    
+
     maxCons = If[maxTime === Infinity, True, t < maxTime];
     resultCons = timeAppliedCause && maxCons;
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
 
-minimizeTime[tCons_] := minimizeTime[tCons, pConstraint];
+minimizeTime[tCons_] := minimizeTime[tCons, pConstraint, 0];
+minimizeTime[tCons_,startingTime_] := minimizeTime[tCons, pConstraint, startingTime];
 
 publicMethod[
   minimizeTime,
-  tCons, pCons,  
+  tCons, pCons, startingTime,
   Module[
     {
       minT,
@@ -494,7 +495,7 @@ publicMethod[
       onTime = True,
       ret
     },
-    Quiet[Check[minT = Minimize[{t, t > 0 && tCons && pCons}, {t}],
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
@@ -505,14 +506,14 @@ publicMethod[
     If[Head[minT] === Minimize,
       error,
       minT = First[minT];
-      If[minT === Infinity, 
+      If[minT === Infinity,
         {},
         ret = makeListFromPiecewise[minT, pCons];
         (* 時刻が0となる場合はinfとする．*)
           ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
-          
+
         ret = Select[ret, (#[[2]] =!= False)&];
-        
+
         (* 整形して結果を返す *)
             resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
             resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
@@ -523,7 +524,7 @@ publicMethod[
   ]
 ];
 
-createParameterMapList[cons_] := 
+createParameterMapList[cons_] :=
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
@@ -552,7 +553,7 @@ publicMethod[
 
 publicMethod[
   isTriggerGuard,
-  atomicGuard, cons, pCons, time,  
+  atomicGuard, cons, pCons, time,
   Module[
     {
       resultCons,
@@ -562,7 +563,7 @@ publicMethod[
     },
     lhs = atomicGuard[[1]] - atomicGuard[[2]];
     simplePrint[lhs];
-    tStore = Map[(Rule@@#)&, cons];  
+    tStore = Map[(Rule@@#)&, cons];
     lhs = lhs /. tStore;
     simplePrint[lhs];
     lhs = lhs /. t->time;
@@ -660,7 +661,7 @@ Module[
        listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       listExpr = Select[listExpr, (#=!=True)&];
-      resultCons = applyDSolveResult[resultCons, resultRule]; 
+      resultCons = applyDSolveResult[resultCons, resultRule];
       If[resultCons === False, Return[overConstraint] ];
     ]
   ];
@@ -749,5 +750,3 @@ Module[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
-
-

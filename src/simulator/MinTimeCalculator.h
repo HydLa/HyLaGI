@@ -14,7 +14,7 @@ namespace simulator {
 class MinTimeCalculator: public GuardVisitor{
 
 public:
-  find_min_time_result_t calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated = false);
+  find_min_time_result_t calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated = false, value_t starting_time = Value());
 
   MinTimeCalculator(RelationGraph *relation_graph, backend::Backend *b);
 
@@ -22,7 +22,7 @@ public:
   virtual void visit(AndGuardNode *and_node);
   virtual void visit(OrGuardNode *or_node);
   virtual void visit(NotGuardNode *not_node);
-  
+
 private:
   RelationGraph* relation_graph;
   guard_time_map_t *guard_time_map;
@@ -31,4 +31,4 @@ private:
 };
 
 } //namespace simulator
-} //namespace hydla 
+} //namespace hydla

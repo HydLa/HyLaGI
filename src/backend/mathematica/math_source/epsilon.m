@@ -492,13 +492,12 @@ publicMethod[
              ];
 
 publicMethod[
-             isZero,
+             limitIsZero,
              expr,
              Module[
                     {ret},
-                    debugPrint["is not zero expr = ",expr];
+                    debugPrint["#epsilon checking zero expr = ",expr];
                     ret = Limit[expr, p[peps, 0, 1] -> 0] === 0;
-                    simplePrint[ret];
                     ret
                     ]
              ];
