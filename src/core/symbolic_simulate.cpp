@@ -48,7 +48,7 @@ void output_result(Simulator& ss, Opts& opts){
   hydla::io::SymbolicTrajPrinter Printer(sstr);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
 
-  Printer.output_parameter_map(ss.get_parameter_map());
+  Printer.output_parameter_map(ss.get_parameter_map(), "(global)");
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
