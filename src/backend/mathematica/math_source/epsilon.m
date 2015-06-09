@@ -83,45 +83,12 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
              ];
 
 
-(* expr > 0かどうか *)
+(* check whether the pCons includes case where the p[peps, 0, 1] = 0 *)
 publicMethod[
-             greaterThanZero,
-             expr, pCons,
-             Module[
-                    {tmp,ret},
-                    tmp = Refine[expr > 0, Assumptions -> pCons];
-                    ret = isOverZeroTrue === True;
-                    debugPrint[expr, " is > 0 ? : ",ret];
-                    ret
-                    ]
-             ];
-
-
-(* expr < 0かどうか *)
-publicMethod[
-             lessThanZero,
-             expr, pCons,
-             Module[
-                    {tmp,ret},
-                    tmp = Refine[expr < 0, Assumptions -> pCons];
-                    ret = tmp === True;
-                    debugPrint[expr, " is < 0 ? : ",ret];
-                    ret
-                    ]
-             ];
-
-(* expr != 0かどうか *)
-publicMethod[
-             notEqualToZero,
-             expr, pCons,
-             Module[
-                    {tmp,ret},
-                    tmp = Refine[expr != 0, Assumptions -> pCons];
-                    ret = tmp === True;
-                    debugPrint[expr, " is != 0 ? : ",ret];
-                    ret
-                    ]
-             ];
+  unsuitableCase,
+  pCons,
+  Reduce[pCons /. p[peps, 0, 1] -> 0, Reals] === False
+]
 
 
 (* n(dcount)次近似をする *)

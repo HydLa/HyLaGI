@@ -2,6 +2,7 @@
 #include "VariableReplacer.h"
 #include "Logger.h"
 #include "Backend.h"
+#include "HydLaError.h"
 
 using namespace std;
 using namespace hydla::symbolic_expression;
@@ -9,7 +10,7 @@ using namespace hydla::symbolic_expression;
 namespace hydla {
 namespace simulator {
 
-PrevReplacer::PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator &simulator):parameter_map(map), prev_phase(phase), simulator(simulator)
+PrevReplacer::PrevReplacer(PhaseResult &phase, Simulator &simulator): prev_phase(phase), simulator(simulator)
 {}
 
 PrevReplacer::~PrevReplacer()
@@ -67,16 +68,24 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
       new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
       parameter_t param(v_name, diff_cnt, prev_phase.id);
 
-      if(!parameter_map.count(param))
+      if(!simulator.get_parameter_map().count(param))
       {
         prev_phase.variable_map[variable] = value_t(new_child);
 
         simulator.introduce_parameter(variable, prev_phase, range);
-        parameter_map[param] = range;
-        prev_phase.parameter_map[param] = parameter_map[param];
+        ConstraintStore par_cons = range.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
+        HYDLA_LOGGER_DEBUG_VAR(par_cons);
+        prev_phase.add_parameter_constraint(par_cons);
+        parameter_constraint.add_constraint_store(par_cons);
+        HYDLA_LOGGER_DEBUG_VAR(parameter_constraint);
       }
     }
   }
+}
+
+ConstraintStore PrevReplacer::get_parameter_constraint()const
+{
+  return parameter_constraint;
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)

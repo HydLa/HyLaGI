@@ -14,6 +14,10 @@
 
 
 namespace hydla {
+namespace backend{
+class Backend;
+}
+
 namespace simulator {
 
 class PhaseResult;
@@ -64,7 +68,6 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 typedef std::set<variable_t, VariableComparator>                             variable_set_t;
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
-
 typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
@@ -90,7 +93,7 @@ struct FindMinTimeCandidate
 {
   value_t         time;
   bool            on_time;
-  parameter_map_t parameter_map;
+  ConstraintStore parameter_constraint;
 };
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
@@ -98,14 +101,14 @@ typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
 struct DCCandidate{
   value_t                       time;
   std::map<ask_t, bool>         discrete_asks;
-  parameter_map_t               parameter_map;
+  ConstraintStore               parameter_constraint;
 
   DCCandidate(const value_t                &t,
               const std::map<ask_t, bool> &d,
-              const parameter_map_t &p)
+              const ConstraintStore &p)
                 :time(t),
                  discrete_asks(d),
-                 parameter_map(p)
+                 parameter_constraint(p)
     {}
   DCCandidate(){}
 };
@@ -123,15 +126,17 @@ typedef std::map<std::string, unsigned int>       profile_t;
 class PhaseResult {
 
 public:
+  static backend::Backend *backend;  
   PhaseType                    phase_type;
   int                          id,
                                step;
-  
+
   value_t                      current_time, end_time;
 
   variable_map_t               variable_map;
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
-  parameter_map_t              parameter_map;
+
+
   asks_t                       diff_positive_asks, diff_negative_asks;
   constraints_t                diff_positive_guards, diff_negative_guards;
   ConstraintStore              additional_constraint_store; /// use for case analysis
@@ -166,12 +171,18 @@ public:
   asks_t                    get_all_negative_asks();
   constraints_t             get_all_positive_guards();
   constraints_t             get_all_negative_guards();
-
+  void                      set_parameter_constraint(const ConstraintStore &cons);
+  ConstraintStore           get_parameter_constraint()const;
+  void                      add_parameter_constraint(const constraint_t &cons);
+  void                      add_parameter_constraint(const ConstraintStore &cons);
+  std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 private:
   void generate_full_information();
 
+  mutable ConstraintStore                      parameter_constraint;
+  mutable boost::optional<std::vector<parameter_map_t> >     parameter_maps;
   boost::optional<FullInformation>             full_information;
 };
 

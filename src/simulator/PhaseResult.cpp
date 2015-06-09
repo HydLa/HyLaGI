@@ -1,6 +1,8 @@
 #include "PhaseResult.h"
 #include "Parameter.h"
 #include "Simulator.h"
+#include "Backend.h"
+#include "HydLaError.h"
 
 using namespace std;
 
@@ -35,6 +37,7 @@ namespace {
 namespace hydla {
 namespace simulator {
 
+backend::Backend *PhaseResult::backend = nullptr;
 
 PhaseResult::PhaseResult():phase_type(InvalidPhase), simulation_state(NOT_SIMULATED), parent(nullptr)
 {
@@ -111,6 +114,43 @@ asks_t PhaseResult::get_all_negative_asks()
   return full_information->negative_asks;
 }
 
+void PhaseResult::set_parameter_constraint(const ConstraintStore &cons)
+{
+  parameter_constraint = cons;
+  parameter_maps = boost::none;
+}
+
+void PhaseResult::add_parameter_constraint(const constraint_t &cons)
+{
+  parameter_constraint.add_constraint(cons);
+  parameter_maps = boost::none;
+}
+
+
+void PhaseResult::add_parameter_constraint(const ConstraintStore &cons)
+{
+  parameter_constraint.add_constraint_store(cons);
+  parameter_maps = boost::none;
+}
+
+
+ConstraintStore PhaseResult::get_parameter_constraint()const
+{
+  return parameter_constraint;
+}
+
+std::vector<parameter_map_t> PhaseResult::get_parameter_maps()const 
+{
+  if(!parameter_maps)
+  {
+    if(!backend)throw HYDLA_ERROR("backend has not been set yet.");
+    std::vector<parameter_map_t> par_maps;
+    backend->call("createParameterMaps", 1, "csn", "mps", &parameter_constraint, &par_maps);
+    parameter_maps = par_maps;
+  }
+  return *parameter_maps;
+}
+
 
 void PhaseResult::set_full_information(FullInformation &info)
 {
@@ -157,8 +197,8 @@ ostream& operator<<(std::ostream& s, const PhaseResult& phase)
   }
   s << "--- variable map ---" << endl;
   s << phase.variable_map    << endl;
-  s << "--- parameter map ---"          << endl;
-  s << phase.parameter_map << endl;
+  s << "--- parameter constraint ---"          << endl;
+  s << phase.get_parameter_constraint() << endl;
   return s;
 }
 
@@ -226,7 +266,7 @@ ostream& operator<<(std::ostream& os, const pp_time_result_t& result)
   for(auto candidate : result)
   {
     os << "time: " << candidate.time << endl;
-    os << "--- parameter_map ---\n" << candidate.parameter_map << endl;
+    os << "--- parameter constraint ---\n" << candidate.parameter_constraint << endl;
     os << "--- discrete guards ---" << endl;
     for(auto guard : candidate.discrete_asks)
     {
@@ -241,7 +281,7 @@ ostream& operator<<(std::ostream& os, const FindMinTimeCandidate& candidate)
 {
   os << "time: " << candidate.time << endl;
   os << "on_time: " << candidate.on_time << endl;
-  os << "--- parameter_map ---\n" << candidate.parameter_map << endl;
+  os << "--- parameter constraint ---\n" << candidate.parameter_constraint << endl;
 
   return os;
 }

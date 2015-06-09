@@ -246,9 +246,12 @@ bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){
   }
 
   //compareing set of variables
+  // TODO
+  /*
   backend->call("checkInclude", 6, "vlnmvtmpvlnmvtmp", "b",
                 &(larger->phase->current_time), &(larger->phase->variable_map), &(larger->phase->parameter_map),
                 &(smaller->phase->current_time), &(smaller->phase->variable_map), &(smaller->phase->parameter_map), &include_ret);
+  */
   if(include_ret){
     // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
   }
@@ -285,7 +288,8 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard
   if(guard->get_node_type_name() == "True"){
     return true;
   }
-  backend->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
+  ConstraintStore par_cons = phase->get_parameter_constraint();
+  backend->call("resetConstraintForParameter", 1, "mp", "", &par_cons);
   CheckConsistencyResult cc_result;
   HYDLA_LOGGER_DEBUG("entailed check start ===========================");
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));

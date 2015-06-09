@@ -48,7 +48,8 @@ void output_result(Simulator& ss, Opts& opts){
   hydla::io::SymbolicTrajPrinter Printer(sstr);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
 
-  Printer.output_parameter_map(ss.get_parameter_map(), "(global)");
+  sstr << "---------parameter condition(global)---------" << endl;
+  Printer.output_parameter_map(ss.get_parameter_map());
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
@@ -141,6 +142,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   setup_simulator_opts(opts, cmdline_options, false);
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+  PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)
   {

@@ -77,14 +77,9 @@ void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, 
   }
 }
 
-void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm, const std::string& post_fix) const
+void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 {
-  parameter_map_t::const_iterator it  = pm.begin();
-  parameter_map_t::const_iterator end = pm.end();
-  if(it != end){
-    ostream << "\n---------parameter condition" << post_fix << "---------\n";
-  }
-  for(; it!=end; ++it) {
+  for(auto it = pm.begin(); it != pm.end(); ++it) {
     ostream << it->first << "\t: " << it->second << "\n";
   }
 }
@@ -92,9 +87,7 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm, const 
 void SymbolicTrajPrinter::output_variable_map(std::
 ostream &stream, const variable_map_t& vm) const
 {
-  variable_map_t::const_iterator it  = vm.begin();
-  variable_map_t::const_iterator end = vm.end();
-  for(; it!=end; ++it) {
+  for(auto it = vm.begin(); it!=vm.end(); ++it) {
     stream << it->first << "\t: " << it->second << "\n";
   }
 }
@@ -102,7 +95,24 @@ ostream &stream, const variable_map_t& vm) const
 void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
 {
   ostream << get_state_output(*phase);
-  output_parameter_map(phase->parameter_map);
+  vector<parameter_map_t> par_maps = phase->get_parameter_maps();
+  if(par_maps.size() > 0)
+  {
+    if(par_maps.size() == 1)
+    {
+      ostream << "---------parameter condition---------" << endl;
+      output_parameter_map(par_maps[0]);
+    }
+    else
+    {
+      int i = 0;
+      for(auto it = par_maps.begin(); it != par_maps.end(); it++, i++)
+      {
+        ostream << "---------parameter condition(" << i+1 << ")---------" << endl;
+        output_parameter_map(par_maps[i]);
+      }
+    }
+  }
 }
 
 void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& root) const
@@ -143,10 +153,26 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
     }
 
     {
-      stringstream sstr;
-      sstr << "(Case " << current_case_num << ")";
-      output_parameter_map(node->parameter_map, sstr.str());
+      vector<parameter_map_t> par_maps = node->get_parameter_maps();
+      if(par_maps.size() > 0)
+      {
+        if(par_maps.size() == 1)
+        {
+          ostream << "---------parameter condition(Case" << current_case_num << ")---------" << endl;
+          output_parameter_map(par_maps[0]);
+        }
+        else
+        {
+          int i = 0;
+          for(auto it = par_maps.begin(); it != par_maps.end(); it++, i++)
+          {
+            ostream << "---------parameter condition(Case" << current_case_num << "_" << i+1 << ")---------" << endl;
+            output_parameter_map(par_maps[i]);
+          }
+        }
+      }
     }
+  
 
     // print why the simulation was terminated
     switch(node->simulation_state){

@@ -169,7 +169,13 @@ productWithGlobalParameterConstraint[cons_] := productWithGlobalParameterConstra
 publicMethod[
   productWithGlobalParameterConstraint,
   map, pCons,
-  createMap[map && pCons, isParameter, hasParameter, {}]
+  {LogicalExpand[map && pCons]}
+];
+
+
+publicMethod[
+  getParameterConstraint,
+  {LogicalExpand[pConstraint]}
 ];
 
 createParameterMaps[] := createParameterMaps[pConstraint];
@@ -509,14 +515,12 @@ publicMethod[
         {},
         ret = makeListFromPiecewise[minT, pCons];
         (* 時刻が0となる場合はinfとする．*)
-          ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
 
+        ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)
-            resultList = Map[({#[[1]], If[onTime, 1, 0], LogicalExpand[#[[2]] ]})&, ret];
-            resultList = Fold[(Join[#1, If[Head[#2[[3]]]===Or, divideDisjunction[#2], {#2}]])&,{}, resultList];
-            resultList = Map[({toReturnForm[#[[1]] ], #[[2]], createMap[#[[3]], isParameter, hasParameter, {}] })&, resultList ];
+        resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {LogicalExpand[#[[2]] ]} })&, ret];
         resultList
       ]
     ]
@@ -541,11 +545,7 @@ publicMethod[
       caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
       caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
       caseGr = Reduce[andCond && !caseLe && !caseEq];
-      (* TODO: 各条件が論理和を含む場合に対応する *)
-      caseEq = createParameterMapList[caseEq];
-      caseGr = createParameterMapList[caseGr];
-      caseLe = createParameterMapList[caseLe];
-      {caseLe, caseGr, caseEq}
+      {{LogicalExpand[caseLe]}, {LogicalExpand[caseGr]}, {LogicalExpand[caseEq]}}
     ]
   ]
 ];

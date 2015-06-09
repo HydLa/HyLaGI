@@ -95,7 +95,8 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", 0, "", "");
-  backend_->call("addParameterConstraint", 1, "mp", "", &todo->parameter_map);
+  ConstraintStore parameter_cons = todo->get_parameter_constraint();
+  backend_->call("addParameterConstraint", 1, "csn", "", &parameter_cons);
   backend_->call("addParameterConstraint", 1, "csn", "", &todo->additional_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
@@ -290,7 +291,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
     consistency_checker->reset_count();
 
-    phase->parameter_map = get_current_parameter_map();
+    phase->set_parameter_constraint(get_current_parameter_constraint());
     phase->diff_positive_asks.insert(cc_local_positives.begin(), cc_local_positives.end());
     phase->diff_negative_asks.insert(cc_local_negatives.begin(), cc_local_negatives.end());
 
@@ -330,11 +331,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   return result_list;
 }
 
-parameter_map_t PhaseSimulator::get_current_parameter_map()
+ConstraintStore PhaseSimulator::get_current_parameter_constraint()
 {
-  list<parameter_map_t> parameter_maps;
-  backend_->call("createParameterMaps", 0, "", "mps", &parameter_maps);
-
   //For epsilon mode
   // if(opts_->epsilon_mode >= 0){
   //   parameter_map_t tmp_pm;
@@ -351,9 +349,9 @@ parameter_map_t PhaseSimulator::get_current_parameter_map()
   //   parameter_maps.clear();
   //   parameter_maps.push_back(tmp_pm);
   // }
-
-  assert(parameter_maps.size() == 1);
-  return parameter_maps.front();
+  ConstraintStore parameter_cons;
+  backend_->call("getParameterConstraint", 0, "", "cs", &parameter_cons);
+  return parameter_cons;
 }
 
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
@@ -364,8 +362,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->step = original->step;
   branch_state_false->current_time = original->current_time;
   branch_state_false->prev_map = original->prev_map;
-  branch_state_false->parameter_map =
-    original->parameter_map;
+  branch_state_false->set_parameter_constraint(original->get_parameter_constraint());
   branch_state_false->additional_constraint_store = original->additional_constraint_store;
 
   branch_state_false->discrete_differential_set = original->discrete_differential_set;
@@ -375,7 +372,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
 branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
   original->parent->todo_list.push_back(branch_state_false);
   original->additional_constraint_store.add_constraint_store(result.consistent_store);
-    backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
+  backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
 }
 
 
@@ -384,7 +381,7 @@ void PhaseSimulator::check_break_points(phase_result_sptr_t &phase, variable_map
   if(!break_point_list.empty())
   {
     timer::Timer entailment_timer;
-    backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
+    reset_parameter_constraint(phase->get_parameter_constraint());
     for(auto entry : break_point_list)
     {
       auto break_point = entry.first;
@@ -394,8 +391,8 @@ void PhaseSimulator::check_break_points(phase_result_sptr_t &phase, variable_map
       switch(consistency_checker->check_entailment(related_vm, cc_result, break_point.condition, phase->phase_type, phase->profile)){
       case BRANCH_PAR:
         push_branch_states(phase, cc_result);
+        phase->set_parameter_constraint(get_current_parameter_constraint());
       case ENTAILED:
-        phase->parameter_map = get_current_parameter_map();
         if(!break_point.call_back(break_point, phase))aborting = true;
         break;
       case CONFLICTING:
@@ -452,11 +449,10 @@ void PhaseSimulator::initialize(variable_set_t &v,
 }
 
 void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
-                                            variable_map_t &vm,
-                                            parameter_map_t &parameter_map)
+                                            variable_map_t &vm)
 {
-  assert(phase.parent != nullptr);
-  PrevReplacer replacer(parameter_map, phase, *simulator_);
+  PrevReplacer replacer(*phase.parent, *simulator_);
+
   for(auto var_entry : vm)
   {
     ValueRange range = var_entry.second;
@@ -494,6 +490,7 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
       if(replaced)vm[var_entry.first] = range;
     }
   }
+  phase.add_parameter_constraint(replacer.get_parameter_constraint());
 }
 
 void PhaseSimulator::set_backend(backend_sptr_t back)
@@ -765,7 +762,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   phase_result_sptr_t next_todo(new PhaseResult());
 
   next_todo->step = phase->step + 1;
-  next_todo->parameter_map = phase->parameter_map;
+  next_todo->set_parameter_constraint(phase->get_parameter_constraint());
   if(phase->phase_type == POINT_PHASE)
   {
     if(phase->in_following_step()){
@@ -794,10 +791,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   }
   else
   {
-    PhaseSimulator::replace_prev2parameter(*phase->parent, phase->variable_map, phase->parameter_map);
+    replace_prev2parameter(*phase, phase->variable_map);
     next_todo->phase_type = POINT_PHASE;
-
-    backend_->call("resetConstraintForParameter", 1, "mp", "", &phase->parameter_map);
+    reset_parameter_constraint(phase->get_parameter_constraint());
 
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
@@ -831,13 +827,10 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             auto &candidate = *cand_it;
             candidate.time -= (phase->current_time - phase->parent->parent->current_time);
-            list<parameter_map_t> parameter_maps;
-            backend_->call("productWithGlobalParameterConstraint", 1, "mp", "mps", &candidate.parameter_map, &parameter_maps);
-            assert(parameter_maps.size() <= 1);
-            if(parameter_maps.empty())entry.second.erase(cand_it++);
+            backend_->call("productWithGlobalParameterConstraint", 1, "csn", "cs", &candidate.parameter_constraint, &candidate.parameter_constraint);
+            if(!candidate.parameter_constraint.consistent())entry.second.erase(cand_it++);
             else
             {
-              candidate.parameter_map = parameter_maps.front();
               cand_it++;
             }
           }
@@ -904,15 +897,11 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       if(opts_->epsilon_mode >= 0){
         for(auto entry : time_result){
-          for(auto par : entry.parameter_map){
-            HYDLA_LOGGER_DEBUG("#epsilon DC before : ",par.first," : ",par.second);
-          }
+          HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);
         }
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
         for(auto entry : time_result){
-          for(auto par : entry.parameter_map){
-            HYDLA_LOGGER_DEBUG("#epsilon DC after : ",par.first," : ",par.second);
-          }
+          HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
         }
       }
 
@@ -929,10 +918,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         while(true)
         {
           DCCandidate &candidate = *time_it;
-          // 全体を置き換えると，値の上限も下限もない記号定数が消えるので，追加のみを行う
-          for(auto par_entry : candidate.parameter_map ){
-            phase->parameter_map[par_entry.first] = par_entry.second;
-          }
+          phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
           backend_->call("simplify", 1, "vln", "vl", &phase->end_time, &phase->end_time);
           if(candidate.time.undefined() || candidate.time.infinite() )
@@ -949,7 +935,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             {
 next_todo->next_pp_candidate_map.erase(ask.first);
             }
-            next_todo->parameter_map = phase->parameter_map;
+            next_todo->set_parameter_constraint(phase->get_parameter_constraint());
             next_todo->parent = phase.get();
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             next_todo->current_time = phase->end_time;
@@ -986,8 +972,8 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
     {
       map<ask_t, bool> discrete_asks;
       if(ask.get())discrete_asks[ask] = newcomer.on_time;
-      DCCandidate candidate(newcomer.time, discrete_asks,  newcomer.parameter_map);
-      result.push_back(candidate);
+      DCCandidate candidate(newcomer.time, discrete_asks,  newcomer.parameter_constraint);
+      result.push_back(candidate);      
     }
   }
   else if(newcomers.empty())
@@ -1002,24 +988,25 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
       for(auto existing: existings)
       {
         compare_min_time_result_t compare_result;
-        backend_->call("compareMinTime", 4, "vltvltmpmp", "cp", &existing.time, &newcomer.time, &existing.parameter_map, &newcomer.parameter_map, &compare_result);
-        for(auto less_map : compare_result.less_maps)
+        backend_->call("compareMinTime", 4, "vltvltcsncsn", "cp", &existing.time, &newcomer.time, &existing.parameter_constraint, &newcomer.parameter_constraint, &compare_result);
+
+        if(compare_result.less_cons.consistent())
         {
-          DCCandidate candidate(existing.time, existing.discrete_asks, less_map);
+          DCCandidate candidate(existing.time, existing.discrete_asks, compare_result.less_cons);
           result.push_back(candidate);
         }
-        for(auto equal_map : compare_result.equal_maps)
+        if(compare_result.equal_cons.consistent())
         {
           map<ask_t, bool> discrete_asks = existing.discrete_asks;
           if(ask.get())discrete_asks[ask] = newcomer.on_time;
-          DCCandidate candidate(existing.time, discrete_asks, equal_map);
+          DCCandidate candidate(existing.time, discrete_asks, compare_result.equal_cons);
           result.push_back(candidate);
         }
-        for(auto greater_map : compare_result.greater_maps)
+        if(compare_result.greater_cons.consistent())
         {
           map<ask_t, bool> discrete_asks;
           if(ask.get())discrete_asks[ask] = newcomer.on_time;
-          DCCandidate candidate(newcomer.time, discrete_asks, greater_map);
+          DCCandidate candidate(newcomer.time, discrete_asks, compare_result.greater_cons);
           result.push_back(candidate);
         }
       }
@@ -1028,6 +1015,12 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
   return result;
 }
 
+
+void PhaseSimulator::reset_parameter_constraint(ConstraintStore par_cons)
+{
+  backend_->call("resetConstraintForParameter", 1, "csn", "", &par_cons);
+}
+  
 
 void PhaseSimulator::apply_diff(const PhaseResult &phase)
 {

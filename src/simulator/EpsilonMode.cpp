@@ -22,53 +22,44 @@ using namespace hydla::backend;
 
 void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase, int diff_cnt)
 {
-  for(auto par_entry : phase->parameter_map)
+  Parameter par("eps", 0, 1);
+  value_t time_ret;
+  backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &par, &diff_cnt, &time_ret);
+  phase->current_time = time_ret;
+  for(auto var_entry : phase->variable_map)
   {
-    Parameter par = par_entry.first;
-    std::string parameter_name = par.get_name();
-    int parameter_differential_count = par.get_differential_count();
-    if(parameter_name=="eps" && parameter_differential_count==0)
+    Variable var = var_entry.first;
+    range_t range = var_entry.second;
+    if(range.undefined())
     {
-      value_t time_ret;
-      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &par, &diff_cnt, &time_ret);
-      phase->current_time = time_ret;
-      for(auto var_entry : phase->variable_map)
+      continue;
+    }
+    else if(range.unique())
+    {
+      value_t value_ret;
+      simulator::value_t val = range.get_unique_value();
+      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &value_ret);
+      phase->variable_map[var] = value_ret;
+    }
+    else
+    {
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
       {
-        Variable var = var_entry.first;
-        range_t range = var_entry.second;
-        if(range.undefined())
-        {
-          continue;
-        }
-        else if(range.unique())
-        {
-          value_t value_ret;
-          simulator::value_t val = range.get_unique_value();
-          backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &value_ret);
-          phase->variable_map[var] = value_ret;
-
-        }
-        else
-        {
-          for(uint i = 0; i < range.get_lower_cnt(); i++)
-          {
-            ValueRange::bound_t bd = range.get_lower_bound(i);
-            value_t val = bd.value;
-            value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
-            range.set_lower_bound(ret, bd.include_bound);
-          }
-          for(uint i = 0; i < range.get_upper_cnt(); i++)
-          {
-            ValueRange::bound_t bd = range.get_upper_bound(i);
-            value_t val = bd.value;
-            value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
-            range.set_upper_bound(ret, bd.include_bound);
-          }
-          phase->variable_map[var] = range;
-        }
+        ValueRange::bound_t bd = range.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
       }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+        ValueRange::bound_t bd = range.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      phase->variable_map[var] = range;
     }
   }
 }
@@ -81,35 +72,8 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t origi
   for(auto original_candidate : original_result){
     HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
     unsuitable = false;
-    for(auto par_entry : original_candidate.parameter_map){
-      HYDLA_LOGGER_DEBUG("#epsilon parameter condition ", par_entry.first , " : ", par_entry.second);
-      if(par_entry.first.get_name() == "eps" && par_entry.first.get_differential_count() == 0){
-        range_t range = par_entry.second;
-        node_sptr val;
-        if(range.unique()){
-          val = range.get_unique_value().get_node();
-          HYDLA_LOGGER_DEBUG("#epsilon range unique : ",val);
-          backend_->call("notEqualToZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
-        }else{
-          if(range.get_lower_cnt()){
-            val = range.get_lower_bound(0).value.get_node();
-            HYDLA_LOGGER_DEBUG("#epsilon range low : ",*val);
-            backend_->call("greaterThanZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
-          }
-          if(unsuitable){
-            break;
-          }
-          if(range.get_upper_cnt()){
-            val = range.get_upper_bound(0).value.get_node();
-            HYDLA_LOGGER_DEBUG("#epsilon range up : ",*val);
-            backend_->call("lessThanZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
-          }
-        }
-      }
-      if(unsuitable){
-        break;
-      }
-    }
+    HYDLA_LOGGER_DEBUG_VAR(original_candidate.parameter_constraint);
+    backend_->call("unsuitableCase", 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
     if(!unsuitable){
       ret.push_back(original_candidate);
     }

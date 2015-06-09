@@ -1,7 +1,10 @@
 #include "ValueRange.h"
+#include "ConstraintStore.h"
 
 namespace hydla {
 namespace simulator {
+
+using namespace symbolic_expression;
 
 std::ostream& operator<<(std::ostream& s, const ValueRange & val)
 {
@@ -20,6 +23,34 @@ ValueRange::ValueRange(const value_t& lower, const value_t& upper)
   set_upper_bound(upper, true);
 }
 
+ConstraintStore ValueRange::create_range_constraint(node_sptr to_be_compared)
+{
+  ConstraintStore ret;
+  if(unique()){
+    ret.add_constraint(constraint_t(new Equal(to_be_compared, unique_value_.get_node())));
+  }else{
+    if(lower_.size() > 0)
+    {
+      for(uint i = 0; i < lower_.size(); i++)
+      {
+        const bound_t& l = lower_[i];
+        if(l.include_bound)ret.add_constraint(constraint_t(new LessEqual(l.value.get_node(), to_be_compared)));
+        else ret.add_constraint(constraint_t(new Less(l.value.get_node(), to_be_compared)));
+      }
+    }
+
+    if(upper_.size() > 0)
+    {
+      for(uint i = 0; i < upper_.size(); i++)
+      {
+        const bound_t& u = upper_[i];
+        if(u.include_bound)ret.add_constraint(constraint_t(new LessEqual(to_be_compared, u.value.get_node())));
+        else ret.add_constraint(constraint_t(new Less(to_be_compared, u.value.get_node())));        
+      }
+    }
+  }
+  return ret;
+}
 
 std::string ValueRange::get_string()const
 {

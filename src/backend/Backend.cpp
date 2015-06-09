@@ -273,7 +273,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     {
       if(ret_fmt[++i] == 's')
       {
-        std::list<parameter_map_t>* pm = (std::list<parameter_map_t>*)ret;
+        std::vector<parameter_map_t>* pm = (std::vector<parameter_map_t>*)ret;
         receive_parameter_maps(*pm);
       }
       else invalid_fmt(ret_fmt, i);
@@ -864,11 +864,9 @@ compare_min_time_result_t Backend::receive_compare_min_time_result()
   int list_size; 
   link_->get_function(name, list_size);
   compare_min_time_result_t result;
-
-  receive_parameter_maps(result.less_maps);
-  receive_parameter_maps(result.greater_maps);
-  receive_parameter_maps(result.equal_maps);
-
+  result.less_cons = receive_cs();
+  result.greater_cons = receive_cs();
+  result.equal_cons = receive_cs();
   return result;
 }
 
@@ -890,10 +888,7 @@ find_min_time_result_t Backend::receive_find_min_time_result()
     candidate.on_time = (bool)link_->get_integer();
 
     // 条件を受け取る
-    list<parameter_map_t> pms;
-    receive_parameter_maps(pms);
-    assert(pms.size() == 1);
-    candidate.parameter_map = pms.front();
+    candidate.parameter_constraint = receive_cs();
     result.push_back(candidate);
   }
   return result;
@@ -1145,7 +1140,7 @@ int Backend::receive_map(variable_map_t& map)
 
 
 
-int Backend::receive_parameter_maps(list<parameter_map_t>& maps)
+int Backend::receive_parameter_maps(vector<parameter_map_t>& maps)
 {
 
   string func_name;

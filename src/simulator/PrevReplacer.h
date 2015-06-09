@@ -16,19 +16,20 @@ namespace simulator {
 
 /**
  * A class to replace prevs with parameters.
- * (And introduce parameter into parameter_map)
+ * (and introduce parameter)
  */
 class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   typedef symbolic_expression::node_sptr                 node_sptr;
 
   public:
 
-  PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator& simulator);
+  PrevReplacer(PhaseResult &phase, Simulator& simulator);
 
   virtual ~PrevReplacer();
   
   bool replace_value(value_t &val);
   void replace_node(symbolic_expression::node_sptr &exp);
+  ConstraintStore get_parameter_constraint()const;
 
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramDefinition> node);
@@ -91,9 +92,9 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
 
   private:
+  ConstraintStore parameter_constraint;
   int differential_cnt;
   bool in_prev;
-  parameter_map_t& parameter_map;
   PhaseResult& prev_phase;
   Simulator &simulator;
   bool replaced;

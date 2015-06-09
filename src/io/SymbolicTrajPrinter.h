@@ -18,7 +18,7 @@ public:
   std::string get_state_output(const phase_result_t& result) const;
   
 
-  void output_parameter_map(const parameter_map_t& pm, const std::string &post_fix= "") const;
+  void output_parameter_map(const parameter_map_t& pm) const;
 
   void output_variable_map(std::ostream &stream, const variable_map_t& vm) const;
 

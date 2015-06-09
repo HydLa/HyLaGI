@@ -18,7 +18,7 @@ class MinTimeCalculator;
 
 struct CompareMinTimeResult
 {
-  std::list<parameter_map_t> less_maps, greater_maps, equal_maps;
+  ConstraintStore less_cons, greater_cons, equal_cons;
 };
 
 typedef std::list<parameter_map_t>                       parameter_maps_t;
@@ -67,10 +67,12 @@ private:
 
   void replace_prev2parameter(
                               PhaseResult &phase,
-                              variable_map_t &vm,
-                              parameter_map_t &parameter_map);
+                              variable_map_t &vm);
 
-  parameter_map_t get_current_parameter_map();
+  void reset_parameter_constraint(ConstraintStore par_cons);
+
+
+  ConstraintStore get_current_parameter_constraint();
 
   module_diff_t get_module_diff(module_set_t unadopted_ms, module_set_t parent_unadopted);
 
