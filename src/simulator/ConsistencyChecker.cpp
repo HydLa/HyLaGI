@@ -117,7 +117,7 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
     for(auto prev_variable : finder.get_prev_variable_set())
     {
       if(!variable_set.count(prev_variable)) send_prev_constraint(prev_variable);
-    }    
+    }
   }
   else
   {
@@ -204,7 +204,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   if(phase == POINT_PHASE)
   {
-    VariableFinder finder;   
+    VariableFinder finder;
     finder.visit_node(guard);
     for(auto variable : finder.get_prev_variable_set())
     {
@@ -216,7 +216,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   ConstraintStore constraint_store;
   module_set_t module_set;
   relation_graph.get_related_constraints(guard, constraint_store, module_set);
-  
+
   for(auto constraint : constraint_store)
   {
     finder.visit_node(constraint);
@@ -271,7 +271,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
   CheckEntailmentResult ce_result;
 
   HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
-  
+
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
   if(cc_result.consistent_store.consistent()){
@@ -307,7 +307,7 @@ void ConsistencyChecker::clear_inconsistent_constraints()
   inconsistent_constraints.clear();
 }
 
-void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constraints, 
+void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constraints,
                                            module_set_t &module_set,
                                            CheckConsistencyResult &result,
                                            const PhaseType& phase,
@@ -365,9 +365,9 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
     int size_of_constraint;
     backend->call("getSizeOfConstraint", 0, "", "i", &size_of_constraint);
     profile["SizeOfConstraint"] += size_of_constraint;
-    
+
     // TODO: deal with multiple variable map
-    
+
     if(create_result.size() == 1)
     {
       for(auto var_entry : create_result[0])
@@ -377,6 +377,19 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
     }
     else if(create_result.size() > 1)
     {
+      //For Epsilon mode
+      // for(auto var_entry : create_result[0])
+      // {
+      //   result_maps[0][var_entry.first] = var_entry.second;
+      // }
+      // int i;
+      // for(i=0;i < create_result.size();i++){
+      //   for(auto var : create_result[i]){
+
+      //     HYDLA_LOGGER_DEBUG("#epsilon create result varialbe map ",i," : ",var.first," : ",var.second);
+      //   }
+      // }
+      //if !epsilon_mode
       throw HYDLA_ERROR("result variable map is not single.");
     }
     else
@@ -405,7 +418,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 
-  
+
   if(result.inconsistent_store.empty()) result.inconsistent_store.set_consistency(false);
 
   return result;

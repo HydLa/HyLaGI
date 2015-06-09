@@ -74,81 +74,48 @@ void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sp
 }
 
 
-find_min_time_result_t reduce_unsuitable_case(find_min_time_result_t original_result, Backend* backend_, phase_result_sptr_t& phase)
+pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t original_result, Backend* backend_, phase_result_sptr_t& phase)
 {
-  find_min_time_result_t result;
-  for(auto original_candidate : original_result)
-  {
-    bool unsuitable = false;
-    for(auto par_entry : original_candidate.parameter_map)
-    {
-      if(par_entry.first.get_name() == "eps" && par_entry.first.get_differential_count() == 0)
-      {
+  pp_time_result_t ret;
+  bool unsuitable;
+  for(auto original_candidate : original_result){
+    HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
+    unsuitable = false;
+    for(auto par_entry : original_candidate.parameter_map){
+      HYDLA_LOGGER_DEBUG("#epsilon parameter condition ", par_entry.first , " : ", par_entry.second);
+      if(par_entry.first.get_name() == "eps" && par_entry.first.get_differential_count() == 0){
         range_t range = par_entry.second;
         node_sptr val;
-        bool ret;
-        if(range.unique())
-        {
+        if(range.unique()){
           val = range.get_unique_value().get_node();
-          backend_->call("unequalZero", 1, "en", "b", &val, &ret);
-          if(ret)unsuitable = true;
-        }
-        else
-        {
-          if(range.get_lower_cnt())
-          {
+          HYDLA_LOGGER_DEBUG("#epsilon range unique : ",val);
+          backend_->call("notEqualToZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
+        }else{
+          if(range.get_lower_cnt()){
             val = range.get_lower_bound(0).value.get_node();
-            backend_->call("isOverZero", 1, "en", "b", &val, &ret);
-            if(ret)unsuitable = true;
+            HYDLA_LOGGER_DEBUG("#epsilon range low : ",*val);
+            backend_->call("greaterThanZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
           }
-          if(range.get_upper_cnt())
-          {
+          if(unsuitable){
+            break;
+          }
+          if(range.get_upper_cnt()){
             val = range.get_upper_bound(0).value.get_node();
-            backend_->call("lessThanZero", 1, "en", "b", &val, &ret);
-            if(ret)unsuitable = true;
+            HYDLA_LOGGER_DEBUG("#epsilon range up : ",*val);
+            backend_->call("lessThanZero", 2, "enmp", "b", &val, &original_candidate.parameter_map, &unsuitable);
           }
         }
       }
-      if(unsuitable)
-      {
+      if(unsuitable){
         break;
       }
     }
-    if(!unsuitable)
-    {
-      result.push_back(original_candidate);
+    if(!unsuitable){
+      ret.push_back(original_candidate);
     }
   }
-  return result;
+  return ret;
 }
-
-// find_min_time_result_t hydla::simulator::find_min_time_test(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
-// {
-//   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
-//   for(auto atomic_guard : guards)
-//     {
-//       constraint_t guard = atomic_guard->constraint;
-//       HYDLA_LOGGER_DEBUG("come find min time test");
-//       HYDLA_LOGGER_DEBUG(guard);
-
-//       constraint_t constraint_for_this_guard;
-//       if(!guard_time_map.count(guard))
-//         {
-//           variable_map_t related_vm = get_related_vm(guard, original_vm);
-//           for(auto var : related_vm){HYDLA_LOGGER_DEBUG(var);}
-//           backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-//           guard_time_map[guard] = constraint_for_this_guard;
-//           HYDLA_LOGGER_DEBUG(constraint_for_this_guard);
-//         }
-//     }
-
-//   find_min_time_result_t min_time_for_this_ask;
-//   min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
-//   for(auto time : min_time_for_this_ask) HYDLA_LOGGER_DEBUG(time);
-//   return min_time_for_this_ask;
-// }
-
-
 
 find_min_time_result_t hydla::simulator::find_min_time_epsilon(node_sptr trigger, variable_map_t &vm, value_t time_limit, phase_result_sptr_t& phase, Backend * backend)
 {
