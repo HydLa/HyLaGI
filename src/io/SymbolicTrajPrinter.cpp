@@ -120,6 +120,7 @@ void SymbolicTrajPrinter::output_result_tree(const phase_result_const_sptr_t& ro
 }
 
 void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &node, vector<std::string> &result, int &case_num, int &phase_num) const{
+  if(node->simulation_state == simulator::NOT_SIMULATED)return; 
   if(node->children.size() == 0){
     int current_case_num = case_num++;
     ostream << "---------Case " << current_case_num << "---------" << endl;

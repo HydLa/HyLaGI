@@ -15,9 +15,6 @@
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
-// parser
-
-
 // namespace
 using namespace hydla;
 using namespace hydla::symbolic_expression;
@@ -51,7 +48,7 @@ void output_result(Simulator& ss, Opts& opts){
   hydla::io::SymbolicTrajPrinter Printer(sstr);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
 
-  Printer.output_parameter_map(ss.get_parameter_map());
+  Printer.output_parameter_map(ss.get_parameter_map(), "(global)");
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
@@ -143,11 +140,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   setup_simulator_opts(opts, cmdline_options, false);
 
-  boost::shared_ptr<Backend> backend;
-
-  backend.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
-
-  if(opts.epsilon_mode >= 0){backend_ = backend;}
+  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
 
   if(opts.ltl_model_check_mode)
   {
@@ -158,7 +151,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     simulator_ = new SequentialSimulator(opts);
   }
 
-  simulator_->set_backend(backend);
+  simulator_->set_backend(backend_);
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();

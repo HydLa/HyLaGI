@@ -77,6 +77,7 @@ Module[
 ];
 
 
+
 publicMethod[
   checkConsistencyInterval,
   cons, initCons, prevCons, pCons, pars,
@@ -88,7 +89,6 @@ publicMethod[
       timeVars = Map[(#[t])&, getVariables[cons] ];
       prevVars = getPrevVariables[initCons];
       debugPrint["sol after exDSolve", sol];
-
       If[sol === overConstraint,
         {{False}, {LogicalExpand[pCons]}},
         tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
@@ -502,7 +502,6 @@ publicMethod[
        {Minimize::wksol, Minimize::infeas}
     ];
     debugPrint["minT after Minimize:", minT];
-    (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     If[Head[minT] === Minimize,
       error,
       minT = First[minT];
@@ -613,7 +612,7 @@ createDifferentiatedEquation[var_, integRules_] := (
   ]
 );
 
-
+exDSolve::multi = "Solution of `1` is not unique.";
 
 (* 微分方程式系を解く．
   単にDSolveをそのまま使用しない理由は以下．
@@ -657,6 +656,7 @@ Module[
         unsolvable = True;
         Continue[]
       ];
+      If[Length[rules] > 1, Message[exDSolve::multi, expr];checkMessage ];
       resultRule = Union[resultRule, rules[[1]] ];
        listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
