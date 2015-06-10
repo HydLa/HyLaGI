@@ -100,8 +100,11 @@ void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phas
   {
     if(par_maps.size() == 1)
     {
-      ostream << "---------parameter condition---------" << endl;
-      output_parameter_map(par_maps[0]);
+      if(!par_maps[0].empty())
+      {
+        ostream << "---------parameter condition---------" << endl;
+        output_parameter_map(par_maps[0]);
+      }
     }
     else
     {
@@ -158,8 +161,11 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
       {
         if(par_maps.size() == 1)
         {
-          ostream << "---------parameter condition(Case" << current_case_num << ")---------" << endl;
-          output_parameter_map(par_maps[0]);
+          if(!par_maps[0].empty())
+          {
+            ostream << "---------parameter condition(Case" << current_case_num << ")---------" << endl;
+            output_parameter_map(par_maps[0]);
+          }
         }
         else
         {
