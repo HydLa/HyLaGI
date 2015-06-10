@@ -143,10 +143,17 @@ std::vector<parameter_map_t> PhaseResult::get_parameter_maps()const
 {
   if(!parameter_maps)
   {
-    if(!backend)throw HYDLA_ERROR("backend has not been set yet.");
-    std::vector<parameter_map_t> par_maps;
-    backend->call("createParameterMaps", 1, "csn", "mps", &parameter_constraint, &par_maps);
-    parameter_maps = par_maps;
+    if(parameter_constraint.size() == 0)
+    {
+      parameter_maps = std::vector<parameter_map_t>(1);
+    }
+    else
+    {
+      if(!backend)throw HYDLA_ERROR("backend has not been set yet.");
+      std::vector<parameter_map_t> par_maps;
+      backend->call("createParameterMaps", 1, "csn", "mps", &parameter_constraint, &par_maps);
+      parameter_maps = par_maps;
+    }
   }
   return *parameter_maps;
 }
