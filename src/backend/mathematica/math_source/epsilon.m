@@ -87,7 +87,7 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
 publicMethod[
   unsuitableCase,
   pCons,
-  Reduce[pCons /. p[peps, 0, 1] -> 0, Reals] === False
+  Reduce[pCons /. {Less -> LessEqual, Greater->GreaterEqual} /. p[peps, 0, 1] -> 0, Reals] === False
 ]
 
 
