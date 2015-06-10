@@ -72,6 +72,12 @@ MathematicaLink::~MathematicaLink()
   clean();
 }
 
+void MathematicaLink::reset()
+{
+  while (MLNextPacket()) {
+    MLNewPacket();
+  }
+}
 
 void MathematicaLink::clean()
 {

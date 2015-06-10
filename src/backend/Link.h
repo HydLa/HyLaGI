@@ -22,6 +22,8 @@ class Link
     DT_NONE
   };
 
+  virtual void reset(){}
+
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str){put_symbol(str.c_str());}
   virtual void put_integer(int value) = 0;

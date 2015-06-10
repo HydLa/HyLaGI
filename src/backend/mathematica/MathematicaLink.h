@@ -29,11 +29,20 @@ public:
    * receive packets until next return packet received
    */
   bool receive_to_return_packet();
-  
+
+  /**
+   * finalize the link
+   */
   void clean();
 
+  /**
+   * reset the state of the link(to be able to send and receive new packet)
+   */
+  void reset();
+  
+
   /** 
-   * 指定されたタイプのパケットが返ってくるまでスキップする
+   *   skip packets until given packet is returned
    */ 
   void skip_pkt_until(int pkt_name);
 
@@ -112,6 +121,8 @@ public:
   void symCase();
   void intCase();
   void funcCase();
+
+  
 
   inline std::string backend_name(){return "Mathematica";}
 

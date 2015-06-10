@@ -28,4 +28,4 @@ BOTH_INTERVAL(lb, ub, ls, us)
 
 BOTH_INTERVAL(0, 9/10, -2, -1/100).  
 
-//ASSERT(y' != 0 | 9 < y < 11).
+ASSERT(y' != 0 | 9 < y < 11).

@@ -9,3 +9,5 @@ STATE2 <=> [](s = 1 => il' = -(rl+rc*r0/(rc+r0))*il -r0/(l*(rc+r0))*vc + vs/l & 
 // ASSERT(vc > 1).
 
 INIT, TIMER << SWITCH, STATE1, STATE2.
+
+// #hylagi -p8

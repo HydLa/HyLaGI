@@ -95,6 +95,8 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
       }
   }
 
+  void reset();
+  
   private:
   static const std::string var_prefix, prev_prefix, par_prefix;
   /// throw an exception for an invalid format

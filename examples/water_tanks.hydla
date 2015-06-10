@@ -19,3 +19,5 @@ INIT(Xs[1],1,Ss[1],1,w-5*Xs[1]).
 { OUT(Xs[i],5+i,Ss[i]) | i in {1..|Xs|} }.
 { CONST(Ss[i]) << POUR(Xs[i],1/2*i,Ss[i]) | i in {1..|Xs|} }.
 { CONST(Ss[j]) << NOT_POUR(Xs[i],1/2*i,Ss[j]) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.
+
+//#hylagi --fnd --fignore_warnings -p8

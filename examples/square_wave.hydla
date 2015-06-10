@@ -4,3 +4,5 @@ INIT   <=> f=10 & t=0.
 CHANGE <=> [](t- = 2 => (t=0 & f = 10 + - f-)). 
 TIMER  <=> [](t'=1).
 INIT, [](f'=0)<<(TIMER << CHANGE).
+
+//#hylagi -p10

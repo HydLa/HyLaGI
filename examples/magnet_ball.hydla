@@ -12,3 +12,5 @@ SWITCHOFF <=> [](timer-=1=>mag=0&timer=0).
 SWITCHW <=> [](timer-=1=>mag=100&timer=0).
 
 INIT,TIMER<<(SWITCHOFF,SWITCHON,SWITCHW)<<TRUE,FALL.
+
+// #hylagi -p8 --fnd

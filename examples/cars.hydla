@@ -34,3 +34,5 @@ CONST(X[1]), TIMER_OFF(T[1]).
 	<< ( SW_ACC(X[i-1],X[i],T[i]), SW_BRK(X[i-1],X[i],T[i]) )
 	<< ( ACC(X[i-1],X[i],T[i]), BRK(X[i-1],X[i],T[i]) )
 	| i in {2..|X|} }.
+
+//#hylagi -p8

@@ -49,6 +49,11 @@ void Backend::invalid_fmt(const char* fmt, int idx)
   throw HYDLA_ERROR(sstr.str().c_str());
 }
 
+void Backend::reset()
+{
+  link_->reset();
+}
+
 int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
 {
   int i = idx;

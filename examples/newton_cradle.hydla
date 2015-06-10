@@ -11,3 +11,5 @@ EPSILON.
 << (COLLISION(x1, x2), COLLISION(x2, x3) ,
 COLLISION(x3, x4),
 COLLISION(x4, x5), LEFT_WALL, RIGHT_WALL).
+
+// #hylagi -p10

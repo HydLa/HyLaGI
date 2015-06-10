@@ -8,3 +8,5 @@ BOUNCE <=> []((x-)^2 + (y-)^2 = 1 =>
                 y' = y'- - (x- * x'- + y- * y'-) * 2 * (y-)
 ).
 INIT, RUN<<BOUNCE.
+
+//#hylagi -p15 --fnd
