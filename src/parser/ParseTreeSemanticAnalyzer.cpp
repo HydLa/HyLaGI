@@ -209,11 +209,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
       throw UndefinedReference(node);
     }
 
-    /*
     // 定義の展開
-    node->set_child(
-      apply_definition(deftype, node, expr_list_def));
-      */
     new_child_ = apply_definition(deftype,node,expr_list_def);
     boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(new_child_->clone());
     if(el)
@@ -238,11 +234,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
       throw UndefinedReference(node);
     }
 
-    /*
+
     // 定義の展開
-    node->set_child(
-      apply_definition(deftype, node, prog_list_def));
-      */
     new_child_ = apply_definition(deftype,node,prog_list_def);
   }
 }

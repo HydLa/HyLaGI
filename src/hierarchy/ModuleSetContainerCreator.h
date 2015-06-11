@@ -13,6 +13,7 @@
 #include "DefaultTreeVisitor.h"
 
 #include "ModuleSet.h"
+#include "Logger.h"
 
 namespace hydla {
 namespace hierarchy {
@@ -64,119 +65,119 @@ public:
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="|";
+    if(!in_constraint_caller_) container_name_+="|";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="&";
+    if(!in_constraint_caller_) container_name_+="&";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
   {
-    if(!in_caller_) container_name_+="PI";
+    if(!in_constraint_caller_) container_name_+="PI";
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
   {
-    if(!in_caller_) container_name_+="E";
+    if(!in_constraint_caller_) container_name_+="E";
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="+";
+    if(!in_constraint_caller_) container_name_+="+";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="-";
+    if(!in_constraint_caller_) container_name_+="-";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="*";
+    if(!in_constraint_caller_) container_name_+="*";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="/";
+    if(!in_constraint_caller_) container_name_+="/";
     accept(node->get_rhs());
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="^";
+    if(!in_constraint_caller_) container_name_+="^";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="=";
+    if(!in_constraint_caller_) container_name_+="=";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="<";
+    if(!in_constraint_caller_) container_name_+="<";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="<=";
+    if(!in_constraint_caller_) container_name_+="<=";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+=">";
+    if(!in_constraint_caller_) container_name_+=">";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+=">=";
+    if(!in_constraint_caller_) container_name_+=">=";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
   {
     accept(node->get_lhs());
-    if(!in_caller_) container_name_+="=>";
+    if(!in_constraint_caller_) container_name_+="=>";
     accept(node->get_rhs());
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
   {
     accept(node->get_child());
-    if(!in_caller_) container_name_+="\'";
+    if(!in_constraint_caller_) container_name_+="\'";
   }
 
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
   {
-    if(!in_caller_) container_name_ += node->get_name();
+    if(!in_constraint_caller_) container_name_ += node->get_name();
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
   {
-    if(!in_caller_) container_name_ += node->get_number();
+    if(!in_constraint_caller_) container_name_ += node->get_number();
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
@@ -189,9 +190,10 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    in_caller_ = true;
+    bool prev_in_caller = in_constraint_caller_;
+    in_constraint_caller_ = true;
     accept(node->get_child());
-    in_caller_ = false;
+    in_constraint_caller_ = prev_in_caller;
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
@@ -204,9 +206,7 @@ public:
       accept(node->get_actual_arg(i));
     }
     if(arg_size) container_name_ += ")";
-    in_caller_ = true;
     accept(node->get_child());
-    in_caller_ = false;
   }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
@@ -291,7 +291,7 @@ private:
   /**
    * flag representating processing in caller
    */
-  bool in_caller_ = false;
+  bool in_constraint_caller_ = false;
 
   int constraint_level_;
 };

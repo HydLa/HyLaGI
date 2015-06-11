@@ -19,8 +19,6 @@ TIMER <=> timer = -1 & [](timer' = 1).
 
 EDGE(from, to, distance) <=> [](next- = from & rest- = 0 => now = next- & next = to & rest = distance).
 
-TRUE <=> [](1=1).
-
 ASSERT(timer < 5 | now = 2).
 
 GRAPH{
@@ -31,4 +29,4 @@ EDGE(4,2,1),
 EDGE(2,-1,0)
 }.
 
-INIT, CONST, GRAPH << TRUE, TIMER.
+INIT, CONST, GRAPH << $TRUE, TIMER.
