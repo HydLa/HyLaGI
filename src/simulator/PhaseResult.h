@@ -137,8 +137,6 @@ public:
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
 
 
-  asks_t                       diff_positive_asks, diff_negative_asks;
-  constraints_t                diff_positive_guards, diff_negative_guards;
   ConstraintStore              additional_constraint_store; /// use for case analysis
   ConstraintStore              diff_sum;
   variable_set_t               discrete_differential_set;
@@ -167,10 +165,17 @@ public:
   PhaseResult();  
   ~PhaseResult();
 
-  asks_t                    get_all_positive_asks();
-  asks_t                    get_all_negative_asks();
-  constraints_t             get_all_positive_guards();
-  constraints_t             get_all_negative_guards();
+
+  asks_t                    get_diff_positive_asks()const;
+  asks_t                    get_diff_negative_asks()const;
+  void                      add_diff_positive_asks(const asks_t &asks);
+  void                      add_diff_negative_asks(const asks_t &asks);
+  void                      add_diff_positive_ask(const ask_t &ask);
+  void                      add_diff_negative_ask(const ask_t &ask);
+  asks_t                    get_all_positive_asks()const;
+  asks_t                    get_all_negative_asks()const;
+  constraints_t             get_all_positive_guards()const;
+  constraints_t             get_all_negative_guards()const;
   void                      set_parameter_constraint(const ConstraintStore &cons);
   ConstraintStore           get_parameter_constraint()const;
   void                      add_parameter_constraint(const constraint_t &cons);
@@ -179,11 +184,12 @@ public:
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 private:
-  void generate_full_information();
+  void generate_full_information() const;
 
+  asks_t                   diff_positive_asks, diff_negative_asks;
   mutable ConstraintStore                      parameter_constraint;
   mutable boost::optional<std::vector<parameter_map_t> >     parameter_maps;
-  boost::optional<FullInformation>             full_information;
+  mutable boost::optional<FullInformation>             full_information;
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);

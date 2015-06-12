@@ -480,7 +480,7 @@ asks_t RelationGraph::get_active_asks(bool ignore_prev_asks)
   asks_t asks;
   for(auto ask_node : ask_nodes)
   {
-    if(to_be_considered(ask_node, ignore_prev_asks))asks.insert(ask_node->ask);
+    if(to_be_considered(ask_node, ignore_prev_asks) && ask_node->entailed)asks.insert(ask_node->ask);
   }
   return asks;
 }
@@ -575,6 +575,7 @@ asks_t RelationGraph::get_all_asks()
   }
   return asks;
 }
+
 
 AskNode *RelationGraph::get_ask_node(const ask_t &ask)
 {

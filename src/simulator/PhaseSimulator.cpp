@@ -121,10 +121,10 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
           if(entailed)
           {
-            todo->diff_negative_asks.insert(ask);
+            todo->add_diff_negative_ask(ask);
           }else
           {
-            todo->diff_positive_asks.insert(ask);
+            todo->add_diff_positive_ask(ask);
           }
         }
 
@@ -262,6 +262,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       // branching by multiple maximal consistent modulesets
       phase.reset(new PhaseResult(*phase));
       phase->profile.clear();
+      phase->simulation_state = NOT_SIMULATED;
       phase->parent->todo_list.push_back(phase);
     }
     phase->parent->children.push_back(phase);
@@ -292,8 +293,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     consistency_checker->reset_count();
 
     phase->set_parameter_constraint(get_current_parameter_constraint());
-    phase->diff_positive_asks.insert(cc_local_positives.begin(), cc_local_positives.end());
-    phase->diff_negative_asks.insert(cc_local_negatives.begin(), cc_local_negatives.end());
+    phase->add_diff_positive_asks(cc_local_positives);
+    phase->add_diff_negative_asks(cc_local_negatives);
 
     phase->always_list.add_constraint_store(cc_local_always);
     phase->simulation_state = SIMULATED;
@@ -1028,11 +1029,11 @@ void PhaseSimulator::apply_diff(const PhaseResult &phase)
   {
     relation_graph_->set_adopted(diff.first, diff.second);
   }
-  for(auto positive : phase.diff_positive_asks)
+  for(auto positive : phase.get_diff_positive_asks())
   {
     relation_graph_->set_entailed(positive, true);
   }
-  for(auto negative : phase.diff_negative_asks)
+  for(auto negative : phase.get_diff_negative_asks())
   {
     relation_graph_->set_entailed(negative, false);
   }
@@ -1046,7 +1047,7 @@ void PhaseSimulator::add_break_point(BreakPoint b)
 
 void PhaseSimulator::revert_diff(const PhaseResult &phase)
 {
-  revert_diff(phase.diff_positive_asks, phase.diff_negative_asks, phase.always_list, phase.module_diff);
+  revert_diff(phase.get_diff_positive_asks(), phase.get_diff_negative_asks(), phase.always_list, phase.module_diff);
 }
 
 void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff)

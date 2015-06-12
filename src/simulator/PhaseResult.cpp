@@ -51,10 +51,10 @@ PhaseResult::~PhaseResult()
   }
 }
 
-void PhaseResult::generate_full_information()
+void PhaseResult::generate_full_information()const
 {
   PhaseResult *ancestor = parent;
-  std::list<PhaseResult *> ancestor_list;
+  std::list<const PhaseResult *> ancestor_list;
   ancestor_list.push_back(this);
   while(ancestor->parent != nullptr && !ancestor->full_information)
   {
@@ -65,17 +65,6 @@ void PhaseResult::generate_full_information()
   full_information = ancestor->full_information;
   for(auto r_it = ancestor_list.rbegin(); r_it != ancestor_list.rend(); r_it++)
   {
-    for(auto guard : (*r_it)->diff_positive_guards)
-    {
-      full_information->negative_guards.erase(guard);
-      full_information->positive_guards.insert(guard);
-    }
-    for(auto guard : (*r_it)->diff_negative_guards)
-    {
-      full_information->positive_guards.erase(guard);
-      full_information->negative_guards.insert(guard);
-    }
-    
     for(auto ask : (*r_it)->diff_positive_asks)
     {
       full_information->negative_asks.erase(ask);
@@ -89,26 +78,48 @@ void PhaseResult::generate_full_information()
   }
 }
 
-constraints_t PhaseResult::get_all_positive_guards()
+
+asks_t PhaseResult::get_diff_negative_asks()const
 {
-  if(!full_information)generate_full_information();
-  return full_information->positive_guards;
+  return diff_negative_asks;
 }
 
-constraints_t PhaseResult::get_all_negative_guards()
+asks_t PhaseResult::get_diff_positive_asks()const
 {
-  if(!full_information)generate_full_information();
-  return full_information->negative_guards;
+  return diff_positive_asks;
 }
 
+void PhaseResult::add_diff_positive_asks(const asks_t &asks)
+{
+  full_information = boost::none;
+  diff_positive_asks.insert(asks.begin(), asks.end());
+}
 
-asks_t PhaseResult::get_all_positive_asks()
+void PhaseResult::add_diff_negative_asks(const asks_t &asks)
+{
+  full_information = boost::none;
+  diff_negative_asks.insert(asks.begin(), asks.end());
+}
+
+void PhaseResult::add_diff_positive_ask(const ask_t &ask)
+{
+  full_information = boost::none;
+  diff_positive_asks.insert(ask);
+}
+
+void PhaseResult::add_diff_negative_ask(const ask_t &ask)
+{
+  full_information = boost::none;
+  diff_negative_asks.insert(ask);
+}
+
+asks_t PhaseResult::get_all_positive_asks()const
 {
   if(!full_information)generate_full_information();
   return full_information->positive_asks;
 }
 
-asks_t PhaseResult::get_all_negative_asks()
+asks_t PhaseResult::get_all_negative_asks()const
 {
   if(!full_information)generate_full_information();
   return full_information->negative_asks;
@@ -192,6 +203,17 @@ ostream& operator<<(std::ostream& s, const PhaseResult& phase)
       s << constraint << endl;
       first = false;
     }
+  }
+
+  s << "%% positive_asks" << endl;
+  for(auto ask : phase.get_diff_positive_asks())
+  {
+    s << get_infix_string(ask) << endl;
+  }
+  s << "%% negative_asks" << endl;
+  for(auto ask: phase.get_diff_negative_asks())
+  {
+    s << get_infix_string(ask) << endl;
   }
   
   if(!phase.current_time.undefined())

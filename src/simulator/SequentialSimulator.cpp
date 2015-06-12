@@ -44,7 +44,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
 void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
-    HYDLA_LOGGER_DEBUG_VAR(*current);
+  HYDLA_LOGGER_DEBUG_VAR(*current);
   if(signal_handler::interrupted)
   {
     current->simulation_state = INTERRUPTED;
