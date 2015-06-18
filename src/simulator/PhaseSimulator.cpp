@@ -17,6 +17,10 @@
 
 #include "Backend.h"
 
+#include "TreeInfixPrinter.h"
+
+#include "IntervalNewton.h"
+
 namespace hydla
 {
 namespace simulator
@@ -29,6 +33,10 @@ using namespace backend;
 using namespace hierarchy;
 using namespace symbolic_expression;
 using namespace timer;
+
+namespace se = symbolic_expression;
+
+typedef interval::itvd itvd;
 
 PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator_(simulator), opts_(&opts) {
 }
@@ -51,9 +59,9 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     }
     todo->diff_sum.add_constraint_store(relation_graph_->get_constraints());
   }
-
+  
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
-
+  for(auto map : todo->parameter_map) HYDLA_LOGGER_DEBUG_VAR(map.second);
   if(phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
@@ -415,6 +423,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   parameter_map_ = &p;
   variable_map_ = &m;
   phase_sum_ = 1;
+  time_id = 0;
   module_set_container = msc;
   result_root = root;
 
@@ -438,9 +447,9 @@ void PhaseSimulator::initialize(variable_set_t &v,
   result_root->set_full_information(root_information);
 
   if(opts_->max_time != ""){
-    max_time = symbolic_expression::node_sptr(new symbolic_expression::Number(opts_->max_time));
+    max_time = node_sptr(new se::Number(opts_->max_time));
   }else{
-    max_time = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
+    max_time = node_sptr(new se::Infinity());
   }
 
   aborting = false;
@@ -737,20 +746,117 @@ find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
 {
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
+  bool once_time_newton = false;
+  list<Parameter> parameters;
+  constraint_t guard_for_newton;
+  variable_map_t related_vm_for_newton;
+  AtomicConstraint *interval_guard = nullptr;
   for(auto atomic_guard : guards)
   {
-    constraint_t guard = atomic_guard->constraint;
+    constraint_t g = atomic_guard->constraint;
     constraint_t constraint_for_this_guard;
-    if(!guard_time_map.count(guard))
+    if(!guard_time_map.count(g))
     {
       variable_map_t related_vm = get_related_vm(guard, original_vm);
-      backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &guard, &related_vm, &time_limit, &constraint_for_this_guard);
-      guard_time_map[guard] = constraint_for_this_guard;
+      bool by_newton = false;
+      if(opts_->interval_newton && !once_time_newton)
+      {
+        cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
+        char c;
+        cin >> c;
+        if(c == 'y')
+        {
+          by_newton = true;
+          interval_guard = atomic_guard;
+        }
+      }
+      if(by_newton)
+      {
+        guard_for_newton = g;
+        related_vm_for_newton = related_vm;
+        once_time_newton = true;
+      }
+      else backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &g, &related_vm, &time_limit, &constraint_for_this_guard);
+      guard_time_map[g] = constraint_for_this_guard;
     }
   }
 
   find_min_time_result_t min_time_for_this_ask;
-  return min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
+  if(once_time_newton)
+  {
+    constraint_t constraint_for_this_ask;
+    list<constraint_t> constraints_for_newton;
+    parameter_map_t pm_for_newton;
+    constraints_for_newton = calculate_approximated_time_constraint(guard_for_newton, related_vm_for_newton, pm, pm_for_newton, parameters);
+    // backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
+    const type_info &guard_type = typeid(*guard_for_newton);
+    string low_value = "0";
+    for(auto p : parameters) HYDLA_LOGGER_DEBUG_VAR(p);
+    for(auto c : constraints_for_newton) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(c));
+    while(!constraints_for_newton.empty())
+    {
+      constraint_t constraint = constraints_for_newton.front();
+      guard_time_map[guard_for_newton] = constraint;
+      const type_info &constraint_type = typeid(*constraint);
+      list<Parameter> p_for_newton;
+      if(guard_type == typeid(symbolic_expression::Equal) || guard_type == typeid(symbolic_expression::UnEqual))
+      {
+        
+      }
+      else
+      {
+        assert(guard_type == typeid(symbolic_expression::LessEqual) ||
+               guard_type == typeid(symbolic_expression::Less) ||
+               guard_type == typeid(symbolic_expression::Greater) ||
+               guard_type == typeid(symbolic_expression::GreaterEqual));
+
+        if(constraint_type == typeid(LogicalAnd))
+        {
+          p_for_newton.push_back(parameters.front());
+          pm[parameters.front()] = pm_for_newton[parameters.front()];
+          parameters.pop_front();
+        }
+        p_for_newton.push_back(parameters.front());
+        ValueRange range = pm_for_newton[parameters.front()];
+        pm[parameters.front()] = pm_for_newton[parameters.front()];
+        parameters.pop_front();
+        node_sptr val;
+        if(range.get_lower_cnt())
+        {
+          val = range.get_lower_bound(0).value.get_node();
+          // HYDLA_LOGGER_DEBUG_VAR(get_infix_string(val));
+        }
+        // else if(range.get_upper_cnt() && constraint_type != typeid(LogicalAnd))
+        // {
+        //   val = range.get_upper_bound(0).value.get_node();
+        // }
+        constraint_t lb, ub;
+        lb.reset(new Less(constraint_t(new Number(low_value)), constraint_t(new SymbolicT())));
+        ub.reset(new Less(constraint_t(new SymbolicT()), constraint_t(new Number(get_infix_string(val)))));
+        constraint_t time_bound;
+        time_bound.reset(new LogicalAnd(lb, ub));
+        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_bound);
+        if(!min_time_for_this_ask.empty()) 
+        {
+          for(auto min_time : min_time_for_this_ask) HYDLA_LOGGER_DEBUG_VAR((min_time.time));
+          break;
+        }
+        else 
+        {
+          low_value = get_infix_string(val);
+          pm.erase(p_for_newton.front());
+          p_for_newton.pop_front();
+          pm.erase(p_for_newton.front());
+          p_for_newton.pop_front();
+        }
+
+      }
+      constraints_for_newton.pop_front();
+    }
+  }
+  else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
+  return min_time_for_this_ask;
 }
 
 void
@@ -795,6 +901,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     replace_prev2parameter(*phase, phase->variable_map);
     next_todo->phase_type = POINT_PHASE;
     reset_parameter_constraint(phase->get_parameter_constraint());
+
 
     value_t time_limit(max_time);
     time_limit -= phase->current_time;
@@ -868,7 +975,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           if(calculated_ask_set.count(ask))continue;
           calculated_ask_set.insert(ask);
-
           if(opts_->epsilon_mode >= 0)
           {
             candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
@@ -883,7 +989,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         auto break_point = entry.first;
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false);
       }
-
+      HYDLA_LOGGER_DEBUG("");
       pp_time_result_t time_result;
       // 各askに関する最小時刻を比較して最小のものを選ぶ．
       for(auto entry : candidate_map)
@@ -895,7 +1001,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         ask_t null_ask;
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
-
       if(opts_->epsilon_mode >= 0){
         for(auto entry : time_result){
           HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);
@@ -914,7 +1019,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       }
       else
       {
-
         auto time_it = time_result.begin();
         while(true)
         {
@@ -1068,6 +1172,98 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   {
     relation_graph_->set_expanded_atomic(always, false);
   }
+}
+
+list<constraint_t> PhaseSimulator::calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, list<Parameter> &parameters)
+{
+  int sign = -1;
+  list<constraint_t> ret;
+  if(sign == 0)
+  {
+    ret.push_back(constraint_t(new symbolic_expression::True()));
+    return ret;
+  }
+
+  node_sptr exp;
+  node_sptr dexp;
+  backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
+  backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
+  itvd init = itvd(0.,opts_->max_ip_width); 
+  list<itvd> result_intervals =
+    interval::calculate_interval_newton_nd(init, exp, dexp, pm);
+  for(auto res : result_intervals)HYDLA_LOGGER_DEBUG_VAR(res);
+  // list<Parameter> parameters;
+  for(auto res : result_intervals)
+  {
+    value_t lower(res.lower());
+    backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
+    value_t upper(res.upper());
+    backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+    ValueRange range (lower, upper);
+    Parameter parameter = simulator_->introduce_parameter("t", -1, ++time_id, range);
+    parameters.push_back(parameter);
+    pm_for_newton[parameter] = range;
+  }
+  // for(auto parameter : parameters) HYDLA_LOGGER_DEBUG_VAR(pm[parameter]);
+  const type_info &guard_type = typeid(*guard);
+  if(guard_type == typeid(symbolic_expression::Equal) || guard_type == typeid(symbolic_expression::UnEqual))
+  {
+    for(Parameter parameter : parameters)
+    {
+      constraint_t lhs;
+      if(guard_type == typeid(se::UnEqual))      lhs.reset(new se::UnEqual(constraint_t(new se::SymbolicT()), constraint_t(new se::Parameter(parameter))));
+      else       lhs.reset(new se::Equal(constraint_t(new se::SymbolicT()), constraint_t( new se::Parameter(parameter))));
+
+      ret.push_back(lhs);
+      // if(ret.get() == nullptr)
+      // {
+      //   ret = lhs;
+      // }
+      // else
+      // {
+      //   ret.reset(
+      //     new symbolic_expression::LogicalOr(lhs, ret));
+      // }
+    }
+  }
+  else
+  {
+    assert(guard_type == typeid(se::LessEqual) ||
+           guard_type == typeid(se::Less) ||
+           guard_type == typeid(se::Greater) ||
+           guard_type == typeid(se::GreaterEqual));
+    if(guard_type == typeid(se::Less) || guard_type == typeid(se::LessEqual))sign *= -1;
+
+    bool upper = sign > 0;
+    list<constraint_t> constraint_list;
+    constraint_t lb;
+    for(Parameter parameter : parameters)
+    {
+      if(upper)
+      {
+        constraint_t ub;
+        if(guard_type == typeid(se::LessEqual) || guard_type == typeid(se::GreaterEqual)) ub.reset(new se::LessEqual(constraint_t(new se::SymbolicT), constraint_t (new se::Parameter(parameter))));
+        else ub.reset(new se::Less(constraint_t(new se::SymbolicT), constraint_t (new se::Parameter(parameter))));
+        if(lb == nullptr)constraint_list.push_back(ub);
+        else
+        {
+          constraint_list.push_back(constraint_t(new LogicalAnd(lb , ub)));
+          lb = nullptr;
+        }
+      }
+      else
+      {
+        if(guard_type == typeid(se::LessEqual) || guard_type == typeid(se::GreaterEqual)) lb.reset(new se::LessEqual(constraint_t( new se::Parameter(parameter)), constraint_t( new se::SymbolicT())));
+        else lb.reset(new se::Less(constraint_t( new se::Parameter(parameter)), constraint_t( new se::SymbolicT())));
+      }
+      upper = !upper;
+    }
+    if(lb != nullptr)constraint_list.push_back(lb);
+    ret = constraint_list;
+  }
+  return ret;
 }
 
 }

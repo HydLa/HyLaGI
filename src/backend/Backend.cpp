@@ -88,7 +88,18 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
   }
   break;
-    
+  
+  case 'd':
+  {
+    if(args_fmt[++i] == 'b')
+    {
+      double *db = (double*)arg;
+      link_->put_double(*db);
+      break;
+    }
+    else invalid_fmt(args_fmt, i);
+  }
+  break;
 
   case 'c':
     switch(args_fmt[++i])
@@ -235,6 +246,17 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     *num = link_->get_integer();
   }
   break;
+
+  case 'd':
+  {
+    if(ret_fmt[++i] == 'b')
+    {
+      double *db = (double*)ret;
+      *db = link_->get_double();
+      break;
+    }
+    else invalid_fmt(ret_fmt, i);
+  }
 
   case 'e':
   {
@@ -683,7 +705,7 @@ void Backend::visit(boost::shared_ptr<Number> node)
 }
 
 void Backend::visit(boost::shared_ptr<Float> node)              {
-  link_->put_float(node->get_number());
+  link_->put_double(node->get_number());
 }  
 
 
@@ -1055,7 +1077,12 @@ symbolic_expression::node_sptr Backend::receive_node(){
     {
 
       std::string symbol = link_->get_symbol();
-      if(symbol=="t")
+      if(symbol=="undefined")
+      {
+        //do nothing
+        return ret;
+      }
+      else if(symbol=="t")
         ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());

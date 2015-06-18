@@ -1,0 +1,5 @@
+INIT <=> x = 10 &  x' = 0 & [](g = 9.8) & [](m = 60) & [](k = 100).
+FALL <=> [](x'' = -m*g).
+TRAMPOLINE <=> [](x < 0 => x'' = -k*x - m*g).
+
+INIT, FALL<<TRAMPOLINE.

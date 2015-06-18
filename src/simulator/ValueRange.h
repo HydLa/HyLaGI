@@ -101,6 +101,8 @@ public:
       upper_.push_back(bound_t(val, include));
     }
   }
+
+  ValueRange get_numerized_range()const;
   
   std::ostream& dump(std::ostream& s) const  
   {

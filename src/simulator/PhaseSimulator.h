@@ -10,8 +10,14 @@
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
 
+namespace kv
+{
+template <class T> class interval;
+}
+
 namespace hydla {
 namespace simulator {
+
 
 class ValueModifier;
 class MinTimeCalculator;
@@ -85,7 +91,7 @@ private:
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
-  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
+  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm);
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
 
@@ -95,6 +101,8 @@ private:
   void make_next_todo(phase_result_sptr_t& phase);
 
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);
+
+  std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, std::list<Parameter> &parameters);
 
   Simulator* simulator_;
 
@@ -110,7 +118,7 @@ private:
   phase_result_sptr_t result_root;
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
-  int                                   phase_sum_;
+  int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
   boost::shared_ptr<ValueModifier>      value_modifier;

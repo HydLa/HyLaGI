@@ -1,5 +1,7 @@
 #include "ValueRange.h"
 #include "ConstraintStore.h"
+#include "IntervalTreeVisitor.h"
+#include <cfloat>
 
 namespace hydla {
 namespace simulator {
@@ -10,6 +12,7 @@ std::ostream& operator<<(std::ostream& s, const ValueRange & val)
 {
   return val.dump(s);
 }
+
 ValueRange::ValueRange(const value_t& lower, bool low_include,
                        const value_t& upper, bool up_include)
 {
@@ -22,6 +25,7 @@ ValueRange::ValueRange(const value_t& lower, const value_t& upper)
   set_lower_bound(lower, true);
   set_upper_bound(upper, true);
 }
+
 
 ConstraintStore ValueRange::create_range_constraint(node_sptr to_be_compared)
 {
@@ -50,6 +54,33 @@ ConstraintStore ValueRange::create_range_constraint(node_sptr to_be_compared)
     }
   }
   return ret;
+}
+
+ValueRange ValueRange::get_numerized_range()const
+{
+  interval::IntervalTreeVisitor itv_visitor;
+  double lower = -DBL_MAX, upper = DBL_MAX; 
+  if(unique())
+  {
+    interval::itvd itv;
+    itv = itv_visitor.get_interval_value(unique_value_.get_node());
+    lower = itv.lower();
+    upper = itv.upper();
+  }
+  else
+  {
+    for(auto &bound : lower_)
+    {
+      interval::itvd lower_itv = itv_visitor.get_interval_value(bound.value.get_node());
+      if(lower_itv.lower() > lower)lower = lower_itv.lower();
+    }
+    for(auto &bound : upper_)
+    {
+      interval::itvd upper_itv = itv_visitor.get_interval_value(bound.value.get_node());
+      if(upper_itv.upper() < upper) upper = upper_itv.upper();
+    }
+  }
+  return ValueRange(Value(lower), true, Value(upper), true);
 }
 
 std::string ValueRange::get_string()const

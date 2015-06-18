@@ -6,11 +6,13 @@
 #include "BaseNodeVisitor.h"
 #include "TreeInfixPrinter.h"
 #include "Logger.h"
+#include "Parameter.h"
 
 using namespace std;
 using namespace boost;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
+
 
 namespace hydla { 
 namespace symbolic_expression {
@@ -523,7 +525,8 @@ std::ostream& ConditionalProgramList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_program() << "]";
   s << "[";
-  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -533,7 +536,8 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_expression() << "]";
   s << "[";
-  for(int i = 0; i < arguments_.size(); i++) s << *arguments_[i] << ",";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -543,9 +547,8 @@ std::ostream& VariadicNode::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << get_name() << "]";
   s << "[";
-  for(unsigned int i=0;i<arguments_.size();i++){
-     s << *arguments_[i] << ",";
-  }
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -558,6 +561,15 @@ void VariadicNode::add_argument(node_sptr node){
 
 void VariadicNode::set_argument(node_sptr node, int i){
   arguments_[i] = node;
+}
+
+void VariadicNode::add_argument(Node *node){
+  arguments_.push_back(node_sptr(node));
+}
+
+
+void VariadicNode::set_argument(Node *node, int i){
+  arguments_[i].reset(node);
 }
 
 
@@ -640,6 +652,11 @@ node_sptr Definition::clone()
   n->child_ = child_->clone();
 
   return n;
+}
+
+Parameter::Parameter(const simulator::Parameter &p):
+  Parameter(p.get_name(), p.get_differential_count(), p.get_phase_id())
+{
 }
 
 /**

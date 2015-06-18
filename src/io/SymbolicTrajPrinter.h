@@ -11,7 +11,7 @@ class SymbolicTrajPrinter: public TrajPrinter{
 public:
 
   SymbolicTrajPrinter(std::ostream& ostream = std::cout);
-
+  
   void output_result_tree(const phase_result_const_sptr_t&)const;
   void output_one_phase(const phase_result_const_sptr_t&)const;
 
@@ -41,6 +41,7 @@ private:
 
   std::ostream& ostream;
   simulator::backend_sptr_t backend;
+  bool numerize_parameter;
   bool epsilon_mode_flag = false;
 };
 

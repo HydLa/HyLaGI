@@ -9,7 +9,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace hydla { 
+namespace hydla {
+
+namespace simulator{
+class Parameter;
+}
+
 namespace symbolic_expression {
 
 class Node;
@@ -119,6 +124,11 @@ public:
   UnaryNode(const node_sptr &child) :
     child_(child)
   {}
+
+  UnaryNode(Node *child) :
+    child_(node_sptr(child))
+  {}
+
   
   virtual ~UnaryNode()
   {}
@@ -184,6 +194,9 @@ protected:
     {}                                                      \
                                                             \
   NAME(const node_sptr& child) :                            \
+    UnaryNode(child)                                        \
+    {}                                                      \
+  NAME(Node *child) :                                       \
     UnaryNode(child)                                        \
     {}                                                      \
                                                             \
@@ -298,6 +311,15 @@ protected:
   NAME(const node_sptr& lhs, const node_sptr& rhs) :        \
     BinaryNode(lhs, rhs)                                    \
     {}                                                      \
+  NAME(Node *lhs, Node *rhs) :                              \
+    BinaryNode(node_sptr(lhs), node_sptr(rhs))              \
+      {}                                                    \
+  NAME(const node_sptr &lhs, Node *rhs) :                   \
+    BinaryNode(lhs, node_sptr(rhs))                         \
+      {}                                                    \
+  NAME(Node *lhs, const node_sptr &rhs) :                   \
+    BinaryNode(node_sptr(lhs), rhs)                         \
+      {}                                                    \
                                                             \
   virtual ~NAME(){}                                         \
                                                             \
@@ -323,7 +345,17 @@ protected:
                                                                         \
   NAME(const node_sptr& lhs, const node_sptr& rhs) :                    \
     BinaryNode(lhs, rhs)                                                \
-    {}                                                                  \
+      {}                                                                \
+                                                                        \
+  NAME(Node *lhs, Node *rhs) :                                          \
+    BinaryNode(node_sptr(lhs), node_sptr(rhs))                          \
+      {}                                                                \
+  NAME(const node_sptr &lhs, Node *rhs) :                               \
+    BinaryNode(lhs, node_sptr(rhs))                                     \
+      {}                                                                \
+  NAME(Node *lhs, const node_sptr &rhs) :                               \
+    BinaryNode(node_sptr(lhs), rhs)                                     \
+      {}                                                                \
                                                                         \
   virtual ~NAME(){}                                                     \
                                                                         \
@@ -1091,6 +1123,8 @@ public:
   Parameter(const std::string& name, const int& differential_count, const int& id) : 
     name_(name), differential_count_(differential_count), phase_id_(id)
   {}
+
+  Parameter(const simulator::Parameter& parameter);
     
   virtual ~Parameter(){}
 
@@ -1574,6 +1608,8 @@ public:
   
   void add_argument(node_sptr node);
   void set_argument(node_sptr node, int i);
+  void add_argument(Node *node);
+  void set_argument(Node *node, int i);
   
   virtual std::ostream& dump(std::ostream& s) const;
   

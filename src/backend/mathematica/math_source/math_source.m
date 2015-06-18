@@ -467,6 +467,8 @@ Module[
 
 calculateConsistentTime[cause_, cons_, maxTime_] := calculateConsistentTime[cause, cons, pConstraint, maxTime];
 
+findMinTime::minimizeFailure = "failed to minimize t";
+
 
 publicMethod[
   calculateConsistentTime,
@@ -527,7 +529,7 @@ publicMethod[
   ]
 ];
 
-createParameterMapList[cons_] :=
+createParameterMapList[cons_] := 
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
@@ -750,3 +752,12 @@ Module[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
+=======
+
+alwaysLess[lhs_, rhs_, pCons_] := alwaysLess[lhs, rhs, pCons, parameters];
+
+publicMethod[
+  alwaysLess,
+  lhs, rhs, pCons, pars,
+  Reduce[ForAll[pars, pCons, lhs < rhs]] === True
+];

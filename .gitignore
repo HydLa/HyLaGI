@@ -3,7 +3,9 @@
 *.a
 *.dot
 *.png
+*.csv
 bin/
+*.txt
 src/math_source_converter/msc
 src/reduce_source_converter/rsc
 *math_source.cpp

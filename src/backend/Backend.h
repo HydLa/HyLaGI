@@ -64,6 +64,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *  format is like below
    *    r: MidpointRadius: midpoint_radius form (receive only)
    *    i: int: integer
+   *    db: double
    *    b: bool: boolean value
    *    s: const char*: symbol (send only)
    *    e(n, p, c, z, t): symbolic_expression::node_sptr: expression (Variables are handled like n:x, c:x (ignoring prev), p:prev[x], z:x[0], t:x[t], needed only for sending)

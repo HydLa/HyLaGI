@@ -15,11 +15,11 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
 {
   guard_time_map = g;
   GuardNode *node = relation_graph->get_guard_node(guard);
-
   node->accept(this);
   if(negated)current_cons.reset(new symbolic_expression::Not(current_cons));
-
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(current_cons));
+  if(time_bound.get() != nullptr)current_cons.reset(new symbolic_expression::LogicalAnd(current_cons, time_bound));
+
   find_min_time_result_t find_min_time_result;
   if(starting_time.undefined()){
     backend->call("minimizeTime", 1, "en", "f",
@@ -28,6 +28,7 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
     backend->call("minimizeTime", 2, "envlt", "f",
                   &current_cons, &starting_time, &find_min_time_result);
   }
+
   return find_min_time_result;
 }
 

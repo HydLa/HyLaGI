@@ -1,39 +1,41 @@
 #include "TreeInfixPrinter.h"
+#include <iomanip>
 
 namespace hydla {
 namespace symbolic_expression{
 
+using namespace std;
 
 //valueとって文字列に変換する
-std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream& s){
+ostream& TreeInfixPrinter::print_infix(const node_sptr& node, ostream& s){
   need_par_ = PAR_NONE;
   output_stream_ = &s;
   accept(node);
   return s;
 }
 
-std::string TreeInfixPrinter::get_infix_string(const hydla::symbolic_expression::node_sptr &node){
+string TreeInfixPrinter::get_infix_string(const hydla::symbolic_expression::node_sptr &node){
   need_par_ = PAR_NONE;
-  std::stringstream sstr;
+  stringstream sstr;
   output_stream_ = &sstr;
   accept(node);
   return sstr.str();
 }
 
-void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
+void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
   need_par_ = pre_par;
   accept(node.get_lhs());
   (*output_stream_) << symbol;
   need_par_ = post_par;
   accept(node.get_rhs());
 }
-void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const std::string &pre, const std::string &post){
+void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const string &pre, const string &post){
   (*output_stream_) << pre;
   accept(node.get_child());
   (*output_stream_) << post;
 }
 
-void TreeInfixPrinter::print_factor_node(const FactorNode &node, const std::string &pre, const std::string &post){
+void TreeInfixPrinter::print_factor_node(const FactorNode &node, const string &pre, const string &post){
   (*output_stream_) << pre;
   (*output_stream_) << post;
 }
@@ -193,7 +195,16 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<Float> node){
-  (*output_stream_) << node->get_number();
+  double number = node->get_number();
+  if(number >= 0 || need_par_ < PAR_N)
+  {
+    (*output_stream_) << setprecision(16) << number;
+  }
+  else{
+    (*output_stream_) << "(";
+    (*output_stream_) << setprecision(16) << number;
+    (*output_stream_) << ")";
+  }
 }
 
 

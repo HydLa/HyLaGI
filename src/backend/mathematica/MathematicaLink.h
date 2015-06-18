@@ -75,7 +75,7 @@ public:
     MLPutInteger(i);
   } 
 
-  void put_float(double num)
+  void put_double(double num)
   {
     MLPutDouble(num);
   }
@@ -89,6 +89,8 @@ public:
   std::string get_string();
   
   int get_integer();
+
+  double get_double();
 
   int get_arg_count();
   
@@ -136,7 +138,7 @@ private:
   int MLGetInteger(int *i)                {return ::MLGetInteger(link_, i);}
 
   int MLPutDouble(double d)               {return ::MLPutDouble(link_, d);}
-
+  int MLGetDouble(double *d)               {return ::MLGetDouble(link_, d);}
   int MLPutSymbol(const char *s)          {return ::MLPutSymbol(link_, s);}
   int MLGetSymbol(const char **s)         {return ::MLGetSymbol(link_, s);}
   void MLReleaseSymbol(const char *s)     {return ::MLReleaseSymbol(link_, s);}

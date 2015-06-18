@@ -75,12 +75,26 @@ void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, 
       first = false;
     }
   }
+<<<<<<< HEAD
 }
 
 void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 {
   for(auto it = pm.begin(); it != pm.end(); ++it) {
     ostream << it->first << "\t: " << it->second << "\n";
+=======
+  if(numerize_parameter)
+  {
+    for(; it!=end; ++it) {
+      ValueRange numerized_range = it->second.get_numerized_range();
+      ostream << it->first << "\t: " << numerized_range << "\n";
+    }
+  }else
+  {
+    for(; it!=end; ++it) {
+      ostream << it->first << "\t: " << it->second << "\n";
+    }
+>>>>>>> Hyrose_Newton
   }
 }
 
