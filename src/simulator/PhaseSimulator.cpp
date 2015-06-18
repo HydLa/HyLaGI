@@ -803,7 +803,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     const type_info &guard_type = typeid(*guard_for_newton);
 
     // TODO: integrate process for both equalities and inequalities
-    if(guard_type == typeid(symbolic_expression::Equal) || guard_type == typeid(symbolic_expression::UnEqual))
+    if(guard_type == typeid(Equal) || guard_type == typeid(UnEqual))
     {
       Parameter parameter_prev("t", -1, ++time_id);
       Parameter parameter_current("t", -1, ++time_id);
@@ -822,8 +822,15 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm_for_each[parameter_current] = current_range;
 
         backend_->call("resetConstraintForParameter", 1, "mp", "", &pm_for_each);
-        
-        guard_time_map[guard_for_newton] = constraint_t(new Equal(new se::Parameter(parameter_current), new SymbolicT()));
+
+        if(guard_type == typeid(UnEqual))
+        {
+          guard_time_map[guard_for_newton] = constraint_t(new UnEqual(new se::Parameter(parameter_current), new SymbolicT()));
+        }
+        else
+        {
+          guard_time_map[guard_for_newton] = constraint_t(new Equal(new se::Parameter(parameter_current), new SymbolicT()));
+        }
         constraint_t lb, ub;
         lb.reset(new LessEqual(new se::Parameter(parameter_prev), new SymbolicT()));
         ub.reset(new Less(new SymbolicT(), new se::Parameter(parameter_current)));
