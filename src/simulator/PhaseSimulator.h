@@ -75,8 +75,8 @@ private:
                               PhaseResult &phase,
                               variable_map_t &vm);
 
-  void reset_parameter_constraint(ConstraintStore par_cons);
 
+  void reset_parameter_constraint(ConstraintStore par_cons);
 
   ConstraintStore get_current_parameter_constraint();
 
@@ -91,12 +91,16 @@ private:
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
-  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, parameter_map_t &pm);
+  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase);
 
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
 
   bool calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks,   ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore always);
 
+  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
+
+  ValueRange create_range_from_interval(kv::interval<double> itv);
+   
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
 

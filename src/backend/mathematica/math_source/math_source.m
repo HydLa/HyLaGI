@@ -1,4 +1,3 @@
-
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
@@ -94,7 +93,7 @@ publicMethod[
         tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
         tCons = sol[[2]] /. tCons;
         simplePrint[tCons];
-
+         
         cpTrue = False;
         For[i = 1, i <= Length[tCons], i++,
           conj = tCons[[i]];
@@ -169,13 +168,13 @@ productWithGlobalParameterConstraint[cons_] := productWithGlobalParameterConstra
 publicMethod[
   productWithGlobalParameterConstraint,
   map, pCons,
-  {LogicalExpand[map && pCons]}
+  {toReturnForm[LogicalExpand[map && pCons] ]}
 ];
 
 
 publicMethod[
   getParameterConstraint,
-  {LogicalExpand[pConstraint]}
+  {toReturnForm[LogicalExpand[pConstraint] ]}
 ];
 
 createParameterMaps[] := createParameterMaps[pConstraint];
@@ -509,6 +508,7 @@ publicMethod[
        ],
        {Minimize::wksol, Minimize::infeas}
     ];
+    (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
     If[Head[minT] === Minimize,
       error,
@@ -522,7 +522,7 @@ publicMethod[
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)
-        resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {LogicalExpand[#[[2]] ]} })&, ret];
+        resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]} })&, ret];
         resultList
       ]
     ]
@@ -547,7 +547,7 @@ publicMethod[
       caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
       caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
       caseGr = Reduce[andCond && !caseLe && !caseEq];
-      {{LogicalExpand[caseLe]}, {LogicalExpand[caseGr]}, {LogicalExpand[caseEq]}}
+      {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
     ]
   ]
 ];
@@ -751,9 +751,6 @@ Module[
   sol
 ];
 
-exDSolve::unkn = "unknown error occurred in exDSolve";
-=======
-
 alwaysLess[lhs_, rhs_, pCons_] := alwaysLess[lhs, rhs, pCons, parameters];
 
 publicMethod[
@@ -761,3 +758,5 @@ publicMethod[
   lhs, rhs, pCons, pars,
   Reduce[ForAll[pars, pCons, lhs < rhs]] === True
 ];
+
+exDSolve::unkn = "unknown error occurred in exDSolve";

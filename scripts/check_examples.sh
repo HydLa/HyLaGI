@@ -7,7 +7,20 @@ do
     if [ "$?" != "0" ];
     then
         echo "Something is wrong!"
-        break
+        while :
+        do
+          echo "Continue? Input y or n."
+          read ans < /dev/tty
+          if [ ${ans} = "y" ] || [ ${ans} = "n" ];
+          then
+              break
+          fi
+        done
+        if [ ${ans} = "y" ];
+        then
+            continue
+        else
+            break
+        fi
     fi
 done
-

@@ -42,9 +42,10 @@ void ProgramOptions::init_descriptions()
     ("dump_module_set_graph", "only output candidate sets of module sets\n"
      "  in graph representation")
     ("dump_module_priority_graph",
+
      "only output priorities of modules\n"
      "  in graphviz format")
-    ("dump_relation_graph",
+    ("dump_relation_graph", 
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
@@ -66,11 +67,10 @@ void ProgramOptions::init_descriptions()
 
     ("debug,d", "display debug trace\n")
 
-    ("ltl,l", "ltl model check mode")
-
     ("math_name",
      value<std::string>()->default_value("math"),
      "name of mathematica command");
+
 
   options_description config_desc("Following options also can be specified in comments in the form of \"#hylagi <options>\"");
 
@@ -94,10 +94,10 @@ void ProgramOptions::init_descriptions()
      "  non-negative value: order of approximation\n"
      "  negative value: invalidate this option\n");
 
-    options_description toggle_desc("Flag options\n"
-                                    "(can be specified \"--f[name]\" or \"--[name] y\""
-                                    " and can be invalidated \"--fno-[name]\" or \"--[name] n\")");
-  toggle_desc.add_options()
+  options_description toggle_desc("Flag options\n"
+                                  "(can be specified \"--f[name]\" or \"--[name] y\""
+                                  " and can be invalidated \"--fno-[name]\" or \"--[name] n\")");
+  toggle_desc.add_options()  
     ("nd", value<char>()->default_value('n'), "nondeterministic mode")
 
     ("ha", value<char>()->default_value('n'), "convert to HA")
@@ -113,13 +113,15 @@ void ProgramOptions::init_descriptions()
      "(current canidates: DSolve::bvnul, Reduce::ztest1)"
       )
 
+    ("interval,i", value<char>()->default_value('n'), "use interval method")
+
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
     ;
 
 
-
+  
   options_description hidden_desc("Hidden options");
   hidden_desc.add_options()
     ("input-file", value<std::string>(), "input file")

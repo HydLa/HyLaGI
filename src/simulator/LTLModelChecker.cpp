@@ -21,7 +21,7 @@ namespace simulator {
 using namespace std;
 using namespace symbolic_expression;
 
-LTLModelChecker::LTLModelChecker(Opts &opts):Simulator(opts), printer(){}
+LTLModelChecker::LTLModelChecker(Opts &opts):Simulator(opts), printer(backend){}
 
 LTLModelChecker::~LTLModelChecker(){}
 

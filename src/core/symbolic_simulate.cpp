@@ -45,8 +45,8 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   std::stringstream sstr;
 
-  hydla::io::SymbolicTrajPrinter Printer(sstr);
-  if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_, true);}
+  hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, opts.interval);
+  if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_,true);}
 
   parameter_map_t par_map = ss.get_parameter_map();
   if(!par_map.empty())
@@ -126,68 +126,18 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
-  opts.ltl_model_check_mode = po.count("ltl")>0;
   IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
   IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<char>("dump_in_progress") == 'y';
   opts.dump_relation = po.count("dump_relation_graph")>0;
-<<<<<<< HEAD
   IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<char>("ignore_warnings") == 'y';
   IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
   IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
-
+  IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
-=======
-  opts.interactive_mode = po.count("in")>0;
-  opts.use_unsat_core = po.count("use_unsat_core")>0;
-  opts.ignore_warnings = po.count("ignore_warnings")>0;
-  opts.ha_convert_mode = po.count("ha")>0;
-  opts.ha_simulator_mode = po.count("hs")>0;
-  //opts.profile_mode  = po.count("profile")>0;
-  opts.parallel_mode = po.count("parallel")>0;
-  opts.parallel_number   = po.get<int>("pn");
-  opts.reuse = po.count("reuse")>0;
-  opts.approx = po.count("approx")>0;
-  opts.cheby = po.count("change")>0;
-  opts.epsilon_mode = po.get<int>("epsilon");
-  opts.interval_newton = po.count("interval_newton")>0;
-  opts.max_ip_width = po.get<double>("max_ip_width");
-  /*
-  opts.output_interval = po.get<std::string>("output_interval");
-  */
-  opts.analysis_mode = po.get<std::string>("analysis_mode");
-  opts.analysis_file = po.get<std::string>("analysis_file");
-  opts.stop_at_failure = po.count("fail_stop") == 1;
-  opts.solver        = po.get<std::string>("solver");
-  /*opts.optimization_level = po.get<int>("optimization_level");
-  if(opts.optimization_level < 0 || opts.optimization_level > 4){
-    throw std::runtime_error(std::string("invalid option - optimization_level"));
-  }
-  */
-  opts.optimization_level = 0;
-
-  /*
-  opts.timeout = po.get<int>("timeout");
-  opts.timeout_case = po.get<int>("timeout_case");
-  opts.timeout_phase = po.get<int>("timeout_phase");
-  */
-  opts.timeout_calc= po.get<int>("timeout_calc");
-
-  
-  //opts.max_loop_count= po.get<int>("mlc");
-
-  // select search method (dfs or bfs)
-  if(po.get<std::string>("search") == "d"){
-    opts.search_method = DFS;
-  }else if(po.get<std::string>("search") == "b"){
-    opts.search_method = BFS;
-  }else{
-    throw std::runtime_error(std::string("invalid option - search"));
-  }
->>>>>>> Hyrose_Newton
 }
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)

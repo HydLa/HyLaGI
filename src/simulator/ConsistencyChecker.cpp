@@ -261,7 +261,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
   backend->call("addConstraint", 1, fmt.c_str(), "", &vm);
   return check_entailment_essential(cc_result, guard, phase, profile);
-
 }
 
 
@@ -273,8 +272,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
   )
 {
   CheckEntailmentResult ce_result;
-
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
 
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
@@ -326,6 +323,7 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
     profile["VisitNode"] += timer.get_elapsed_us();
   }
   CheckConsistencyResult tmp_result;
+
   tmp_result = check_consistency_essential(constraints, finder, phase, profile);
 
   if(!tmp_result.consistent_store.consistent())

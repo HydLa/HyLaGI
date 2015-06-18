@@ -16,8 +16,8 @@ using namespace simulator;
 using namespace backend;
 using namespace std;
 
-SymbolicTrajPrinter::SymbolicTrajPrinter(std::ostream& ost):
-  ostream(ost){
+SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, std::ostream& ost, bool numerize_par):
+  ostream(ost), backend(b), numerize_parameter(numerize_par){
 }
 
 string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const{
@@ -75,14 +75,12 @@ void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, 
       first = false;
     }
   }
-<<<<<<< HEAD
 }
 
 void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 {
-  for(auto it = pm.begin(); it != pm.end(); ++it) {
-    ostream << it->first << "\t: " << it->second << "\n";
-=======
+  parameter_map_t::const_iterator it  = pm.begin();
+  parameter_map_t::const_iterator end = pm.end();
   if(numerize_parameter)
   {
     for(; it!=end; ++it) {
@@ -94,7 +92,6 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
     for(; it!=end; ++it) {
       ostream << it->first << "\t: " << it->second << "\n";
     }
->>>>>>> Hyrose_Newton
   }
 }
 

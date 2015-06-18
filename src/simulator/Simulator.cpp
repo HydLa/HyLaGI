@@ -184,7 +184,7 @@ bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
   Simulator *simulator = (Simulator *)bp.tag;
   simulator->assertion_failed = true;
   cout << "Assertion failed!" << endl;
-  io::SymbolicTrajPrinter().output_one_phase(phase);
+  io::SymbolicTrajPrinter(simulator->backend).output_one_phase(phase);
   return false;
 }
 

@@ -10,8 +10,8 @@ namespace io{
 class SymbolicTrajPrinter: public TrajPrinter{
 public:
 
-  SymbolicTrajPrinter(std::ostream& ostream = std::cout);
-  
+  SymbolicTrajPrinter(simulator::backend_sptr_t b, std::ostream& ostream = std::cout, bool numerize_par = false);
+
   void output_result_tree(const phase_result_const_sptr_t&)const;
   void output_one_phase(const phase_result_const_sptr_t&)const;
 
