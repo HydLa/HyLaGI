@@ -1076,7 +1076,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         }
       }
 
-      for(auto entry : break_point_list)
+      for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase);
