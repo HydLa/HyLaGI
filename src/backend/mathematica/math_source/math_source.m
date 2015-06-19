@@ -112,15 +112,33 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters];
 
 publicMethod[
   createVariableMap,
-  cons, vars,
+  cons, vars, pars,
   Module[
-    {ret},
-    ret = createMap[cons, isVariable, hasVariable, vars];
-    debugPrint["ret after CreateMap", ret];
+    {ret, map},
+    map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
+    simplePrint[map];
+    If[ Count[map, Less| Unequal| LessEqual| Greater| GreaterEqual, Infinity, Heads -> True] > 0,
+      (* If the constraints include inequalities we use Reduce *)
+      map = Reduce[map, vars, Reals];
+      map = removeUnnecessaryConstraints[map, hasVariable];
+      If[map === True, Return[{{}}] ];
+      If[map === False, Return[{}] ];
+      map = LogicalExpand[map];
+      map = applyListToOr[map];
+      map = Map[(applyList[#])&, map],
+      (* else we use Solve *)
+      (* Here, we use parameters because "Solve" cannot solve constraints without paramters such as 
+      Solve[uy == (-8*Sqrt[-10 + p[py, 0, 1]])/Sqrt[5] && p[py, 0, 1] == 10, {uy}, Reals] *)
+      map = Quiet[Solve[map, Join[vars, pars], Reals], Solve::svars]
+    ];
+
+    map = Map[(adjustExprs[#, isVariable])&, map];
+    debugPrint["map after adjustExprs in createVariableMap", map];
+    ret = Map[(convertExprs[#])&, map];
     ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
     ret = ruleOutException[ret];
     simplePrint[ret];
@@ -182,7 +200,23 @@ createParameterMaps[] := createParameterMaps[pConstraint];
 publicMethod[
   createParameterMaps,
   pCons,
-  createMap[pCons, isParameter, hasParameter, {}]
+  Module[
+    {map},
+    map = removeUnnecessaryConstraints[pCons, hasParameter];
+    map = Reduce[map, Reals];
+    map = removeUnnecessaryConstraints[map, hasParameter];
+    
+    If[map === True, Return[{{}}] ];
+    If[map === False, Return[{}] ];
+      
+    map = LogicalExpand[map];
+    map = applyListToOr[map];
+    map = Map[(applyList[#])&, map];
+    map = Map[(adjustExprs[#, isParameter])&, map];
+    debugPrint["map after adjustExprs in createParameterMap", map];
+    map = Map[(convertExprs[#])&, map];
+    map
+  ]  
 ];
 
 removeUnnecessaryConstraints[cons_, hasJudge_] :=
@@ -190,26 +224,6 @@ removeUnnecessaryConstraints[cons_, hasJudge_] :=
 cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
 );
 
-createMap[cons_, judge_, hasJudge_, vars_] :=
-createMap[cons, judge, hasJudge, vars] = (* for memoization *)
-Module[
-  {map},
-  map = removeUnnecessaryConstraints[cons, hasJudge];
-  map = Reduce[map, vars, Reals];
-
-  map = removeUnnecessaryConstraints[map, hasJudge];
-
-  If[map === True, Return[{{}}] ];
-  If[map === False, Return[{}] ];
-
-  map = LogicalExpand[map];
-  map = applyListToOr[map];
-  map = Map[(applyList[#])&, map];
-  map = Map[(adjustExprs[#, judge])&, map];
-  debugPrint["map after adjustExprs in createMap", map];
-  map = Map[(convertExprs[#])&, map];
-  map
-];
 
 (* 式中に変数名が出現するか否か *)
 
@@ -235,6 +249,8 @@ getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
 hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
 
 hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Infinity] ] > 0;
+
+hasVariableOrParameter[exprs_] := hasParameter[exprs] || hasVariable[exprs];
 
 (* 式が定数そのものか否か *)
 

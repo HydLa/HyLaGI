@@ -208,6 +208,7 @@ convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[
 (* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
   Equal, 0,
+  Rule, 0,
   Less, 1,
   Greater, 2,
   LessEqual, 3,
