@@ -72,7 +72,6 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     }
   }
   phase_simulator_->revert_diff(*current);
-  HYDLA_LOGGER_DEBUG_VAR(*current);
 }
 
 void SequentialSimulator::omit_following_todos(phase_result_sptr_t current)

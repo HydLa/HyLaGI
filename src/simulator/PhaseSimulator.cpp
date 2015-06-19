@@ -68,7 +68,6 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
   else
   {
-    int phase_num = 0;
     for(auto phase : phase_list)
     {
       if(phase->parent == result_root.get())
@@ -86,8 +85,6 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         }
       }
       make_next_todo(phase);
-      phase->id += phase_num;
-      phase_num++;
       if(aborting)break;
     }
   }
@@ -98,7 +95,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 
 std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_result_sptr_t& todo)
 {
-  std::list<phase_result_sptr_t> result_list;
+  list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", 0, "", "");
@@ -157,10 +154,12 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     module_set_t unadopted_ms = module_set_container->unadopted_module_set();
     string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
-
-    result_list.merge(simulate_ms(unadopted_ms, todo, nonprev_trigger_asks));
+    auto tmp_result_list = simulate_ms(unadopted_ms, todo, nonprev_trigger_asks);
+    result_list.merge(tmp_result_list);
 
     todo->profile[module_sim_string] += ms_timer.get_elapsed_us();
+
+    if(!tmp_result_list.empty() && !opts_->nd_mode)break;
   }
 
   if(todo->profile["# of CheckConsistency"]) todo->profile["Average of CheckConsistency"] = todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
@@ -218,7 +217,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms, module_
 }
 
 
-list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t& phase, asks_t trigger_asks)
+list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t phase, asks_t trigger_asks)
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
@@ -234,11 +233,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   list<phase_result_sptr_t> result_list;
   timer::Timer cc_timer;
 
-  asks_t cc_local_positives, cc_local_negatives;
-  ConstraintStore cc_local_always;
+  asks_t ms_local_positives, ms_local_negatives;
+  ConstraintStore ms_local_always;
 
   consistency_checker->clear_inconsistent_constraints();
-  bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, cc_local_positives, cc_local_negatives, cc_local_always);
+  bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
 
@@ -258,30 +257,24 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   else
   {
     HYDLA_LOGGER_DEBUG("CONSISTENT: ", unadopted_ms);
-    timer::Timer postprocess_timer;
     module_set_container->remove_included_ms_by_current_ms();
-    phase->profile["RemoveIncludedMS"] += postprocess_timer.get_elapsed_us();
-    phase->unadopted_mss.insert(unadopted_ms);
 
     if(phase->simulation_state == SIMULATED)
     {
       // branching by multiple maximal consistent modulesets
+      // clone the existing phase
       phase.reset(new PhaseResult(*phase));
+      phase->id = ++phase_sum_;
       phase->profile.clear();
-      phase->simulation_state = NOT_SIMULATED;
       phase->parent->todo_list.push_back(phase);
     }
+
+    phase->unadopted_mss.insert(unadopted_ms);
     phase->parent->children.push_back(phase);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
-    if(create_result.size() == 0)
-    {
-      throw HYDLA_ERROR("some error occured in creation of variable maps.");
-    }
-    else if(create_result.size() > 1)
-    {
-      throw HYDLA_ERROR("result variable map is not single.");
-    }
+    if(create_result.size() == 0)throw HYDLA_ERROR("some error occured in creation of variable maps.");
+    else if(create_result.size() > 1)throw HYDLA_ERROR("result variable map is not single.");
     phase->variable_map = create_result[0];
     if(opts_->epsilon_mode >= 0){
       variable_map_t before_map = phase->variable_map;
@@ -291,7 +284,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       for(auto var_entry : before_map)HYDLA_LOGGER_DEBUG("#epsilon before : ",var_entry.first," : ",var_entry.second);
       HYDLA_LOGGER_DEBUG("#epsilon after : time : ",phase->current_time);
       for(auto var_entry : phase->variable_map)HYDLA_LOGGER_DEBUG("#epsilon after : ",var_entry.first," : ",var_entry.second);
-
     }
 
     phase->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
@@ -299,10 +291,10 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     consistency_checker->reset_count();
 
     phase->set_parameter_constraint(get_current_parameter_constraint());
-    phase->add_diff_positive_asks(cc_local_positives);
-    phase->add_diff_negative_asks(cc_local_negatives);
+    phase->add_diff_positive_asks(ms_local_positives);
+    phase->add_diff_negative_asks(ms_local_negatives);
 
-    phase->always_list.add_constraint_store(cc_local_always);
+    phase->always_list.add_constraint_store(ms_local_always);
     phase->simulation_state = SIMULATED;
     phase->diff_sum = local_diff_sum;
     phase->unadopted_ms = unadopted_ms;
@@ -332,9 +324,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       }
       phase->discrete_differential_set = discrete_vs;
     }
-    phase->profile["Postprocess"] += postprocess_timer.get_elapsed_us();
   }
-  revert_diff(cc_local_positives, cc_local_negatives, cc_local_always, module_diff);
+  revert_diff(ms_local_positives, ms_local_negatives, ms_local_always, module_diff);
   return result_list;
 }
 
@@ -656,6 +647,7 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   }
   return related_vm;
 }
+
 find_min_time_result_t PhaseSimulator::find_min_time_test(phase_result_sptr_t &phase, const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
 {
   HYDLA_LOGGER_DEBUG("#epsilon find min time start");
@@ -955,6 +947,8 @@ void
 PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 {
   timer::Timer next_todo_timer;
+
+  HYDLA_LOGGER_DEBUG_VAR(*phase);
 
   apply_diff(*phase);
 

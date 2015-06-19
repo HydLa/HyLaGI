@@ -109,7 +109,7 @@ void ProgramOptions::init_descriptions()
 
     ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
-    ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
+    ("ignore_warnings", value<char>()->default_value('y'), "ignore warnings created by backend solvers. \n"
      "(current canidates: DSolve::bvnul, Reduce::ztest1)"
       )
 

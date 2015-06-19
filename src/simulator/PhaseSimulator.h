@@ -69,7 +69,7 @@ public:
 
 private:
 
-  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t& state, asks_t trigger_asks);
+  std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
 
   void replace_prev2parameter(
                               PhaseResult &phase,
