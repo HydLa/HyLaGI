@@ -8,3 +8,5 @@ BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
 Init(y10,5).
 { INIT(Y[i],i+1), FALL(Y[i]) << BOUNCE(Y[i]) | i in {1..|Y|} }.
+
+//#hylagi -p 6
