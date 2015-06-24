@@ -674,7 +674,7 @@ Module[
         unsolvable = True;
         Continue[]
       ];
-      If[Length[rules] > 1, Message[exDSolve::multi, expr];checkMessage ];
+      If[Length[rules] > 1, Message[exDSolve::multi, searchResult[[1]]];checkMessage ];
       resultRule = Union[resultRule, rules[[1]] ];
        listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];

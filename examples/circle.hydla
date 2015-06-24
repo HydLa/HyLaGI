@@ -1,7 +1,7 @@
 //circle.hydla
 //bouncing particle in a circle
 
-INIT   <=> x = 0 /\ -0.6 < y < -0.5 /\ x' = 2 /\ y' = 1.
+INIT   <=> x = 0 /\ -0.6 < y < -0.58 /\ x' = 2 /\ y' = 1.
 RUN    <=> [](x'' = 0 /\ y'' = 0).
 BOUNCE <=> []((x-)^2 + (y-)^2 = 1 => 
                 x' = x'- - (x- * x'- + y- * y'-) * 2 * (x-) /\
