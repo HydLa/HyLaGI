@@ -113,12 +113,12 @@ struct DCCandidate{
   DCCandidate(){}
 };
 
-typedef std::list<DCCandidate>            pp_time_result_t;
-typedef std::map<constraint_t, constraint_t> guard_time_map_t;
+typedef std::list<DCCandidate>                    pp_time_result_t;
+typedef std::map<constraint_t, constraint_t>      guard_time_map_t;
 /// map from variables to candidates of next PP whose time is minimum
-typedef std::map<ask_t, find_min_time_result_t> next_pp_candidate_map_t;
+typedef std::map<ask_t, find_min_time_result_t>   next_pp_candidate_map_t;
 
-typedef std::map<std::string, unsigned int>       profile_t;
+typedef std::map<std::string, unsigned long int>  profile_t;
 
 /**
  * A class to express the result of each phase.

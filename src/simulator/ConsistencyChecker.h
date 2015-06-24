@@ -110,7 +110,7 @@ private:
   const variable_map_t *prev_map;
   std::vector<variable_map_t> result_maps;
   int backend_check_consistency_count;
-  int backend_check_consistency_time;
+  unsigned long int backend_check_consistency_time;
   std::vector<module_set_t> inconsistent_module_sets;
   std::list<ConstraintStore> inconsistent_constraints;
 };

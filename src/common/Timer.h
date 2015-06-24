@@ -28,12 +28,12 @@ namespace hydla{
       /**
        * 経過時刻を対応する単位で返す
        */ 
-      unsigned int get_elapsed_h() const;
-      unsigned int get_elapsed_m() const;
-      unsigned int get_elapsed_s() const;
-      unsigned int get_elapsed_ms() const;
-      unsigned int get_elapsed_us() const;
-      unsigned int get_elapsed_ns() const;
+      unsigned long int get_elapsed_h() const;
+      unsigned long int get_elapsed_m() const;
+      unsigned long int get_elapsed_s() const;
+      unsigned long int get_elapsed_ms() const;
+      unsigned long int get_elapsed_us() const;
+      unsigned long int get_elapsed_ns() const;
 
     private:
       /**
