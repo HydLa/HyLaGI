@@ -14,7 +14,7 @@ namespace simulator {
 class MinTimeCalculator: public GuardVisitor{
 
 public:
-  find_min_time_result_t calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated = false,  const constraint_t &time_bound = constraint_t(), value_t starting_time = Value());
+  find_min_time_result_t calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated, value_t time_limit, const constraint_t &time_bound = constraint_t(), value_t starting_time = Value());
 
   MinTimeCalculator(RelationGraph *relation_graph, backend::Backend *b);
 

@@ -777,7 +777,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       {
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
-        backend_->call("calculateConsistentTime", 3, "etmvtvlt", "e", &g, &related_vm, &time_limit, &constraint_for_this_guard);
+        backend_->call("calculateConsistentTime", 2, "etmvt", "e", &g, &related_vm,  &constraint_for_this_guard);
         guard_time_map[g] = constraint_for_this_guard;
       }
     }
@@ -830,7 +830,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         // prev_t < t /\ t < current_t
         time_bound.reset(new LogicalAnd(lb, ub));
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
           
         if(!min_time_for_this_ask.empty()) 
@@ -913,7 +913,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           time_bound.reset(new LogicalAnd(lb, ub));
         }
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
           
         if(!min_time_for_this_ask.empty()) 
@@ -937,7 +937,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       }
     }
   }
-  else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed);
+  else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
   return min_time_for_this_ask;
 }
 

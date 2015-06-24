@@ -10,7 +10,7 @@ using namespace backend;
 MinTimeCalculator::MinTimeCalculator(RelationGraph *rel, Backend *b): relation_graph(rel), backend(b)
 {
 }
-find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated, const constraint_t &time_bound, value_t starting_time)
+find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated, value_t time_limit, const constraint_t &time_bound, value_t starting_time)
 {
   guard_time_map = g;
   GuardNode *node = relation_graph->get_guard_node(guard);
@@ -22,11 +22,11 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
   find_min_time_result_t find_min_time_result;
 
   if(starting_time.undefined()){
-    backend->call("minimizeTime", 1, "en", "f",
-                  &current_cons, &find_min_time_result);
-  }else{
     backend->call("minimizeTime", 2, "envlt", "f",
-                  &current_cons, &starting_time, &find_min_time_result);
+                  &current_cons, &time_limit, &find_min_time_result);
+  }else{
+    backend->call("minimizeTime", 3, "envltvlt", "f",
+                  &current_cons, &starting_time, &time_limit, &find_min_time_result);
   }
   return find_min_time_result;
 }

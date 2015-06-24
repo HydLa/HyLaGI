@@ -480,37 +480,31 @@ Module[
   ]
 ];
 
-calculateConsistentTime[cause_, cons_, maxTime_] := calculateConsistentTime[cause, cons, pConstraint, maxTime];
+calculateConsistentTime[cause_, cons_] := calculateConsistentTime[cause, cons, pConstraint];
 
 findMinTime::minimizeFailure = "failed to minimize t";
 
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, pCons, maxTime,
+  cause, cons, pCons,
   Module[
     {
       resultCons,
-      timeAppliedCause,
-      maxCons,
-      ret
     },
     tStore = Map[(Rule@@#)&, cons];
-    timeAppliedCause = ToRadicals[cause /. tStore];
+    resultCons = ToRadicals[cause /. tStore];
     simplePrint[timeAppliedCause];
-
-    maxCons = If[maxTime === Infinity, True, t < maxTime];
-    resultCons = timeAppliedCause && maxCons;
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
 
-minimizeTime[tCons_] := minimizeTime[tCons, pConstraint, 0];
-minimizeTime[tCons_,startingTime_] := minimizeTime[tCons, pConstraint, startingTime];
+minimizeTime[tCons_, maxTime_] := minimizeTime[tCons, pConstraint, 0, maxTime];
+minimizeTime[tCons_,startingTime_, maxTime_] := minimizeTime[tCons, pConstraint, startingTime, maxTime];
 
 publicMethod[
   minimizeTime,
-  tCons, pCons, startingTime,
+  tCons, pCons, startingTime, maxTime,
   Module[
     {
       minT,
@@ -518,7 +512,7 @@ publicMethod[
       onTime = True,
       ret
     },
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons}, {t}],
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons && t < maxTime}, {t}],
          onTime = False,
          Minimize::wksol
        ],
