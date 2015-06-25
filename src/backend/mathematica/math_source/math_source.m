@@ -558,7 +558,7 @@ publicMethod[
     },
     andCond = Reduce[pCons1 && pCons2, Reals];
     If[andCond === False,
-      {{}, {}, {}},
+      {{False}, {False}, {False}},
       caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
       caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
       caseGr = Reduce[andCond && !caseLe && !caseEq];
@@ -646,7 +646,7 @@ exDSolve::multi = "Solution of `1` is not unique.";
 
 exDSolve[expr_, initExpr_] :=
 Module[
-  {listExpr, reducedExpr, rules, tVars, tVar, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
+  {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr, initExpr];
   listExpr = applyList[expr];
   sol = {};
@@ -678,6 +678,7 @@ Module[
        listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       listExpr = Select[listExpr, (#=!=True)&];
+      If[Reduce[listExpr, tVars, Reals] == False, Return[overConstraint]];
       resultCons = applyDSolveResult[resultCons, resultRule];
       If[resultCons === False, Return[overConstraint] ];
     ]
