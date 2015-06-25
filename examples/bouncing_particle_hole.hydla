@@ -9,3 +9,5 @@ BOUNCE <=> [](y- = -7 \/ (x- <= 7 \/ x- >= 10) /\ y- = 0 => y' = -(4/5) * y'-).
 //ASSERT(!(x >= 10 /\ y >= 0)).
 
 INIT, FALL << BOUNCE, XCONST << XBOUNCE.
+
+//#hylagi -p 10 --fnd

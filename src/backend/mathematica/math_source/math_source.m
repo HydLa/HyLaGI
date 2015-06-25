@@ -121,20 +121,15 @@ publicMethod[
     {ret, map},
     map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
     simplePrint[map];
-    If[ Count[map, Less| Unequal| LessEqual| Greater| GreaterEqual, Infinity, Heads -> True] > 0,
-      (* If the constraints include inequalities we use Reduce *)
-      map = Reduce[map, vars, Reals];
-      map = removeUnnecessaryConstraints[map, hasVariable];
-      If[map === True, Return[{{}}] ];
-      If[map === False, Return[{}] ];
-      map = LogicalExpand[map];
-      map = applyListToOr[map];
-      map = Map[(applyList[#])&, map],
-      (* else we use Solve *)
-      (* Here, we use parameters because "Solve" cannot solve constraints without paramters such as 
-      Solve[uy == (-8*Sqrt[-10 + p[py, 0, 1]])/Sqrt[5] && p[py, 0, 1] == 10, {uy}, Reals] *)
-      map = Quiet[Solve[map, Join[vars, pars], Reals], Solve::svars]
-    ];
+    (* If the constraints include inequalities we use Reduce *)
+    map = Reduce[map, vars, Reals];
+    map = removeUnnecessaryConstraints[map, hasVariable];
+    If[map === True, Return[{{}}] ];
+    If[map === False, Return[{}] ];
+    map = LogicalExpand[map];
+    map = applyListToOr[map];
+    map = Map[(applyList[#])&, map];
+
 
     map = Map[(adjustExprs[#, isVariable])&, map];
     debugPrint["map after adjustExprs in createVariableMap", map];
@@ -236,6 +231,7 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
+getVariablesWithDerivatives[exprs_] := Cases[exprs, ele_ /; isVariable[exprs], Infinity, Heads->True];
 
 (* 式中に出現するprev値を取得 *)
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
@@ -675,10 +671,12 @@ Module[
       ];
       If[Length[rules] > 1, Message[exDSolve::multi, searchResult[[1]]];checkMessage ];
       resultRule = Union[resultRule, rules[[1]] ];
-       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+      listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
       listExpr = Select[listExpr, (#=!=True)&];
-      If[Reduce[listExpr, tVars, Reals] == False, Return[overConstraint]];
+      tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
+      simplePrint[listExpr, tVars];
+      If[Quiet[Reduce[listExpr, tVars, Reals], Reduce::nsmet] === False, Return[overConstraint]];
       resultCons = applyDSolveResult[resultCons, resultRule];
       If[resultCons === False, Return[overConstraint] ];
     ]
