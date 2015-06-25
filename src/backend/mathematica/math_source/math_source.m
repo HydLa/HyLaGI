@@ -510,9 +510,14 @@ publicMethod[
       minT,
       resultList,
       onTime = True,
+      maxCons,
       ret
     },
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons && t < maxTime}, {t}],
+    (* Mathematica cannot solve some minimization problem with "t < Infinity", such 
+    as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
+    maxCons = If[maxTime === Infinity, True, t < maxTime];
+
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons && maxCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
