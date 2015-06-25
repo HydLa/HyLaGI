@@ -425,7 +425,6 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const Variabl
 {
   differential_count_ = 0;
   in_prev_ = false;
-  apply_not_ = false;
   variable_arg_ = form;
   accept(node);
   return 0;
@@ -577,18 +576,6 @@ void Backend::visit(boost::shared_ptr<Tell> node)
   accept(node->get_rhs());                                              \
 }
 
-#define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME) \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-  {                                                             \
-    if(!apply_not_)                                             \
-      link_->put_converted_function(#FUNC_NAME, 2);             \
-    else                                                        \
-      link_->put_converted_function(#NOT_NAME, 2);              \
-    accept(node->get_lhs());                                    \
-    accept(node->get_rhs());                                    \
-  }
-
-
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)          \
   void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
   {                                                       \
@@ -602,16 +589,16 @@ void Backend::visit(boost::shared_ptr<Tell> node)
     link_->put_symbol(#FUNC_NAME);                        \
   }
 
-DEFINE_VISIT_BINARY_NOT(Equal, Equal, Unequal)
-DEFINE_VISIT_BINARY_NOT(UnEqual, Unequal, Equal)
-DEFINE_VISIT_BINARY_NOT(Less, Less, GreaterEqual)
-DEFINE_VISIT_BINARY_NOT(LessEqual, LessEqual, Greater)
-DEFINE_VISIT_BINARY_NOT(Greater, Greater, LessEqual)
-DEFINE_VISIT_BINARY_NOT(GreaterEqual, GreaterEqual, Less)
+DEFINE_VISIT_BINARY(Equal, Equal)
+DEFINE_VISIT_BINARY(UnEqual, Unequal)
+DEFINE_VISIT_BINARY(Less, Less)
+DEFINE_VISIT_BINARY(LessEqual, LessEqual)
+DEFINE_VISIT_BINARY(Greater, Greater)
+DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
 /// 論理演算子
-DEFINE_VISIT_BINARY_NOT(LogicalAnd, And, Or)
-DEFINE_VISIT_BINARY_NOT(LogicalOr, Or, And)
+DEFINE_VISIT_BINARY(LogicalAnd, And)
+DEFINE_VISIT_BINARY(LogicalOr, Or)
 
 /// 算術二項演算子
 DEFINE_VISIT_BINARY(Plus, Plus)
@@ -649,9 +636,8 @@ void Backend::visit(boost::shared_ptr<Previous> node)
 /// 否定
 void Backend::visit(boost::shared_ptr<Not> node)              
 {
-  apply_not_ = !apply_not_;
+  link_->put_function("Not", 1);
   accept(node->get_child());
-  apply_not_ = !apply_not_;
 }
 
 /// 関数

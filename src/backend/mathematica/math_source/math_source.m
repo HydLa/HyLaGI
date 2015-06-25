@@ -490,7 +490,7 @@ publicMethod[
   cause, cons, pCons,
   Module[
     {
-      resultCons,
+      resultCons
     },
     tStore = Map[(Rule@@#)&, cons];
     resultCons = ToRadicals[cause /. tStore];

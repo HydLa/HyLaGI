@@ -230,12 +230,6 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   /// Prevノードの下にいるかどうか
   int in_prev_;
 
-  /** 
-   * whether to send negation of logical operators
-   * (needed for backend which cannot use logical negation easily
-   */
-  bool apply_not_;
-
   MidpointRadius receive_midpoint_radius();
 
   find_min_time_result_t receive_find_min_time_result();
