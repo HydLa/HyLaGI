@@ -23,9 +23,11 @@ BOTH_INTERVAL(lb, ub, ls, us)
   FRICTION << SWEEPING
 }.
 
-// SWEEP_INTERVAL(1, -2, -1/100).
-// BORDER_INTERVAL(0, 9/10, -1/40).
+// SWEEP_INTERVAL(1, -1/10, -1/100).
+// BORDER_INTERVAL(0, 1, -1/40).
 
-BOTH_INTERVAL(0, 9/10, -2, -1/100).  
+BOTH_INTERVAL(0, 1, -1/10, -1/100).  
 
 ASSERT(y' != 0 | 9 < y < 11).
+
+//#hylagi --fnd -p 10

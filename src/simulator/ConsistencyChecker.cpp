@@ -103,7 +103,7 @@ bool ConsistencyChecker::check_continuity(Variable &var, variable_map_t &vm){
   return false;
 }
 
-void ConsistencyChecker::add_continuity(const VariableFinder& finder, const PhaseType &phase){
+void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType &phase, const constraint_t &constraint_for_default_continuity){
   assert(prev_map != nullptr);
   std::string fmt = "v";
 
@@ -112,6 +112,7 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
 
   if(phase == POINT_PHASE)
   {
+    if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
     variable_set = finder.get_variable_set();
     fmt += "n";
     for(auto prev_variable : finder.get_prev_variable_set())
@@ -125,7 +126,31 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
     variable_set = finder.get_all_variable_set();
   }
 
-  for(auto dm_entry : get_differential_map(variable_set))
+  auto dm = get_differential_map(variable_set);
+  
+  if(phase == INTERVAL_PHASE && constraint_for_default_continuity.get())
+  {
+    // assuming default continuity for variables in constraints
+    VariableFinder tmp_finder;
+    tmp_finder.visit_node(constraint_for_default_continuity);
+    auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
+    for(auto entry: tmp_dm)
+    {
+      if(dm.count(entry.first) == 0)
+      {
+        for(int i = 0; i <= entry.second;i++){
+          variable_t var(entry.first, i);
+          send_prev_constraint(var);
+          send_init_equation(var, fmt);
+        }
+        Value zero_value("0");
+        variable_t var(entry.first, entry.second + 1);
+        backend->call("addInitEquation", 2, "vtvlt", "", &var, &zero_value);
+      }
+    }
+  }
+
+  for(auto dm_entry : dm)
   {
     for(int i = 0; i < dm_entry.second;i++){
       variable_t var(dm_entry.first, i);
@@ -135,7 +160,6 @@ void ConsistencyChecker::add_continuity(const VariableFinder& finder, const Phas
     variable_t var(dm_entry.first, dm_entry.second);
     send_prev_constraint(var);
   }
-
 }
 
 int ConsistencyChecker::get_backend_check_consistency_count()
@@ -175,7 +199,7 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
 }
 
 
-map<string, int> ConsistencyChecker::get_differential_map(variable_set_t &vs)
+map<string, int> ConsistencyChecker::get_differential_map(const variable_set_t &vs)
 {
   map<string, int> dm;
 
@@ -245,11 +269,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     finder.visit_node(constraint);
   }
-  if(constraint_for_default_continuity.get())
-  {
-    finder.visit_node(constraint_for_default_continuity);
-  }
-  add_continuity(finder, phase);
+  add_continuity(finder, phase, constraint_for_default_continuity);
   backend->call("addConstraint", 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
@@ -467,7 +487,7 @@ list<ConstraintStore> ConsistencyChecker::get_inconsistent_constraints()
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, const VariableFinder &finder, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder &finder, const PhaseType& phase, profile_t &profile)
 {
   timer::Timer timer;
   // PPでは変数表を全変数について作成する必要があるので，特定変数だけ解くようにするのは難しい．

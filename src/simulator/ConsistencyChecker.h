@@ -81,13 +81,13 @@ public:
 
   void clear_inconsistent_constraints();
   
-  std::map<std::string, int> get_differential_map(variable_set_t &);
+  std::map<std::string, int> get_differential_map(const variable_set_t &);
 
   bool check_continuity(Variable& var, variable_map_t &vm);
 
 
 private:
-  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store,   const VariableFinder&, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
 
   CheckEntailmentResult check_entailment_essential(
     CheckConsistencyResult &cc_result,
@@ -96,7 +96,7 @@ private:
     profile_t &profile
     );
   
-  void add_continuity(const VariableFinder&, const PhaseType &phase);
+  void add_continuity(VariableFinder&, const PhaseType &phase, const constraint_t &constraint_for_default_continuity = constraint_t());
 
   void check_consistency_foreach(const ConstraintStore& constraint_store, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
