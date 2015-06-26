@@ -59,3 +59,5 @@ ANGLE, HUMAN_RADIUS,
 { STRAIGHT(T[i],S[i],Sinit[i]) | i in {1..|S|} },
 
 { TIMER(i) | i in T }.
+
+//#hylagi -p 8 --fnd
