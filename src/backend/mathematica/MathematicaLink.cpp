@@ -74,9 +74,6 @@ MathematicaLink::~MathematicaLink()
 
 void MathematicaLink::reset()
 {
-  while (MLNextPacket()) {
-    MLNewPacket();
-  }
 }
 
 void MathematicaLink::clean()
@@ -147,8 +144,20 @@ bool MathematicaLink::receive_to_return_packet(){
     case ILLEGALPKT:
       throw LinkError("math", "receive illegalpkt", 0);
       break;
+    case MENUPKT:
+      // should be in interrupt dialog
+      MLNewPacket();
+      put_string("a");
+
+      //skip a text packet and an empty list
+      MLNextPacket();
+      MLNewPacket();
+      MLNextPacket();
+      MLNewPacket();
+      throw LinkError("math", "receive menu packet (Did you interrupt?)", 0);
+      break;
     default:
-      throw LinkError("math", "receive unknownpkt", 0);
+      throw LinkError("math", "receive unknownpkt", pkt);
       break;
     }
     if(at_end)break;
@@ -170,41 +179,7 @@ void MathematicaLink::_check(){
     std::cout << "not illegal:" << pkt << std::endl;
     switch(pkt){
     case RETURNPKT:
-      std::cout << "returnpkt" << std::endl;
-      switch(MLGetType()){ // 現行オブジェクトの型を得る
-      case MLTKSTR: // 文字列
-        strCase();
-        break;
-      case MLTKSYM: // シンボル（記号）
-        symCase();
-        break;
-      case MLTKINT: // 整数
-        intCase();
-        break;
-      case MLTKOLDINT: // 古いバージョンのMathlinkライブラリの整数
-        std::cout << "oldint" << std::endl;
-        break;
-      case MLTKERR: // エラー
-        std::cout << "err" << std::endl;
-        break;
-      case MLTKFUNC: // 合成関数
-        funcCase();
-        break;
-      case MLTKREAL: // 近似実数
-        std::cout << "real" << std::endl;
-        break;
-      case MLTKOLDREAL:
-        std::cout << "oldreal" << std::endl;
-        break;
-      case MLTKOLDSTR:
-        std::cout <<"oldstr" << std::endl;
-        break;
-      case MLTKOLDSYM:
-        std::cout << "oldsym" << std::endl;
-        break;
-      default:
-        std::cout <<"unknown_token" << std::endl;
-      }
+      check();
       break;
 
     case MESSAGEPKT: // Mathematica メッセージ識別子（symbol::string）
@@ -306,7 +281,12 @@ void MathematicaLink::funcCase(){
     break;
   case MLTKSYM: // シンボル（記号）
     std::cout << "#funcCase:case MLTKSYM" << std::endl;
-    std::cout << "#funcname:" << get_symbol() << std::endl;
+    {
+      const char* s;
+      MLGetSymbol(&s);
+      std::cout << "#funcname:" << s << std::endl;
+      MLReleaseString(s);
+    }
     break;
   default:
     ;
