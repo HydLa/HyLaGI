@@ -54,6 +54,7 @@ public:
     CheckConsistencyResult &cc_result,
     const constraint_t &guard,
     const constraint_t &node_sptr,
+    const asks_t &unknown_asks,
     const PhaseType &phase,
     profile_t &profile
     );

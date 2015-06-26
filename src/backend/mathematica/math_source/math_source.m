@@ -124,20 +124,22 @@ publicMethod[
     (* If the constraints include inequalities we use Reduce *)
     map = Reduce[map, vars, Reals];
     map = removeUnnecessaryConstraints[map, hasVariable];
-    If[map === True, Return[{{}}] ];
-    If[map === False, Return[{}] ];
-    map = LogicalExpand[map];
-    map = applyListToOr[map];
-    map = Map[(applyList[#])&, map];
-
-
-    map = Map[(adjustExprs[#, isVariable])&, map];
-    debugPrint["map after adjustExprs in createVariableMap", map];
-    ret = Map[(convertExprs[#])&, map];
-    ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
-    ret = ruleOutException[ret];
-    simplePrint[ret];
-    ret
+    If[map === True, 
+      {{}},
+      If[map === False,
+        {},
+        map = LogicalExpand[map];
+        map = applyListToOr[map];
+        map = Map[(applyList[#])&, map];
+        map = Map[(adjustExprs[#, isVariable])&, map];
+        debugPrint["map after adjustExprs in createVariableMap", map];
+      ret = Map[(convertExprs[#])&, map];
+      ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
+      ret = ruleOutException[ret];
+      simplePrint[ret];
+      ret
+      ]
+    ]
   ]
 ];
 
@@ -490,7 +492,6 @@ publicMethod[
     },
     tStore = Map[(Rule@@#)&, cons];
     resultCons = ToRadicals[cause /. tStore];
-    simplePrint[timeAppliedCause];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];

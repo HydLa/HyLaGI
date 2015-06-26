@@ -1,6 +1,6 @@
 /* simplified version of navigation problem */
 
-INIT <=> px = 1/2 /\ py = 3/2 /\ px' = 1 & py' = 1.
+INIT <=> px = 1.2 /\ py = 0.5 /\ px' = 1 & py' = 1.
 
 L00  <=> [](0 < px < 1 /\ 0 < py < 1 => px'' = 1 /\ py'' = 0).
 L01  <=> [](0 < px < 1 /\ 1 <= py < 2 => px'' = 0 /\ py'' = 1).
@@ -17,3 +17,5 @@ L22  <=> [](2 <= px < 3 /\ 2 <= py < 3 => px'' = 0 /\ py'' = 0).
 CONST <=> [](px'' = 0 & py'' = 0).
 
 INIT, CONST << (L00, L01, L02, L10, L11, L12, L20, L21, L22).
+
+// #hylagi -p 7 --fnd

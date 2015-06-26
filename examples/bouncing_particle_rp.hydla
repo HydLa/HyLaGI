@@ -5,3 +5,5 @@ FALL   <=> [](v'  = -10).
 BOUNCE <=> [](ht- = 0 => v = -e * v-).
 
 INIT, FALL << BOUNCE.
+
+//#hylagi -t 5 --fnd

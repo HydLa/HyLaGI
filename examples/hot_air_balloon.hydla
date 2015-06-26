@@ -28,3 +28,5 @@ ASSERT(h > 0).
 
 // constraint hierarchies
 INIT, PARAM, FALL, RISE, TIMER<<RESET.
+
+//#hylagi -p 8 --fnd

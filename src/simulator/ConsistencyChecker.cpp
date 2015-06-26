@@ -196,11 +196,11 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   CheckConsistencyResult &cc_result,
   const constraint_t &guard,
   const constraint_t &constraint_for_default_continuity,
+  const asks_t &unknown_asks,
   const PhaseType &phase,
   profile_t &profile
   )
 {
-  // HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
 
   backend->call("resetConstraintForVariable", 0, "", "");
@@ -218,8 +218,29 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   VariableFinder finder;
   ConstraintStore constraint_store;
   module_set_t module_set;
-  relation_graph.get_related_constraints(guard, constraint_store, module_set);
 
+
+  asks_t temporarily_invalidated_asks;
+  // remove constraints which are children of unknown_asks temporarily
+  for(auto ask : unknown_asks)
+  {
+    if(relation_graph.get_entailed(ask))
+    {
+      relation_graph.set_entailed(ask, false);
+      temporarily_invalidated_asks.insert(ask);
+    }
+  }
+  relation_graph.get_related_constraints(guard, constraint_store, module_set);
+  for(auto ask : temporarily_invalidated_asks)
+  {
+    relation_graph.set_entailed(ask, true);
+  }    
+
+
+  for(auto ask : unknown_asks)
+  {
+    constraint_store.erase(ask->get_child());
+  }
   for(auto constraint : constraint_store)
   {
     finder.visit_node(constraint);
@@ -242,7 +263,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   profile_t &profile
   )
 {
-  // HYDLA_LOGGER_DEBUG(get_infix_string(guard) );
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
   
   backend->call("resetConstraintForVariable", 0, "", "");

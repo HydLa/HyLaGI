@@ -1,6 +1,6 @@
 #!/bin/sh
 
-find ./examples/ \( -type f -and -name '*.hydla' \) | while read FILE
+find ./examples/ -maxdepth 1 \( -type f -and -name '*.hydla' \) | while read FILE
 do
     echo ${FILE}
     ./bin/hylagi ${FILE}

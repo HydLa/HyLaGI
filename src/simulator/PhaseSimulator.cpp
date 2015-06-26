@@ -500,7 +500,7 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
-  bool expanded, first_loop = true;
+  bool expanded;
   PhaseType phase_type = phase->phase_type;
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
@@ -552,7 +552,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       }
 
       CheckConsistencyResult check_consistency_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), phase_type, phase->profile)){
+      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
 
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
@@ -568,12 +568,13 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
           }
           else
           {
-expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
+            expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
             positive_asks.insert(ask);
             diff_sum.add_constraint(ask->get_child());
           }
           relation_graph_->set_entailed(ask, true);
           expanded = true;
+          HYDLA_LOGGER_DEBUG_VAR(expanded);
         }
         ask_it = unknown_asks.erase(ask_it);
         break;
@@ -592,6 +593,7 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
           }
           relation_graph_->set_entailed(ask, false);
           expanded = true;
+          HYDLA_LOGGER_DEBUG_VAR(expanded);
         }
         ask_it = unknown_asks.erase(ask_it);
         break;
@@ -603,27 +605,23 @@ expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
       phase->profile["# of CheckEntailment"]+= 1;
     }
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
-    if(expanded || first_loop)
+    // loop until no branching occurs
+    while(true)
     {
-      // loop until no branching occurs
-      while(true)
-      {
-        timer::Timer consistency_timer;
-        CheckConsistencyResult cc_result;
-        cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
-        phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-        phase->profile["# of CheckConsistency"]++;
-        if(!cc_result.consistent_store.consistent()){
-          return false;
-        }else if (cc_result.inconsistent_store.consistent()){
-          push_branch_states(phase, cc_result);
-        }
-        else
-        {
-          break;
-        }
+      timer::Timer consistency_timer;
+      CheckConsistencyResult cc_result;
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
+      phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+      phase->profile["# of CheckConsistency"]++;
+      if(!cc_result.consistent_store.consistent()){
+        return false;
+      }else if (cc_result.inconsistent_store.consistent()){
+        push_branch_states(phase, cc_result);
       }
-      first_loop = false;
+      else
+      {
+        break;
+      }
     }
   }while(expanded);
 
@@ -742,6 +740,7 @@ ValueRange PhaseSimulator::create_range_from_interval(itvd itv)
 
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase)
 {
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   bool by_newton = false;
   list<Parameter> parameters;
