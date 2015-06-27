@@ -497,25 +497,32 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
   consistency_checker.reset(new ConsistencyChecker(backend_));
 }
 
+variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase_type)
+{
+  variable_set_t result;
+  for(auto constraint: diff_sum)
+  {
+    VariableFinder finder;
+    finder.visit_node(constraint);
+    variable_set_t variables = phase_type==POINT_PHASE?finder.get_variable_set()
+      :finder.get_all_variable_set();
+    result.insert(variables.begin(), variables.end());
+  }
+  return result;
+}
+
+
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
   bool expanded;
   PhaseType phase_type = phase->phase_type;
+  variable_set_t discrete_variables = get_discrete_variables(diff_sum, phase_type);
+  
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
     timer::Timer entailment_timer;
-
-    variable_set_t discrete_variables;
-    for(auto constraint: diff_sum)
-    {
-      VariableFinder finder;
-      finder.visit_node(constraint);
-      variable_set_t variables = phase_type==POINT_PHASE?finder.get_variable_set()
-        :finder.get_all_variable_set();
-      discrete_variables.insert(variables.begin(), variables.end());
-    }
 
     set<ask_t> adjacents;
     if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
@@ -534,6 +541,8 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         }
       }
     }
+    discrete_variables.clear();
+    ConstraintStore local_diff_sum;
     for(auto adjacent : adjacents)
     {
       unknown_asks.insert(adjacent);
@@ -572,10 +581,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
             positive_asks.insert(ask);
             diff_sum.add_constraint(ask->get_child());
           }
+          local_diff_sum.add_constraint(ask->get_child());
           relation_graph_->set_entailed(ask, true);
-          expanded = true;
-          HYDLA_LOGGER_DEBUG_VAR(expanded);
         }
+        expanded = true;
         ask_it = unknown_asks.erase(ask_it);
         break;
       case CONFLICTING:
@@ -591,10 +600,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
             negative_asks.insert(ask);
             diff_sum.add_constraint(ask->get_child());
           }
+          local_diff_sum.add_constraint(ask->get_child());
           relation_graph_->set_entailed(ask, false);
-          expanded = true;
-          HYDLA_LOGGER_DEBUG_VAR(expanded);
         }
+        expanded = true;
         ask_it = unknown_asks.erase(ask_it);
         break;
       case BRANCH_VAR:
@@ -623,6 +632,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         break;
       }
     }
+    discrete_variables = get_discrete_variables(local_diff_sum, phase_type);
   }while(expanded);
 
   if(!unknown_asks.empty()){

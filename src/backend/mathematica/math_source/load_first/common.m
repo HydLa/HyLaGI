@@ -183,7 +183,7 @@ Module[
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p, Return[expr] ];
-
+   
   ret = ToRadicals[expr];
 
   (* return Root[] as string. because it's difficult to handle as formulas in C++*)
