@@ -26,6 +26,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     sstr << "---------IP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     output_inconsistent_constraints(sstr, result);
+    output_asks(sstr, result);
     if(!result.end_time.undefined()){
       sstr << "t\t: " << result.current_time << "->" << result.end_time << "\n";
     }else{
@@ -35,6 +36,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     sstr << "---------PP " << result.id << "---------" << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     output_inconsistent_constraints(sstr, result);
+    output_asks(sstr, result);
     sstr << "t\t: " << result.current_time << "\n";
   }
 
@@ -49,6 +51,29 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
   }
   return sstr.str();
+}
+
+void SymbolicTrajPrinter::output_asks(std::ostream &stream, const phase_result_t &phase)const
+{
+  stream << "positive \t: ";
+  bool first = true;
+  for(auto ask : phase.get_diff_positive_asks())
+  {
+    if(!first)stream << "\n\t\t  ";
+    stream << get_infix_string(ask);
+    first = false;
+  }
+  stream << endl;
+
+  stream << "negative \t: ";
+  first = true;
+  for(auto ask : phase.get_diff_negative_asks())
+  {
+    if(!first)stream << "\n\t\t  ";
+    stream << get_infix_string(ask);
+    first = false;
+  }
+  stream << endl;
 }
 
 void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const

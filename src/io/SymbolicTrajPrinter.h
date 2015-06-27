@@ -37,6 +37,8 @@ public:
 
 private:
 
+  void output_asks(std::ostream &stream, const phase_result_t &phase)const;
+  
   void output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const;
 
   std::ostream& ostream;

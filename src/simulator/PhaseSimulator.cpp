@@ -1041,7 +1041,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       }
       next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
 
-      set<constraint_t> calculated_ask_set;
       set<string> checked_variables;
 
       variable_set_t diff_variables;
@@ -1058,24 +1057,27 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
+      set<ask_t> asks;
       for(auto variable : diff_variables)
       {
         string var_name = variable.get_name();
         // 既にチェック済みの変数なら省略（x'とxはどちらもxとして扱うため，二回呼ばれないようにする）
         if(checked_variables.count(var_name))continue;
         checked_variables.insert(var_name);
-        asks_t asks = relation_graph_->get_adjacent_asks(var_name);
-
-        for(auto ask : asks)
+        asks_t tmp_asks = relation_graph_->get_adjacent_asks(var_name);
+        asks.insert(tmp_asks.begin(), tmp_asks.end());
+      }
+      for(auto entry : phase->discrete_asks)
+      {
+        asks.insert(entry.first);
+      }
+      for(auto ask : asks)
+      {
+        if(opts_->ltl_model_check_mode)
         {
-          if(calculated_ask_set.count(ask))continue;
-          calculated_ask_set.insert(ask);
-          if(opts_->ltl_model_check_mode)
-          {
-            candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
-          }else{
-            candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
-          }
+          candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
+        }else{
+          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
         }
       }
 
@@ -1138,7 +1140,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->next_pp_candidate_map = phase->next_pp_candidate_map;
             for(auto ask : next_todo->discrete_asks)
             {
-next_todo->next_pp_candidate_map.erase(ask.first);
+              next_todo->next_pp_candidate_map.erase(ask.first);
             }
             next_todo->set_parameter_constraint(phase->get_parameter_constraint());
             next_todo->parent = phase.get();
