@@ -273,8 +273,14 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->parent->children.push_back(phase);
 
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
-    if(create_result.size() == 0)throw HYDLA_ERROR("some error occured in creation of variable maps.");
-    else if(create_result.size() > 1)throw HYDLA_ERROR("result variable map is not single.");
+    if(create_result.size() == 0)
+    {
+      throw HYDLA_ERROR("some error occured in creation of variable maps." + phase->get_string());
+    }
+    else if(create_result.size() > 1)
+    {
+      throw HYDLA_ERROR("result variable map is not single. \nphase:" + phase->get_string());
+    }
     phase->variable_map = create_result[0];
     if(opts_->epsilon_mode >= 0){
       variable_map_t before_map = phase->variable_map;
@@ -317,7 +323,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
             break;
           }
         }
-        if(max_d_count < 0)throw HYDLA_ERROR("max_d_count < 0");
+        if(max_d_count < 0)throw HYDLA_ERROR("Value of " + pair.first + " is not defined.");
         Variable var(pair.first, max_d_count);
         if(!consistency_checker->check_continuity(var, phase->variable_map))
           discrete_vs.insert(var);
@@ -366,8 +372,10 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->discrete_differential_set = original->discrete_differential_set;
   branch_state_false->parent = original->parent;
   branch_state_false->discrete_asks = original->discrete_asks;
+  branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
-branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
+  branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
+
   original->parent->todo_list.push_back(branch_state_false);
   original->additional_constraint_store.add_constraint_store(result.consistent_store);
   backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
@@ -487,6 +495,17 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
       }
       if(replaced)vm[var_entry.first] = range;
     }
+  }
+  ConstraintStore par_cons = phase.get_parameter_constraint();
+  if(!par_cons.empty())
+  {
+    ConstraintStore new_par_cons;
+    for(auto cons : par_cons)
+    {
+      replacer.replace_node(cons);
+      new_par_cons.insert(cons);
+    }
+    phase.set_parameter_constraint(new_par_cons);
   }
   phase.add_parameter_constraint(replacer.get_parameter_constraint());
 }

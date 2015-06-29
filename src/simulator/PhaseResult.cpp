@@ -4,6 +4,8 @@
 #include "Backend.h"
 #include "HydLaError.h"
 
+#include <sstream>
+
 using namespace std;
 
 
@@ -173,6 +175,13 @@ std::vector<parameter_map_t> PhaseResult::get_parameter_maps()const
 void PhaseResult::set_full_information(FullInformation &info)
 {
   full_information = info;
+}
+
+string PhaseResult::get_string()const
+{
+  std::stringstream sstr;
+  sstr << *this;
+  return  sstr.str();
 }
 
 

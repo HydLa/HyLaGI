@@ -183,6 +183,8 @@ public:
   std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
+
+  std::string get_string() const;
 private:
   void generate_full_information() const;
 

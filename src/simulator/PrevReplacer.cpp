@@ -74,10 +74,8 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
 
         simulator.introduce_parameter(variable, prev_phase, range);
         ConstraintStore par_cons = range.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
-        HYDLA_LOGGER_DEBUG_VAR(par_cons);
         prev_phase.add_parameter_constraint(par_cons);
         parameter_constraint.add_constraint_store(par_cons);
-        HYDLA_LOGGER_DEBUG_VAR(parameter_constraint);
       }
     }
   }

@@ -182,18 +182,20 @@ public:
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
-    container_name_ = node->get_name();
-    int arg_size = node->actual_arg_size();
-    if(arg_size) container_name_ += "("; 
-    for(int i = 0; i < arg_size; i++){
-      if(i) container_name_ += ",";
-      accept(node->get_actual_arg(i));
+    if(!in_constraint_caller_)
+    {
+      container_name_ = node->get_name();
+      int arg_size = node->actual_arg_size();
+      if(arg_size) container_name_ += "("; 
+      for(int i = 0; i < arg_size; i++){
+        if(i) container_name_ += ",";
+        accept(node->get_actual_arg(i));
+      }
+      if(arg_size) container_name_ += ")";
+      in_constraint_caller_ = true;
+      accept(node->get_child());
+      in_constraint_caller_ = false;
     }
-    if(arg_size) container_name_ += ")";
-    bool prev_in_caller = in_constraint_caller_;
-    in_constraint_caller_ = true;
-    accept(node->get_child());
-    in_constraint_caller_ = prev_in_caller;
   }
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
