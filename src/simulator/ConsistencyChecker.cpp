@@ -446,16 +446,17 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
   CheckConsistencyResult result;
   result_maps.clear();
   result_maps.push_back(variable_map_t());
-  HYDLA_LOGGER_DEBUG("");
 
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
   vector<module_set_t> related_modules_list;
   relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
   profile["PreparationInCC"] += timer.get_elapsed_us();
+  for(auto ask : relation_graph.get_active_asks())HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
-    HYDLA_LOGGER_DEBUG_VAR(related_constraints_list[i]);
+    HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
+                       "]: ", related_constraints_list[i]);
     check_consistency_foreach(related_constraints_list[i], related_modules_list[i], result, phase, profile, following_step);
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }

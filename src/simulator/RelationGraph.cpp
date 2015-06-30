@@ -206,6 +206,7 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
   module_set_vector.clear();
   for(auto constraint : constraint_store)
   {
+
     auto constraint_it = tell_node_map.find(constraint);
     if(constraint_it == tell_node_map.end())
     {
@@ -234,11 +235,11 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       TellNode *tell_node = constraint_it->second;
       if(!tell_node->collected)
       {
+        ConstraintStore connected_constraints;
+        module_set_t connected_ms;
+        variable_set_t vars;
         if(tell_node->is_active())
         {
-          ConstraintStore connected_constraints;
-          module_set_t connected_ms;
-          variable_set_t vars;
           collect_node(tell_node, connected_constraints, connected_ms, vars);
           constraints_vector.push_back(connected_constraints);
           module_set_vector.push_back(connected_ms);
@@ -246,9 +247,6 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
         else
         {
           // adjacent node may be active (this case is mainly caused by negative asks)
-          ConstraintStore connected_constraints;
-          module_set_t connected_ms;
-          variable_set_t vars;
           for(auto edge : tell_node->edges)
           {
             if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, connected_constraints, connected_ms, vars);
@@ -485,6 +483,18 @@ asks_t RelationGraph::get_active_asks(bool ignore_prev_asks)
   return asks;
 }
 
+
+ConstraintStore RelationGraph::get_active_tells()
+{
+  ConstraintStore tells;
+  for(auto tell_node : tell_nodes)
+  {
+    if(tell_node->is_active())tells.add_constraint(tell_node->constraint);
+  }
+  return tells;
+}
+
+
 AskNode::AskNode(const ask_t &a, const module_t &mod, GuardNode *g):ConstraintNode(mod), ask(a), entailed(false), guard_node(g)
 {
   VariableFinder finder;
@@ -662,7 +672,6 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
       tell_node->edges.push_back(EdgeToVariable(var_node, true));
       var_node->edges.push_back(EdgeToConstraint(tell_node, true));
     }
-
     if(in_always)always_list.add_constraint(node);
   }
   else if(visit_mode == EXPANDING)
@@ -720,15 +729,13 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     assert(!ask_node_map.count(ask)); /// assume that same ask node doesn't exist
     visit_mode = ADDING_ASK;
     atomic_guard_list.clear();
-    ConstraintStore prev_always_list = always_list;
-    always_list.clear();
+
     accept(ask->get_lhs());
     visit_mode = ADDING;
     ask_node = new AskNode(ask, current_module, current_guard_node);
     current_guard_node->asks.push_back(ask_node);
     ask_node->atomic_guard_list = atomic_guard_list;
-    ask_node->always_children = always_list;
-    always_list = prev_always_list;
+
     ask_nodes.push_back(ask_node);
     ask_node_map[ask] = ask_node;
     ask_node->parent = parent_ask;
@@ -747,7 +754,11 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     bool prev_in_always = in_always;
     in_always = false;
     parent_ask = ask_node;
+    ConstraintStore prev_always_list = always_list;
+    always_list.clear();
     accept(ask->get_rhs());
+    ask_node->always_children = always_list;
+    always_list = prev_always_list;
     parent_ask = ask_node->parent;
     in_always = prev_in_always;
   }

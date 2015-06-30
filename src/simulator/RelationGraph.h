@@ -165,6 +165,12 @@ public:
    * Get all active asks
    */
   asks_t get_active_asks(bool ignore_prev_asks = false);
+
+
+  /**
+   * Get all active tells
+   */ 
+  ConstraintStore get_active_tells();
   
   /**
    * Get the number of connected component in the graph.

@@ -64,6 +64,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   if(phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
+    // todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
   }
   else
@@ -372,6 +373,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->discrete_differential_set = original->discrete_differential_set;
   branch_state_false->parent = original->parent;
   branch_state_false->discrete_asks = original->discrete_asks;
+  branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
   branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
@@ -531,7 +533,7 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase
 }
 
 
-bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore expanded_always)
+bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
   bool expanded;
