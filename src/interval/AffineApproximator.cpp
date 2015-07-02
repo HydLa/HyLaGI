@@ -61,7 +61,7 @@ void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)
 {
   value_t ret(affine_value.a(0));
-  simulator->backend->call("transformToRational", 1, "vln", "vl", &ret, &ret);
+  simulator->backend->call("transformToRational", true, 1, "vln", "vl", &ret, &ret);
   double sum = 0;
   int available_index;
   for(int i = 1; i < affine_value.a.size(); i++)
@@ -80,7 +80,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
       parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
       // convert floating point into rational
       value_t val = value_t(affine_value.a(i));
-      simulator->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+      simulator->backend->call("transformToRational", true, 1, "vln", "vl", &val, &val);
       ret = ret + val * value_t(r_it->second);
     }
   }
@@ -94,7 +94,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
     parameter_idx_map.insert(parameter_idx_t(param, available_index));
     parameter_map[param] = range_t(value_t(-1), value_t(1));
     value_t val = value_t(sum);
-    simulator->backend->call("transformToRational", 1, "vln", "vl", &val, &val);
+    simulator->backend->call("transformToRational", true, 1, "vln", "vl", &val, &val);
     ret = ret + val * value_t(param);
   }
 
@@ -163,7 +163,7 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
         }
       }
       Value consistent_value;
-      simulator->backend->call("calculateConsistentValue", 4,
+      simulator->backend->call("calculateConsistentValue", true, 4,
                                 "ecvnmvnmp", "vl",
                                 &condition, &remain_var, &variable_map, &parameter_map, &consistent_value);
       variable_map[remain_var] = consistent_value;
@@ -198,7 +198,7 @@ void AffineApproximator::approximate_time(value_t& time, const variable_map_t& i
     }
 
     Value consistent_value;
-    simulator->backend->call("calculateConsistentValue", 4,
+    simulator->backend->call("calculateConsistentValue", true, 4,
                              "ecvnmvnmp", "vl",
                              &condition, &recalculate_variable, &prev_map, &parameter_map, &consistent_value);
     prev_map[recalculate_variable] = consistent_value;

@@ -99,10 +99,10 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
-  backend_->call("resetConstraint", 0, "", "");
+  backend_->call("resetConstraint", false, 0, "", "");
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
-  backend_->call("addParameterConstraint", 1, "csn", "", &parameter_cons);
-  backend_->call("addParameterConstraint", 1, "csn", "", &todo->additional_constraint_store);
+  backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
+  backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
   consistency_checker->set_prev_map(&todo->prev_map);
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
@@ -355,7 +355,7 @@ ConstraintStore PhaseSimulator::get_current_parameter_constraint()
   //   parameter_maps.push_back(tmp_pm);
   // }
   ConstraintStore parameter_cons;
-  backend_->call("getParameterConstraint", 0, "", "cs", &parameter_cons);
+  backend_->call("getParameterConstraint", true, 0, "", "cs", &parameter_cons);
   return parameter_cons;
 }
 
@@ -380,7 +380,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
 
   original->parent->todo_list.push_back(branch_state_false);
   original->additional_constraint_store.add_constraint_store(result.consistent_store);
-  backend_->call("addParameterConstraint", 1, "csn", "", &original->additional_constraint_store);
+  backend_->call("addParameterConstraint", true, 1, "csn", "", &original->additional_constraint_store);
 }
 
 
@@ -708,7 +708,7 @@ find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_
   for(auto target : min_time_candidate){
     //最小時間候補を検査し、不適切な候補の削減を行う
     value_t target_time = target.time;
-    backend_->call("limitIsZero", 1, "vln", "b", &target_time, &limit_is_zero);
+    backend_->call("limitIsZero", true, 1, "vln", "b", &target_time, &limit_is_zero);
     if(!limit_is_zero || !same_guard){
       //時刻をずらさない場合
       ret.push_back(target);
@@ -746,7 +746,7 @@ find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_
       //tmp_min_time = find_min_time(guard,min_time_calculator,guard_time_map,shifted_vm,tmp_time_limit,entailed);
       for(auto &tmp_candidate : tmp_min_time){
         tmp_candidate.time += target_time;
-        backend_->call("simplify", 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
+        backend_->call("simplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
         ret.push_back(tmp_candidate);
       }
     }
@@ -764,8 +764,8 @@ find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_
 ValueRange PhaseSimulator::create_range_from_interval(itvd itv)
 {
   value_t lower(itv.lower()), upper(itv.upper());
-  backend_->call("transformToRational", 1, "vln", "vl", &lower, &lower);
-  backend_->call("transformToRational", 1, "vln", "vl", &upper, &upper);
+  backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
+  backend_->call("transformToRational", false, 1, "vln", "vl", &upper, &upper);
   return ValueRange(lower, upper);
 }
 
@@ -807,7 +807,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       {
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
-        backend_->call("calculateConsistentTime", 2, "etmvt", "e", &g, &related_vm,  &constraint_for_this_guard);
+        backend_->call("calculateConsistentTime", true, 2, "etmvt", "e", &g, &related_vm,  &constraint_for_this_guard);
         guard_time_map[g] = constraint_for_this_guard;
       }
     }
@@ -843,7 +843,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm_for_each[parameter_prev] = prev_range;
         pm_for_each[parameter_current] = current_range;
 
-        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm_for_each);
+        backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
 
         if(guard_type == typeid(UnEqual))
         {
@@ -870,7 +870,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           ConstraintStore new_store = phase->get_parameter_constraint();
           new_store.add_constraint_store(current_range.create_range_constraint(node_sptr(new se::Parameter(parameter_current))));
           phase->set_parameter_constraint(new_store);
-          backend_->call("resetConstraintForParameter", 1, "csn", "", &new_store);
+          backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
           break;
         }
         prev_interval = current_interval;
@@ -916,7 +916,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm_for_each[parameter_prev] = prev_range;
         pm_for_each[parameter_lower] = lower_range;
         pm_for_each[parameter_upper] = upper_range;
-        backend_->call("resetConstraintForParameter", 1, "mp", "", &pm_for_each);
+        backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
 
         {
           constraint_t lb, ub;
@@ -955,7 +955,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           new_store.add_constraint_store(lower_range.create_range_constraint(node_sptr(new se::Parameter(parameter_lower))));
           new_store.add_constraint_store(upper_range.create_range_constraint(node_sptr(new se::Parameter(parameter_upper))));
           phase->set_parameter_constraint(new_store);
-          backend_->call("resetConstraintForParameter", 1, "csn", "", &new_store);
+          backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
           break;
         }
         prev_interval = upper_interval;
@@ -1051,7 +1051,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             auto &candidate = *cand_it;
 
             candidate.time -= (phase->current_time - phase->parent->parent->current_time);
-            backend_->call("productWithGlobalParameterConstraint", 1, "csn", "cs", &candidate.parameter_constraint, &candidate.parameter_constraint);
+            backend_->call("productWithGlobalParameterConstraint", true, 1, "csn", "cs", &candidate.parameter_constraint, &candidate.parameter_constraint);
             if(!candidate.parameter_constraint.consistent())entry.second.erase(cand_it++);
             else
             {
@@ -1060,6 +1060,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           }
         }
       }
+
       next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
 
       set<string> checked_variables;
@@ -1148,7 +1149,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           DCCandidate &candidate = *time_it;
           phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
-          backend_->call("simplify", 1, "vln", "vl", &phase->end_time, &phase->end_time);
+          backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
           if(candidate.time.undefined() || candidate.time.infinite() )
           {
             phase->simulation_state = TIME_LIMIT;
@@ -1216,7 +1217,7 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
       for(auto existing: existings)
       {
         compare_min_time_result_t compare_result;
-        backend_->call("compareMinTime", 4, "vltvltcsncsn", "cp", &existing.time, &newcomer.time, &existing.parameter_constraint, &newcomer.parameter_constraint, &compare_result);
+        backend_->call("compareMinTime", true, 4, "vltvltcsncsn", "cp", &existing.time, &newcomer.time, &existing.parameter_constraint, &newcomer.parameter_constraint, &compare_result);
 
         if(compare_result.less_cons.consistent())
         {
@@ -1246,7 +1247,7 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
 
 void PhaseSimulator::reset_parameter_constraint(ConstraintStore par_cons)
 {
-  backend_->call("resetConstraintForParameter", 1, "csn", "", &par_cons);
+  backend_->call("resetConstraintForParameter", false, 1, "csn", "", &par_cons);
 }
   
 
@@ -1301,8 +1302,8 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
 {
   node_sptr exp;
   node_sptr dexp;
-  backend_->call("relationToFunction", 2, "etmvt", "e", &guard, &related_vm, &exp);
-  backend_->call("differentiateWithTime", 1, "et", "e", &exp, &dexp);
+  backend_->call("relationToFunction", true, 2, "etmvt", "e", &guard, &related_vm, &exp);
+  backend_->call("differentiateWithTime", true, 1, "et", "e", &exp, &dexp);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
   itvd init = itvd(0.,100); 

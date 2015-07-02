@@ -248,7 +248,7 @@ bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
   //compareing set of variables
-  backend->call("checkInclude", 6, "vlnmvtmpvlnmvtmp", "b",
+  backend->call("checkInclude", true, 6, "vlnmvtmpvlnmvtmp", "b",
                 &(larger->phase->current_time), &(larger->phase->variable_map), &larger_cons,
                 &(smaller->phase->current_time), &(smaller->phase->variable_map), &smaller_cons, &include_ret);
   if(include_ret){
@@ -288,7 +288,7 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard
     return true;
   }
   ConstraintStore par_cons = phase->get_parameter_constraint();
-  backend->call("resetConstraintForParameter", 1, "mp", "", &par_cons);
+  backend->call("resetConstraintForParameter", true, 1, "mp", "", &par_cons);
   CheckConsistencyResult cc_result;
   HYDLA_LOGGER_DEBUG("entailed check start ===========================");
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));

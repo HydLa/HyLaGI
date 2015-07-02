@@ -125,9 +125,9 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
-        HYDLA_LOGGER_DEBUG("input: \n", str);
+        if(trace)HYDLA_LOGGER_DEBUG("input: \n", str);
       }else{
-        HYDLA_LOGGER_DEBUG("trace: ", str);
+        if(trace)HYDLA_LOGGER_DEBUG("trace: ", str);
         debug_print_ += str + "\n";
       }
       break;

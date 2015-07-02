@@ -24,7 +24,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sp
 {
   Parameter par("eps", 0, 1);
   value_t time_ret;
-  backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &par, &diff_cnt, &time_ret);
+  backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &phase->current_time, &par, &diff_cnt, &time_ret);
   phase->current_time = time_ret;
   for(auto var_entry : phase->variable_map)
   {
@@ -38,7 +38,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sp
     {
       value_t value_ret;
       simulator::value_t val = range.get_unique_value();
-      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &value_ret);
+      backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &value_ret);
       phase->variable_map[var] = value_ret;
     }
     else
@@ -48,7 +48,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sp
         ValueRange::bound_t bd = range.get_lower_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
         range.set_lower_bound(ret, bd.include_bound);
       }
       for(uint i = 0; i < range.get_upper_cnt(); i++)
@@ -56,7 +56,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sp
         ValueRange::bound_t bd = range.get_upper_bound(i);
         value_t val = bd.value;
         value_t ret;
-        backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
         range.set_upper_bound(ret, bd.include_bound);
       }
       phase->variable_map[var] = range;
@@ -73,7 +73,7 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t origi
     HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
     unsuitable = false;
     HYDLA_LOGGER_DEBUG_VAR(original_candidate.parameter_constraint);
-    backend_->call("unsuitableCase", 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
+    backend_->call("unsuitableCase", true, 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
     if(!unsuitable){
       ret.push_back(original_candidate);
     }
@@ -90,10 +90,10 @@ find_min_time_result_t hydla::simulator::find_min_time_epsilon(node_sptr trigger
 
   for(auto &tmp_candidate : time_result)
   {
-    backend->call("simplify", 1, "vln", "vl", &tmp_candidate.time, &tmp_candidate.time);
+    backend->call("simplify", true, 1, "vln", "vl", &tmp_candidate.time, &tmp_candidate.time);
   }
-  backend->call("resetConstraintForVariable", 0, "", "");
-  backend->call("addConstraint", 1, "mv0t", "", &vm);
+  backend->call("resetConstraintForVariable", false, 0, "", "");
+  backend->call("addConstraint", false, 1, "mv0t", "", &vm);
 
   HYDLA_LOGGER_DEBUG("exit find min time epsilon");
 
@@ -110,11 +110,11 @@ find_min_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_
 
   HYDLA_LOGGER_DEBUG("come calculate tmp result");
 
-  backend->call("findMinTime", 3, "etmvtvlt", "f", &trigger, &vm, &time_limit, &find_result);
+  backend->call("findMinTime", true, 3, "etmvtvlt", "f", &trigger, &vm, &time_limit, &find_result);
   for(auto find_candidate : find_result)
   {
     value_t time = find_candidate.time;
-    backend->call("isZero", 1, "vln", "b", &time, &iszero);
+    backend->call("isZero", true, 1, "vln", "b", &time, &iszero);
 
     //前回の離散変化条件のidとの比較
     for(auto entry: phase->parent->parent->discrete_asks)
@@ -138,8 +138,8 @@ find_min_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_
       ValueModifier modifier(*backend);
       shifted_vm = modifier.apply_function("exprTimeshift", tmp_val, vm);
 
-      backend->call("resetConstraintForVariable", 0, "", "");
-      backend->call("addConstraint", 1, "mv0t", "", &shifted_vm);
+      backend->call("resetConstraintForVariable", true, 0, "", "");
+      backend->call("addConstraint", true, 1, "mv0t", "", &shifted_vm);
       value_t eps_time_limit = time_limit;
       eps_time_limit -= find_candidate.time;
       //二回目

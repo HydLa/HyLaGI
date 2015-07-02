@@ -367,8 +367,9 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   return i - idx;
 }
 
-int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
+int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
+  link_->trace = trace;
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
   va_list args;

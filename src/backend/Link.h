@@ -90,6 +90,8 @@ class Link
   virtual std::string get_input_print() = 0;
   virtual std::string get_debug_print() = 0;
   virtual void check() = 0;
+
+  bool trace = true;
   protected:
   typedef boost::bimaps::bimap<std::string, std::string > function_map_t;
   function_map_t function_map_;

@@ -56,6 +56,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
 
   /** call of function
    *  @param name name of function
+   *  @param trace If true, the trace will be logged
    *  @param arg_cnt count of arguments of function
    *  @param args_fmt  format for following arguments
    *  @param ret_fmt format for following return-values (after args)
@@ -84,15 +85,15 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *  Caution: In Mathematica, '_' cannot be used as name of symbols
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
    */
-  int call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
+  int call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 
   void set_variable_set(variable_set_t& v){
-    call("resetVariables", 0, "", "");
+    call("resetVariables", false, 0, "", "");
     for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
         std::string name = var_prefix + it->get_name();
         int diff = it->get_differential_count();
-        call("addVariable", 2, "si", "", name.c_str(), &diff);
+        call("addVariable", false, 2, "si", "", name.c_str(), &diff);
       }
   }
 

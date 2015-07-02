@@ -297,39 +297,39 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
     {
       tmp_current_time = result.current_time.get_node();
       tmp_end_time = result.end_time.get_node();
-      backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_current_time);
-      backend->call("checkEpsilon", 1, "en", "i",&tmp_end_time, &check_end_time);
+      backend->call("checkEpsilon", true, 1, "en", "i",&tmp_current_time, &check_current_time);
+      backend->call("checkEpsilon", true, 1, "en", "i",&tmp_end_time, &check_end_time);
       check_result = check_current_time * check_end_time;
       if(check_result == 1)
       {
-        backend->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-        backend->call("limitEpsilon", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        backend->call("limitEpsilon", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilon", true, 1, "en", "vl",&tmp_end_time, &ret_end_time);
         stream << "Limit(t)\t: " << ret_current_time << "->" << ret_end_time << "\n";
       }
       else
       {
-        backend->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-        backend->call("limitEpsilonP", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        backend->call("limitEpsilonP", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonP", true, 1, "en", "vl",&tmp_end_time, &ret_end_time);
         stream << "Limit(t)\t+ : " << ret_current_time << "->" << ret_end_time << "\n";
-        backend->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
-        backend->call("limitEpsilonM", 1, "en", "vl",&tmp_end_time, &ret_end_time);
+        backend->call("limitEpsilonM", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonM", true, 1, "en", "vl",&tmp_end_time, &ret_end_time);
         stream << "Limit(t)\t- : " << ret_current_time << "->" << ret_end_time << "\n";
       }
     }
     else if(!result.current_time.undefined())
     {
       tmp_current_time = result.current_time.get_node();
-      backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+      backend->call("checkEpsilon", true, 1, "en", "i",&tmp_current_time, &check_result);
       if(check_result == 1)
       {
-        backend->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilon", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(t)\t: " << ret_current_time << "->" << "???" << "\n";
       }
       else
       {
-        backend->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonP", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(t)\t+ : " << ret_current_time << "->" << "???" << "\n";
-        backend->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonM", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(time)\t- : " << ret_current_time << "->" << "???" << "\n";
       }
     }
@@ -339,17 +339,17 @@ void SymbolicTrajPrinter::output_limit_of_time(std::ostream &stream, Backend* ba
     if(!result.current_time.undefined())
     {
       tmp_current_time = result.current_time.get_node();
-      backend->call("checkEpsilon", 1, "en", "i",&tmp_current_time, &check_result);
+      backend->call("checkEpsilon", true, 1, "en", "i",&tmp_current_time, &check_result);
       if(check_result == 1)
       {
-        backend->call("limitEpsilon", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilon", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(t)\t: " << ret_current_time << "\n";
       }
       else
       {
-        backend->call("limitEpsilonP", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonP", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(t)\t+ : " << ret_current_time << "\n";
-        backend->call("limitEpsilonM", 1, "en", "vl",&tmp_current_time, &ret_current_time);
+        backend->call("limitEpsilonM", true, 1, "en", "vl",&tmp_current_time, &ret_current_time);
         stream << "Limit(t)\t- : " << ret_current_time << "\n";
       }
     }
@@ -369,17 +369,17 @@ void SymbolicTrajPrinter::output_limits_of_variable_map(std::ostream &stream, Ba
     if(it->second.unique())
     {
       tmp = it->second.get_unique_value();
-      backend->call("checkEpsilon", 1, "vln", "i",&tmp, &check_result);
+      backend->call("checkEpsilon", true, 1, "vln", "i",&tmp, &check_result);
       if(check_result == 1)
       {
-        backend->call("limitEpsilon", 1, "vln", "vl", &tmp, &ret);
+        backend->call("limitEpsilon", true, 1, "vln", "vl", &tmp, &ret);
         stream << "Limit(" << it->first << ")\t  : " << ret << "\n";
       }
       else
       {
-        backend->call("limitEpsilonP", 1, "vln", "vl", &tmp, &ret);
+        backend->call("limitEpsilonP", true, 1, "vln", "vl", &tmp, &ret);
         stream << "Limit(" << it->first << ")\t+ : " << ret << "\n";
-        backend->call("limitEpsilonM", 1, "vln", "vl", &tmp, &ret);
+        backend->call("limitEpsilonM", true, 1, "vln", "vl", &tmp, &ret);
         stream << "Limit(" << it->first << ")\t- : " << ret << "\n";
       }
     }

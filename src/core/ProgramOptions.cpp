@@ -88,9 +88,9 @@ void ProgramOptions::init_descriptions()
 
     ("epsilon,e",
      value<int>()->default_value(-1),
-     "perform 2 additional processed below\n"
+     "perform 2 additional processes below\n"
      "1. prune branches where the value of epsilon is not in neighborhood of 0\n"
-     "2. approximate expressions by cutting off higher order terms about epsilon"
+     "2. approximate expressions by cutting off higher order terms about epsilon\n"
      "  non-negative value: order of approximation\n"
      "  negative value: invalidate this option\n");
 

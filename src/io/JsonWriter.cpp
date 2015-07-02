@@ -190,7 +190,7 @@ value JsonWriter::for_range_diff(const value_range_t &range)
   if(range.unique())
     {
       tmp = range.get_unique_value();
-      backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+      backend->call("diffEpsilon", true, 1, "vln", "vl", &tmp, &ret);
       range_object["unique_value"] = value(ret.get_string());
     }
   else
@@ -201,7 +201,7 @@ value JsonWriter::for_range_diff(const value_range_t &range)
           const value_range_t::bound_t &bound = range.get_lower_bound(i);
           object lb;
           tmp = bound.value;
-          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          backend->call("diffEpsilon", true, 1, "vln", "vl", &tmp, &ret);
           lb["value"] = value(ret.get_string());
           lb["closed"] = value(bound.include_bound);
           lbs.push_back(value(lb));
@@ -214,7 +214,7 @@ value JsonWriter::for_range_diff(const value_range_t &range)
           const value_range_t::bound_t &bound = range.get_upper_bound(i);
           object ub;
           tmp = bound.value;
-          backend->call("diffEpsilon", 1, "vln", "vl", &tmp, &ret);
+          backend->call("diffEpsilon", true, 1, "vln", "vl", &tmp, &ret);
           ub["value"] = value(ret.get_string());
           ub["closed"] = value(bound.include_bound);
           ubs.push_back(value(ub));

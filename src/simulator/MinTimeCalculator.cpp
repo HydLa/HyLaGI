@@ -22,10 +22,10 @@ find_min_time_result_t MinTimeCalculator::calculate_min_time(guard_time_map_t *g
   find_min_time_result_t find_min_time_result;
 
   if(starting_time.undefined()){
-    backend->call("minimizeTime", 2, "envlt", "f",
+    backend->call("minimizeTime", true, 2, "envlt", "f",
                   &current_cons, &time_limit, &find_min_time_result);
   }else{
-    backend->call("minimizeTime", 3, "envltvlt", "f",
+    backend->call("minimizeTime", true, 3, "envltvlt", "f",
                   &current_cons, &starting_time, &time_limit, &find_min_time_result);
   }
   return find_min_time_result;
