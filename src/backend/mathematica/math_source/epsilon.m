@@ -189,8 +189,9 @@ publicMethod[
              Module[
                     {tmp,ret},
                     debugPrint["json diffEpsilonP arg",arg];
-                    tmp = arg /. p[peps, 0, 1] -> 0;
-                    ret = Simplify[arg - tmp];
+                    tmp = Quiet[Check[arg /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
+                    (* tmp = arg /. p[peps, 0, 1] -> 0; *)
+                    If[tmp =!= False, ret = Simplify[arg - tmp], ret = arg];
                     toReturnForm[ret]
                     ]
              ];
