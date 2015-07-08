@@ -27,7 +27,7 @@ using namespace backend;
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr), backend_check_consistency_count(0), backend_check_consistency_time(0){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
-void ConsistencyChecker::send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode)
+void ConsistencyChecker::send_range_constraint(const Variable &var, const variable_map_t &vm, bool prev_mode)
 {
   if(!vm.count(var))return;
   std::string fmt = prev_mode ? "vpvlp" : "vnvln";
@@ -74,7 +74,7 @@ void ConsistencyChecker::send_range_constraint(Variable &var, const variable_map
   }
 }
 
-void ConsistencyChecker::send_prev_constraint(Variable &var){
+void ConsistencyChecker::send_prev_constraint(const Variable &var){
   send_range_constraint(var, *prev_map, true);
 }
 
@@ -115,10 +115,6 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
     variable_set = finder.get_variable_set();
     fmt += "n";
-    for(auto prev_variable : finder.get_prev_variable_set())
-    {
-      if(!variable_set.count(prev_variable)) send_prev_constraint(prev_variable);
-    }
   }
   else
   {
@@ -140,12 +136,11 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
       {
         for(int i = 0; i <= entry.second;i++){
           variable_t var(entry.first, i);
-          send_prev_constraint(var);
           send_init_equation(var, fmt);
         }
         Value zero_value("0");
         variable_t var(entry.first, entry.second + 1);
-        backend->call("addInitEquation", false, 2, "vtvlt", "", &var, &zero_value);
+        backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
       }
     }
   }
@@ -154,11 +149,9 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
   {
     for(int i = 0; i < dm_entry.second;i++){
       variable_t var(dm_entry.first, i);
-      send_prev_constraint(var);
       send_init_equation(var, fmt);
     }
     variable_t var(dm_entry.first, dm_entry.second);
-    send_prev_constraint(var);
   }
 }
 
@@ -171,7 +164,6 @@ int ConsistencyChecker::get_backend_check_consistency_time()
 {
   return backend_check_consistency_time;
 }
-
 
 void ConsistencyChecker::reset_count()
 {
@@ -229,16 +221,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   backend->call("resetConstraintForVariable", false, 0, "", "");
 
-  if(phase == POINT_PHASE)
-  {
-    VariableFinder finder;
-    finder.visit_node(guard);
-    for(auto variable : finder.get_prev_variable_set())
-    {
-      send_prev_constraint(variable);
-    }
-  }
-
   VariableFinder finder;
   ConstraintStore constraint_store;
   module_set_t module_set;
@@ -286,17 +268,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
   
   backend->call("resetConstraintForVariable", false, 0, "", "");
-
-  if(phase == POINT_PHASE)
-  {
-    VariableFinder finder;
-    finder.visit_node(guard);
-    for(auto variable : finder.get_prev_variable_set())
-    {
-      send_prev_constraint(variable);
-    }
-  }
-
 
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
   backend->call("addConstraint", false, 1, fmt.c_str(), "", &vm);
@@ -470,6 +441,11 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 void ConsistencyChecker::set_prev_map(const variable_map_t* vm)
 {
   prev_map = vm;
+  backend->call("clearPrevConstraint", false, 0, "", "");
+  for(auto var_entry : *vm)
+  {
+    send_prev_constraint(var_entry.first);
+  }
 }
 
 vector<variable_map_t> ConsistencyChecker::get_result_maps()

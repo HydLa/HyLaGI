@@ -6,6 +6,7 @@
 #include "Timer.h"
 
 #include "PrevReplacer.h"
+#include "VariableReplacer.h"
 #include "VariableFinder.h"
 #include "PrevSearcher.h"
 #include "HydLaError.h"
@@ -58,6 +59,14 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       relation_graph_->set_expanded_recursive(module.second, true);
     }
     todo->diff_sum.add_constraint_store(relation_graph_->get_constraints());
+  }
+  else
+  {
+    todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
+    if(todo->phase_type == INTERVAL_PHASE)
+    {
+      todo->prev_map = todo->parent->variable_map;
+    }
   }
   
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
@@ -376,13 +385,34 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
-  branch_state_false->additional_constraint_store.add_constraint_store(result.inconsistent_store);
+  
+
+  branch_state_false->additional_constraint_store.add_constraint_store(replace_prev_store(original->parent, result.inconsistent_store));
 
   original->parent->todo_list.push_back(branch_state_false);
-  original->additional_constraint_store.add_constraint_store(result.consistent_store);
+  original->additional_constraint_store.add_constraint_store(replace_prev_store(original->parent, result.consistent_store));
+  if(original->phase_type == INTERVAL_PHASE)
+  {
+    original->prev_map = original->parent->variable_map;
+    consistency_checker->set_prev_map(&original->prev_map);
+  }
+  HYDLA_LOGGER_DEBUG_VAR(original->additional_constraint_store);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &original->additional_constraint_store);
+  HYDLA_LOGGER_DEBUG_VAR(*branch_state_false);
+  HYDLA_LOGGER_DEBUG_VAR(*original);
 }
 
+ConstraintStore PhaseSimulator::replace_prev_store(PhaseResult *parent, ConstraintStore orig)
+{
+  PrevReplacer replacer(*parent, *simulator_);
+  ConstraintStore replaced_store;
+  for(auto cons : orig)
+  {
+    replacer.replace_node(cons);
+    replaced_store.add_constraint(cons);
+  }
+  return replaced_store;
+}
 
 void PhaseSimulator::check_break_points(phase_result_sptr_t &phase, variable_map_t &variable_map)
 {
@@ -498,19 +528,12 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
       if(replaced)vm[var_entry.first] = range;
     }
   }
-  ConstraintStore par_cons = phase.get_parameter_constraint();
-  if(!par_cons.empty())
-  {
-    ConstraintStore new_par_cons;
-    for(auto cons : par_cons)
-    {
-      replacer.replace_node(cons);
-      new_par_cons.insert(cons);
-    }
-    phase.set_parameter_constraint(new_par_cons);
-  }
   phase.add_parameter_constraint(replacer.get_parameter_constraint());
+  phase.set_parameter_constraint(replace_prev_store(phase.parent, phase.get_parameter_constraint()));
+  HYDLA_LOGGER_DEBUG_VAR(phase.get_parameter_constraint());
 }
+
+
 
 void PhaseSimulator::set_backend(backend_sptr_t back)
 {
@@ -985,7 +1008,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   phase_result_sptr_t next_todo(new PhaseResult());
 
   next_todo->step = phase->step + 1;
-  next_todo->set_parameter_constraint(phase->get_parameter_constraint());
+
   if(phase->phase_type == POINT_PHASE)
   {
     if(phase->in_following_step()){
@@ -1002,20 +1025,20 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     check_break_points(phase, phase->variable_map);
     if(!aborting)
     {
+      next_todo->set_parameter_constraint(phase->get_parameter_constraint());
       next_todo->id = ++phase_sum_;
       next_todo->phase_type = INTERVAL_PHASE;
       next_todo->parent = phase.get();
       next_todo->diff_sum = phase->diff_sum;
       next_todo->current_time = phase->end_time = phase->current_time;
       next_todo->discrete_asks = phase->discrete_asks;
-      next_todo->prev_map = phase->variable_map;
       phase->todo_list.push_back(next_todo);
     }
   }
   else
   {
-    replace_prev2parameter(*phase, phase->variable_map);
     next_todo->phase_type = POINT_PHASE;
+    replace_prev2parameter(*phase, phase->variable_map);
 
     reset_parameter_constraint(phase->get_parameter_constraint());
 

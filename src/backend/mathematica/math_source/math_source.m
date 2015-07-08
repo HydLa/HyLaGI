@@ -36,7 +36,7 @@ checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons /. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, initRules_, pCons_] :=
@@ -84,6 +84,7 @@ publicMethod[
     {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
       {{LogicalExpand[pCons]}, {False}},
+      simplePrint[prevRules, prevConstraint];
       sol = exDSolve[cons, initCons];
       timeVars = Map[(#[t])&, getVariables[cons] ];
       prevVars = getPrevVariables[initCons];
@@ -287,14 +288,17 @@ publicMethod[
   constraint = True;
   initConstraint = True;
   pConstraint = True;
+];
+
+publicMethod[
+  clearPrevConstraint,
   prevConstraint = True;
   prevRules = {};
 ];
 
 publicMethod[
   resetConstraintForVariable,
-  constraint = initConstraint = prevConstraint = True;
-  prevRules = {};
+  constraint = initConstraint = True;
 ];
 
 publicMethod[
@@ -302,14 +306,14 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] /. prevRules;
+    cons = If[Head[co] === List, And@@co, co] //. prevRules;
     constraint = constraint && cons;
   ]
 ];
 
 addInitConstraint[co_] := Module[
   {cons, vars},
-  cons = And@@co /. prevRules;
+  cons = And@@co //. prevRules;
   initConstraint = initConstraint && cons;
 ];
 

@@ -21,6 +21,7 @@ class Backend;
 namespace simulator {
 
 class PhaseResult;
+class PrevReplacer;
 
 /**
  * type for cause of termination of simulation

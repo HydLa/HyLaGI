@@ -1,5 +1,6 @@
 #include "Parameter.h"
 #include "PhaseResult.h"
+#include "Value.h"
 #include <stdexcept>
 #include <stdlib.h>
 
@@ -38,7 +39,10 @@ bool operator<(const Parameter& lhs,
   return lhs.to_string() < rhs.to_string();
 }
   
-
+Value Parameter::as_value()const
+{
+  return Value(symbolic_expression::node_sptr(new symbolic_expression::Parameter(get_name(), get_differential_count(), get_phase_id())));
+}
 
 Parameter::Parameter(const std::string &str)
 {

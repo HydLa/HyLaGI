@@ -101,9 +101,9 @@ private:
   void check_consistency_foreach(const ConstraintStore& constraint_store, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   void send_init_equation(Variable &var, std::string fmt);
-  void send_prev_constraint(Variable &var);
+  void send_prev_constraint(const Variable &var);
 
-  void send_range_constraint(Variable &var, const variable_map_t &vm, bool prev_mode);
+  void send_range_constraint(const Variable &var, const variable_map_t &vm, bool prev_mode);
 
 
   backend_sptr_t backend;

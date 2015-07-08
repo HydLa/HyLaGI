@@ -71,10 +71,11 @@ private:
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
 
+  ConstraintStore replace_prev_store(PhaseResult *parent, ConstraintStore orig);
+
   void replace_prev2parameter(
                               PhaseResult &phase,
                               variable_map_t &vm);
-
 
   void reset_parameter_constraint(ConstraintStore par_cons);
 
