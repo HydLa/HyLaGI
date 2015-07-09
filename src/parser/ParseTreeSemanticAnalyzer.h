@@ -31,6 +31,8 @@ public:
    */
   void analyze(symbolic_expression::node_sptr& n);
 
+private:
+
   // 定義
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::ProgramDefinition> node);
@@ -178,7 +180,6 @@ public:
   // Intersection 
   virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
 
-private:
   typedef parser::DefinitionContainer<
     symbolic_expression::Definition>::definition_map_key_t referenced_definition_t;
 
@@ -213,6 +214,11 @@ private:
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
 
+  std::set<boost::shared_ptr<symbolic_expression::ConstraintDefinition> > unused_constraint_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ProgramDefinition> >  unused_program_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  unused_expression_list_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  unused_program_list_definition;
+
   /**
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する
@@ -243,7 +249,9 @@ private:
   DefinitionContainer<symbolic_expression::ProgramListDefinition>& 
     program_list_definition_;
 
-  std::stack<std::map<node_sptr, node_sptr> > local_variables_in_list_;  
+  std::stack<std::map<node_sptr, node_sptr> > local_variables_in_list_;
+
+  
 
   ListExpander list_expander_;
 

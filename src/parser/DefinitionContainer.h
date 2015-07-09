@@ -113,6 +113,9 @@ public:
     return s;
   }
 
+  definition_map_const_iterator begin() const{return definition_map_.begin();}
+  definition_map_const_iterator end() const{return definition_map_.end();}
+
 private:
 
   /**

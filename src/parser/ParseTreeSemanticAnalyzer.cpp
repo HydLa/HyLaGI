@@ -5,6 +5,7 @@
 
 #include "ParseError.h"
 #include "TreeInfixPrinter.h"
+#include "Logger.h" 
 
 using namespace hydla::symbolic_expression;
 using namespace hydla::parser::error;
@@ -52,7 +53,12 @@ ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
     program_list_definition_(program_list_definition),
     list_expander_(constraint_definition, program_definition, expression_list_definition, program_list_definition),
     parse_tree_(parse_tree)
-{}
+{
+  for(auto def : constraint_definition)  unused_constraint_definition.insert(def.second);
+  for(auto def : program_definition)  unused_program_definition.insert(def.second);
+  for(auto def : expression_list_definition)  unused_expression_list_definition.insert(def.second);
+  for(auto def : program_list_definition)  unused_program_list_definition.insert(def.second);
+}
 
 ParseTreeSemanticAnalyzer::~ParseTreeSemanticAnalyzer()
 {}
@@ -69,6 +75,11 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n)
 
     accept(n);
     if(new_child_) n = new_child_;
+
+    for(auto def : unused_constraint_definition) HYDLA_LOGGER_WARN("WARNING: Constraint ", def->get_name(), " is defined but not called.");
+    for(auto def : unused_program_definition) HYDLA_LOGGER_WARN("WARNING: Program ", def->get_name(), " is defined but not called.");
+    for(auto def : unused_expression_list_definition) HYDLA_LOGGER_WARN("WARNING: Expression list ", def->get_name(), " is defined but not called.");
+    for(auto def : unused_program_list_definition) HYDLA_LOGGER_WARN("WARNING: Program list", def->get_name(), " is defined but not called.");
 
     assert(todo_stack_.size() == 1);
   }
@@ -162,6 +173,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
       throw UndefinedReference(node);
     }
 
+    unused_constraint_definition.erase(cons_def);
+
     // 定義の展開
     node->set_child( 
       apply_definition(deftype, node, cons_def));
@@ -186,8 +199,20 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
         constraint_definition_.get_definition(deftype));
       if(!cons_def){
         throw UndefinedReference(node);
-      }else def = cons_def;
-    }else def = prog_def;
+      }else
+      {
+        def = cons_def;
+        unused_constraint_definition.erase(cons_def);
+      }
+    }else
+    {
+      def = prog_def;
+      unused_program_definition.erase(prog_def);
+    }
+
+
+
+
 
     // 定義の展開
     node->set_child(
@@ -208,6 +233,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
     if(!expr_list_def){
       throw UndefinedReference(node);
     }
+
+    unused_expression_list_definition.erase(expr_list_def);
 
     // 定義の展開
     new_child_ = apply_definition(deftype,node,expr_list_def);
@@ -233,7 +260,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
     if(!prog_list_def){
       throw UndefinedReference(node);
     }
-
+    unused_program_list_definition.erase(prog_list_def);
 
     // 定義の展開
     new_child_ = apply_definition(deftype,node,prog_list_def);
