@@ -1,0 +1,27 @@
+// maze billiard of the form
+// +---   +
+// |      |
+// |      |
+// |      |
+// +   ---+
+//   *
+// author: Kazunori Ueda
+
+INIT(b,b0,vb0) <=> b=b0 & b'=vb0.
+
+CONSTV(b) <=> [](b''=0).
+WALL(x,wx,y,ymin,ymax) <=> [](x-=wx & y- >= ymin & y- <= ymax => x'=-x'-).
+
+-1 <= vx <= 1.  [](vx' = 0).
+// -0.2 = vx.  [](vx' = 0).
+// -7/41 <= vx <= -5/41.  [](vx' = 0).
+
+0.3 <= x0 <= 0.7.  [](x0' = 0).
+// 2/10 < x0 <= 4/10.  [](x0' = 0).
+
+INIT(x,x0,vx), INIT(y,-0.1,2).
+
+CONSTV(x) << (WALL(x,0,y,0,2), WALL(x,2,y,0,2)).
+CONSTV(y) << (WALL(y,2,x,0,1), WALL(y,0,x,1,2)).
+
+// #hylagi --fnd -p8
