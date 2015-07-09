@@ -120,9 +120,7 @@ publicMethod[
   cons, vars, pars,
   Module[
     {ret, map},
-    map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-    simplePrint[map];
-    (* If the constraints include inequalities we use Reduce *)
+    map = removeUnnecessaryConstraints[cons, hasVariable];
     map = Reduce[map, vars, Reals];
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True, 

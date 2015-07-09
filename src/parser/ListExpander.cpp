@@ -1,9 +1,12 @@
 #include "ListExpander.h"
+#include "Logger.h"
 
 namespace hydla{
 namespace parser{
 
 using namespace symbolic_expression;
+using namespace boost;
+using namespace std;
 
 #define DEFINE_FACTOR_VISIT(TYPE) \
 void ListExpander::visit(boost::shared_ptr<TYPE> node) \
@@ -335,7 +338,7 @@ void ListExpander::expand_conditional_list(boost::shared_ptr<VariadicNode> ret, 
     return;
   }
 
-  // DifferenVariable
+  // DifferentVariable
   bn = boost::dynamic_pointer_cast<DifferentVariable>(list->get_argument(idx)->clone());
   if(bn){
     node_sptr lhs,rhs;
@@ -682,6 +685,7 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ProgramListCalle
   if(!cons_def) {
     throw hydla::parser::error::UndefinedReference(node);
   }
+  called_program_list_definition.insert(cons_def);
 
   new_child = circular_check(deftype,cons_def);
   accept(new_child);
@@ -696,6 +700,8 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListCa
   if(!cons_def) {
     throw hydla::parser::error::UndefinedReference(node);
   }
+
+  called_expression_list_definition.insert(cons_def);
 
   new_child = circular_check(deftype,cons_def);
   accept(new_child);
@@ -797,6 +803,9 @@ DEFINE_FACTOR_VISIT(Infinity)
 
 DEFINE_ARBITRARY_VISIT(Function)
 DEFINE_ARBITRARY_VISIT(UnsupportedFunction)
+
+set<boost::shared_ptr<ExpressionListDefinition> >  ListExpander::get_called_expression_list_definition(){return called_expression_list_definition;}
+set<boost::shared_ptr<ProgramListDefinition> >  ListExpander::get_called_program_list_definition(){return called_program_list_definition;}
 
 }
 }

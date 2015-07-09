@@ -76,10 +76,13 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n)
     accept(n);
     if(new_child_) n = new_child_;
 
+    for(auto def : list_expander_.get_called_expression_list_definition())unused_expression_list_definition.erase(def);
+    for(auto def : list_expander_.get_called_program_list_definition())unused_program_list_definition.erase(def);
+
     for(auto def : unused_constraint_definition) HYDLA_LOGGER_WARN("WARNING: Constraint ", def->get_name(), " is defined but not called.");
     for(auto def : unused_program_definition) HYDLA_LOGGER_WARN("WARNING: Program ", def->get_name(), " is defined but not called.");
     for(auto def : unused_expression_list_definition) HYDLA_LOGGER_WARN("WARNING: Expression list ", def->get_name(), " is defined but not called.");
-    for(auto def : unused_program_list_definition) HYDLA_LOGGER_WARN("WARNING: Program list", def->get_name(), " is defined but not called.");
+    for(auto def : unused_program_list_definition) HYDLA_LOGGER_WARN("WARNING: Program list ", def->get_name(), " is defined but not called.");
 
     assert(todo_stack_.size() == 1);
   }
@@ -233,7 +236,6 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
     if(!expr_list_def){
       throw UndefinedReference(node);
     }
-
     unused_expression_list_definition.erase(expr_list_def);
 
     // 定義の展開
@@ -260,6 +262,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
     if(!prog_list_def){
       throw UndefinedReference(node);
     }
+
     unused_program_list_definition.erase(prog_list_def);
 
     // 定義の展開
