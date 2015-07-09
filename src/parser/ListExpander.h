@@ -103,12 +103,19 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller>);
   virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList>);
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList>);
+
+  std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  get_called_expression_list_definition();
+  std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  get_called_program_list_definition();
 private:
   void expand_conditional_list(boost::shared_ptr<symbolic_expression::VariadicNode>, symbolic_expression::node_sptr, boost::shared_ptr<symbolic_expression::VariadicNode>, int);
 
   bool in_list_element = false;
 
   std::stack<std::set<referenced_definition_t> > referenced_definition;
+
+  std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  called_expression_list_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  called_program_list_definition;
+
   std::map<symbolic_expression::node_sptr,symbolic_expression::node_sptr> local_variable_map;
   symbolic_expression::node_sptr new_child;
   DefinitionContainer<symbolic_expression::ConstraintDefinition> constraint_def;
