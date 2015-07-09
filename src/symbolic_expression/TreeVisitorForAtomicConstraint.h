@@ -21,8 +21,11 @@ public:
   virtual void visit(boost::shared_ptr<LessEqual> node);
   virtual void visit(boost::shared_ptr<Greater> node);
   virtual void visit(boost::shared_ptr<GreaterEqual> node);
+  
+  virtual void visit(boost::shared_ptr<True> node);
+  virtual void visit(boost::shared_ptr<False> node);
 
-  virtual void visit_atomic_constraint(boost::shared_ptr<BinaryNode> node) = 0;
+  virtual void visit_atomic_constraint(boost::shared_ptr<Node> node) = 0;
 };
 
 } //namespace symbolic_expression

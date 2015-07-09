@@ -24,6 +24,10 @@ void TreeVisitorForAtomicConstraint::visit(boost::shared_ptr<Greater> node)
 {visit_atomic_constraint(node);}
 void TreeVisitorForAtomicConstraint::visit(boost::shared_ptr<GreaterEqual> node)  
 {visit_atomic_constraint(node);}
+void TreeVisitorForAtomicConstraint::visit(boost::shared_ptr<True> node)
+{visit_atomic_constraint(node);}
+void TreeVisitorForAtomicConstraint::visit(boost::shared_ptr<False> node)
+{visit_atomic_constraint(node);}
 
 } //namespace symbolic_expression
 } //namespace hydla

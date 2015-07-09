@@ -284,7 +284,7 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
   void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
   void visit(boost::shared_ptr<symbolic_expression::Always> always); 
-  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> binary);
+  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> binary);
   
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;

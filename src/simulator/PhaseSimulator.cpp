@@ -73,7 +73,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   if(phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
-    // todo->set_parameter_constraint(get_current_parameter_constraint());
+    todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
   }
   else

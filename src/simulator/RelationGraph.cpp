@@ -616,7 +616,7 @@ constraints_t RelationGraph::get_all_guards()
   return result;
 }
 
-void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node)
+void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node)
 {
   if(visit_mode == ADDING_ASK)
   {

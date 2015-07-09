@@ -33,7 +33,7 @@ void AlwaysFinder::visit(boost::shared_ptr<symbolic_expression::Always> node)
   always_set->insert(node);
 }
 
-void AlwaysFinder::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node)
+void AlwaysFinder::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node)
 {
   if(non_always != nullptr) non_always->add_constraint(node);
 }

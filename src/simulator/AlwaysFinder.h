@@ -25,7 +25,7 @@ public:
   // Always
   virtual void visit(boost::shared_ptr<symbolic_expression::Always> node);
 
-  virtual void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::BinaryNode> node);
+  virtual void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node);
 
 private:
 
