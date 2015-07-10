@@ -80,6 +80,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   {
     for(auto phase : phase_list)
     {
+
+
       if(phase->parent == result_root.get())
       {
         AlwaysFinder always_finder;
@@ -95,6 +97,14 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         }
       }
       make_next_todo(phase);
+
+      // warn against unreferenced variables
+      for(auto var: *variable_set_)
+      {
+        if(var.get_differential_count() == 0 &&
+           !phase->variable_map.count(var))HYDLA_LOGGER_WARN(var, " is completely unbound at phase... ", *phase);
+      }
+          
       if(aborting)break;
     }
   }
@@ -285,11 +295,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if(create_result.size() == 0)
     {
-      throw HYDLA_ERROR("some error occured in creation of variable maps." + phase->get_string());
+      throw HYDLA_ERROR("some error occured in creation of variable maps at phase...\n" + phase->get_string());
     }
     else if(create_result.size() > 1)
     {
-      throw HYDLA_ERROR("result variable map is not single. \nphase:" + phase->get_string());
+      throw HYDLA_ERROR("result variable map is not single at phase...\n" + phase->get_string());
     }
     phase->variable_map = create_result[0];
     if(opts_->epsilon_mode >= 0){
@@ -333,7 +343,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
             break;
           }
         }
-        if(max_d_count < 0)throw HYDLA_ERROR("Value of " + pair.first + " is not defined.");
+        if(max_d_count < 0)throw HYDLA_ERROR("Value of " + pair.first + " is not defined at phase...\n" + phase->get_string());
         Variable var(pair.first, max_d_count);
         if(!consistency_checker->check_continuity(var, phase->variable_map))
           discrete_vs.insert(var);

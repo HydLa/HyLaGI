@@ -30,4 +30,4 @@ BOTH_INTERVAL(0, 1, -1/10, -1/100).
 
 ASSERT(y' != 0 | 9 < y < 11).
 
-//#hylagi --fnd -p 10
+//#hylagi --fnd -p 10 --fignore_warnings

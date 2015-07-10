@@ -111,12 +111,12 @@ void ProgramOptions::init_descriptions()
 
     ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
-    ("ignore_warnings", value<char>()->default_value('y'), "ignore warnings created by backend solvers. \n"
-     "(current canidates: DSolve::bvnul, Reduce::ztest1)"
+    ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
+     "current canidates: DSolve::bvnul, Reduce::ztest1\n"
+     "Note: Warnings from HyLaGI itself are always activated"
       )
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
-
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
