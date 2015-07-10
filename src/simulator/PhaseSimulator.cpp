@@ -68,6 +68,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       todo->prev_map = todo->parent->variable_map;
     }
   }
+
+  if(todo->phase_type == POINT_PHASE)backend_->call("setCurrentTime", true, 1, "vln", "", &todo->current_time);
   
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
   if(phase_list.empty())
@@ -1096,7 +1098,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 
       next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
 
-      set<string> checked_variables;
+
 
       variable_set_t diff_variables;
       {
@@ -1113,18 +1115,26 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
       set<ask_t> asks;
-      for(auto variable : diff_variables)
+      if(phase->parent->parent == result_root.get())
       {
-        string var_name = variable.get_name();
-        // 既にチェック済みの変数なら省略（x'とxはどちらもxとして扱うため，二回呼ばれないようにする）
-        if(checked_variables.count(var_name))continue;
-        checked_variables.insert(var_name);
-        asks_t tmp_asks = relation_graph_->get_adjacent_asks(var_name);
-        asks.insert(tmp_asks.begin(), tmp_asks.end());
+        asks = relation_graph_->get_all_asks();
       }
-      for(auto entry : phase->discrete_asks)
+      else
       {
-        asks.insert(entry.first);
+        set<string> checked_variables;
+        for(auto variable : diff_variables)
+        {
+          string var_name = variable.get_name();
+          // 既にチェック済みの変数なら省略（x'とxはどちらもxとして扱うため，二回呼ばれないようにする）
+          if(checked_variables.count(var_name))continue;
+          checked_variables.insert(var_name);
+          asks_t tmp_asks = relation_graph_->get_adjacent_asks(var_name);
+          asks.insert(tmp_asks.begin(), tmp_asks.end());
+        }
+        for(auto entry : phase->discrete_asks)
+        {
+          asks.insert(entry.first);
+        }
       }
       for(auto ask : asks)
       {

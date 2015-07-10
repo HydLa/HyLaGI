@@ -169,8 +169,21 @@ public:
     if(!in_constraint_caller_) container_name_+="\'";
   }
 
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
+  {
+    accept(node->get_child());
+    if(!in_constraint_caller_) container_name_+="-";
+  }
+
+
+
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
+  {
+    if(!in_constraint_caller_) container_name_ += node->get_name();
+  }
+
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
   {
     if(!in_constraint_caller_) container_name_ += node->get_name();
   }

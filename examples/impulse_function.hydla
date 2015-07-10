@@ -1,0 +1,6 @@
+//(impulse function)
+
+FLAT  <=> [](b=0).
+PULSE <=> [](t = 5=> b=1).
+
+FLAT << PULSE.

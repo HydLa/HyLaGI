@@ -334,6 +334,7 @@ boost::shared_ptr<Variable> Parser::variable(){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){
       lexer.set_current_position(tmp_position);
+      if(name == "t") return boost::shared_ptr<Variable>(new SymbolicT());
       return boost::shared_ptr<Variable>(new Variable(name));
     }
   }

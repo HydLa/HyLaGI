@@ -1,21 +1,21 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters ]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, vars, pars,
+  cons, pcons, vars, pars, current,
   Module[
     {cpTrue, cpFalse},
 
     Quiet[
-         cpTrue = Reduce[Exists[vars, cons && pcons], pars, Reals], {Reduce::useq}
+         cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -113,14 +113,14 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
-  cons, vars, pars,
+  cons, vars, pars, current,
   Module[
     {ret, map},
-    map = removeUnnecessaryConstraints[cons, hasVariable];
+    map = removeUnnecessaryConstraints[cons /. t -> current, hasVariable];
     map = Reduce[map, vars, Reals];
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True, 
@@ -251,6 +251,7 @@ hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Inf
 
 hasVariableOrParameter[exprs_] := hasParameter[exprs] || hasVariable[exprs];
 
+
 (* 式が定数そのものか否か *)
 
 isParameter[exprs_] := Head[exprs] === p;
@@ -337,6 +338,11 @@ publicMethod[
   prevConstraint = prevConstraint && co;
 ];
 
+publicMethod[
+  setCurrentTime,
+  expr,
+  currentTime = expr;
+];
 
 
 makePrevVar[var_] := Module[
@@ -482,20 +488,21 @@ Module[
   ]
 ];
 
-calculateConsistentTime[cause_, cons_] := calculateConsistentTime[cause, cons, pConstraint];
+calculateConsistentTime[cause_, cons_] := calculateConsistentTime[cause, cons, pConstraint, currentTime];
 
 findMinTime::minimizeFailure = "failed to minimize t";
 
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, pCons,
+  cause, cons, pCons, current, 
   Module[
     {
+      tRemovedRules,
       resultCons
     },
-    tStore = Map[(Rule@@#)&, cons];
-    resultCons = ToRadicals[cause /. tStore];
+    tRemovedRules = Map[(Rule@@#)&, cons] /. x_[t] -> x;
+    resultCons = ToRadicals[cause /. x_[t] -> x /. t -> t + current /. tRemovedRules];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
@@ -605,7 +612,7 @@ applyDSolveResult[exprs_, integRule_] := (
 
 createDifferentiatedEquations[vars_, integRules_] := (
   Module[
-    {tRemovedRules, derivativeExpanded, ruleApplied, ruleVars, ret, tRemovedVars},
+    {ret},
     ret = Fold[(Join[#1, createDifferentiatedEquation[#2, integRules] ])&, {}, vars];
     ret
   ]
@@ -654,10 +661,8 @@ Module[
   resultCons = Select[listExpr, (Head[#] =!= Equal)&];
   listExpr = Complement[listExpr, resultCons];
   (* add constraint "t > 0" to exclude past case *)
+  tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
   resultCons = And@@resultCons && t > 0;
-  reducedExpr = Quiet[Check[Reduce[listExpr, Reals], listExpr], {Reduce::nsmet, Reduce::useq}];
-  (* Reduceの結果が使えそうな場合のみ使う *)
-  If[Head[reducedExpr] === And && MemberQ[reducedExpr, Element, Infinity, Heads->True], listExpr = applyList[reducedExpr] ];
   tmpInitExpr = applyList[initExpr];
   resultRule = {};
   While[True,

@@ -9,6 +9,7 @@ $MaxExtraPrecision = 1000;
  * pConstraint: 定数についての制約
  * prevConstraint: constraint for previ variables
  * prevRules:      rules converted from equalities of left-hand limits
+ * currentTime:    symbolic expression of current time 
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
  * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの

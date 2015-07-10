@@ -26,7 +26,7 @@ bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_res
   return rhs->id > lhs->id;
 }
 
-Simulator::Simulator(Opts& opts):system_time_("time", 0), opts_(&opts), exit_status(EXIT_SUCCESS)
+Simulator::Simulator(Opts& opts): opts_(&opts), exit_status(EXIT_SUCCESS)
 {
   affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);

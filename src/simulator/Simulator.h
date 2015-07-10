@@ -23,7 +23,6 @@ namespace interval
 
 namespace simulator {
 
-class RelationGraph;
 struct BreakPoint;
 
 class PhaseComparator
@@ -113,8 +112,6 @@ public:
    * set of variables
    */
   variable_set_t variable_set_;
-
-  variable_t system_time_;
 
   /*
    * map of introduced parameters and their ranges of values

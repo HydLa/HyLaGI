@@ -1100,12 +1100,12 @@ public:
   }
   
 
-  void set_name(const std::string& name) 
+  virtual void set_name(const std::string& name) 
   {
     name_ = name;
   }
 
-  std::string get_name() const
+  virtual std::string get_name() const
   {
     return name_;
   }
@@ -1229,7 +1229,7 @@ public:
  * ｔ（時刻）を表すノード．変数の時刻に対する式の中に出現するやつ．数式処理用
  */
 
-class SymbolicT : public FactorNode {
+class SymbolicT : public Variable {
 public:
   SymbolicT()
   {}
@@ -1248,6 +1248,10 @@ public:
   virtual std::string get_node_type_name() const {
     return "SymbolicT";
   }
+
+  virtual void set_string(std::string){}
+
+  virtual std::string get_name()const{return "t";}
 
   virtual std::ostream& dump(std::ostream& s) const 
   {
