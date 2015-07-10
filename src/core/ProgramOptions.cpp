@@ -45,7 +45,7 @@ void ProgramOptions::init_descriptions()
 
      "only output priorities of modules\n"
      "  in graphviz format")
-    ("dump_relation_graph", 
+    ("dump_relation_graph",
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
@@ -97,12 +97,14 @@ void ProgramOptions::init_descriptions()
   options_description toggle_desc("Flag options\n"
                                   "(can be specified \"--f[name]\" or \"--[name] y\""
                                   " and can be invalidated \"--fno-[name]\" or \"--[name] n\")");
-  toggle_desc.add_options()  
+  toggle_desc.add_options()
     ("nd", value<char>()->default_value('n'), "nondeterministic mode")
 
     ("ha", value<char>()->default_value('n'), "convert to HA")
 
     ("hs", value<char>()->default_value('n'), "simulate using HA")
+
+    ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
     ("fail_on_stop",value<char>()->default_value('n'),
      "stop all simulation cases when assertion fails")
@@ -121,7 +123,7 @@ void ProgramOptions::init_descriptions()
     ;
 
 
-  
+
   options_description hidden_desc("Hidden options");
   hidden_desc.add_options()
     ("input-file", value<std::string>(), "input file")
