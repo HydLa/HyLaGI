@@ -8,6 +8,8 @@
 #include "LTLNode.h"
 #include "PropertyNode.h"
 
+// test
+extern hydla::Opts opts;
 
 namespace hydla{
 namespace io{
@@ -124,6 +126,21 @@ void SymbolicTrajPrinter::output_variable_map(std::
 ostream &stream, const variable_map_t& vm) const
 {
   for(auto it = vm.begin(); it!=vm.end(); ++it) {
+
+    // 出力変数を指定した場合
+    if (opts.omit_var == true) {
+      bool hit = false;
+      for (auto it2 = opts.output_vars.begin(); it2 != opts.output_vars.end(); ++it2) {
+        if (it->first.get_string() == *it2) {
+          hit = true;
+          break;
+        }
+      }
+      if (hit) {
+        continue;
+      }
+    }
+
     stream << it->first << "\t: " << it->second << "\n";
   }
 }

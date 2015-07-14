@@ -29,6 +29,8 @@ struct Opts {
   bool ignore_warnings;
   symbolic_expression::node_sptr assertion;
   int max_phase;
+  bool omit_var;
+  std::set<std::string> output_vars;
 };
 
 }

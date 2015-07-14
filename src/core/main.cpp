@@ -2,6 +2,7 @@
 #include <exception>
 #include <string>
 #include <fstream>
+#include <regex>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -116,8 +117,49 @@ int hydla_main(int argc, char* argv[])
   options_in_source.parse(option_string);
   setup_simulator_opts(opts, options_in_source, true);
 
-  pt->parse_string(input);
+  // コメント中の変数省略指定を調べる
+  bool isOmit = false;
+  const string omit_comment = "#omit ";
+  string::size_type output_pos = comment.find(omit_comment);
+  if (output_pos != string::npos)
+  {
+    isOmit = true;
+    opts.omit_var = true;
+    output_pos += omit_comment.length();
 
+    // 省略対象指定部を取り出す
+    string::size_type pos = comment.find('\n', output_pos);
+    string omit_var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
+
+    // 省略変数を解析する
+    string delimStr = ",";
+    vector<string> omit_var_list;
+    std::stringstream ss(omit_var_string);
+    string buffer;
+    while (std::getline(ss, buffer, ','))
+    {
+      // 前後の空白を取り除く
+      auto left = buffer.find_first_not_of(" ");
+      if (left != string::npos)
+      {
+        auto right = buffer.find_last_not_of(" ");
+        buffer = buffer.substr(left, right - left + 1);
+      }
+      // 変数名に使えない文字が入っていたら警告
+      regex re("^[0-9a-z']+$");
+      smatch match;
+      if (!regex_search(buffer, match, re))
+      {
+        cout << "[#omit] warning : \"" << buffer << "\" is not a valid variable name." << endl;
+        continue;
+      }
+
+      omit_var_list.push_back(buffer);
+      opts.output_vars.insert(buffer);
+    }
+  }
+
+  pt->parse_string(input);
 
   if(cmdline_options.count("parse_only"))
   {
