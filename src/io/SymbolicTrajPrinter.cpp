@@ -8,7 +8,6 @@
 #include "LTLNode.h"
 #include "PropertyNode.h"
 
-// test
 extern hydla::Opts opts;
 
 namespace hydla{
