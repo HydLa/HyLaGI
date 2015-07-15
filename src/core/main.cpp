@@ -146,7 +146,7 @@ int hydla_main(int argc, char* argv[])
         buffer = buffer.substr(left, right - left + 1);
       }
       // 変数名に使えない文字が入っていたら警告
-      regex re("^[0-9a-z']+$", std::regex_constants::basic);
+      regex re("^[0-9a-z']+$", std::regex_constants::extended);
       smatch match;
       if (!regex_search(buffer, match, re))
       {
