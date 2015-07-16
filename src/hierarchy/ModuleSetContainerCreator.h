@@ -80,6 +80,11 @@ public:
   {
     if(!in_constraint_caller_) container_name_+="PI";
   }
+  
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ImaginaryUnit> node)
+  {
+    if(!in_constraint_caller_) container_name_+="I";
+  }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
   {

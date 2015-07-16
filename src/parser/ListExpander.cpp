@@ -447,6 +447,12 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::Number> node){
   new_child = node->clone();
 }
 
+
+void ListExpander::visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node){
+  new_child = node->clone();
+}
+
+
 void ListExpander::visit(boost::shared_ptr<symbolic_expression::Variable> node){
   for(auto map : local_variable_map){
     if(node->is_same_struct(*(map.first),true)){

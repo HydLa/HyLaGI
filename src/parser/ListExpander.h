@@ -78,6 +78,7 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::E>);
   virtual void visit(boost::shared_ptr<symbolic_expression::False>);
   virtual void visit(boost::shared_ptr<symbolic_expression::Float>);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit>);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::Weaker>);
   virtual void visit(boost::shared_ptr<symbolic_expression::Parallel>);

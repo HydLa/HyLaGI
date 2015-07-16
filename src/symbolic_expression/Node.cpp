@@ -799,5 +799,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(False)
+
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ImaginaryUnit)
 } //namespace symbolic_expression
 } //namespace hydla

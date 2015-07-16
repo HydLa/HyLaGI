@@ -673,6 +673,7 @@ DEFINE_VISIT_FACTOR(Infinity, Infinity)
 DEFINE_VISIT_FACTOR(Pi, Pi)
 /// 自然対数の底
 DEFINE_VISIT_FACTOR(E, E)
+DEFINE_VISIT_FACTOR(ImaginaryUnit, I)
 
 // 変数
 void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
@@ -1075,6 +1076,8 @@ symbolic_expression::node_sptr Backend::receive_node(){
         ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
       else if(symbol=="E")
         ret = symbolic_expression::node_sptr(new symbolic_expression::E());
+      else if(symbol=="I")
+        ret = symbolic_expression::node_sptr(new symbolic_expression::ImaginaryUnit());
       else if(symbol=="inf")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
       else if(symbol=="True")

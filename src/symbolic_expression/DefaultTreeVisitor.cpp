@@ -93,6 +93,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Parameter> node)               
 // t
 void DefaultTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {}
 
+void DefaultTreeVisitor::visit(boost::shared_ptr<ImaginaryUnit> node)                {}
+
 // Print
 void DefaultTreeVisitor::visit(boost::shared_ptr<Print> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<PrintPP> node)              {}

@@ -113,6 +113,8 @@ public:
   // 数字
   virtual void visit(boost::shared_ptr<Number> node) = 0;
 
+  virtual void visit(boost::shared_ptr<ImaginaryUnit> node) = 0;
+
   // 浮動小数点数
   virtual void visit(boost::shared_ptr<Float> node) = 0;
   

@@ -118,6 +118,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 // 時刻
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
+  variables_.insert(Variable("t", 0));  //Since t is always continuous, it can be regarded as previous value (for simplicity of simulation)
 }
 
 // 変数

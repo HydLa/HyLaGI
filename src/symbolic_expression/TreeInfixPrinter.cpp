@@ -218,6 +218,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
   (*output_stream_) << "t";
 }
 
+void TreeInfixPrinter::visit(boost::shared_ptr<ImaginaryUnit> node){
+  (*output_stream_) << "I";
+}
+
 
 //関数
 void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){

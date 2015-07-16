@@ -1,12 +1,12 @@
 // dosing model
 
-INIT<=>timer=0/\y=2/\1<t<2/\1<dosage<2.
+INIT<=>timer=0/\y=2/\1<interval<2/\1<dosage<2.
 
-CONS<=>[](k=1/2/\dosage'=0/\t'=0).
+CONS<=>[](k=1/2/\dosage'=0/\interval'=0).
 
 TIME<=>[](timer'=1).
 RATE<=>[](y'=-k*y).
-DOSE<=>[](timer-=t=>y=y-+dosage/\timer=0).
+DOSE<=>[](timer-=interval=>y=y-+dosage/\timer=0).
 
 INIT, CONS, (TIME, RATE)<<DOSE.
 

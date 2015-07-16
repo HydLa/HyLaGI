@@ -916,6 +916,20 @@ public:
   }
 };
 
+class ImaginaryUnit : public FactorNode {
+public:
+  virtual void accept(node_sptr own, TreeVisitor* visitor);
+
+  virtual node_sptr clone()
+  {
+    boost::shared_ptr<ImaginaryUnit> n(new ImaginaryUnit());
+    return n;
+  }
+  virtual std::string get_node_type_name() const {
+    return "I";
+  }
+};
+
 
 /**
  * 数字（文字列で値を保持する）

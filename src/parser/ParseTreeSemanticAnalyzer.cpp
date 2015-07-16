@@ -478,6 +478,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(Float)
 
+DEFINE_DEFAULT_VISIT_FACTOR(ImaginaryUnit)
+
 // Print
 DEFINE_DEFAULT_VISIT_FACTOR(Print)
 DEFINE_DEFAULT_VISIT_FACTOR(PrintPP)

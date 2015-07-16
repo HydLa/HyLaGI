@@ -117,6 +117,8 @@ public:
   // Infinity
   virtual void visit(boost::shared_ptr<Infinity> node);
 
+  virtual void visit(boost::shared_ptr<ImaginaryUnit> node);
+
   // ExpressionList
   virtual void visit(boost::shared_ptr<ExpressionList> node);
 

@@ -120,6 +120,8 @@ private:
   //SymbolicT
   virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
 
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+
   //SystemVariable
   virtual void visit(boost::shared_ptr<symbolic_expression::SVtimer> node);
   

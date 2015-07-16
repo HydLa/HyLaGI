@@ -248,7 +248,7 @@ bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
   //compareing set of variables
-  backend->call("checkInclude", true, 6, "vlnmvtmpvlnmvtmp", "b",
+  backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
                 &(larger->phase->current_time), &(larger->phase->variable_map), &larger_cons,
                 &(smaller->phase->current_time), &(smaller->phase->variable_map), &smaller_cons, &include_ret);
   if(include_ret){

@@ -204,9 +204,10 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
   initialize_node_collected();
   constraints_vector.clear();
   module_set_vector.clear();
+
   for(auto constraint : constraint_store)
   {
-
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint));
     auto constraint_it = tell_node_map.find(constraint);
     if(constraint_it == tell_node_map.end())
     {

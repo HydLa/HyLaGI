@@ -345,10 +345,23 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
             break;
           }
         }
-        if(max_d_count < 0)throw HYDLA_ERROR("Value of " + pair.first + " is not defined at phase...\n" + phase->get_string());
-        Variable var(pair.first, max_d_count);
-        if(!consistency_checker->check_continuity(var, phase->variable_map))
-          discrete_vs.insert(var);
+
+        if(max_d_count < 0)
+        {
+          // This variable is completely unbound
+          for(int i = 0; i < max_d_count; i++)
+          {
+            //insert all entrys
+            Variable var(pair.first, i);
+            discrete_vs.insert(var);
+          }
+        }
+        else
+        {
+          Variable var(pair.first, max_d_count);
+          if(!consistency_checker->check_continuity(var, phase->variable_map))
+            discrete_vs.insert(var);
+        }
       }
       phase->discrete_differential_set = discrete_vs;
     }

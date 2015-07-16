@@ -220,6 +220,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   // 無限大
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
 
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
   
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
 

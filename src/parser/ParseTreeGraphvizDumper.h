@@ -108,6 +108,8 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
 
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+
   // Parameter
   virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
   // SymbolicT

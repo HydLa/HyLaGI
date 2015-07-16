@@ -127,6 +127,8 @@ class TreeInfixPrinter:
 
   // t
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+  virtual void
+  visit(boost::shared_ptr<ImaginaryUnit> node);
 
   // 無限大
   virtual void visit(boost::shared_ptr<Infinity> node);

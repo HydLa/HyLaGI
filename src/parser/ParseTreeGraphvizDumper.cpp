@@ -355,6 +355,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Float> node)
 }
 
 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ImaginaryUnit> node)
+{
+  dump_node(node);
+}
+
+
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Infinity> node)
 {
   dump_node(node);

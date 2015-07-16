@@ -89,6 +89,7 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
   
   virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
