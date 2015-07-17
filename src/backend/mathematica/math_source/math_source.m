@@ -33,13 +33,13 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-ccIntervalForEach[cond_, initRules_, pCons_] :=
+ccIntervalForEach[cond_, pCons_] :=
 Module[
   {
     operator,
@@ -49,10 +49,10 @@ Module[
     ltSol,
     trueCond
   },
-  inputPrint["ccIntervalForEach", cond, initRules, pCons];
+  inputPrint["ccIntervalForEach", cond, pCons];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
-  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
+  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs, pCons];
   (* caused by underConstraint *)
   If[hasVariable[lhs], Return[pCons] ];
@@ -61,7 +61,7 @@ Module[
 
   eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
   If[eqSol =!= False,
-    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
+    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], eqSol];
     trueCond = trueCond || eqSol
   ];
   If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
@@ -79,15 +79,16 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, prevCons, pCons, pars,
+  cons, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
       {{LogicalExpand[pCons]}, {False}},
-      simplePrint[prevRules, prevConstraint];
-      sol = exDSolve[cons, initCons];
+      sol = exDSolve[cons];
+      simplePrint[sol];
+      sol = sol /. prevRs;
       timeVars = Map[(#[t])&, getVariables[cons] ];
-      prevVars = getPrevVariables[initCons];
+      prevVars = Map[makePrevVar, timeVars];
       debugPrint["sol after exDSolve", sol];
       If[sol === overConstraint,
         {{False}, {LogicalExpand[pCons]}},
@@ -100,7 +101,7 @@ publicMethod[
           conj = tCons[[i]];
           eachCpTrue = prevCons && pCons;
           For[j = 1, j <= Length[conj], j++,
-            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], Map[(Rule@@#)&, applyList[initCons] ], eachCpTrue]
+            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
           ];
           cpTrue = cpTrue || eachCpTrue
         ];
@@ -132,11 +133,11 @@ publicMethod[
         map = Map[(applyList[#])&, map];
         map = Map[(adjustExprs[#, isVariable])&, map];
         debugPrint["map after adjustExprs in createVariableMap", map];
-      ret = Map[(convertExprs[#])&, map];
-      ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
-      ret = ruleOutException[ret];
-      simplePrint[ret];
-      ret
+        ret = Map[(convertExprs[#])&, map];
+        ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
+        ret = ruleOutException[ret];
+        simplePrint[ret];
+        ret
       ]
     ]
   ]
@@ -144,18 +145,20 @@ publicMethod[
 
 
 
-createVariableMapInterval[] := createVariableMapInterval[constraint, initConstraint, timeVariables];
+createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, timeVariables];
 
-createVariableMapInterval[tvars_] := createVariableMapInterval[constraint, initConstraint, tvars];
+createVariableMapInterval[tvars_] := createVariableMapInterval[constraint, prevRules, tvars];
 
 createVariableMapInterval::underconstraint = "The system should not be underconstrained here.";
 
 publicMethod[
   createVariableMapInterval,
-  cons, initCons, vars,
+  cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, initCons];
+    sol = exDSolve[cons];
+    sol = sol /. prevRs;
+    simplePrint[prevRules, prevRs];
 
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstraint || sol[[1]] === underConstraint,
@@ -234,7 +237,9 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
-getVariablesWithDerivatives[exprs_] := Cases[exprs, ele_ /; isVariable[exprs], Infinity, Heads->True];
+getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], Infinity], Cases[exprs, Derivative[_][_][_], Infinity]];
+getVariablesWithDerivatives[exprs_] := Union[getVariables[expr], getDerivatives[exprs] ];
+
 
 (* 式中に出現するprev値を取得 *)
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
@@ -285,8 +290,8 @@ Fold[
 publicMethod[
   resetConstraint,
   constraint = True;
-  initConstraint = True;
   pConstraint = True;
+  initConstraint = True;
 ];
 
 publicMethod[
@@ -297,7 +302,8 @@ publicMethod[
 
 publicMethod[
   resetConstraintForVariable,
-  constraint = initConstraint = True;
+  constraint = True;
+  initConstraint = True;
 ];
 
 publicMethod[
@@ -410,6 +416,7 @@ publicMethod[
 publicMethod[
   addInitEquation,
   lhs, rhs,
+  lhs
   addInitConstraint[{lhs == rhs}]
 ];
 
@@ -441,17 +448,6 @@ publicMethod[
   addParameter,
   par,
   parameters = Union[parameters, {par}]
-];
-
-(* 変数名からDerivativeやtを取り，微分回数とともに返す *)
-removeDash[var_] := Module[
-   {ret},
-   If[Head[var] === p || Head[var] === prev, Return[var]];
-   ret = var /. x_[t] -> x;
-   If[MatchQ[Head[ret], Derivative[_]],
-     ret /. Derivative[d_][x_] -> {x, d},
-     {ret, 0}
-   ]
 ];
 
 
@@ -646,16 +642,15 @@ exDSolve::multi = "Solution of `1` is not unique.";
     理由2: 不等式に弱い
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
-  @param initExpr 変数の初期値についての制約
   @return overConstraint |
     {underConstraint, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, initExpr_] :=
+exDSolve[expr_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
-  inputPrint["exDSolve", expr, initExpr];
+  inputPrint["exDSolve", expr];
   listExpr = applyList[expr];
   sol = {};
   resultCons = Select[listExpr, (Head[#] =!= Equal)&];
@@ -663,14 +658,13 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
   resultCons = And@@resultCons && t > 0;
-  tmpInitExpr = applyList[initExpr];
   resultRule = {};
   While[True,
     searchResult = searchExprsAndVars[listExpr];
     simplePrint[searchResult];
     If[searchResult === unExpandable,
       Break[],
-      rules = solveByDSolve[searchResult[[1]], tmpInitExpr, searchResult[[3]]];
+      rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
       If[rules === overConstraint || Length[rules] == 0, Return[overConstraint] ];
       (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
       If[Head[rules] === DSolve,
@@ -685,7 +679,7 @@ Module[
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];
-      If[Quiet[Reduce[listExpr, tVars, Reals], Reduce::nsmet] === False, Return[overConstraint]];
+
       resultCons = applyDSolveResult[resultCons, resultRule];
       If[resultCons === False, Return[overConstraint] ];
     ]
@@ -753,19 +747,39 @@ Module[
   unExpandable
 ];
 
+createPrevRules[var_] := Module[
+  {tRemovedVar, dCount, i, varName, der},
+  tRemovedVar = var /. x_[t] -> x;
+  If[MatchQ[Head[tRemovedVar], Derivative[_]],
+    varName = tRemovedVar[[1]];
+    dCount = Head[tRemovedVar][[1]];
+    ret = {varName[0] == makePrevVar[varName]};
+    der = Derivative[i][varName];
+    For[i = 1, i < dCount, i++,
+      ret = Append[ret, der[0] == makePrevVar[der]];
+    ];
+    ret,
+    {}
+  ]
+];
+
+
 (* 渡された式をDSolveで解いて，結果のRuleを返す．
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
-  @param initExpr: 初期値制約のリスト．余計なものが含まれていてもよい
-  @param tVars: exprに出現する変数のリスト
+  @param vars: exprに出現する変数のリスト
 *)
-solveByDSolve[expr_, initExpr_, tVars_] :=
-solveByDSolve[expr, initExpr, tVars] = (* for memoization *)
+solveByDSolve[expr_, vars_] :=
+solveByDSolve[expr, vars] = (* for memoization *)
 Module[
-  {ini, sol, idx, generalInitValue, swapValue, j},
-  ini = Select[initExpr, (hasSymbol[#, tVars ])& ];
+  {ini = {}, sol, derivatives, dCountList, i},
+  tVars = Map[(#[t])&, vars];
+  derivatives = getVariablesWithDerivatives[expr];
+  For[i = 1, i <= Length[derivatives], i++,
+    ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
+  ];
   sol = Quiet[
     Check[
-      DSolve[Union[expr, ini], Map[(#[t])&, tVars], t],
+      DSolve[Union[expr, ini], tVars, t],
           overConstraint,
       {DSolve::overdet, DSolve::bvimp}
     ],

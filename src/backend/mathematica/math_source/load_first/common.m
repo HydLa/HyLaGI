@@ -200,6 +200,17 @@ toRational[float_] := SetPrecision[float, Infinity];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
 
+removeDash[var_] := Module[
+   {ret},
+   If[Head[var] === p || Head[var] === prev, Return[var]];
+   ret = var /. x_[t] -> x;
+   If[MatchQ[Head[ret], Derivative[_]],
+     ret /. Derivative[d_][x_] -> {x, d},
+     {ret, 0}
+   ]
+];
+
+
 (* リストを整形する *)
 (* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
 
