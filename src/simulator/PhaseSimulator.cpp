@@ -304,7 +304,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       throw HYDLA_ERROR("result variable map is not single at phase...\n" + phase->get_string());
     }
     phase->variable_map = create_result[0];
-    if(opts_->epsilon_mode >= 0){
+    if(opts_->epsilon_mode > 0){
+      //cut_high_order : approx count n > 0.(n=1,2,3...)
       variable_map_t before_map = phase->variable_map;
       value_t before_time = phase->current_time;
       cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
