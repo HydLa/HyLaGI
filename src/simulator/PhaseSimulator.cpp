@@ -70,7 +70,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
 
   if(todo->phase_type == POINT_PHASE)backend_->call("setCurrentTime", true, 1, "vln", "", &todo->current_time);
-  
+
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
   if(phase_list.empty())
   {
@@ -106,7 +106,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         if(var.get_differential_count() == 0 &&
            !phase->variable_map.count(var))HYDLA_LOGGER_WARN(var, " is completely unbound at phase... ", *phase);
       }
-          
+
       if(aborting)break;
     }
   }
@@ -410,7 +410,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
-  
+
 
   branch_state_false->additional_constraint_store.add_constraint_store(replace_prev_store(original->parent, result.inconsistent_store));
 
@@ -587,7 +587,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
   bool expanded;
   PhaseType phase_type = phase->phase_type;
   variable_set_t discrete_variables = get_discrete_variables(diff_sum, phase_type);
-  
+
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
@@ -910,8 +910,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-          
-        if(!min_time_for_this_ask.empty()) 
+
+        if(!min_time_for_this_ask.empty())
         {
           assert(min_time_for_this_ask.size() == 1);
           simulator_->introduce_parameter(parameter_current, current_range);
@@ -930,7 +930,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
              guard_type == typeid(se::Less) ||
              guard_type == typeid(se::Greater) ||
              guard_type == typeid(se::GreaterEqual));
-      
+
       Parameter parameter_prev("t", -1, ++time_id);
       Parameter parameter_lower("t", -1, ++time_id);
       Parameter parameter_upper("t", -1, ++time_id);
@@ -980,8 +980,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           }
           guard_time_map[guard_for_newton] = constraint_t(new LogicalAnd(lb, ub));
         }
-        
-        constraint_t time_bound;        
+
+        constraint_t time_bound;
         {
           constraint_t lb, ub;
           lb.reset(new LessEqual(new se::Parameter(parameter_prev), new SymbolicT()));
@@ -993,8 +993,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-          
-        if(!min_time_for_this_ask.empty()) 
+
+        if(!min_time_for_this_ask.empty())
         {
           assert(min_time_for_this_ask.size() == 1);
           simulator_->introduce_parameter(parameter_upper, upper_range);
@@ -1151,7 +1151,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       }
       for(auto ask : asks)
       {
-        if(opts_->ltl_model_check_mode)
+        if(opts_->epsilon_mode >= 0)
         {
           candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
         }else{
@@ -1177,7 +1177,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
       /*
-      if(opts_->epsilon_mode >= 0){
+        if(opts_->epsilon_mode >= 0){
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
       }*/
 
@@ -1191,7 +1191,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
         }
       }
-      
+
       if(time_result.empty())
       {
         phase->simulation_state = simulator::TIME_LIMIT;
@@ -1258,7 +1258,7 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
       map<ask_t, bool> discrete_asks;
       if(ask.get())discrete_asks[ask] = newcomer.on_time;
       DCCandidate candidate(newcomer.time, discrete_asks,  newcomer.parameter_constraint);
-      result.push_back(candidate);      
+      result.push_back(candidate);
     }
   }
   else if(newcomers.empty())
@@ -1305,7 +1305,7 @@ void PhaseSimulator::reset_parameter_constraint(ConstraintStore par_cons)
 {
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &par_cons);
 }
-  
+
 
 void PhaseSimulator::apply_diff(const PhaseResult &phase)
 {
@@ -1362,7 +1362,7 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   backend_->call("differentiateWithTime", true, 1, "et", "e", &exp, &dexp);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
-  itvd init = itvd(0.,100); 
+  itvd init = itvd(0.,100);
   list<itvd> result_intervals =
     interval::calculate_interval_newton_nd(init, exp, dexp, pm);
   return result_intervals;
