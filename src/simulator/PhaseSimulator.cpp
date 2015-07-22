@@ -1150,6 +1150,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           asks.insert(entry.first);
         }
       }
+      timer::Timer find_min_time_timer;
       for(auto ask : asks)
       {
         if(opts_->epsilon_mode >= 0)
@@ -1165,9 +1166,11 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         auto break_point = entry.first;
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase);
       }
+      phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
       HYDLA_LOGGER_DEBUG("");
       pp_time_result_t time_result;
       // 各askに関する最小時刻を比較して最小のものを選ぶ．
+      timer::Timer compare_min_time_timer;
       for(auto entry : candidate_map)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
@@ -1177,6 +1180,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         ask_t null_ask;
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
+      phase->profile["CompareMinTime"] += compare_min_time_timer.get_elapsed_us();
       /*
         if(opts_->epsilon_mode >= 0){
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
@@ -1223,7 +1227,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             }
             next_todo->set_parameter_constraint(phase->get_parameter_constraint());
             next_todo->parent = phase.get();
+            timer::Timer apply_time_timer;
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+            phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
@@ -1247,6 +1253,8 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     }
   }
   revert_diff(*phase);
+
+  phase->profile["MakeNextTodo"] = next_todo_timer.get_elapsed_us();
 }
 
 pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existings, const find_min_time_result_t &newcomers, const ask_t& ask)
