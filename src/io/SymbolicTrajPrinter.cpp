@@ -127,7 +127,7 @@ ostream &stream, const variable_map_t& vm) const
   for(auto it = vm.begin(); it!=vm.end(); ++it) {
 
     // 出力変数を指定した場合
-    if (opts.omit_var == true) {
+    if (opts.output_mode != Opts::None) {
       bool hit = false;
       for (auto it2 = opts.output_vars.begin(); it2 != opts.output_vars.end(); ++it2) {
         if (it->first.get_string() == *it2) {
@@ -135,8 +135,16 @@ ostream &stream, const variable_map_t& vm) const
           break;
         }
       }
-      if (hit) {
-        continue;
+      switch (opts.output_mode)
+      {
+        case Opts::Omit:
+          if (hit) continue;
+          break;
+        case Opts::Output:
+          if (!hit) continue;
+          break;
+        default :
+          break;
       }
     }
 

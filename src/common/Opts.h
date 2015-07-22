@@ -12,6 +12,7 @@ typedef boost::shared_ptr<Node> node_sptr;
 }
 
 struct Opts {
+  enum EOutputMode { None, Omit, Output, };
   std::string mathlink;
   bool debug_mode;
   std::string max_time;
@@ -29,7 +30,7 @@ struct Opts {
   bool ignore_warnings;
   symbolic_expression::node_sptr assertion;
   int max_phase;
-  bool omit_var;
+  EOutputMode output_mode;
   std::set<std::string> output_vars;
 };
 
