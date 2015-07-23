@@ -33,10 +33,10 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, prevRules, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -54,7 +54,7 @@ Module[
   operator = Head[cond];
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs, pCons];
-  (* caused by underConstraint *)
+  (* caused by underConstrained *)
   If[hasVariable[lhs], Return[pCons] ];
 
   trueCond = False;
@@ -79,21 +79,22 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, prevRs, prevCons, pCons, pars,
+  cons, initCons, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
     If[cons === True,
       {{LogicalExpand[pCons]}, {False}},
       sol = exDSolve[cons];
       simplePrint[sol];
       sol = sol /. prevRs;
-      timeVars = Map[(#[t])&, getVariables[cons] ];
-      prevVars = Map[makePrevVar, timeVars];
+      prevVars = Map[makePrevVar, vars];
       debugPrint["sol after exDSolve", sol];
-      If[sol === overConstraint,
+      If[sol === overConstrained,
         {{False}, {LogicalExpand[pCons]}},
-        tCons = Map[(Rule@@#)&, createDifferentiatedEquations[timeVars, sol[[3]] ] ];
-        tCons = sol[[2]] /. tCons;
+        tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+        simplePrint[tRules];
+        tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+
         simplePrint[tCons];
          
         cpTrue = False;
@@ -161,7 +162,7 @@ publicMethod[
     simplePrint[prevRules, prevRs];
 
     debugPrint["sol after exDSolve", sol];
-    If[sol === overConstraint || sol[[1]] === underConstraint,
+    If[sol === overConstrained || sol[[1]] === underConstrained,
       Message[createVariableMapInterval::underconstraint],
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
@@ -642,8 +643,8 @@ exDSolve::multi = "Solution of `1` is not unique.";
     理由2: 不等式に弱い
     理由3: bvnulなどの例外処理を統一したい
   @param expr 時刻に関する変数についての制約
-  @return overConstraint |
-    {underConstraint, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
+  @return overConstrained |
+    {underConstrained, 変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール} |
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
@@ -665,7 +666,7 @@ Module[
     If[searchResult === unExpandable,
       Break[],
       rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
-      If[rules === overConstraint || Length[rules] == 0, Return[overConstraint] ];
+      If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
       (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
       If[Head[rules] === DSolve,
         resultCons = resultCons && And@@searchResult[[1]];
@@ -675,16 +676,16 @@ Module[
       ];
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-      If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstraint] ];
+      If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];
 
       resultCons = applyDSolveResult[resultCons, resultRule];
-      If[resultCons === False, Return[overConstraint] ];
+      If[resultCons === False, Return[overConstrained] ];
     ]
   ];
-  retCode = If[Length[listExpr] > 0 || unsolvable, underConstraint, solved];
+  retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
   restCond = LogicalExpand[And@@listExpr && applyDSolveResult[resultCons, resultRule]];
   restCond = Or2or[restCond];
   restCond = Map[(And2and[#])&, restCond];
@@ -780,12 +781,19 @@ Module[
   sol = Quiet[
     Check[
       DSolve[Union[expr, ini], tVars, t],
-          overConstraint,
+          overConstrained,
       {DSolve::overdet, DSolve::bvimp}
     ],
   {DSolve::overdet, DSolve::bvimp, Solve::svars}
   ];
-  sol
+  (* remove solutions with imaginary numbers *)
+  For[i = 1, i <= Length[sol], i++,
+    If[Count[Map[(Simplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
+      sol = Drop[sol, {i}];
+      --i;
+    ]
+  ];
+  If[Length[sol] > 0, sol, overConstrained]
 ];
 
 alwaysLess[lhs_, rhs_, pCons_] := alwaysLess[lhs, rhs, pCons, parameters];
