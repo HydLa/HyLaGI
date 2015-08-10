@@ -60,7 +60,7 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   function_map_.insert(f_value_t("Acosh", "ArcCosh"));
   function_map_.insert(f_value_t("tan", "Tan"));
   function_map_.insert(f_value_t("tanh", "Tanh"));
-  function_map_.insert(f_value_t("Atan", "Arctan"));
+  function_map_.insert(f_value_t("Atan", "ArcTan"));
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
