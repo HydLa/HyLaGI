@@ -121,9 +121,16 @@ publicMethod[
   createVariableMap,
   cons, vars, pars, current,
   Module[
-    {ret, map},
-    map = removeUnnecessaryConstraints[cons /. t -> current, hasVariable];
+    {ret, map, currentCons},
+    currentCons = cons /. t -> current;
+    map = removeUnnecessaryConstraints[currentCons, hasVariable];
     map = Reduce[map, vars, Reals];
+    If[Head[map] === Or,
+       (* try to solve with parameters *)
+       map = removeUnnecessaryConstraints[currentCons, hasVariableOrParameter];
+       map = Reduce[map, vars, Reals];
+    ];
+
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True, 
       {{}},
