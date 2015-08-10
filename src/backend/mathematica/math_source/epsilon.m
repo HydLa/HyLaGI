@@ -142,9 +142,9 @@ publicMethod[
              arg,
              Module[
                     {one,two,ret},
-                    one = Quiet[Check[arg /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
-                    two = Quiet[Check[D[arg, p[eps, 0, 1]] /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
-                    If[one =!= False && two =!= False, ret = one + two * p[eps, 0, 1], ret = arg];
+                    one = Quiet[Check[arg /. p[peps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
+                    two = Quiet[Check[D[arg, p[peps, 0, 1]] /. p[peps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
+                    If[one =!= False && two =!= False, ret = one + two * p[peps, 0, 1], ret = arg];
                     toReturnForm[ret]
                     ]
              ];
@@ -157,8 +157,8 @@ publicMethod[
                     debugPrint["checkEpsilon arg",arg];
                     ret = 0;
                     If[arg =!= Infinity,
-                       direplus = Limit[arg, p[eps, 0, 1] -> 0,Direction->-1];
-                       direminus = Limit[arg, p[eps, 0, 1] -> 0,Direction->1];
+                       direplus = Limit[arg, p[peps, 0, 1] -> 0,Direction->-1];
+                       direminus = Limit[arg, p[peps, 0, 1] -> 0,Direction->1];
                        flag = FullSimplify[direplus - direminus];
                        If[flag === 0,
                           ret = 1,
@@ -173,14 +173,14 @@ publicMethod[
              limitEpsilonP,
              arg,
              debugPrint["limitEpsilonP arg",arg];
-             toReturnForm[Limit[arg, p[eps, 0, 1] -> 0,Direction->-1]]
+             toReturnForm[Limit[arg, p[peps, 0, 1] -> 0,Direction->-1]]
              ];
 
 publicMethod[
              limitEpsilonM,
              arg,
              debugPrint["limitEpsilonM arg",arg];
-             toReturnForm[Limit[arg, p[eps, 0, 1] -> 0,Direction->1]]
+             toReturnForm[Limit[arg, p[peps, 0, 1] -> 0,Direction->1]]
              ];
 
 publicMethod[
@@ -189,7 +189,7 @@ publicMethod[
              Module[
                     {tmp,ret},
                     debugPrint["json diffEpsilonP arg",arg];
-                    tmp = Quiet[Check[arg /. p[eps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
+                    tmp = Quiet[Check[arg /. p[peps, 0, 1] -> 0, False, {Power::infy, Power::indet}]];
                     (* tmp = arg /. p[peps, 0, 1] -> 0; *)
                     If[tmp =!= False, ret = Simplify[arg - tmp], ret = arg];
                     toReturnForm[ret]
