@@ -1,0 +1,30 @@
+X := {x0..x3}.
+Y := {y0..y3}.
+
+INIT(x,y,x0,y0,vx0,vy0) <=> x = x0 & y = y0 & x' = vx0 & y' = vy0.
+
+COL(x1,y1,x2,y2) <=>
+  []((x1- - x2-)^2 + (y1- - y2-)^2 = 4 =>
+      x1'=1/4 * ((x2- - x1-)*(x2'-*(x2- - x1-) + y2'- * (y2- - y1-) ) -
+                (y2- - y1-)*(-x1'-*(y2- - y1-) + y1'- *(x2- - x1-) ) )
+    & y1'=1/4 *
+        ((y2- - y1-)*(x2'-*(x2- - x1-) + y2'- * (y2- - y1-) ) +
+          (x2- - x1-)*(-x1'-*(y2- - y1-) + y1'- *(x2- - x1-) ) )
+    & x2'=1/4 *
+        ((x2- - x1-)*(x1'-*(x2- - x1-) + y1'- * (y2- - y1-) ) -
+          (y2- - y1-)*(-x2'-*(y2- - y1-) + y2'- *(x2- - x1-) ) )
+    & y2'=1/4 *
+        ( (y2- - y1-)*(x1'-*(x2- - x1-) + y1'- * (y2- - y1-) ) +
+          (x2- - x1-)*(-x2'-*(y2- - y1-) + y2'- *(x2- - x1-) ) ) ).
+
+CONST(p) <=> [](p'' = 0).
+EPS <=> eps = 0.01 /\ [](eps' = 0) /\ veps = 0.01 /\ [](veps' = 0).
+
+INIT(X[1],Y[1],0,0,veps,10). // the first ball
+INIT(X[2],Y[2],0,10,0,0). // the ball on the first line.
+INIT(X[3],Y[3],-(2^(1/2)+eps),10 + 2^(1/2) + eps, 0, 0), INIT(X[4],Y[4],2^(1/2)+eps,10 + 2^(1/2) + eps, 0, 0). // the balls on the second line.
+
+EPS.
+{(CONST(X[i]), CONST(Y[i]), CONST(X[j]), CONST(Y[j])) << COL(X[i],Y[i],X[j],Y[j]) | i in {1..|X|-1}, j in {i+1..|X|}}. 
+
+//#hylagi --fnd --fdump_in_progress -p6

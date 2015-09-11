@@ -118,23 +118,40 @@ int hydla_main(int argc, char* argv[])
   setup_simulator_opts(opts, options_in_source, true);
 
   // コメント中の変数省略指定を調べる
+  opts.output_mode = Opts::None;
   bool isOmit = false;
+  bool isOutput = false;
   const string omit_comment = "#omit ";
+  const string output_comment = "#output ";
+  // #omit を検索
   string::size_type output_pos = comment.find(omit_comment);
   if (output_pos != string::npos)
   {
     isOmit = true;
-    opts.omit_var = true;
-    output_pos += omit_comment.length();
+    opts.output_mode = Opts::Omit;
+  }
+  else 
+  {
+    // #output を検索
+    output_pos = comment.find(output_comment);
+    if (output_pos != string::npos)
+    {
+      isOutput = true;
+      opts.output_mode = Opts::Output;
+    }
+  }
+  if (isOmit || isOutput)
+  {
+    output_pos += (isOmit ? omit_comment.length() : output_comment.length());
 
     // 省略対象指定部を取り出す
     string::size_type pos = comment.find('\n', output_pos);
-    string omit_var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
+    string var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
 
     // 省略変数を解析する
     string delimStr = ",";
-    vector<string> omit_var_list;
-    std::stringstream ss(omit_var_string);
+    vector<string> var_list;
+    std::stringstream ss(var_string);
     string buffer;
     while (std::getline(ss, buffer, ','))
     {
@@ -150,11 +167,11 @@ int hydla_main(int argc, char* argv[])
       smatch match;
       if (!regex_search(buffer, match, re))
       {
-        cout << "[#omit] warning : \"" << buffer << "\" is not a valid variable name." << endl;
+        cout << "[" << (isOmit ? "#omit" : "#output") << "] warning : \"" << buffer << "\" is not a valid variable name." << endl;
         continue;
       }
 
-      omit_var_list.push_back(buffer);
+      var_list.push_back(buffer);
       opts.output_vars.insert(buffer);
     }
   }

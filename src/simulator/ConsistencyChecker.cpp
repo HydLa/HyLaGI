@@ -132,8 +132,6 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-      if(dm.count(entry.first) == 0)
-      {
         for(int i = 0; i <= entry.second;i++){
           variable_t var(entry.first, i);
           send_init_equation(var, fmt);
@@ -141,7 +139,6 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
         Value zero_value("0");
         variable_t var(entry.first, entry.second + 1);
         backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
-      }
     }
   }
 
