@@ -85,7 +85,8 @@ public:
 
   bool check_continuity(Variable& var, variable_map_t &vm);
 
-
+  void add_assumption_guard(constraint_t &guard);
+  
 private:
   CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
 
@@ -114,6 +115,8 @@ private:
   unsigned long int backend_check_consistency_time;
   std::vector<module_set_t> inconsistent_module_sets;
   std::list<ConstraintStore> inconsistent_constraints;
+  // 仮定するガード条件のリストをメンバに持つ
+  std::set<constraint_t> assumption_guards;
 };
 
 

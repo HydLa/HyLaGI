@@ -238,7 +238,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms, module_
   return module_diff;
 }
 
-
+// phase = todo
 list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t phase, asks_t trigger_asks)
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
@@ -580,7 +580,7 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase
   return result;
 }
 
-
+// phase = todo
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
@@ -860,7 +860,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       }
     }
   }
-
+  
   find_min_time_result_t min_time_for_this_ask;
   if(guard_for_newton.get() != nullptr)
   {
@@ -908,9 +908,9 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         // prev_t < t /\ t < current_t
         time_bound.reset(new LogicalAnd(lb, ub));
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-          
+        // 多分ここに離散変化時刻の原因となった原子ガード条件を探せばいいと思う
         if(!min_time_for_this_ask.empty()) 
         {
           assert(min_time_for_this_ask.size() == 1);
@@ -991,9 +991,9 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           time_bound.reset(new LogicalAnd(lb, ub));
         }
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-          
+        // 多分ここに離散変化時刻の原因となった原子ガード条件を探せばいいと思う
         if(!min_time_for_this_ask.empty()) 
         {
           assert(min_time_for_this_ask.size() == 1);
@@ -1004,6 +1004,23 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           new_store.add_constraint_store(upper_range.create_range_constraint(node_sptr(new se::Parameter(parameter_upper))));
           phase->set_parameter_constraint(new_store);
           backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+
+          // 離散変化時刻の原因となったガード条件の探索
+          constraint_t assumption_guard;
+          for(auto entry : guard_time_map)
+          {
+            HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.second));
+          }
+          // 上下の2つ（entry.second と cadidate.time）を文字列として比較して、
+          // candidate.time \in entry.second って関係なら、
+          // entry.first を auumption_guard として採用して、
+          // consistency_checker.add_assumption_guard(assumption_guard) する
+          for(auto candidate : min_time_for_this_ask)
+          {
+            HYDLA_LOGGER_DEBUG_VAR(candidate.time);
+          }
+
+
           break;
         }
         prev_interval = upper_interval;
@@ -1170,6 +1187,10 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       for(auto entry : candidate_map)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
+        for(auto candidate : entry.second)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(candidate.time); 
+        }
       }
       for(auto entry : break_point_list)
       {
@@ -1181,7 +1202,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
       }*/
 
-
+      
       if(opts_->epsilon_mode >= 0){
         for(auto entry : time_result){
           HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);

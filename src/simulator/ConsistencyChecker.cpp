@@ -482,9 +482,16 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
+  // ここに仮定する処理を加える
   backend->call("addConstraint", false, 1, fmt, "", &constraint_store);
   return call_backend_check_consistency(phase);
 }
+
+void ConsistencyChecker::add_assumption_guard(constraint_t &guard)
+{
+  assumption_guards.insert(guard);
+}
+
 
 }
 
