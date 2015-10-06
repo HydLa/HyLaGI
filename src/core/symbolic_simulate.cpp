@@ -147,6 +147,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
+  opts.num_threads   = po.get<int>("threads");
 }
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)

@@ -31,6 +31,7 @@ struct Opts {
   bool fullsimplify;
   symbolic_expression::node_sptr assertion;
   int max_phase;
+  int num_threads;
   EOutputMode output_mode;
   std::set<std::string> output_vars;
 };
