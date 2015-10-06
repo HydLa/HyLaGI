@@ -617,8 +617,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     {
       unknown_asks.insert(adjacent);
     }
+    timer::Timer for_loop_timer;
     for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
     {
+      phase->profile["# of CheckEntailment_Loop"]+= 1;
       const auto ask = *ask_it;
 
       if(phase_type == POINT_PHASE
@@ -683,6 +685,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       }
       phase->profile["# of CheckEntailment"]+= 1;
     }
+    phase->profile["CheckEntailment_Loop"] += for_loop_timer.get_elapsed_us();
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     // loop until no branching occurs
     while(true)
