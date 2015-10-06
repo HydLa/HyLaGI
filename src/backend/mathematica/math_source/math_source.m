@@ -1,42 +1,43 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, vars, pars, current,
+  cons, pcons, assum,vars, pars, current,
   Module[
     {cpTrue, cpFalse},
-
-    Quiet[
-         cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
-    ];
-    simplePrint[cpTrue];
-    (* remove (Not)Element[] because it seems to be always true *)
-    cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
-    checkMessage;
-    Quiet[
-      cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
-    ];
-    checkMessage;
-    simplePrint[cpFalse];
-    toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+    Assuming[assum,
+      Quiet[
+        cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+      ];
+      simplePrint[cpTrue];
+      (* remove (Not)Element[] because it seems to be always true *)
+      cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
+      checkMessage;
+      Quiet[
+        cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
+      ];
+      checkMessage;
+      simplePrint[cpFalse];
+      toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+    ]
   ]
 ];
 
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -79,35 +80,37 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, vars, prevRs, prevCons, pCons, pars,
+  cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
-    If[cons === True,
-      {{LogicalExpand[pCons]}, {False}},
-      sol = exDSolve[cons];
-      simplePrint[sol];
-      sol = sol /. prevRs;
-      prevVars = Map[makePrevVar, vars];
-      debugPrint["sol after exDSolve", sol];
-      If[sol === overConstrained,
-        {{False}, {LogicalExpand[pCons]}},
-        tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-        simplePrint[tRules];
-        tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
-
-        simplePrint[tCons];
-         
-        cpTrue = False;
-        For[i = 1, i <= Length[tCons], i++,
-          conj = tCons[[i]];
-          eachCpTrue = prevCons && pCons;
-          For[j = 1, j <= Length[conj], j++,
-            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+    Assuming[assum,
+      If[cons === True,
+        {{LogicalExpand[pCons]}, {False}},
+        sol = exDSolve[cons];
+        simplePrint[sol];
+        sol = sol /. prevRs;
+        prevVars = Map[makePrevVar, vars];
+        debugPrint["sol after exDSolve", sol];
+        If[sol === overConstrained,
+          {{False}, {LogicalExpand[pCons]}},
+          tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+          simplePrint[tRules];
+          tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+          
+          simplePrint[tCons];
+          
+          cpTrue = False;
+          For[i = 1, i <= Length[tCons], i++,
+            conj = tCons[[i]];
+            eachCpTrue = prevCons && pCons;
+            For[j = 1, j <= Length[conj], j++,
+              eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+            ];
+            cpTrue = cpTrue || eachCpTrue
           ];
-          cpTrue = cpTrue || eachCpTrue
-        ];
-        cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-        toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+          cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+          toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+        ]
       ]
     ]
   ]
@@ -300,6 +303,7 @@ publicMethod[
   constraint = True;
   pConstraint = True;
   initConstraint = True;
+  assumptions = True;
 ];
 
 publicMethod[
@@ -315,6 +319,14 @@ publicMethod[
 ];
 
 publicMethod[
+  addAssumption,
+  as,
+  debugPrint["as in addAssumption:", as];
+  simplePrint[prevRules];
+  assumptions = assumptions && as //. prevRules;
+];
+
+publicMethod[
   addConstraint,
   co,
   Module[
@@ -325,7 +337,7 @@ publicMethod[
 ];
 
 addInitConstraint[co_] := Module[
-  {cons, vars},
+  {cons},
   cons = And@@co //. prevRules;
   initConstraint = initConstraint && cons;
 ];

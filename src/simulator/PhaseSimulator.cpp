@@ -121,10 +121,38 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", false, 0, "", "");
+  consistency_checker->set_prev_map(&todo->prev_map);
+
+  if(todo->phase_type == POINT_PHASE)
+  {
+    for(auto ask : todo->discrete_asks)
+    {
+      constraint_t cons = ask.first->get_guard();
+      VariableFinder finder;
+      finder.visit_node(cons);
+      bool discrete_changed = false;
+      variable_set_t vars_in_ask = finder.get_all_variable_set();
+      HYDLA_LOGGER_DEBUG_VAR(todo->parent->discrete_differential_set.size());
+      HYDLA_LOGGER_DEBUG_VAR(vars_in_ask.size());
+      for(auto var: todo->parent->discrete_differential_set)
+      {
+        HYDLA_LOGGER_DEBUG_VAR(var);
+        if(vars_in_ask.count(var) > 0)
+        {
+          discrete_changed = true;
+          break;
+        }
+      }
+      if(discrete_changed)continue;
+      if(!ask.second)cons.reset(new symbolic_expression::Not(cons));
+      HYDLA_LOGGER_DEBUG_VAR(get_infix_string(cons));
+      backend_->call("addAssumption", true, 1, "en", "", &cons);
+    }
+  }
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
   backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
-  consistency_checker->set_prev_map(&todo->prev_map);
+
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
@@ -365,6 +393,11 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
         }
       }
       phase->discrete_differential_set = discrete_vs;
+      HYDLA_LOGGER_DEBUG_VAR(phase->discrete_differential_set.size());
+      for(auto var : phase->discrete_differential_set)
+      {
+        HYDLA_LOGGER_DEBUG_VAR(var);
+      }
     }
   }
   revert_diff(ms_local_positives, ms_local_negatives, ms_local_always, module_diff);

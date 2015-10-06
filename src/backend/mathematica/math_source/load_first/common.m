@@ -6,6 +6,7 @@ $MaxExtraPrecision = 1000;
 (*
  * global variables
  * constraint: 現在のフェーズでの制約
+ * assumptions: assumptions for the current phase
  * pConstraint: 定数についての制約
  * prevConstraint: constraint for previ variables
  * prevRules:      rules converted from equalities of left-hand limits
@@ -35,6 +36,7 @@ parameters = {};
 dList = {};
 profileList = {};
 createMapList = {};
+assumptions = True;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
