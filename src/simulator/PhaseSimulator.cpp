@@ -1007,20 +1007,24 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 
           // 離散変化時刻の原因となったガード条件の探索
-          constraint_t assumption_guard;
           for(auto entry : guard_time_map)
           {
             HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.second));
+            std::string str_entry = get_infix_string(entry.second);
+            for(auto candidate : min_time_for_this_ask)
+            {
+              HYDLA_LOGGER_DEBUG_VAR(candidate.time);
+              std::string str_candidate = candidate.time.get_string();
+              unsigned long int judge = str_entry.find(str_candidate, 0);
+              if(judge != string::npos)
+              {
+                constraint_t assumption_guard;
+                assumption_guard = entry.first;
+                consistency_checker->set_assumption_guard(assumption_guard);
+                HYDLA_LOGGER_DEBUG_VAR(get_infix_string(assumption_guard));
+              }
+            }
           }
-          // 上下の2つ（entry.second と cadidate.time）を文字列として比較して、
-          // candidate.time \in entry.second って関係なら、
-          // entry.first を auumption_guard として採用して、
-          // consistency_checker.add_assumption_guard(assumption_guard) する
-          for(auto candidate : min_time_for_this_ask)
-          {
-            HYDLA_LOGGER_DEBUG_VAR(candidate.time);
-          }
-
 
           break;
         }
@@ -1175,13 +1179,23 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
         }else{
           candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
+          if(opts_->interval)
+          {
+            consistency_checker->add_assumption_guard_map(ask);
+          }
         }
       }
 
+      if(opts_->interval)
+      {
+        consistency_checker->debug_print_assumption_gurad_map();
+      }
+      
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase);
+        // ここにもadd_assumption_gurad_mapは必要かな？
       }
       phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
       HYDLA_LOGGER_DEBUG("");

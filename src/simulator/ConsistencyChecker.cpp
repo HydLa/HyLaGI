@@ -484,9 +484,27 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
   return call_backend_check_consistency(phase);
 }
 
-void ConsistencyChecker::add_assumption_guard(constraint_t &guard)
+void ConsistencyChecker::set_assumption_guard(constraint_t &guard)
 {
-  assumption_guards.insert(guard);
+  candidate_assumption_guard = guard;
+}
+
+void ConsistencyChecker::add_assumption_guard_map(ask_t &ask)
+{
+  candidate_assumption_guards_map[ask] = candidate_assumption_guard;
+}
+
+void ConsistencyChecker::debug_print_assumption_gurad_map(void)
+{
+  for(auto entry : candidate_assumption_guards_map)
+  {
+    auto ask = entry.first;
+    auto guard = entry.second;
+    
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+  }
+
 }
 
 
