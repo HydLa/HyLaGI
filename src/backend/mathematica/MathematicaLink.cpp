@@ -4,6 +4,7 @@
 #include "TimeOutError.h"
 #include "Utility.h"
 #include "LinkError.h"
+#include <mutex>
 
 namespace hydla{
 namespace backend{
@@ -12,10 +13,13 @@ namespace mathematica{
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, const bool ignore_warnings) : env_(0), link_(0)
 {
-
+  // MLInitializeはThread-Unsafe (undocumented)
+  static std::mutex mtx_MLInitialize;
+  mtx_MLInitialize.lock();
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
+  mtx_MLInitialize.unlock();
   int err;
   link_ = MLOpenString(env_, mathlink_name.c_str(), &err);
   if(link_ == (MLINK)0 || err != MLEOK) throw LinkError("math", "can not link",1);

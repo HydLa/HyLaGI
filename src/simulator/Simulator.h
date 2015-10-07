@@ -32,6 +32,7 @@ public:
 };
 
 typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
+typedef std::vector<backend_sptr_t>               backends_vector_t;
 
 typedef hierarchy::ModuleSetContainer             module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;

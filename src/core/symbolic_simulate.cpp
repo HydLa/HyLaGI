@@ -11,6 +11,7 @@
 #include "Timer.h"
 #include <sys/stat.h>
 #include <fstream>
+#include <thread>
 
 #include "version.h"
 #include "Logger.h"
@@ -158,7 +159,17 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   else     Logger::instance().set_log_level(Logger::Warn);
 
 
-  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+  backends_vector_t backends_(opts.num_threads);
+  std::vector<std::thread> threads(opts.num_threads);
+  for (int i=0; i<opts.num_threads; ++i) {
+    threads[i] = std::thread([i,&backends_](){
+        backends_[i].reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+    });
+  }
+  for (int i=0; i<opts.num_threads; ++i) {
+    threads[i].join();
+  }
+  backend_ = backends_[0];
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)
