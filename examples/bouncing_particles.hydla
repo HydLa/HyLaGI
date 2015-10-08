@@ -2,11 +2,9 @@
 Y := {y0..y9}.
 
 INIT(y, y0) <=> y = y0 & y' = 0.
-Init(y, y0) <=> y = 10000 & y' = 1000000.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
-Init(y10,5).
 { INIT(Y[i],i+1), FALL(Y[i]) << BOUNCE(Y[i]) | i in {1..|Y|} }.
 
 //#hylagi -p 6
