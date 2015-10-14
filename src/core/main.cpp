@@ -75,7 +75,6 @@ int hydla_main(int argc, char* argv[])
     Logger::instance().set_log_level(Logger::Warn);
   }
   
-  
   if(cmdline_options.count("help")) {     // ヘルプ表示して終了
     cmdline_options.help_msg(cout);
     return 0;
@@ -85,6 +84,13 @@ int hydla_main(int argc, char* argv[])
     cout << Version::description() << endl;
     return 0;
   }
+
+  if (cmdline_options.count("use_fullsimplify")) {
+    opts.fullsimplify = true;
+  } else {
+    opts.fullsimplify = false;
+  }
+
   // ParseTreeの構築
   // ファイルを指定されたらファイルから
   // そうでなければ標準入力から受け取る

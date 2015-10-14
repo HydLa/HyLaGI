@@ -795,7 +795,11 @@ find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_
       //tmp_min_time = find_min_time(guard,min_time_calculator,guard_time_map,shifted_vm,tmp_time_limit,entailed);
       for(auto &tmp_candidate : tmp_min_time){
         tmp_candidate.time += target_time;
-        backend_->call("simplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
+        if (opts_->fullsimplify) {
+          backend_->call("fullsimplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
+        } else {
+          backend_->call("simplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
+        }
         ret.push_back(tmp_candidate);
       }
     }
@@ -1210,7 +1214,11 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           DCCandidate &candidate = *time_it;
           phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
-          backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
+          if (opts_->fullsimplify) {
+            backend_->call("fullsimplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
+          } else {
+            backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
+          }
           if(candidate.time.undefined() || candidate.time.infinite() )
           {
             phase->simulation_state = TIME_LIMIT;

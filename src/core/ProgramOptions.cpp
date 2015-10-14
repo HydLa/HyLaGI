@@ -49,6 +49,8 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
+    ("use_fullsimplify", "use FullSimplify")
+
     ("tm",
      value<std::string>()->default_value("n"),
      "time measurement:\n"

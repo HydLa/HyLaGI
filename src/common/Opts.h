@@ -28,6 +28,7 @@ struct Opts {
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
+  bool fullsimplify;
   symbolic_expression::node_sptr assertion;
   int max_phase;
   EOutputMode output_mode;
