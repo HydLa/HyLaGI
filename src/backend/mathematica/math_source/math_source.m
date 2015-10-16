@@ -12,22 +12,22 @@ publicMethod[
   checkConsistencyPoint,
   cons, pcons, assum,vars, pars, current,
   Module[
-    {cpTrue, cpFalse},
-    Assuming[assum,
-      Quiet[
-        cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
-      ];
-      simplePrint[cpTrue];
-      (* remove (Not)Element[] because it seems to be always true *)
-      cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
-      checkMessage;
-      Quiet[
-        cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
-      ];
-      checkMessage;
-      simplePrint[cpFalse];
-      toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
-    ]
+    {simplifiedCons, cpTrue, cpFalse},
+    simplifiedCons = Assuming[assum, Simplify[cons] ];
+    simplePrint[simplifiedCons];
+    Quiet[
+      cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+    ];
+    simplePrint[cpTrue];
+    (* remove (Not)Element[] because it seems to be always true *)
+    cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
+    checkMessage;
+    Quiet[
+      cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
+    ];
+    checkMessage;
+    simplePrint[cpFalse];
+    toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
   ]
 ];
 
@@ -824,3 +824,37 @@ publicMethod[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
+
+borderIsIncluded[border_, lower_, upper_] := borderIsIncluded[border, lower, upper, parameters, pConstraint];
+
+publicMethod[
+  borderIsIncluded,
+  border,
+  lower,
+  upper,
+  pars,
+  pCons,
+  Reduce[ForAll[pars, pCons, lower <= border <= upper]] === True
+];  
+  
+
+onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameter, pConstraint];
+
+publicMethod[
+  onBorder,
+  borderExpr,
+  time,
+  pars,
+  pCons,
+  Module[
+    {eq},
+    eq = Equal[borderExpr[[1]], borderExpr[[2]]];
+    Reduce[ForAll[pars, pCons, eq]] === True
+  ]
+];
+
+publicMethod[
+  makeEquation,
+  expr,
+  Equal[expr[[1]], expr[[2]]]
+];
