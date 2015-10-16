@@ -33,6 +33,7 @@ public:
 
 typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
 typedef std::vector<backend_sptr_t>               backends_vector_t;
+typedef boost::shared_ptr<backends_vector_t>      backends_sptr_t;
 
 typedef hierarchy::ModuleSetContainer             module_set_container_t;
 typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
@@ -73,7 +74,7 @@ public:
    */
   virtual void set_phase_simulator(phase_simulator_t *ps);
 
-  void set_backend(backend_sptr_t back);
+  void set_backend(backends_vector_t& back);
 
   /**
    * @return set of introduced parameters and their ranges of values
@@ -120,6 +121,7 @@ public:
   parameter_map_t parameter_map_;
 
   backend_sptr_t backend;
+  backends_vector_t* backends;
 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
 

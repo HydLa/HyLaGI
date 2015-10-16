@@ -38,13 +38,14 @@ Simulator::~Simulator()
 
 void Simulator::set_phase_simulator(phase_simulator_t *ps){
   phase_simulator_.reset(ps);
-  phase_simulator_->set_backend(backend);
+  phase_simulator_->set_backend(*backends);
 
 }
 
-void Simulator::set_backend(backend_sptr_t back)
+void Simulator::set_backend(backends_vector_t& back)
 {
-  backend = back;
+  backends = &back;
+  backend = back[0];
 }
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)

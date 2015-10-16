@@ -55,7 +55,7 @@ public:
   void process_todo(phase_result_sptr_t&);
 
 
-  void set_backend(backend_sptr_t);
+  void set_backend(backends_vector_t&);
 
   void apply_diff(const PhaseResult &phase);
 
@@ -123,6 +123,7 @@ private:
   phase_result_sptr_t result_root;
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  std::vector<boost::shared_ptr<ConsistencyChecker>> consistency_checkers;
   int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
@@ -133,6 +134,7 @@ private:
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
+  backends_vector_t* backends_;
 };
 
 

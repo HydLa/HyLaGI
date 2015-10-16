@@ -561,10 +561,14 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
 
 
 
-void PhaseSimulator::set_backend(backend_sptr_t back)
+void PhaseSimulator::set_backend(backends_vector_t& back)
 {
-  backend_ = back;
-  consistency_checker.reset(new ConsistencyChecker(backend_));
+  backends_ = &back;
+  backend_ = back[0];
+  for (int i=0; i<opts_->num_threads; ++i) {
+    consistency_checkers.push_back(boost::make_shared<ConsistencyChecker>(back[i]));
+  }
+  consistency_checker = consistency_checkers[0];
 }
 
 variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase_type)
