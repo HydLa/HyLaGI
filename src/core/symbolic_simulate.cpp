@@ -129,7 +129,10 @@ void output_result(Simulator& ss, Opts& opts){
 void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
-  opts.debug_mode    = po.count("debug") > 0;
+  if(po.count("debug"))
+  {
+    opts.debug_mode    = true;
+  }
   IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
@@ -149,6 +152,10 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   process_opts(opts, cmdline_options, false);
+  
+  if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
+  else     Logger::instance().set_log_level(Logger::Warn);
+
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
   PhaseResult::backend = backend_.get();

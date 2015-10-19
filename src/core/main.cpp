@@ -106,6 +106,7 @@ int hydla_main(int argc, char* argv[])
 
   // コメント中の変数省略指定を調べる
   opts.output_mode = Opts::None;
+
   bool isOmit = false;
   bool isOutput = false;
   const string omit_comment = "#omit ";
@@ -228,10 +229,6 @@ bool dump_in_advance(ProgramOptions& po)
     return true;
   }
     
-  if(po.count("debug")){                 // デバッグ出力
-    Logger::instance().set_log_level(Logger::Debug);
-  }else {                              // 警告のみ出力
-    Logger::instance().set_log_level(Logger::Warn);
-  }
+
   return false;
 }
