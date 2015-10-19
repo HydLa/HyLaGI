@@ -12,6 +12,9 @@
 #include <sys/stat.h>
 #include <fstream>
 
+#include "version.h"
+#include "Logger.h"
+
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
@@ -24,6 +27,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::io;
+using namespace hydla::logger;
 using namespace std;
 
 
@@ -122,7 +126,7 @@ void output_result(Simulator& ss, Opts& opts){
 
 #define IF_SPECIFIED(X) if(use_default || !po.defaulted(X))
 
-void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
+void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
   opts.debug_mode    = po.count("debug") > 0;
@@ -139,11 +143,12 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
+  IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  setup_simulator_opts(opts, cmdline_options, false);
+  process_opts(opts, cmdline_options, false);
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
   PhaseResult::backend = backend_.get();
