@@ -1,4 +1,3 @@
-
 (*
  apply specified value for expression
  *)
@@ -58,6 +57,7 @@ publicMethod[
   ByteCount[constraint && initConstraint && prevConstraint && pConstraint]
 ];
 
+
 (* translate given relational expression in the form of f(V) = 0 *)
 publicMethod[
   relationToFunction,
@@ -88,3 +88,4 @@ publicMethod[
   exp,
   toReturnForm[D[exp, t] ]
 ];
+

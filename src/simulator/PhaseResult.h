@@ -95,6 +95,9 @@ struct FindMinTimeCandidate
   value_t         time;
   bool            on_time;
   ConstraintStore parameter_constraint;
+  ValueRange     range_by_newton;
+  constraint_t   guard_by_newton;
+  std::map<constraint_t, constraint_t>  other_guards_to_time_condition;
 };
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
@@ -160,6 +163,7 @@ public:
 
   // trigger conditions
   std::map<ask_t, bool>        discrete_asks;
+  std::set<constraint_t>        discrete_guards;
   
   profile_t                    profile;
 
