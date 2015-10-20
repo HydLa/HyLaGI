@@ -45,56 +45,74 @@ itvd intersect_interval(itvd x, itvd y)
 bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   itvd tmp;
+  tmp.lower() = candidate.lower() - width(candidate);            
+  tmp.upper() = candidate.upper() + width(candidate);
+  bool first = true;
+  bool widening;
+  // tmp.lower() = nextafter(candidate.lower(), -100.0);
+  // tmp.upper() = nextafter(candidate.upper(), 100.0);
 
   if(candidate == candidate.lower() && candidate == candidate.upper() &&
      candidate != itvd(0.,0.))
   {
     return true;
   }
-    
-  tmp.lower() = candidate.lower() - 1.0 * pow(10, (int)log10(width(candidate)));            
-  tmp.upper() = candidate.upper() + 1.0 * pow(10, (int)log10(width(candidate)));
 
-  // tmp.lower() = nextafter(candidate.lower(), -100.0);
-  // tmp.upper() = nextafter(candidate.upper(), 100.0);
-  
-  HYDLA_LOGGER_DEBUG_VAR(width(candidate));
-  HYDLA_LOGGER_DEBUG_VAR(log10(width(candidate)));
-  HYDLA_LOGGER_DEBUG_VAR((int)log10(width(candidate)));
-  HYDLA_LOGGER_DEBUG_VAR(candidate);
-  HYDLA_LOGGER_DEBUG_VAR(tmp);
-  
-  itvd n_x, div;
-  bool parted;
-  IntervalTreeVisitor visitor;
-  itvd time_interval = itvd(mid(tmp));
-
-
-  itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
-  itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
-  
-  div = division_part1(f_result, d_result, parted);
-
-  HYDLA_LOGGER_DEBUG("div : ", div);
-  
-  if(parted)
+  while(true)
   {
-    HYDLA_LOGGER_DEBUG("Parted False.");
-    return false;
-  }
+    HYDLA_LOGGER_DEBUG_VAR(width(candidate));
+    HYDLA_LOGGER_DEBUG_VAR(log10(width(candidate)));
+    HYDLA_LOGGER_DEBUG_VAR((int)log10(width(candidate)));
+    HYDLA_LOGGER_DEBUG_VAR(candidate);
+    HYDLA_LOGGER_DEBUG_VAR(tmp);
   
-  n_x = mid(tmp) - div;
+    itvd n_x, div;
+    bool parted;
+    IntervalTreeVisitor visitor;
+    itvd time_interval = itvd(mid(tmp));
 
-  HYDLA_LOGGER_DEBUG("n_x : ", n_x);
+
+    itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
+    itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
   
-  if(proper_subset(n_x, tmp))
-  {
-    return true;
-  }
-  else
-  {
-    HYDLA_LOGGER_DEBUG("Not Subset.");
-    return false;
+    div = division_part1(f_result, d_result, parted);
+
+    HYDLA_LOGGER_DEBUG("div : ", div);
+  
+    if(parted)
+    {
+      if(first)
+      {
+        first = false;
+        widening = false;
+      }
+      if(widening)return false;
+      tmp.lower() = tmp.lower() + width(tmp)/4;
+      tmp.upper() = tmp.upper() - width(tmp)/4;
+      HYDLA_LOGGER_DEBUG_VAR(tmp);
+      continue;
+    }
+  
+    n_x = mid(tmp) - div;
+
+    HYDLA_LOGGER_DEBUG("n_x : ", n_x);
+  
+    if(proper_subset(n_x, tmp))
+    {
+      return true;
+    }
+    else
+    {
+      HYDLA_LOGGER_DEBUG("Not Subset.");
+      if(first)
+      {
+        first = false;
+        widening = true;
+      }
+      if(!widening)return false;
+      tmp.lower() = tmp.lower() - width(tmp);
+      tmp.upper() = tmp.upper() + width(tmp);
+    }
   }
 }
 
@@ -115,13 +133,12 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
   {
     current_value = candidate_stack.top();
     candidate_stack.pop();
+    HYDLA_LOGGER_DEBUG("pop candidate: ", current_value);
     
     for(int i=0;i<100;i++)
     {
       std::cout.precision(17);
       
-      itvd m = itvd(mid(current_value));
-
       IntervalTreeVisitor visitor;
 
       itvd time_interval = itvd(mid(current_value));
@@ -140,6 +157,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
       
       prev_value = current_value;
       HYDLA_LOGGER_DEBUG("prev_value : ", prev_value);
+      HYDLA_LOGGER_DEBUG_VAR(time_interval);
       div1 = division_part1(f_result, d_result, parted);
       HYDLA_LOGGER_DEBUG("div1 : ", div1);
       tmp1 = time_interval - div1;
@@ -158,7 +176,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
         if(!(x1 == itvd(0.,0.)))
         {
           candidate_stack.push(x1);
-          HYDLA_LOGGER_DEBUG_VAR("Push candidate!");
+          HYDLA_LOGGER_DEBUG("Push candidate :", x1);
         }
         
         current_value = x2;
@@ -170,7 +188,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     
       if(current_value == itvd(0.,0.))
       {
-        HYDLA_LOGGER_DEBUG_VAR("Wrong Interval");
+        HYDLA_LOGGER_DEBUG("Wrong Interval");
         break;
       }
 
@@ -189,11 +207,12 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
     if(show_existence(current_value, exp, dexp, phase_map_))
     {
       HYDLA_LOGGER_DEBUG("Width of answer : ", width(current_value));
+      HYDLA_LOGGER_DEBUG("answer: ", current_value);
       return current_value;
     }
     
   } // while
-
+  HYDLA_LOGGER_DEBUG("There is no answer");
   // 解探索失敗
   return itvd(0.,0.);
 }
@@ -239,8 +258,11 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
       current_interval = intersect_interval(prev_interval, nx);
       if(parted)
       {
-        HYDLA_LOGGER_DEBUG("push candidate: ", current_interval);
-        candidate_stack.push(current_interval);
+        if(current_interval != itvd(0., 0.))
+        {
+          HYDLA_LOGGER_DEBUG("push candidate: ", current_interval);
+          candidate_stack.push(current_interval);
+        }
         nx2 = m - division_part2(f_result, d_result);
         HYDLA_LOGGER_DEBUG_VAR(nx2);
         current_interval = intersect_interval(prev_interval, nx2);

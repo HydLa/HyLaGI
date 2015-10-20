@@ -921,7 +921,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
     HYDLA_ASSERT(parameter_map_vector.size() <= 1);
     parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
-    list<itvd> result_interval_list = calculate_interval_newton_nd(guard_by_newton, related_vm, pm);
+    list<itvd> result_interval_list = calculate_interval_newton_nd(guard_by_newton, related_vm, pm, phase->parent == result_root.get());
     const type_info &guard_type = typeid(*guard_by_newton);
 
     // TODO: integrate process for both equalities and inequalities
@@ -1483,11 +1483,11 @@ itvd PhaseSimulator::calculate_zero_crossing_of_derivative(const constraint_t& g
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ddexp));
   itvd init = itvd(0.,100);
-  itvd result_interval = interval::calculate_interval_newton(init, criteria_val.get_node(), dexp, pm);
+  itvd result_interval = interval::calculate_interval_newton(init, dexp, ddexp, pm);
   return result_interval;
 }
 
-list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm)
+list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint)
 {
   node_sptr exp;
   node_sptr dexp;
@@ -1495,7 +1495,25 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   backend_->call("differentiateWithTime", true, 1, "et", "e", &exp, &dexp);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
-  itvd init = itvd(0.,upper_bound_of_itv_newton);
+
+
+  double start_of_init = 0;
+  if(additional_constraint)
+  {
+    itvd min_interval = calculate_zero_crossing_of_derivative(guard, related_vm, pm);
+    if(width(min_interval) > 0)
+    {
+      start_of_init = min_interval.lower();
+    }
+  }
+  itvd init = itvd(start_of_init,upper_bound_of_itv_newton);
+  HYDLA_LOGGER_DEBUG_VAR(init);
+  interval::calculate_interval_newton(init, exp, dexp, pm);
+  for(auto entry : pm)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(entry.first);
+    HYDLA_LOGGER_DEBUG_VAR(entry.second);
+  }
   list<itvd> result_intervals =
     interval::calculate_interval_newton_nd(init, exp, dexp, pm);
   return result_intervals;
