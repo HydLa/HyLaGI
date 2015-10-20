@@ -98,6 +98,8 @@ private:
 
   bool calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks,   ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& always);
 
+  kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
+  
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
@@ -130,6 +132,7 @@ private:
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
+  double                                upper_bound_of_itv_newton = 100;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
