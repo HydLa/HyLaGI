@@ -1,0 +1,13 @@
+// 2015/6/28
+// Tsutomu WADA
+// The shape of floor is sin.
+
+INIT <=> x = Pi/2 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 4/5 /\ [](e' = 0).
+FALL <=> [](y'' = -10).
+CONSTX <=> [](x'' = 0).
+BOUNCE <=> []( y- = sin(x-) => x' = (1 - e * cos(x-)^2)/(1 + cos(x-)^2)*x'- + (1 + e)*((1 + cos(x-))/(1 + cos(x-)^2))*y'- /\
+        y' = -(1 + e)*((1 + cos(x-))/(1 + cos(x-)^2))*x'- - (e + cos(x-)^2)/(1 + cos(x-)^2)*y'-).
+
+INIT, (FALL, CONSTX) << BOUNCE.
+
+//#hylagi -p 10 --finterval --fdump_in_progress

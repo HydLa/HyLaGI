@@ -175,6 +175,13 @@ publicMethod[
   toReturnForm[Simplify[arg]]
 ];
 
+publicMethod[
+  fullSimplify,
+  arg,
+  toReturnForm[FullSimplify[arg]]
+];
+
+
 
 toReturnForm[expr_] := 
 Module[

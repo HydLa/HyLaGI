@@ -111,6 +111,8 @@ private:
 
   std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, std::list<Parameter> &parameters);
 
+  void add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange current_range);
+
   Simulator* simulator_;
 
   const Opts *opts_;
