@@ -641,110 +641,110 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       auto ask_it = begin;
       for(bool loop=true; loop;)
       {
-      if (ask_it == end)
-        loop = false;
-      st_mtx.phase.lock();
-      phase->profile["# of CheckEntailment_Loop"]+= 1;
-      st_mtx.phase.unlock();
-      const auto ask = *ask_it;
-
-      if(phase_type == POINT_PHASE
-         // in initial phase, conditions about left-hand limits are considered to be invalid
-         && phase->parent == result_root.get()
-         && PrevSearcher().search_prev(ask))
-      {
-        st_mtx.unknown_asks.lock();
-        ask_it = unknown_asks.erase(ask_it);
-        st_mtx.unknown_asks.unlock();
-        continue;
-      }
-
-      CheckConsistencyResult check_consistency_result;
-      switch(consistency_checkers[thread_number]->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
-
-      case BRANCH_PAR:
-        HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+        if (ask_it == end)
+          loop = false;
         st_mtx.phase.lock();
-        push_branch_states(phase, check_consistency_result);
+        phase->profile["# of CheckEntailment_Loop"]+= 1;
         st_mtx.phase.unlock();
-        // Since we choose entailed case in push_branch_states, we go down without break.
-      case ENTAILED:
-        HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
-        if(!relation_graph_->get_entailed(ask))
+        const auto ask = *ask_it;
+
+        if(phase_type == POINT_PHASE
+            // in initial phase, conditions about left-hand limits are considered to be invalid
+            && phase->parent == result_root.get()
+            && PrevSearcher().search_prev(ask))
         {
-          st_mtx.negative_asks.lock();
-          if(negative_asks.erase(ask))
-          {
-            st_mtx.diff_sum.lock();
-            diff_sum.erase(ask->get_child());
-            st_mtx.diff_sum.unlock();
-          }
-          else
-          {
-            st_mtx.expanded_always.lock();
-            expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
-            st_mtx.expanded_always.unlock();
-            st_mtx.positive_asks.lock();
-            positive_asks.insert(ask);
-            st_mtx.positive_asks.unlock();
-            st_mtx.diff_sum.lock();
-            diff_sum.add_constraint(ask->get_child());
-            st_mtx.diff_sum.unlock();
-          }
-          st_mtx.negative_asks.unlock();
-          st_mtx.local_diff_sum.lock();
-          local_diff_sum.add_constraint(ask->get_child());
-          st_mtx.local_diff_sum.unlock();
-          relation_graph_->set_entailed(ask, true);
+          st_mtx.unknown_asks.lock();
+          ask_it = unknown_asks.erase(ask_it);
+          st_mtx.unknown_asks.unlock();
+          continue;
         }
-        st_mtx.expanded.lock();
-        expanded = true;
-        st_mtx.expanded.unlock();
-        st_mtx.unknown_asks.lock();
-        ask_it = unknown_asks.erase(ask_it);
-        st_mtx.unknown_asks.unlock();
-        break;
-      case CONFLICTING:
-        HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", get_infix_string(ask));
-        if(relation_graph_->get_entailed(ask))
-        {
-          st_mtx.positive_asks.lock();
-          if(positive_asks.erase(ask))
-          {
-            st_mtx.diff_sum.lock();
-            diff_sum.erase(ask->get_child());
-            st_mtx.diff_sum.unlock();
-          }
-          else
-          {
-            st_mtx.negative_asks.lock();
-            negative_asks.insert(ask);
-            st_mtx.negative_asks.unlock();
-            st_mtx.diff_sum.lock();
-            diff_sum.add_constraint(ask->get_child());
-            st_mtx.diff_sum.unlock();
-          }
-          st_mtx.positive_asks.unlock();
-          st_mtx.local_diff_sum.lock();
-          local_diff_sum.add_constraint(ask->get_child());
-          st_mtx.local_diff_sum.unlock();
-          relation_graph_->set_entailed(ask, false);
+
+        CheckConsistencyResult check_consistency_result;
+        switch(consistency_checkers[thread_number]->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
+
+          case BRANCH_PAR:
+            HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+            st_mtx.phase.lock();
+            push_branch_states(phase, check_consistency_result);
+            st_mtx.phase.unlock();
+            // Since we choose entailed case in push_branch_states, we go down without break.
+          case ENTAILED:
+            HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
+            if(!relation_graph_->get_entailed(ask))
+            {
+              st_mtx.negative_asks.lock();
+              if(negative_asks.erase(ask))
+              {
+                st_mtx.diff_sum.lock();
+                diff_sum.erase(ask->get_child());
+                st_mtx.diff_sum.unlock();
+              }
+              else
+              {
+                st_mtx.expanded_always.lock();
+                expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
+                st_mtx.expanded_always.unlock();
+                st_mtx.positive_asks.lock();
+                positive_asks.insert(ask);
+                st_mtx.positive_asks.unlock();
+                st_mtx.diff_sum.lock();
+                diff_sum.add_constraint(ask->get_child());
+                st_mtx.diff_sum.unlock();
+              }
+              st_mtx.negative_asks.unlock();
+              st_mtx.local_diff_sum.lock();
+              local_diff_sum.add_constraint(ask->get_child());
+              st_mtx.local_diff_sum.unlock();
+              relation_graph_->set_entailed(ask, true);
+            }
+            st_mtx.expanded.lock();
+            expanded = true;
+            st_mtx.expanded.unlock();
+            st_mtx.unknown_asks.lock();
+            ask_it = unknown_asks.erase(ask_it);
+            st_mtx.unknown_asks.unlock();
+            break;
+          case CONFLICTING:
+            HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", get_infix_string(ask));
+            if(relation_graph_->get_entailed(ask))
+            {
+              st_mtx.positive_asks.lock();
+              if(positive_asks.erase(ask))
+              {
+                st_mtx.diff_sum.lock();
+                diff_sum.erase(ask->get_child());
+                st_mtx.diff_sum.unlock();
+              }
+              else
+              {
+                st_mtx.negative_asks.lock();
+                negative_asks.insert(ask);
+                st_mtx.negative_asks.unlock();
+                st_mtx.diff_sum.lock();
+                diff_sum.add_constraint(ask->get_child());
+                st_mtx.diff_sum.unlock();
+              }
+              st_mtx.positive_asks.unlock();
+              st_mtx.local_diff_sum.lock();
+              local_diff_sum.add_constraint(ask->get_child());
+              st_mtx.local_diff_sum.unlock();
+              relation_graph_->set_entailed(ask, false);
+            }
+            st_mtx.expanded.lock();
+            expanded = true;
+            st_mtx.expanded.unlock();
+            st_mtx.unknown_asks.lock();
+            ask_it = unknown_asks.erase(ask_it);
+            st_mtx.unknown_asks.unlock();
+            break;
+          case BRANCH_VAR:
+            HYDLA_LOGGER_DEBUG("\n--- branched ask ---\n", get_infix_string(ask));
+            ask_it++;
+            break;
         }
-        st_mtx.expanded.lock();
-        expanded = true;
-        st_mtx.expanded.unlock();
-        st_mtx.unknown_asks.lock();
-        ask_it = unknown_asks.erase(ask_it);
-        st_mtx.unknown_asks.unlock();
-        break;
-      case BRANCH_VAR:
-        HYDLA_LOGGER_DEBUG("\n--- branched ask ---\n", get_infix_string(ask));
-        ask_it++;
-        break;
-      }
-      st_mtx.phase.lock();
-      phase->profile["# of CheckEntailment"]+= 1;
-      st_mtx.phase.unlock();
+        st_mtx.phase.lock();
+        phase->profile["# of CheckEntailment"]+= 1;
+        st_mtx.phase.unlock();
       }
     };
     const int num_asks = unknown_asks.size();
