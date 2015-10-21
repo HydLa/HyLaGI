@@ -33,6 +33,7 @@ struct Opts {
   int max_phase;
   EOutputMode output_mode;
   std::set<std::string> output_vars;
+  std::set<std::string> constant_vars;
 };
 
 }

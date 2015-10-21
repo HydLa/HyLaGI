@@ -840,7 +840,12 @@ publicMethod[
   upper,
   pars,
   pCons,
-  Reduce[ForAll[pars, pCons, lower <= border <= upper]] === True
+  Module[
+    {necessaryPCons, parsInCons},
+    parsInCons = Union[getParameters[lower], getParameters[upper], getParameters[border]];
+    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    Reduce[ForAll[parsInCons, necessaryPCons, lower <= border <= upper]] === True
+  ]
 ];  
   
 

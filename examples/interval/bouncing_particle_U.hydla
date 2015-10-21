@@ -26,4 +26,4 @@ BOUNCE <=> [](y- = (1/2) * (x-)^2 =>
 
 INIT, SC, A << BOUNCE.
 
-// #hylagi -p 10 --finterval --fnd --fdump_in_progress --approximation_step 1
+// #hylagi -p 10 --finterval --fnd --fdump_in_progress --approximation_step 1 --constants s,c,x'',y'',k

@@ -121,8 +121,9 @@ void ProgramOptions::init_descriptions()
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
-    ;
-
+    ("constants",
+     value<std::string>()->default_value(""),
+     "variables which can be assumed constant (delimited by \",\")");
 
 
   options_description hidden_desc("Hidden options");

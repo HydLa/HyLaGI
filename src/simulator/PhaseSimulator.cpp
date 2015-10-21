@@ -87,6 +87,11 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       {
         for(auto &entry: phase->variable_map)
         {
+          if(opts_->constant_vars.count(entry.first.get_string()) > 0 )
+          {
+            HYDLA_LOGGER_DEBUG_VAR(entry.first.get_string());
+            continue;
+          }
           VariableReplacer v_replacer(phase->variable_map);
           v_replacer.replace_range(entry.second);
           entry.second = value_modifier->apply_function("fullSimplify", entry.second);
