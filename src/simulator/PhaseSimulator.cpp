@@ -1,4 +1,6 @@
 #include <iostream>
+#include <thread>
+#include <mutex>
 
 #include "PhaseSimulator.h"
 
@@ -120,11 +122,13 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
-  backend_->call("resetConstraint", false, 0, "", "");
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
-  backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
-  backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
-  consistency_checker->set_prev_map(&todo->prev_map);
+  for (int i=0; i<opts_->num_threads; ++i) {
+    (*backends_)[i]->call("resetConstraint", false, 0, "", "");
+    (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
+    (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
+    consistency_checkers[i]->set_prev_map(&todo->prev_map);
+  }
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
@@ -590,7 +594,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
 {
   asks_t unknown_asks = trigger_asks;
   bool expanded;
-  PhaseType phase_type = phase->phase_type;
+  const PhaseType phase_type = phase->phase_type;
   variable_set_t discrete_variables = get_discrete_variables(diff_sum, phase_type);
 
   do{
@@ -622,9 +626,26 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       unknown_asks.insert(adjacent);
     }
     timer::Timer for_loop_timer;
-    for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
+    struct {
+      std::mutex phase;
+      std::mutex unknown_asks;
+      std::mutex negative_asks;
+      std::mutex diff_sum;
+      std::mutex expanded_always;
+      std::mutex positive_asks;
+      std::mutex local_diff_sum;
+      std::mutex expanded;
+    } st_mtx;
+    auto check_entailment_worker = [&phase,&phase_type,&unknown_asks,&negative_asks,&diff_sum,&expanded_always,&positive_asks,&local_diff_sum,&expanded,&st_mtx,this](asks_t::iterator begin, asks_t::iterator end, const int thread_number)
     {
+      auto ask_it = begin;
+      for(bool loop=true; loop;)
+      {
+      if (ask_it == end)
+        loop = false;
+      st_mtx.phase.lock();
       phase->profile["# of CheckEntailment_Loop"]+= 1;
+      st_mtx.phase.unlock();
       const auto ask = *ask_it;
 
       if(phase_type == POINT_PHASE
@@ -632,62 +653,131 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
          && phase->parent == result_root.get()
          && PrevSearcher().search_prev(ask))
       {
+        st_mtx.unknown_asks.lock();
         ask_it = unknown_asks.erase(ask_it);
+        st_mtx.unknown_asks.unlock();
         continue;
       }
 
       CheckConsistencyResult check_consistency_result;
-      switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
+      switch(consistency_checkers[thread_number]->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
 
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
+        st_mtx.phase.lock();
         push_branch_states(phase, check_consistency_result);
+        st_mtx.phase.unlock();
         // Since we choose entailed case in push_branch_states, we go down without break.
       case ENTAILED:
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
         if(!relation_graph_->get_entailed(ask))
         {
+          st_mtx.negative_asks.lock();
           if(negative_asks.erase(ask))
           {
+            st_mtx.diff_sum.lock();
             diff_sum.erase(ask->get_child());
+            st_mtx.diff_sum.unlock();
           }
           else
           {
+            st_mtx.expanded_always.lock();
             expanded_always.add_constraint_store(relation_graph_->get_always_list(ask));
+            st_mtx.expanded_always.unlock();
+            st_mtx.positive_asks.lock();
             positive_asks.insert(ask);
+            st_mtx.positive_asks.unlock();
+            st_mtx.diff_sum.lock();
             diff_sum.add_constraint(ask->get_child());
+            st_mtx.diff_sum.unlock();
           }
+          st_mtx.negative_asks.unlock();
+          st_mtx.local_diff_sum.lock();
           local_diff_sum.add_constraint(ask->get_child());
+          st_mtx.local_diff_sum.unlock();
           relation_graph_->set_entailed(ask, true);
         }
+        st_mtx.expanded.lock();
         expanded = true;
+        st_mtx.expanded.unlock();
+        st_mtx.unknown_asks.lock();
         ask_it = unknown_asks.erase(ask_it);
+        st_mtx.unknown_asks.unlock();
         break;
       case CONFLICTING:
         HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", get_infix_string(ask));
         if(relation_graph_->get_entailed(ask))
         {
+          st_mtx.positive_asks.lock();
           if(positive_asks.erase(ask))
           {
+            st_mtx.diff_sum.lock();
             diff_sum.erase(ask->get_child());
+            st_mtx.diff_sum.unlock();
           }
           else
           {
+            st_mtx.negative_asks.lock();
             negative_asks.insert(ask);
+            st_mtx.negative_asks.unlock();
+            st_mtx.diff_sum.lock();
             diff_sum.add_constraint(ask->get_child());
+            st_mtx.diff_sum.unlock();
           }
+          st_mtx.positive_asks.unlock();
+          st_mtx.local_diff_sum.lock();
           local_diff_sum.add_constraint(ask->get_child());
+          st_mtx.local_diff_sum.unlock();
           relation_graph_->set_entailed(ask, false);
         }
+        st_mtx.expanded.lock();
         expanded = true;
+        st_mtx.expanded.unlock();
+        st_mtx.unknown_asks.lock();
         ask_it = unknown_asks.erase(ask_it);
+        st_mtx.unknown_asks.unlock();
         break;
       case BRANCH_VAR:
         HYDLA_LOGGER_DEBUG("\n--- branched ask ---\n", get_infix_string(ask));
         ask_it++;
         break;
       }
+      st_mtx.phase.lock();
       phase->profile["# of CheckEntailment"]+= 1;
+      st_mtx.phase.unlock();
+      }
+    };
+    const int num_asks = unknown_asks.size();
+    if (num_asks != 0) {
+      const int max_threads = opts_->num_threads;
+      const int num_threads = num_asks>max_threads ? max_threads : num_asks;
+      const int asks_per_thread = num_asks/num_threads;
+      int odd_asks = num_asks%num_threads;
+      struct its_t {
+        asks_t::iterator start, end;
+      };
+      std::vector<struct its_t> its(num_threads);
+      asks_t::iterator itr = unknown_asks.begin();
+      for (int i=0; i<num_threads; ++i) {
+        its[i].start = itr;
+        // its[i].end is NOT the same one as set::end(), but previous one of it.
+        // Because we should not share iterators across several threads.
+        if (odd_asks > 0) {
+          std::advance(itr, asks_per_thread);
+          odd_asks--;
+        } else {
+          std::advance(itr, asks_per_thread-1);
+        }
+        its[i].end = itr;
+        itr++;
+      }
+      std::vector<std::thread> threads(num_threads);
+      for (int i = 0; i < num_threads; ++i) {
+        threads[i] = std::thread(check_entailment_worker, its[i].start, its[i].end, i);
+      }
+      for (int i = 0; i < num_threads; ++i) {
+        threads[i].join();
+      }
     }
     phase->profile["CheckEntailment_Loop"] += for_loop_timer.get_elapsed_us();
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
