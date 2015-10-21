@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "PhaseSimulator.h"
 
@@ -83,7 +84,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   {
     for(auto phase : phase_list)
     {
-      if(todo->phase_type == POINT_PHASE && opts_->interval && todo->step > 0 &&  (todo->step/2) % opts_->approximation_step == 0)
+      if(todo->phase_type == POINT_PHASE && opts_->interval && todo->step > 0 && opts_->approximation_step > 0 && (todo->step/2) % opts_->approximation_step == 0)
       {
         for(auto &entry: phase->variable_map)
         {
@@ -107,6 +108,9 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
             Parameter param(entry.first, *phase);
             add_parameter_constraint(phase, param, range);
             entry.second = param.as_value();
+            stringstream sstr;
+            sstr << param.get_name() << "_" <<  param.get_differential_count();
+            phase->profile[sstr.str()] = width(interval);
           }
         }
       }
