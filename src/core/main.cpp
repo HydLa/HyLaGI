@@ -42,6 +42,7 @@ int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 void setup_simulator_opts(Opts& opts, ProgramOptions& p, bool use_default);
+void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
 
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
@@ -149,31 +150,7 @@ int hydla_main(int argc, char* argv[])
     string var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
 
     // 省略変数を解析する
-    string delimStr = ",";
-    vector<string> var_list;
-    std::stringstream ss(var_string);
-    string buffer;
-    while (std::getline(ss, buffer, ','))
-    {
-      // 前後の空白を取り除く
-      auto left = buffer.find_first_not_of(" ");
-      if (left != string::npos)
-      {
-        auto right = buffer.find_last_not_of(" ");
-        buffer = buffer.substr(left, right - left + 1);
-      }
-      // 変数名に使えない文字が入っていたら警告
-      regex re("^[0-9a-z']+$", std::regex_constants::extended);
-      smatch match;
-      if (!regex_search(buffer, match, re))
-      {
-        cout << "[" << (isOmit ? "#omit" : "#output") << "] warning : \"" << buffer << "\" is not a valid variable name." << endl;
-        continue;
-      }
-
-      var_list.push_back(buffer);
-      opts.output_vars.insert(buffer);
-    }
+    add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
 
   pt->parse_string(input);

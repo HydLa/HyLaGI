@@ -118,14 +118,14 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters, currentTime];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, assumptions, variables, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
-  cons, vars, pars, current,
+  cons, assump, vars, pars, current,
   Module[
     {ret, map, currentCons},
-    currentCons = cons /. t -> current;
+    currentCons = Assuming[assump, Simplify[cons /. t -> current]];
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
     map = Reduce[map, vars, Reals];
     If[Head[map] === Or,
@@ -534,14 +534,20 @@ publicMethod[
       minT,
       resultList,
       onTime = True,
+      necessaryPCons,
+      parsInCons,
       maxCons,
       ret
     },
     (* Mathematica cannot solve some minimization problem with "t < Infinity", such 
     as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
+
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons && maxCons}, {t}],
+    parsInCons = getParameters[tCons];
+    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
@@ -834,11 +840,16 @@ publicMethod[
   upper,
   pars,
   pCons,
-  Reduce[ForAll[pars, pCons, lower <= border <= upper]] === True
+  Module[
+    {necessaryPCons, parsInCons},
+    parsInCons = Union[getParameters[lower], getParameters[upper], getParameters[border]];
+    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    Reduce[ForAll[parsInCons, necessaryPCons, lower <= border <= upper]] === True
+  ]
 ];  
   
 
-onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameter, pConstraint];
+onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameters, pConstraint];
 
 publicMethod[
   onBorder,
@@ -848,8 +859,13 @@ publicMethod[
   pCons,
   Module[
     {eq},
-    eq = Equal[borderExpr[[1]], borderExpr[[2]]];
-    Reduce[ForAll[pars, pCons, eq]] === True
+    If[borderExpr === True,
+      False, (* exclude case which the trajectory is continuously on the border *)
+      eq = Equal[borderExpr[[1]], borderExpr[[2]]];
+      eq = borderExpr /. t -> time;
+      simplePrint[eq];
+      Reduce[ForAll[pars, pCons, eq]] === True
+    ]
   ]
 ];
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef LP_HPP
@@ -13,10 +13,10 @@
 #include <kv/interval.hpp>
 #include <kv/rdouble.hpp>
 
-namespace ub = boost::numeric::ublas;
-
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 template <class T> inline T lp_minimize(ub::vector<T>& objfunc, std::list< ub::vector<T> >& constraints)
 {
@@ -40,7 +40,7 @@ template <class T> inline T lp_minimize(ub::vector<T>& objfunc, std::list< ub::v
 	p = constraints.begin();
 	for (i=0; i<m; i++) {
 		if ((*p)[0] > 0) {
-			throw std::range_error("lp_minimize: constraints sign error");
+			throw std::domain_error("lp_minimize: constraints sign error");
 		}
 		a(i+1, 0) = -(*p)[0];
 		for (j=1; j<=lp_n; j++) {
@@ -83,7 +83,7 @@ template <class T> inline T lp_minimize(ub::vector<T>& objfunc, std::list< ub::v
 			}
 		}
 		if (pivot_i == -1) {
-			throw std::range_error("lp_minimize: no optimal solution");
+			throw std::domain_error("lp_minimize: no optimal solution");
 		}
 
 		isbasic(basic(pivot_i)) = false;
@@ -139,7 +139,7 @@ template <class T> inline T lp_minimize_verified(ub::vector<T>& objfunc, std::li
 	p = constraints.begin();
 	for (i=0; i<m; i++) {
 		if ((*p)[0] > 0) {
-			throw std::range_error("lp_minimize: constraints sign error");
+			throw std::domain_error("lp_minimize: constraints sign error");
 		}
 		a(i+1, 0) = -(*p)[0];
 		for (j=1; j<=lp_n; j++) {
@@ -182,7 +182,7 @@ template <class T> inline T lp_minimize_verified(ub::vector<T>& objfunc, std::li
 			}
 		}
 		if (pivot_i == -1) {
-			throw std::range_error("lp_minimize: no optimal solution");
+			throw std::domain_error("lp_minimize: no optimal solution");
 		}
 
 		Imin = (interval<T>)a(pivot_i, 0) / a(pivot_i, pivot_j);
@@ -196,8 +196,8 @@ template <class T> inline T lp_minimize_verified(ub::vector<T>& objfunc, std::li
 					if (Imin.upper() < Itmp.lower()) {
 						break;
 					}
-					tmp = (a(i, 0) > 0) ? a(i, 0) : -a(i, 0);
-					a(i, 0) += tmp * std::numeric_limits<T>::epsilon();
+					// succ
+					a(i, 0) = ((interval<T>)a(i, 0) + std::numeric_limits<T>::denorm_min()).upper();
 				}
 			} else {
 				Itmp = (interval<T>)a(i, 0) / a(i, pivot_j);
@@ -205,8 +205,8 @@ template <class T> inline T lp_minimize_verified(ub::vector<T>& objfunc, std::li
 					if (Imin.upper() < Itmp.lower()) {
 						break;
 					}
-					tmp = (a(pivot_i, 0) > 0) ? a(pivot_i, 0) : -a(pivot_i, 0);
-					a(pivot_i, 0) -= tmp * std::numeric_limits<T>::epsilon();
+					// pred
+					a(pivot_i, 0) = ((interval<T>)a(pivot_i, 0) - std::numeric_limits<T>::denorm_min()).lower();
 
 					Imin = (interval<T>)a(pivot_i, 0) / a(pivot_i, pivot_j);
 				}

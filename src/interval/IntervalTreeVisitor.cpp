@@ -82,7 +82,16 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   itvd lhs = interval_value;
   accept(node->get_rhs());
   itvd rhs = interval_value;
-  interval_value = pow(lhs, rhs);
+  // TODO: avoid string comparison
+  if(get_infix_string(node->get_rhs()) == "2")
+  {
+    interval_value = pow(lhs, 2);
+  }
+  else if(get_infix_string(node->get_rhs()) == "1/2")
+  {
+    interval_value = sqrt(lhs);
+  }
+  else interval_value = pow(lhs, rhs);
   // debug_print("Power : ", interval_value);
   return;
 }

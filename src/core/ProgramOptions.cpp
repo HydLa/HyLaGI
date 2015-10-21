@@ -117,11 +117,13 @@ void ProgramOptions::init_descriptions()
       )
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
+    ("approximation_step", value<int>()->default_value('0'), "the interval of step to approximate value of variable")
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
-    ;
-
+    ("constants",
+     value<std::string>()->default_value(""),
+     "variables which can be assumed constant (delimited by \",\")");
 
 
   options_description hidden_desc("Hidden options");

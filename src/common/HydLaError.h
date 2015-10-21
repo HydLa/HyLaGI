@@ -9,16 +9,20 @@
 #define HYDLA_ERROR(MSG)                                  \
   hydla::HydLaError("@" __FILE__ " " HYDLA_TO_STR(__LINE__) " ", MSG)
 
+#define HYDLA_ASSERT(COND)                                \
+  if(!(COND)) throw  hydla::HydLaError("@" __FILE__ " " HYDLA_TO_STR(__LINE__) " assertion failure: ", HYDLA_TO_STR(COND))
+
+
 namespace hydla {
 
 class HydLaError : public std::runtime_error {
 public:
   HydLaError(const std::string& msg) : 
-    std::runtime_error("error occurred: " + msg)
+    std::runtime_error(msg)
   {}
   
   HydLaError(const std::string& prefix, const std::string& msg) : 
-    std::runtime_error("error occurred: " + prefix + msg)
+    std::runtime_error(prefix + msg)
   {}
 };
     

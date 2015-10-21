@@ -28,10 +28,12 @@ struct Opts {
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
+  int approximation_step;
   symbolic_expression::node_sptr assertion;
   int max_phase;
   EOutputMode output_mode;
   std::set<std::string> output_vars;
+  std::set<std::string> constant_vars;
 };
 
 }

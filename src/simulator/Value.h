@@ -51,6 +51,8 @@ class Value
   
   virtual bool infinite() const;
 
+  virtual bool isZero() const;
+
   /**
    * 文字列表現を取得する
    */
