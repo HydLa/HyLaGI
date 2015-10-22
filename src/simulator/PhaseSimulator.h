@@ -102,6 +102,8 @@ private:
   
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint);
 
+  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange &range);
+
   ValueRange create_range_from_interval(kv::interval<double> itv);
    
  	/// make todos from given phase_result
