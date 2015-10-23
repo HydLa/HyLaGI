@@ -18,6 +18,7 @@ struct Opts {
   std::string max_time;
   int epsilon_mode;
   bool interval;
+  bool numerize_mode;
   bool ltl_model_check_mode;
 
   bool nd_mode;
@@ -33,7 +34,7 @@ struct Opts {
   int max_phase;
   EOutputMode output_mode;
   std::set<std::string> output_vars;
-  std::set<std::string> constant_vars;
+  std::set<std::string> vars_to_approximate;
 };
 
 }

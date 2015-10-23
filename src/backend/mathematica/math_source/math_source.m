@@ -1,22 +1,20 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons]] /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, assum,vars, pars, current,
+  cons, pcons, vars, pars, current,
   Module[
-    {simplifiedCons, cpTrue, cpFalse},
-    simplifiedCons = Assuming[assum, Simplify[cons] ];
-    simplePrint[simplifiedCons];
+    {cpTrue, cpFalse},
     Quiet[
-      cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -34,10 +32,10 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Assuming[assumptions, Simplify[tmpCons]] //. prevRules) && constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -80,10 +78,9 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
+  cons, initCons, vars, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
-    Assuming[assum,
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
         sol = exDSolve[cons];
@@ -112,20 +109,19 @@ publicMethod[
           toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
         ]
       ]
-    ]
-  ]
+   ]
 ];
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, assumptions, variables, parameters, currentTime];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
-  cons, assump, vars, pars, current,
+  cons, vars, pars, current,
   Module[
     {ret, map, currentCons},
-    currentCons = Assuming[assump, Simplify[cons /. t -> current]];
+    currentCons = cons /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
     map = Reduce[map, vars, Reals];
     If[Head[map] === Or,
@@ -322,8 +318,7 @@ publicMethod[
   addAssumption,
   as,
   debugPrint["as in addAssumption:", as];
-  simplePrint[prevRules];
-  assumptions = assumptions && as //. prevRules;
+  assumptions = assumptions && as;
 ];
 
 publicMethod[
@@ -331,7 +326,9 @@ publicMethod[
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] //. prevRules;
+    cons = If[Head[co] === List, And@@co, co];
+    cons = Assuming[assumptions, Simplify[cons]];
+    cons = cons //. prevRules;
     constraint = constraint && cons;
   ]
 ];

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "PhaseSimulator.h"
 
@@ -22,6 +23,7 @@
 
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
+#include "kv/interval.hpp"
 
 namespace hydla
 {
@@ -83,30 +85,38 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   {
     for(auto phase : phase_list)
     {
-      if(todo->phase_type == POINT_PHASE && opts_->interval && todo->step > 0 &&  (todo->step/2) % opts_->approximation_step == 0)
+      if(todo->phase_type == POINT_PHASE&& todo->step > 0)
       {
-        for(auto &entry: phase->variable_map)
+        // approximation
+        if(opts_->numerize_mode)
         {
-          if(opts_->constant_vars.count(entry.first.get_string()) > 0 )
+          for(auto &entry: phase->variable_map)
           {
-            HYDLA_LOGGER_DEBUG_VAR(entry.first.get_string());
-            continue;
+            itvd itv = evaluate_interval(phase, entry.second);
+            double mid_double = (itv.lower() + itv.upper())/2;
+            value_t mid_val(mid_double);
+            backend_->call("transformToRational", false, 1, "vln", "vl", &mid_val, &mid_val);
+            entry.second.set_unique_value(mid_val);
+            HYDLA_LOGGER_DEBUG_VAR(entry.second);
           }
-          VariableReplacer v_replacer(phase->variable_map);
-          v_replacer.replace_range(entry.second);
-          entry.second = value_modifier->apply_function("fullSimplify", entry.second);
-          interval::IntervalTreeVisitor interval_visitor;
-          vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
-          assert(parameter_map_vector.size() <= 1);
-          parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
-          HYDLA_ASSERT(entry.second.unique());
-          itvd interval = interval_visitor.get_interval_value(entry.second.get_unique_value().get_node(), nullptr, &pm);
-          if(width(interval) > 0)
+        }
+        else if(opts_->interval && opts_->approximation_step > 0 && (todo->step/2) % opts_->approximation_step == 0)
+        {
+          for(auto &entry: phase->variable_map)
           {
-            ValueRange range = create_range_from_interval(interval);
-            Parameter param(entry.first, *phase);
-            add_parameter_constraint(phase, param, range);
-            entry.second = param.as_value();
+            if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
+              continue;
+            itvd interval = evaluate_interval(phase, entry.second);
+            if(width(interval) > 0)
+            {
+              ValueRange range = create_range_from_interval(interval);
+              Parameter param(entry.first, *phase);
+              add_parameter_constraint(phase, param, range);
+              entry.second = param.as_value();
+              stringstream sstr;
+              sstr << param.get_name() << "_" <<  param.get_differential_count();
+              phase->profile[sstr.str()] = width(interval);
+            }
           }
         }
       }
@@ -147,8 +157,6 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", false, 0, "", "");
-  consistency_checker->set_prev_map(&todo->prev_map);
-
   // add assumptions
   // TODO: If the discrete_guard is not approximated, this process may be redundant
   if(todo->phase_type == INTERVAL_PHASE)
@@ -181,6 +189,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
     backend_->call("addAssumption", true, 1, "en", "", &cons);
   }
+  consistency_checker->set_prev_map(&todo->prev_map);
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
   backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
@@ -1578,6 +1587,19 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   list<itvd> result_intervals =
     interval::calculate_interval_newton_nd(init, exp, dexp, pm);
   return result_intervals;
+}
+
+itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange &range)
+{
+  VariableReplacer v_replacer(phase->variable_map);
+  v_replacer.replace_range(range);
+  range = value_modifier->apply_function("fullSimplify", range);
+  interval::IntervalTreeVisitor interval_visitor;
+  vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
+  assert(parameter_map_vector.size() <= 1);
+  parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
+  HYDLA_ASSERT(range.unique());
+  return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
 }
 
 void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange range)
