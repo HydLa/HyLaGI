@@ -122,12 +122,18 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
-  ConstraintStore parameter_cons = todo->get_parameter_constraint();
+  const ConstraintStore parameter_cons = todo->get_parameter_constraint();
+  std::vector<std::thread> threads(opts_->num_threads);
   for (int i=0; i<opts_->num_threads; ++i) {
-    (*backends_)[i]->call("resetConstraint", false, 0, "", "");
-    (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
-    (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
-    consistency_checkers[i]->set_prev_map(&todo->prev_map);
+    threads[i] = std::thread ([i,&parameter_cons,&todo,this](){
+        (*backends_)[i]->call("resetConstraint", false, 0, "", "");
+        (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
+        (*backends_)[i]->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
+        consistency_checkers[i]->set_prev_map(&todo->prev_map);
+    });
+  }
+  for (int i=0; i<opts_->num_threads; ++i) {
+    threads[i].join();
   }
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
