@@ -651,9 +651,6 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
           break;
         if (ask_it == end)
           loop = false;
-        st_mtx.phase.lock();
-        phase->profile["# of CheckEntailment_Loop"]+= 1;
-        st_mtx.phase.unlock();
         const auto ask = *ask_it;
 
         if(phase_type == POINT_PHASE
