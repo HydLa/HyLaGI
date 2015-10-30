@@ -83,7 +83,7 @@ publicMethod[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
-        sol = exDSolve[cons];
+        sol = exDSolve[cons, prevRs];
         simplePrint[sol];
         sol = sol /. prevRs;
         prevVars = Map[makePrevVar, vars];
@@ -163,10 +163,9 @@ publicMethod[
   cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons];
+    sol = exDSolve[cons, prevRs];
     sol = sol /. prevRs;
-    simplePrint[prevRules, prevRs];
-
+    simplePrint["prevRs@cvminterval: ", prevRs];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
       Message[createVariableMapInterval::underconstraint],
@@ -514,8 +513,8 @@ publicMethod[
       tRemovedRules,
       resultCons
     },
-    tRemovedRules = Map[(Rule@@#)&, cons] /. x_[t] -> x;
-    resultCons = ToRadicals[cause /. x_[t] -> x /. t -> t + current /. tRemovedRules];
+    tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
+    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
@@ -670,7 +669,7 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_] :=
+exDSolve[expr_, prevRs_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr];
@@ -688,6 +687,7 @@ Module[
     If[searchResult === unExpandable,
       Break[],
       rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+      simplePrint[rules];
       If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
       (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
       If[Head[rules] === DSolve,
@@ -698,12 +698,13 @@ Module[
       ];
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+      listExpr = listExpr //. prevRs;
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];
 
-      resultCons = applyDSolveResult[resultCons, resultRule];
+      resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
       If[resultCons === False, Return[overConstrained] ];
     ]
   ];

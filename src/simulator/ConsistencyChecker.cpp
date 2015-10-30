@@ -23,7 +23,6 @@ using namespace symbolic_expression;
 using namespace logger;
 using namespace backend;
 
-
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr), backend_check_consistency_count(0), backend_check_consistency_time(0){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
@@ -250,7 +249,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
     finder.visit_node(constraint);
   }
   add_continuity(finder, phase, constraint_for_default_continuity);
-  backend->call("addConstraint", false, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
+  backend->call("addConstraint", true, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
 
@@ -268,7 +267,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   backend->call("resetConstraintForVariable", false, 0, "", "");
 
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
-  backend->call("addConstraint", false, 1, fmt.c_str(), "", &vm);
+  backend->call("addConstraint", true, 1, fmt.c_str(), "", &vm);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
 

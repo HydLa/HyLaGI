@@ -181,8 +181,6 @@ publicMethod[
   toReturnForm[FullSimplify[arg]]
 ];
 
-
-
 toReturnForm[expr_] := 
 Module[
   {ret},

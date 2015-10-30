@@ -13,6 +13,10 @@
 #include <fstream>
 #include <regex>
 
+#include "version.h"
+#include "Logger.h"
+#include <regex>
+
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
@@ -25,6 +29,7 @@ using namespace hydla::simulator;
 using namespace hydla::backend;
 using namespace hydla::backend::mathematica;
 using namespace hydla::io;
+using namespace hydla::logger;
 using namespace std;
 
 
@@ -132,7 +137,7 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
     // 変数名に使えない文字が入っていたら警告
     regex re("^[0-9a-z']+$", std::regex_constants::extended);
     smatch match;
-    if (regex_search(buffer, match, re))
+    if (!regex_search(buffer, match, re))
     {
       cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
       continue;
@@ -145,10 +150,13 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
 
 #define IF_SPECIFIED(X) if(use_default || !po.defaulted(X))
 
-void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
+void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
   opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
-  opts.debug_mode    = po.count("debug") > 0;
+  if(po.count("debug"))
+  {
+    opts.debug_mode    = true;
+  }
   IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
@@ -168,12 +176,17 @@ void setup_simulator_opts(Opts& opts, ProgramOptions& po, bool use_default)
   {
     add_vars_from_string(po.get<string>("vars_to_approximate"), opts.vars_to_approximate, "");
   }
+  IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }
 
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  setup_simulator_opts(opts, cmdline_options, false);
+  process_opts(opts, cmdline_options, false);
+  
+  if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
+  else     Logger::instance().set_log_level(Logger::Warn);
+
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
   PhaseResult::backend = backend_.get();
