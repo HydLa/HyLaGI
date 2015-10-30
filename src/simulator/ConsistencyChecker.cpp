@@ -2,6 +2,7 @@
 #include "Backend.h"
 
 #include <iostream>
+#include <mutex>
 
 #include "Logger.h"
 
@@ -222,6 +223,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   ConstraintStore constraint_store;
   module_set_t module_set;
 
+  static std::mutex mtx_relation_graph;
 
   asks_t temporarily_invalidated_asks;
   // remove constraints which are children of unknown_asks temporarily
@@ -229,16 +231,19 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     if(relation_graph.get_entailed(ask))
     {
+      mtx_relation_graph.lock();
       relation_graph.set_entailed(ask, false);
       temporarily_invalidated_asks.insert(ask);
+      mtx_relation_graph.unlock();
     }
   }
+  mtx_relation_graph.lock();
   relation_graph.get_related_constraints(guard, constraint_store, module_set);
   for(auto ask : temporarily_invalidated_asks)
   {
     relation_graph.set_entailed(ask, true);
-  }    
-
+  }
+  mtx_relation_graph.unlock();
 
   for(auto ask : unknown_asks)
   {
