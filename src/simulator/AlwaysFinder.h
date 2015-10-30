@@ -17,10 +17,9 @@ public:
   /** 
    * find all always included by this node
    */
-  void find_always(symbolic_expression::node_sptr node, always_set_t* always_set, ConstraintStore* non_al = nullptr);
+  void find_always(symbolic_expression::node_sptr node, always_set_t* always_set, ConstraintStore* non_al, asks_t* pos, asks_t *nonal_asks);
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings
-  // Ask制約
   virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
   // Always
   virtual void visit(boost::shared_ptr<symbolic_expression::Always> node);
@@ -31,6 +30,8 @@ private:
 
   always_set_t *always_set;
   ConstraintStore *non_always;
+  asks_t           *positive_asks;
+  asks_t           *nonalways_asks;
 };
 
 } //namespace simulator

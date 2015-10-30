@@ -63,6 +63,23 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   else
   {
     todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
+
+    if(todo->parent->parent == result_root.get())
+    {
+      // remove constraints without always at first interval phase
+      AlwaysFinder always_finder;
+      ConstraintStore non_always;
+      always_set_t always_set;
+      asks_t diff_positives = todo->parent->get_diff_positive_asks();
+      asks_t nonalways_asks;
+      for(auto module : module_set_container->get_max_module_set())
+      {
+        always_finder.find_always(module.second, &always_set, &non_always, &diff_positives, &nonalways_asks);
+      }
+      for(auto constraint : non_always)relation_graph_->set_expanded_atomic(constraint, false);
+      for(auto ask : nonalways_asks)relation_graph_->set_expanded_atomic(ask, false);
+    }
+    
     if(todo->phase_type == INTERVAL_PHASE)
     {
       todo->prev_map = todo->parent->variable_map;
@@ -82,23 +99,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   {
     for(auto phase : phase_list)
     {
-
-
-      if(phase->parent == result_root.get())
-      {
-        AlwaysFinder always_finder;
-        ConstraintStore non_always;
-        always_set_t always_set;
-        for(auto module : module_set_container->get_max_module_set())
-        {
-          always_finder.find_always(module.second, &always_set, &non_always);
-        }
-        for(auto constraint : non_always)
-        {
-          relation_graph_->set_expanded_atomic(constraint, false);
-        }
-      }
       make_next_todo(phase);
+
 
       // warn against unreferenced variables
       for(auto var: *variable_set_)
