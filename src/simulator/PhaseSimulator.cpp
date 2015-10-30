@@ -161,6 +161,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", false, 0, "", "");
+  consistency_checker->set_prev_map(&todo->prev_map);
   // add assumptions
   // TODO: If the discrete_guard is not approximated, this process may be redundant
   if(todo->phase_type == INTERVAL_PHASE)
@@ -193,7 +194,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
     backend_->call("addAssumption", true, 1, "en", "", &cons);
   }
-  consistency_checker->set_prev_map(&todo->prev_map);
+
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
   backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
