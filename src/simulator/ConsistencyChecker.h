@@ -84,12 +84,6 @@ public:
   std::map<std::string, int> get_differential_map(const variable_set_t &);
 
   bool check_continuity(Variable& var, variable_map_t &vm);
-
-  void set_assumption_guard(constraint_t &guard);
-
-  void add_assumption_guard_map(ask_t &ask);
-
-  void debug_print_assumption_gurad_map(void);
   
 private:
   CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
@@ -119,10 +113,6 @@ private:
   unsigned long int backend_check_consistency_time;
   std::vector<module_set_t> inconsistent_module_sets;
   std::list<ConstraintStore> inconsistent_constraints;
-  // 仮定するガード条件の候補
-  constraint_t candidate_assumption_guard;
-  // 仮定するガード条件の候補とそれに対応するaskとのマップ
-  std::map<ask_t, constraint_t> candidate_assumption_guards_map;
 };
 
 
