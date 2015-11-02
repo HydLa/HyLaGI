@@ -39,10 +39,11 @@ using namespace std;
 int main(int argc, char* argv[]);
 int hydla_main(int argc, char* argv[]);
 int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
-bool dump(boost::shared_ptr<ParseTree> pt);
+bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& p);
+bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
-void setup_simulator_opts(Opts& opts, ProgramOptions& p, bool use_default);
 void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
+bool process_opts(Opts& opts, ProgramOptions& p, bool use_default);
 
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
@@ -60,32 +61,17 @@ int main(int argc, char* argv[])
   return hydla_main(argc, argv);
 }
 
-
 int hydla_main(int argc, char* argv[])
 {
   cmdline_options.parse(argc, argv);
   
   signal(SIGINT, signal_handler::interrupt_handler);
   signal(SIGTERM, signal_handler::term_handler);
+
+  if(dump_in_advance(cmdline_options))return 0;
   
   Timer main_timer;
-  
-  if(cmdline_options.count("debug")){                 // デバッグ出力
-    Logger::instance().set_log_level(Logger::Debug);
-  }else {                              // 警告のみ出力
-    Logger::instance().set_log_level(Logger::Warn);
-  }
-  
-  
-  if(cmdline_options.count("help")) {     // ヘルプ表示して終了
-    cmdline_options.help_msg(cout);
-    return 0;
-  }
 
-  if(cmdline_options.count("version")) {  // バージョン表示して終了
-    cout << Version::description() << endl;
-    return 0;
-  }
   // ParseTreeの構築
   // ファイルを指定されたらファイルから
   // そうでなければ標準入力から受け取る
@@ -116,10 +102,12 @@ int hydla_main(int argc, char* argv[])
     option_string = comment.substr(option_pos, pos==string::npos?string::npos:pos - option_pos);
   }
   options_in_source.parse(option_string);
-  setup_simulator_opts(opts, options_in_source, true);
+  if(dump_in_advance(options_in_source))return 0;
+  process_opts(opts, options_in_source, true);
 
   // コメント中の変数省略指定を調べる
   opts.output_mode = Opts::None;
+
   bool isOmit = false;
   bool isOutput = false;
   const string omit_comment = "#omit ";
@@ -152,16 +140,16 @@ int hydla_main(int argc, char* argv[])
     // 省略変数を解析する
     add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
-
+  
   pt->parse_string(input);
 
-  if(cmdline_options.count("parse_only"))
+  if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
   {
     cout << "successfully parsed" << endl;
     return 0;
   }
   
-  if(dump(pt)) {
+  if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
     return 0;
   }
 
@@ -169,7 +157,7 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  if(cmdline_options.get<string>("tm") != "n"){
+  if(cmdline_options.get<string>("tm") != "n" || cmdline_options.get<string>("tm") != "n"){
     std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
     std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
     cout << endl;
@@ -181,27 +169,44 @@ int hydla_main(int argc, char* argv[])
  * ProgramOptionとParseTreeを元に出力
  * 何か出力したらtrueを返す
  */
-bool dump(boost::shared_ptr<ParseTree> pt)
+bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 {
 
-  if(cmdline_options.count("dump_parse_tree")>0) {
+  if(po.count("dump_parse_tree")>0) {
     pt->to_graphviz(cout);
     return true;
   }
 
-  if(cmdline_options.count("dump_module_set_graph")>0) {
+  if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_module_sets_for_graphviz(cout);
     return true;
   }
 
-  if(cmdline_options.count("dump_module_priority_graph")>0) {
+  if(po.count("dump_module_priority_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_priority_data_for_graphviz(cout);
     return true;
   }
+
+  return false;
+}
+
+
+bool dump_in_advance(ProgramOptions& po)
+{
+  if(po.count("help")) {     // ヘルプ表示して終了
+    po.help_msg(cout);
+    return true;
+  }
+
+  if(po.count("version")) {  // バージョン表示して終了
+    cout << Version::description() << endl;
+    return true;
+  }
+    
 
   return false;
 }

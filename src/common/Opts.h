@@ -30,6 +30,7 @@ struct Opts {
   bool stop_at_failure;
   bool ignore_warnings;
   int approximation_step;
+  bool fullsimplify;
   symbolic_expression::node_sptr assertion;
   int max_phase;
   EOutputMode output_mode;

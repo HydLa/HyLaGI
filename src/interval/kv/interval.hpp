@@ -12,6 +12,8 @@
 #include <string>
 #include <sstream>
 
+#pragma clang diagnostic ignored "-Wunused-variable"
+
 #include <kv/convert.hpp>
 #include <kv/constants.hpp>
 

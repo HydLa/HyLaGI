@@ -1,0 +1,19 @@
+/*
+INIT <=> x = 4 & y = -10 & x' = eps & y' = 2.
+EPS <=> -0.1 < eps < 0.1 & [](eps' = 0).
+MOVEA <=> [](x > 0 & y > 0 => x'' = -1 & y'' = 0).
+MOVEB <=> [](x <= 0 & y > 0 => x'' = 0.5 & y'' = -0.2).
+MOVEC <=> [](x <= 0 & y <= 0 => x'' = 1.5 & y'' = 0.3).
+MOVED <=> [](x > 0 & y <= 0 => x'' = -0.5 & y'' = 0).
+
+INIT,EPS, MOVEA, MOVEB, MOVEC, MOVED.
+*/
+
+INIT <=> x = 5 + eps & y = -10 & x' = 0 & y' = 2.
+EPS <=> -0.2 < eps < 0.2 & [](eps' = 0).
+MOVEA <=> [](-3 < x < 3 => x'' = 0.01 & y'' = -0.1).
+MOVEB <=> [](x <= -3 => x'' = 0.5 & y'' = -0.2).
+MOVEC <=> [](x >= 3 => x'' = -1.5 & y'' = 0.3).
+
+INIT,EPS, MOVEA, MOVEB, MOVEC.
+ 

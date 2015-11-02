@@ -5,6 +5,9 @@
 #ifndef CONV_DOUBLE_HPP
 #define CONV_DOUBLE_HPP
 
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+
 #include <cstdio>
 #include <iostream>
 #include <string>

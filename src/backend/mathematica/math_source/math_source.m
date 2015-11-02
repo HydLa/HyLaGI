@@ -1,20 +1,21 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons]] /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, vars, pars, current,
+  cons, pcons, assum, vars, pars, current,
   Module[
-    {cpTrue, cpFalse},
+    {cpTrue, cpFalse, simplifiedCos},
+    simplifiedCons = Assuming[assum, Simplify[cons]];
     Quiet[
-      cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -32,10 +33,10 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Assuming[assumptions, Simplify[tmpCons]] //. prevRules) && constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Simplify[tmpCons] //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -78,35 +79,36 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, vars, prevRs, prevCons, pCons, pars,
+  cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
-        sol = exDSolve[cons];
-        simplePrint[sol];
-        sol = sol /. prevRs;
-        prevVars = Map[makePrevVar, vars];
-        debugPrint["sol after exDSolve", sol];
-        If[sol === overConstrained,
-          {{False}, {LogicalExpand[pCons]}},
-          tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-          simplePrint[tRules];
-          tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
-          
-          simplePrint[tCons];
-          
-          cpTrue = False;
-          For[i = 1, i <= Length[tCons], i++,
-            conj = tCons[[i]];
-            eachCpTrue = prevCons && pCons;
-            For[j = 1, j <= Length[conj], j++,
-              eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+        Assuming[assum, 
+          sol = exDSolve[cons, prevRs];
+          simplePrint[sol];
+          prevVars = Map[makePrevVar, vars];
+          debugPrint["sol after exDSolve", sol];
+          If[sol === overConstrained,
+            {{False}, {LogicalExpand[pCons]}},
+            tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+            simplePrint[tRules];
+            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+            
+            simplePrint[tCons];
+            
+            cpTrue = False;
+            For[i = 1, i <= Length[tCons], i++,
+              conj = tCons[[i]];
+              eachCpTrue = prevCons && pCons;
+              For[j = 1, j <= Length[conj], j++,
+                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+              ];
+              cpTrue = cpTrue || eachCpTrue
             ];
-            cpTrue = cpTrue || eachCpTrue
-          ];
-          cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-          toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+            cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+            toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+          ]
         ]
       ]
    ]
@@ -114,14 +116,14 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters, currentTime];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, assumptions, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
-  cons, vars, pars, current,
+  cons, vars, assum, pars, current,
   Module[
     {ret, map, currentCons},
-    currentCons = cons /. t -> current;
+    currentCons = Assuming[assum, Simplify[cons] ] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
     map = Reduce[map, vars, Reals];
     If[Head[map] === Or,
@@ -163,10 +165,9 @@ publicMethod[
   cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons];
+    sol = exDSolve[cons, prevRs];
     sol = sol /. prevRs;
-    simplePrint[prevRules, prevRs];
-
+    simplePrint["prevRs@cvminterval: ", prevRs];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
       Message[createVariableMapInterval::underconstraint],
@@ -318,7 +319,7 @@ publicMethod[
   addAssumption,
   as,
   debugPrint["as in addAssumption:", as];
-  assumptions = assumptions && as;
+  assumptions = assumptions && as //. prevRules;
 ];
 
 publicMethod[
@@ -327,7 +328,6 @@ publicMethod[
   Module[
     {cons},
     cons = If[Head[co] === List, And@@co, co];
-    cons = Assuming[assumptions, Simplify[cons]];
     cons = cons //. prevRules;
     constraint = constraint && cons;
   ]
@@ -514,8 +514,8 @@ publicMethod[
       tRemovedRules,
       resultCons
     },
-    tRemovedRules = Map[(Rule@@#)&, cons] /. x_[t] -> x;
-    resultCons = ToRadicals[cause /. x_[t] -> x /. t -> t + current /. tRemovedRules];
+    tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
+    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
@@ -670,7 +670,7 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_] :=
+exDSolve[expr_, prevRs_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr];
@@ -688,6 +688,7 @@ Module[
     If[searchResult === unExpandable,
       Break[],
       rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+      simplePrint[rules];
       If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
       (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
       If[Head[rules] === DSolve,
@@ -698,12 +699,13 @@ Module[
       ];
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+      listExpr = listExpr //. prevRs;
       If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];
 
-      resultCons = applyDSolveResult[resultCons, resultRule];
+      resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
       If[resultCons === False, Return[overConstrained] ];
     ]
   ];

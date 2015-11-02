@@ -42,12 +42,13 @@ void ProgramOptions::init_descriptions()
     ("dump_module_set_graph", "only output candidate sets of module sets\n"
      "  in graph representation")
     ("dump_module_priority_graph",
-
      "only output priorities of modules\n"
      "  in graphviz format")
     ("dump_relation_graph",
      "only output relation of constraints and variables\n"
      "  in graphviz format")
+
+    ("use_fullsimplify", "use FullSimplify")
 
     ("tm",
      value<std::string>()->default_value("n"),
@@ -69,12 +70,8 @@ void ProgramOptions::init_descriptions()
 
     ("math_name",
      value<std::string>()->default_value("math"),
-     "name of mathematica command");
-
-
-  options_description config_desc("Following options also can be specified in comments in the form of \"#hylagi <options>\"");
-
-  config_desc.add_options()
+     "name of mathematica command")
+    
     ("time,t",
      value<std::string>()->default_value(""),
      "time limit of the model\n"
@@ -134,8 +131,8 @@ void ProgramOptions::init_descriptions()
     ;
 
 
-  visible_desc_.add(generic_desc).add(config_desc).add(toggle_desc);
-  cmdline_desc_.add(generic_desc).add(config_desc).add(toggle_desc).add(hidden_desc);
+  visible_desc_.add(generic_desc).add(toggle_desc);
+  cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
 }
 
 

@@ -36,7 +36,6 @@ public:
 
   void help_msg(std::ostream& os) const {visible_desc_.print(os);}
 
-
   void init_descriptions();
 
   boost::program_options::variables_map vm_;
