@@ -172,6 +172,33 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     accept(node->get_argument(0));
     interval_value = log(interval_value);
   }
+  else if(name == "sinh")
+  {
+    if(node->get_arguments_size() != 1)
+    {
+      invalid_node(*node);
+    }
+    accept(node->get_argument(0));
+    interval_value = sinh(interval_value);
+  }
+  else if(name == "cosh")
+  {
+    if(node->get_arguments_size() != 1)
+    {
+      invalid_node(*node);
+    }
+    accept(node->get_argument(0));
+    interval_value = cosh(interval_value);
+  }
+  else if(name == "tanh")
+  {
+    if(node->get_arguments_size() != 1)
+    {
+      invalid_node(*node);
+    }
+    accept(node->get_argument(0));
+    interval_value = tanh(interval_value);
+  }
   else
   {
     invalid_node(*node);
