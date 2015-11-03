@@ -647,8 +647,6 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       auto ask_it = begin;
       for(bool loop=true; loop;)
       {
-        if (expanded)
-          break;
         if (ask_it == end)
           loop = false;
         const auto ask = *ask_it;
