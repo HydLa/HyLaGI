@@ -24,7 +24,6 @@ using namespace symbolic_expression;
 using namespace logger;
 using namespace backend;
 
-
 ConsistencyChecker::ConsistencyChecker(backend_sptr_t back) : backend(back), prev_map(nullptr), backend_check_consistency_count(0), backend_check_consistency_time(0){}
 ConsistencyChecker::~ConsistencyChecker(){}
 
@@ -133,13 +132,14 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-        for(int i = 0; i <= entry.second;i++){
-          variable_t var(entry.first, i);
-          send_init_equation(var, fmt);
-        }
-        Value zero_value("0");
-        variable_t var(entry.first, entry.second + 1);
-        backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
+      if(dm.count(entry.first))continue;;
+      for(int i = 0; i <= entry.second;i++){
+        variable_t var(entry.first, i);
+        send_init_equation(var, fmt);
+      }
+      Value zero_value("0");
+      variable_t var(entry.first, entry.second + 1);
+      backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
     }
   }
 
@@ -254,7 +254,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
     finder.visit_node(constraint);
   }
   add_continuity(finder, phase, constraint_for_default_continuity);
-  backend->call("addConstraint", false, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
+  backend->call("addConstraint", true, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
 
@@ -272,7 +272,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   backend->call("resetConstraintForVariable", false, 0, "", "");
 
   string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
-  backend->call("addConstraint", false, 1, fmt.c_str(), "", &vm);
+  backend->call("addConstraint", true, 1, fmt.c_str(), "", &vm);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
 

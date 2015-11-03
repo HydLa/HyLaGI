@@ -15,6 +15,7 @@
 
 #include "version.h"
 #include "Logger.h"
+#include <regex>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -124,6 +125,28 @@ void output_result(Simulator& ss, Opts& opts){
     }
   }
 }
+
+
+void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix)
+{
+  HYDLA_LOGGER_DEBUG_VAR(vars_list_string);
+  std::stringstream sstr(vars_list_string);
+  string buffer;
+  while(std::getline(sstr, buffer, ','))
+  {
+    // 変数名に使えない文字が入っていたら警告
+    regex re("^[0-9a-z']+$", std::regex_constants::extended);
+    smatch match;
+    if (!regex_search(buffer, match, re))
+    {
+      cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
+      continue;
+    }
+      
+    set_to_add.insert(buffer);
+  }
+}
+
 
 #define IF_SPECIFIED(X) if(use_default || !po.defaulted(X))
 
