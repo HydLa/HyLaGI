@@ -747,9 +747,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
             ask_it++;
             break;
         }
-        st_mtx.phase.lock();
         phase->profile["# of CheckEntailment"]+= 1;
-        st_mtx.phase.unlock();
       }
     };
     const int num_asks = unknown_asks.size();
