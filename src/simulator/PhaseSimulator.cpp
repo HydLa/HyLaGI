@@ -65,7 +65,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
   else
   {
-    todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
+    if(todo->phase_type == INTERVAL_PHASE)
+      todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
 
     if(todo->parent->parent == result_root.get())
     {
@@ -102,43 +103,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   {
     for(auto phase : phase_list)
     {
-      if(todo->phase_type == POINT_PHASE&& todo->step > 0)
-      {
-        // approximation
-        if(opts_->numerize_mode)
-        {
-          for(auto &entry: phase->variable_map)
-          {
-            itvd itv = evaluate_interval(phase, entry.second);
-            double mid_double = (itv.lower() + itv.upper())/2;
-            value_t mid_val(mid_double);
-            backend_->call("transformToRational", false, 1, "vln", "vl", &mid_val, &mid_val);
-            entry.second.set_unique_value(mid_val);
-            HYDLA_LOGGER_DEBUG_VAR(entry.second);
-          }
-        }
-        else if(opts_->interval && opts_->approximation_step > 0 && (todo->step/2) % opts_->approximation_step == 0)
-        {
-          for(auto &entry: phase->variable_map)
-          {
-            if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
-              continue;
-            itvd interval = evaluate_interval(phase, entry.second);
-            if(width(interval) > 0)
-            {
-              ValueRange range = create_range_from_interval(interval);
-              Parameter param(entry.first, *phase);
-              add_parameter_constraint(phase, param, range);
-              entry.second = param.as_value();
-              stringstream sstr;
-              sstr << param.get_name() << "_" <<  param.get_differential_count();
-              phase->profile[sstr.str()] = width(interval);
-            }
-          }
-        }
-      }
       make_next_todo(phase);
-
 
       // warn against unreferenced variables
       for(auto var: *variable_set_)
@@ -154,6 +119,14 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
 }
 
+value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range)
+{
+  itvd itv = evaluate_interval(phase, range);
+  double mid_double = (itv.lower() + itv.upper())/2;
+  value_t mid_val(mid_double);
+  backend_->call("transformToRational", false, 1, "vln", "vl", &mid_val, &mid_val);
+  return mid_val;
+}
 
 std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_result_sptr_t& todo)
 {
@@ -161,6 +134,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", false, 0, "", "");
+  HYDLA_LOGGER_DEBUG_VAR(*todo);
   consistency_checker->set_prev_map(&todo->prev_map);
   // add assumptions
   // TODO: If the discrete_guard is not approximated, this process may be redundant
@@ -197,6 +171,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
+  HYDLA_LOGGER_DEBUG_VAR(parameter_cons);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
 
@@ -944,14 +919,22 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
         constraint_t cons = g;
-        if(opts_->interval && phase->discrete_guards.count(g) > 0)
+        if((opts_->interval ||opts_->numerize_mode) && phase->discrete_guards.count(g) > 0)
         {
           // exploit derivative of guard conditions
           vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
           assert(parameter_map_vector.size() <= 1);
           parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
           itvd min_interval = calculate_zero_crossing_of_derivative(g, related_vm, pm);
-          if(width(min_interval) > 0)
+          HYDLA_LOGGER_DEBUG_VAR(min_interval);
+          if(min_interval == itvd(0.0))
+          {
+            //TODO: validate that there are no answers for this guard
+            guard_time_map[g] = constraint_t(new symbolic_expression::False);
+            other_guards.insert(g);
+            continue;
+          }
+          else if(width(min_interval) > 0)
           {
             value_t lower(min_interval.lower());
             backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
@@ -1138,12 +1121,23 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     }
     HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
     min_time_for_this_ask.front().guard_by_newton = guard_by_newton;
-    for(auto guard : other_guards)
+  }
+  else
+  {
+    min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
+  }
+
+  if(opts_->numerize_mode)
+  {
+    for(auto &each_case: min_time_for_this_ask)
     {
-      min_time_for_this_ask.front().other_guards_to_time_condition[guard] = guard_time_map[guard];
+      for(auto guard : other_guards)
+      {
+        each_case.other_guards_to_time_condition[guard] = guard_time_map[guard];
+      }
     }
   }
-  else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
+  
   return min_time_for_this_ask;
 }
 
@@ -1174,6 +1168,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           phase->variable_map[var] = vm_to_take_over[var];
         }
       }
+      approximate_phase(phase, phase->variable_map);
     }
     check_break_points(phase, phase->variable_map);
     if(!aborting)
@@ -1232,7 +1227,12 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             if(!candidate.parameter_constraint.consistent())entry.second.erase(cand_it++);
             else
             {
+              for(auto &entry : candidate.other_guards_to_time_condition)
+              {
+                entry.second = value_modifier->shift_time(-(phase->current_time - phase->parent->parent->current_time), value_t(entry.second) ).get_node();
+              }
               cand_it++;
+              
             }
           }
         }
@@ -1353,7 +1353,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
-            if(opts_->interval)
+            if(opts_->interval || opts_->numerize_mode)
             {
               // calculate discrete_guards
               for(auto discrete_ask : next_todo->discrete_asks)
@@ -1371,6 +1371,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 for(auto guard : candidate.other_guards_to_time_condition)
                 {
                   bool on_border;
+                  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard.first));
                   backend_->call("onBorder", true, 2, "etvlt", "b", &guard.second, &candidate.time, &on_border);
                   if(on_border)
                   {
@@ -1391,6 +1392,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
+            approximate_phase(next_todo, next_todo->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
           }
@@ -1415,6 +1417,38 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   revert_diff(*phase);
 
   phase->profile["MakeNextTodo"] = next_todo_timer.get_elapsed_us();
+}
+
+void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_t &vm_to_approximate)
+{
+  // approximation
+  if(opts_->numerize_mode)
+  {
+    phase->current_time = calculate_middle_value(phase, ValueRange(phase->current_time));
+    for(auto &entry: vm_to_approximate)
+    {
+      entry.second.set_unique_value(calculate_middle_value(phase, entry.second));
+    }
+  }
+  else if(opts_->interval && opts_->approximation_step > 0 && (phase->step/2) % opts_->approximation_step == 0)
+  {
+    for(auto &entry: vm_to_approximate)
+    {
+      if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
+        continue;
+      itvd interval = evaluate_interval(phase, entry.second);
+      if(width(interval) > 0)
+      {
+        ValueRange range = create_range_from_interval(interval);
+        Parameter param(entry.first, *phase);
+        add_parameter_constraint(phase, param, range);
+        entry.second = param.as_value();
+        stringstream sstr;
+        sstr << param.get_name() << "_" <<  param.get_differential_count();
+        phase->profile[sstr.str()] = width(interval);
+      }
+    }
+  }
 }
 
 pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existings, const find_min_time_result_t &newcomers, const ask_t& ask)
@@ -1572,11 +1606,11 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   return result_intervals;
 }
 
-itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange &range)
+itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range)
 {
   VariableReplacer v_replacer(phase->variable_map);
   v_replacer.replace_range(range);
-  range = value_modifier->apply_function("fullSimplify", range);
+  range = value_modifier->apply_function(opts_->fullsimplify?"fullsimplify":"simplify", range);
   interval::IntervalTreeVisitor interval_visitor;
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
   assert(parameter_map_vector.size() <= 1);

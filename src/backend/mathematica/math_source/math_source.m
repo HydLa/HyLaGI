@@ -319,7 +319,7 @@ publicMethod[
   addAssumption,
   as,
   debugPrint["as in addAssumption:", as];
-  assumptions = assumptions && as //. prevRules;
+  assumptions = assumptions && as;
 ];
 
 publicMethod[
@@ -328,14 +328,14 @@ publicMethod[
   Module[
     {cons},
     cons = If[Head[co] === List, And@@co, co];
-    cons = cons //. prevRules;
+    cons = Assuming[assumptions, Simplify[cons]] //. prevRules;
     constraint = constraint && cons;
   ]
 ];
 
 addInitConstraint[co_] := Module[
   {cons},
-  cons = And@@co //. prevRules;
+  cons = Assuming[assumptions, Simplify[And@@co]] //. prevRules;
   initConstraint = initConstraint && cons;
 ];
 
@@ -858,7 +858,7 @@ publicMethod[
   pCons,
   Module[
     {eq},
-    If[borderExpr === True,
+    If[borderExpr === True || borderExpr === False,
       False, (* exclude case which the trajectory is continuously on the border *)
       eq = Equal[borderExpr[[1]], borderExpr[[2]]];
       eq = borderExpr /. t -> time;
