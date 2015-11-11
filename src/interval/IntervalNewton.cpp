@@ -57,6 +57,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
   
+  std::cerr.precision(17);
   double w = width(candidate);
   while(true)
   {
@@ -224,6 +225,7 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
   std::list<itvd> result_intervals;
 
   std::cout.precision(17);
+  std::cerr.precision(17);
 
   candidate_stack.push(init);
   
