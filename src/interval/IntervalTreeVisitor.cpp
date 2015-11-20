@@ -225,15 +225,22 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
 
   range_t range = param_it->second;;
 
-  value_t lower_value = (range.get_lower_bound()).value;
-  accept(lower_value.get_node());
-  itvd lower_itvd = interval_value;
+  if(range.unique())
+  {
+    accept(range.get_unique_value().get_node());
+  }
+  else
+  {
+    value_t lower_value = (range.get_lower_bound()).value;
+    accept(lower_value.get_node());
+    itvd lower_itvd = interval_value;
 
-  value_t uppper_value = (range.get_upper_bound()).value;
-  accept(uppper_value.get_node());
-  itvd upper_itvd = interval_value;
+    value_t uppper_value = (range.get_upper_bound()).value;
+    accept(uppper_value.get_node());
+    itvd upper_itvd = interval_value;
 
-  interval_value = itvd(lower_itvd.lower(), upper_itvd.upper());
+    interval_value = itvd(lower_itvd.lower(), upper_itvd.upper());
+  }
 }
 
 
