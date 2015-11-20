@@ -1,0 +1,9 @@
+INIT <=> 10 <= x <= 10.2 & v = 0.
+MODE1 <=> [](x' = v & v' = -9.81 & x >= 0).
+JUMP1 <=> [](x- = 0 & v- <= 0 => v = -0.75 * v- & x' = v).
+
+ASSERT(x <= 10.7).
+
+INIT, MODE1 << JUMP1.
+
+//#hylagi -t 10 --fnd
