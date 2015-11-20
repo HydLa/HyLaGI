@@ -102,14 +102,18 @@ private:
   
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint);
 
-  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange &range);
+  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
    
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
 
+  void approximate_phase(phase_result_sptr_t &phase, variable_map_t &vm_to_approximate);
+
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);
+
+  value_t calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range);
 
   std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, std::list<Parameter> &parameters);
 
