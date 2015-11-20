@@ -2,7 +2,6 @@
 #include <exception>
 #include <string>
 #include <fstream>
-#include <regex>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -24,6 +23,8 @@
 #include "SignalHandler.h"
 #include "Utility.h"
 
+#include <boost/regex.hpp>
+
 // namespace
 using namespace boost;
 using namespace hydla;
@@ -44,6 +45,7 @@ bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
 bool process_opts(Opts& opts, ProgramOptions& p, bool use_default);
+void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix);
 
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
@@ -137,7 +139,6 @@ int hydla_main(int argc, char* argv[])
     string::size_type pos = comment.find('\n', output_pos);
     string var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
 
-    // 省略変数を解析する
     add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
   
