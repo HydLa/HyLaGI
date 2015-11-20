@@ -91,6 +91,10 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   {
     interval_value = sqrt(lhs);
   }
+  else if(get_infix_string(node->get_rhs()) == "-1")
+  {
+    interval_value = 1. / lhs;
+  }
   else interval_value = pow(lhs, rhs);
   // debug_print("Power : ", interval_value);
   return;
@@ -171,6 +175,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     }
     accept(node->get_argument(0));
     interval_value = log(interval_value);
+    // debug_print("Log : ", interval_value);
   }
   else if(name == "sinh")
   {

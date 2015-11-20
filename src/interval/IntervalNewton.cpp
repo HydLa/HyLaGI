@@ -218,8 +218,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
 
 std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
-  int count_retry;
-  bool parted, change_m;
+  bool parted;
   itvd current_interval, prev_interval, div1, div2, nx, nx2, x2, f_result, d_result,m;
   itvs candidate_stack;
   std::list<itvd> result_intervals;
@@ -228,15 +227,13 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
   std::cerr.precision(17);
 
   candidate_stack.push(init);
-  
+
   while(!candidate_stack.empty())
   {
     current_interval = candidate_stack.top();
     candidate_stack.pop();
 
     HYDLA_LOGGER_DEBUG("pop new interval: ", current_interval);
-    count_retry = 0;
-    change_m = false;
     for(int i=0;i<100;i++)
     {
       if(current_interval == itvd(0.,0.))
@@ -245,31 +242,27 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
         break;
       }
       prev_interval = current_interval;
+      HYDLA_LOGGER_DEBUG_VAR(current_interval);
       IntervalTreeVisitor visitor;
-      if(!change_m)
-      {
-        m = itvd(mid(current_interval));
-        f_result = visitor.get_interval_value(exp, &m, &phase_map_);
-        d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
-        HYDLA_LOGGER_DEBUG_VAR(f_result);
-        HYDLA_LOGGER_DEBUG_VAR(d_result);
-      }
+      m = itvd(mid(current_interval));
+      f_result = visitor.get_interval_value(exp, &m, &phase_map_);
+      d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
+      HYDLA_LOGGER_DEBUG_VAR(f_result);
+      HYDLA_LOGGER_DEBUG_VAR(d_result);
+
       
-      if(in(0.,f_result) && in(0.,d_result) && count_retry < 100)
+      if(in(0.,f_result) && in(0.,d_result))
       {
-        count_retry++;
-        m = m + 1./pow(2.,(count_retry + 1)) * width(current_interval);
-        f_result = visitor.get_interval_value(exp, &m, &phase_map_);
-        HYDLA_LOGGER_DEBUG_VAR(m);
-        HYDLA_LOGGER_DEBUG_VAR(f_result);
-        i--;
-        change_m = true;
+        current_interval.upper() = m.lower();
+        candidate_stack.push(itvd(m.upper(), current_interval.upper()));
         continue;
       }
+      
       nx = m - division_part1(f_result, d_result, parted);
       HYDLA_LOGGER_DEBUG_VAR(nx);
       HYDLA_LOGGER_DEBUG_VAR(prev_interval);
       current_interval = intersect_interval(prev_interval, nx);
+      
       if(parted)
       {
         if(current_interval != itvd(0., 0.))
