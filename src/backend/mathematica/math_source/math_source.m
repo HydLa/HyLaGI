@@ -160,7 +160,7 @@ createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, 
 
 createVariableMapInterval[tvars_] := createVariableMapInterval[constraint, prevRules, tvars];
 
-createVariableMapInterval::underconstraint = "The system should not be underconstrained here.";
+createVariableMapInterval::underconstrained = "The system should not be underconstrained here.";
 
 publicMethod[
   createVariableMapInterval,
@@ -172,7 +172,7 @@ publicMethod[
     simplePrint["prevRs@cvminterval: ", prevRs];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
-      Message[createVariableMapInterval::underconstraint],
+      Message[createVariableMapInterval::underconstrained],
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       ret = {convertExprs[tStore]};
