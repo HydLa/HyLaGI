@@ -282,8 +282,6 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
         HYDLA_LOGGER_DEBUG("Stopped at step ", i+1);
         break;
       }
-      change_m = false;
-      count_retry = 0;
     }
     if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
     {

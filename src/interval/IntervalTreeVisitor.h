@@ -13,7 +13,7 @@
 #include "Value.h"
 #include "ValueRange.h"
 #include "PhaseResult.h"
-
+#include "IntervalOrInteger.h"
 
 namespace hydla
 {
@@ -64,6 +64,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   void debug_print(std::string str, itvd x);
   
   static itvd pi, e;
+  IntervalOrInteger current_value;
   itvd interval_value;
   itvd *time_interval;
   parameter_map_t *parameter_map;
