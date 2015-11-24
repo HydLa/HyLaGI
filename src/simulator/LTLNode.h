@@ -16,7 +16,7 @@
 class LTLNode;
 
 typedef std::vector<LTLNode*> ltl_node_list_t;
-typedef std::vector<ltl_node_list_t> pass_list_t;
+typedef std::vector<ltl_node_list_t> path_list_t;
 typedef boost::shared_ptr<hydla::simulator::ConsistencyChecker> consistency_checker_t;
 
 
@@ -52,7 +52,7 @@ class LTLNode : public Automaton
  public:
   hydla::simulator::phase_result_sptr_t phase;
   PropertyNode* property;
-  pass_list_t acceptance_passes;
+  path_list_t acceptance_pathes;
   bool checked_next_link;
   LTLNode(hydla::simulator::phase_result_sptr_t set_phase,PropertyNode* set_property);
   /* ~LTLNode(); */

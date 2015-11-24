@@ -19,16 +19,16 @@ Automaton::Automaton(string name){
   this->write = 0;
   automaton_node_list_t self;
   self.push_back(this);
-  this->trace_pass = self;
+  this->trace_path = self;
 }
 
 void Automaton::add_next_link(Automaton* child){
   this->next_link.push_back(child);
   if(child->parent_node == NULL){
-    automaton_node_list_t child_trace_pass = this->trace_pass;
-    child_trace_pass.push_back(child);
+    automaton_node_list_t child_trace_path = this->trace_path;
+    child_trace_path.push_back(child);
     child->parent_node = this;
-    child->trace_pass = child_trace_pass;
+    child->trace_path = child_trace_path;
   }
 }
 
@@ -36,16 +36,16 @@ void Automaton::set_color(string color){
   this->color = color;
 }
 
-void Automaton::set_color_to_trace_pass(string color){
-  for(automaton_node_list_t::iterator it = trace_pass.begin();it != trace_pass.end();it++){
+void Automaton::set_color_to_trace_path(string color){
+  for(automaton_node_list_t::iterator it = trace_path.begin();it != trace_path.end();it++){
     (*it)->set_color(color);
   }
 }
 
 void Automaton::trace(){
   cout << "// this is trace of " << this->name << "." << endl;
-  for(automaton_node_list_t::iterator it = this->trace_pass.begin();it + 1 != this->trace_pass.end();it++){
-    if((it + 1) != trace_pass.end()){
+  for(automaton_node_list_t::iterator it = this->trace_path.begin();it + 1 != this->trace_path.end();it++){
+    if((it + 1) != trace_path.end()){
       cout << "\"" << (*it)->name << "\"" << " " << "[color=" << (*it)->color << "];" << endl;
       if((*it)->color == (*(it + 1))->color){
         cout << "\"" << (*it)->name << "\"" << " -> " << "\"" << (*(it + 1))->name << "\"" << "[color=" << (*it)->color << "];" << endl;

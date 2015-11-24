@@ -14,7 +14,7 @@
 class Automaton;
 
 typedef std::vector<Automaton*> automaton_node_list_t;
-typedef std::vector<automaton_node_list_t> automaton_pass_list_t;
+typedef std::vector<automaton_node_list_t> automaton_path_list_t;
 
 typedef boost::shared_ptr<hydla::simulator::ConsistencyChecker> consistency_checker_t;
 
@@ -23,6 +23,7 @@ typedef std::set<ask_t >                                           asks_t;
 typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
 
 typedef hydla::hierarchy::ModuleSet                              module_set_t;
+typedef hydla::symbolic_expression::node_sptr                              node_sptr;
 
 typedef boost::shared_ptr<hydla::simulator::PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
@@ -51,14 +52,14 @@ class Automaton
   std::string name;
   Automaton* parent_node;
   automaton_node_list_t next_link;
-  automaton_node_list_t trace_pass;
+  automaton_node_list_t trace_path;
   int write;
   std::string color;
   Automaton(std::string name);
   /* ~Automaton(); */
-  void add_next_link(Automaton* child);
+  virtual void add_next_link(Automaton* child);
   void set_color(std::string color);
-  void set_color_to_trace_pass(std::string color);
+  void set_color_to_trace_path(std::string color);
   void trace();
   void dump();
   void dump_node_and_link();

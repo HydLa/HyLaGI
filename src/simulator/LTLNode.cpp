@@ -13,8 +13,7 @@ using namespace hydla;
 using namespace simulator;
 using namespace symbolic_expression;
 
-LTLNode::LTLNode(phase_result_sptr_t set_phase,PropertyNode* set_property){
-  name = "Property" + to_string(set_property->name) + " Phase" + to_string(set_phase->name);
+LTLNode::LTLNode(phase_result_sptr_t set_phase,PropertyNode* set_property):Automaton("Property" + (set_property->name) + " Phase" + to_string(set_phase->id)){
   phase = set_phase;
   property = set_property;
   parent_node = NULL;
@@ -32,10 +31,10 @@ bool LTLNode::acceptanceCycle(){
 // void LTLNode::addLink(LTLNode* child){
 //   link.push_back(child);
 //   if(!(child->parent_node != NULL)){
-//     ltl_node_list_t tmp_pass = pass;
-//     tmp_pass.push_back(child);
+//     ltl_node_list_t tmp_path = path;
+//     tmp_path.push_back(child);
 //     child->parent_node = this;
-//     child->pass = tmp_pass;
+//     child->path = tmp_path;
 //   }
 // }
 
@@ -107,7 +106,7 @@ bool LTLNode::acceptanceCycle(){
 // }
 
 // void LTLNode::setRed(){
-//   for(ltl_node_list_t::iterator it = pass.begin();it != pass.end();it++){
+//   for(ltl_node_list_t::iterator it = path.begin();it != path.end();it++){
 //     (*it)->red = 1;
 //   }
 // }
@@ -197,8 +196,8 @@ bool LTLNode::acceptanceCycle(){
 
 // LTLNode* LTLNode::detectAcceptanceCycle(LTLNode* parent_node_node,backend_sptr_t backend){
 //   LTLNode* ret = NULL;
-//   for(pass_list_t::iterator acceptance_pass = parent_node_node->acceptance_passes.begin();acceptance_pass != parent_node_node->acceptance_passes.end();acceptance_pass++){
-//     for(ltl_node_list_t::iterator it = acceptance_pass->begin();it != acceptance_pass->end();it++){
+//   for(path_list_t::iterator acceptance_path = parent_node_node->acceptance_pathes.begin();acceptance_path != parent_node_node->acceptance_pathes.end();acceptance_path++){
+//     for(ltl_node_list_t::iterator it = acceptance_path->begin();it != acceptance_path->end();it++){
 //       if((*it)->will_include(this,backend)){
 //         ret = *it;
 //       }
@@ -209,7 +208,7 @@ bool LTLNode::acceptanceCycle(){
 
 // LTLNode* LTLNode::detectLoop(LTLNode* parent_node_node,backend_sptr_t backend){
 //   LTLNode* ret = NULL;
-//   for(ltl_node_list_t::iterator it = parent_node_node->pass.begin();it != parent_node_node->pass.end();it++){
+//   for(ltl_node_list_t::iterator it = parent_node_node->path.begin();it != parent_node_node->path.end();it++){
 //     if((*it)->will_include(this,backend)){
 //       ret = *it;
 //     }
