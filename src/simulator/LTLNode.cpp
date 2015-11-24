@@ -14,12 +14,10 @@ using namespace simulator;
 using namespace symbolic_expression;
 
 LTLNode::LTLNode(phase_result_sptr_t set_phase,PropertyNode* set_property){
-  id = "Property" + to_string(set_property->id) + " Phase" + to_string(set_phase->id);
+  name = "Property" + to_string(set_property->name) + " Phase" + to_string(set_phase->name);
   phase = set_phase;
   property = set_property;
-  parent = NULL;
-  red = 0;
-  write = 0;
+  parent_node = NULL;
   checked_next_link = false;
 }
 
@@ -31,107 +29,107 @@ bool LTLNode::acceptanceCycle(){
   return (property->type == ACCEPTANCE_CYCLE);
 }
 
-void LTLNode::addLink(LTLNode* child){
-  link.push_back(child);
-  if(!(child->parent != NULL)){
-    ltl_node_list_t tmp_pass = pass;
-    tmp_pass.push_back(child);
-    child->parent = this;
-    child->pass = tmp_pass;
-  }
-}
+// void LTLNode::addLink(LTLNode* child){
+//   link.push_back(child);
+//   if(!(child->parent_node != NULL)){
+//     ltl_node_list_t tmp_pass = pass;
+//     tmp_pass.push_back(child);
+//     child->parent_node = this;
+//     child->pass = tmp_pass;
+//   }
+// }
 
-void LTLNode::trace(){
-  cout << " -> " << "\"" << id << "\"";
-  if(parent != NULL){
-    parent->trace();
-  }
-}
+// void LTLNode::trace(){
+//   cout << " -> " << "\"" << name << "\"";
+//   if(parent_node != NULL){
+//     parent_node->trace();
+//   }
+// }
 
-void LTLNode::dump(){
-  if(write == 0){
-    write++;
-    cout << "\"" << id << "\"" << " ";
-    if(property->type != NOMAL){
-      if(red>0){
-        cout << "[peripheries=2 color=red];" << endl;
-      }else{
-        cout << "[peripheries=2];" << endl;
-      }
-    }else{
-      if(red>0){
-        cout << "[color=red];" << endl;
-      }else{
-        cout << ";" << endl;
-      }
-    }
-    for(ltl_node_list_t::iterator it = link.begin();it != link.end();it++){
-      if(id == (*it)->id){
-        if(red>0 && (*it)->red>0){
-          cout << "\"" << id << "\"" << " -> " << "\"" << id << "\"" << "[color=red];" << endl;
-        }else{
-          cout << "\"" << id << "\"" << " -> " << "\"" << id << "\"" << ";" << endl;
-        }
-      }else{
-        if(red>0 && (*it)->red>0){
-          cout << "\"" << id << "\"" << " -> " << "\"" << (*it)->id << "\"" << "[color=red];" << endl;
-        }else{
-          cout << "\"" << id << "\"" << " -> " << "\"" << (*it)->id << "\"" << ";" << endl;
-        }
-        (*it)->dump();
-      }
-    }
-  }
-}
+// void LTLNode::dump(){
+//   if(write == 0){
+//     write++;
+//     cout << "\"" << name << "\"" << " ";
+//     if(property->type != NOMAL){
+//       if(red>0){
+//         cout << "[peripheries=2 color=red];" << endl;
+//       }else{
+//         cout << "[peripheries=2];" << endl;
+//       }
+//     }else{
+//       if(red>0){
+//         cout << "[color=red];" << endl;
+//       }else{
+//         cout << ";" << endl;
+//       }
+//     }
+//     for(ltl_node_list_t::iterator it = link.begin();it != link.end();it++){
+//       if(name == (*it)->name){
+//         if(red>0 && (*it)->red>0){
+//           cout << "\"" << name << "\"" << " -> " << "\"" << name << "\"" << "[color=red];" << endl;
+//         }else{
+//           cout << "\"" << name << "\"" << " -> " << "\"" << name << "\"" << ";" << endl;
+//         }
+//       }else{
+//         if(red>0 && (*it)->red>0){
+//           cout << "\"" << name << "\"" << " -> " << "\"" << (*it)->name << "\"" << "[color=red];" << endl;
+//         }else{
+//           cout << "\"" << name << "\"" << " -> " << "\"" << (*it)->name << "\"" << ";" << endl;
+//         }
+//         (*it)->dump();
+//       }
+//     }
+//   }
+// }
 
-void LTLNode::dot(){
-  if(property->type != ZERO){
-    write_reset();
-    cout << "digraph g{" << endl;
-    cout << "\"init\"[shape=\"point\"];" << endl;
-    cout << "\"init\"" << " -> " << "\"" << id << "\"" << ";" << endl;
-    dump();
-    cout << "}" << endl;
-    write_reset();
-  }else{
-    ltl_node_list_t::iterator it = link.begin();
-    (*it)->dot();
-  }
-}
+// void LTLNode::dot(){
+//   if(property->type != ZERO){
+//     write_reset();
+//     cout << "digraph g{" << endl;
+//     cout << "\"init\"[shape=\"point\"];" << endl;
+//     cout << "\"init\"" << " -> " << "\"" << name << "\"" << ";" << endl;
+//     dump();
+//     cout << "}" << endl;
+//     write_reset();
+//   }else{
+//     ltl_node_list_t::iterator it = link.begin();
+//     (*it)->dot();
+//   }
+// }
 
-void LTLNode::write_reset(){
-  if(write > 0){
-    write = 0;
-    for(ltl_node_list_t::iterator it = link.begin();it != link.end();it++){
-      (*it)->write_reset();
-    }
-  }
-}
+// void LTLNode::write_reset(){
+//   if(write > 0){
+//     write = 0;
+//     for(ltl_node_list_t::iterator it = link.begin();it != link.end();it++){
+//       (*it)->write_reset();
+//     }
+//   }
+// }
 
-void LTLNode::setRed(){
-  for(ltl_node_list_t::iterator it = pass.begin();it != pass.end();it++){
-    (*it)->red = 1;
-  }
-}
+// void LTLNode::setRed(){
+//   for(ltl_node_list_t::iterator it = pass.begin();it != pass.end();it++){
+//     (*it)->red = 1;
+//   }
+// }
 
 // bool LTLNode::will_include(LTLNode* check,backend_sptr_t backend){
 //   // A->will_include(B) <=> A ) B
 //   bool ret;
 //   //property_automaton
-//   int old_property = property->id;
-//   int now_property = check->property->id;
+//   int old_property = property->name;
+//   int now_property = check->property->name;
 //   if(old_property != now_property){
-//     cout << "different property automaton :\n\t \"" << id << "\" : \"" << check->id << "\"" << endl;
+//     cout << "different property automaton :\n\t \"" << name << "\" : \"" << check->name << "\"" << endl;
 //     return false;
 //   }
 //   //phase typeの比較
 //   if(phase->phase_type != check->phase->phase_type){
-//     cout << "different phase type :\n\t \"" << id << "\" : \"" << check->id << "\"" << endl;
+//     cout << "different phase type :\n\t \"" << name << "\" : \"" << check->name << "\"" << endl;
 //     return false;
 //   }
 //   //phase の変数表の大きさの比較
 //   if(phase->variable_map.size() != check->phase->variable_map.size()){
-//     cout << "different size of variable map :\n\t \"" << id << "\" : \"" << check->id << "\"" << endl;
+//     cout << "different size of variable map :\n\t \"" << name << "\" : \"" << check->name << "\"" << endl;
 //     return false;
 //   }
 
@@ -141,10 +139,10 @@ void LTLNode::setRed(){
 //                 &(phase->current_time), &(phase->variable_map), &(phase->parameter_map),
 //                 &(check->phase->current_time), &(check->phase->variable_map), &(check->phase->parameter_map), &include_ret);
 //   if(include_ret){
-//     cout << "\n\"" << id << "\" includes \"" << check->id << "\"\n" << endl;
+//     cout << "\n\"" << name << "\" includes \"" << check->name << "\"\n" << endl;
 //   }
 //   else{
-//     cout << "not included :\n\t \"" << id << "\" : \"" << check->id << "\"" << endl;
+//     cout << "not included :\n\t \"" << name << "\" : \"" << check->name << "\"" << endl;
 //   }
 
 //   // //変数表の時刻を戻す
@@ -193,13 +191,13 @@ void LTLNode::setRed(){
 //   //   var_old++;
 //   //   var_now++;
 //   // }
-//   // cout << "\"" << id << "\" includes \"" << check->id << "\"" << endl;
+//   // cout << "\"" << name << "\" includes \"" << check->name << "\"" << endl;
 //   return include_ret;
 // }
 
-// LTLNode* LTLNode::detectAcceptanceCycle(LTLNode* parent_node,backend_sptr_t backend){
+// LTLNode* LTLNode::detectAcceptanceCycle(LTLNode* parent_node_node,backend_sptr_t backend){
 //   LTLNode* ret = NULL;
-//   for(pass_list_t::iterator acceptance_pass = parent_node->acceptance_passes.begin();acceptance_pass != parent_node->acceptance_passes.end();acceptance_pass++){
+//   for(pass_list_t::iterator acceptance_pass = parent_node_node->acceptance_passes.begin();acceptance_pass != parent_node_node->acceptance_passes.end();acceptance_pass++){
 //     for(ltl_node_list_t::iterator it = acceptance_pass->begin();it != acceptance_pass->end();it++){
 //       if((*it)->will_include(this,backend)){
 //         ret = *it;
@@ -209,9 +207,9 @@ void LTLNode::setRed(){
 //   return ret;
 // }
 
-// LTLNode* LTLNode::detectLoop(LTLNode* parent_node,backend_sptr_t backend){
+// LTLNode* LTLNode::detectLoop(LTLNode* parent_node_node,backend_sptr_t backend){
 //   LTLNode* ret = NULL;
-//   for(ltl_node_list_t::iterator it = parent_node->pass.begin();it != parent_node->pass.end();it++){
+//   for(ltl_node_list_t::iterator it = parent_node_node->pass.begin();it != parent_node_node->pass.end();it++){
 //     if((*it)->will_include(this,backend)){
 //       ret = *it;
 //     }
@@ -230,7 +228,7 @@ void LTLNode::setRed(){
 // }
 
 // stack< pair<bool,int> > d
-// void search(){
+// voname search(){
 //   //現在の状態の保持
 //   int s = now_state;
 //   int toggle = search_mode;

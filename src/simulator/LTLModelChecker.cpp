@@ -1,4 +1,5 @@
 #include "LTLModelChecker.h"
+#include "Automaton.h"
 #include "Timer.h"
 #include "SymbolicTrajPrinter.h"
 #include "PhaseSimulator.h"
@@ -32,6 +33,36 @@ phase_result_sptr_t LTLModelChecker::simulate()
 
   try
     {
+      //############# test
+      cout << "test start" << endl;
+      Automaton* test_1 = new Automaton("test1");
+
+      Automaton* test_2 = new Automaton("test2");
+      Automaton* test_3 = new Automaton("test3");
+      Automaton* test_4 = new Automaton("test4");
+      Automaton* test_5 = new Automaton("test5");
+      test_1->add_next_link(test_2);
+      test_1->add_next_link(test_3);
+      test_1->add_next_link(test_4);
+      test_1->add_next_link(test_5);
+
+      Automaton* test_6 = new Automaton("test6");
+      Automaton* test_7 = new Automaton("test7");
+      Automaton* test_8 = new Automaton("test8");
+      Automaton* test_9 = new Automaton("test9");
+      test_2->add_next_link(test_6);
+      test_3->add_next_link(test_7);
+      test_3->add_next_link(test_8);
+      test_3->add_next_link(test_9);
+
+      test_9->trace();
+      test_9->dump();
+      test_9->set_color_to_trace_pass("red");
+      test_1->dot();
+      test_3->dump();
+      cout << "test end" << endl;
+      //############# test
+
       consistency_checker.reset(new ConsistencyChecker(backend));
       //Property Automaton initialize
       int id = 0;
