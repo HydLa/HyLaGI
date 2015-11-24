@@ -89,7 +89,6 @@ struct FullInformation
   asks_t                       positive_asks, negative_asks;
 };
 
-
 struct FindMinTimeCandidate
 {
   value_t         time;

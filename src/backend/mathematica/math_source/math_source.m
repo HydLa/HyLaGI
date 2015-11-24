@@ -516,6 +516,7 @@ publicMethod[
     },
     tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
     resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules];
+    simplePrint[resultCons];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
