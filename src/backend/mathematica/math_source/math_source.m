@@ -1,21 +1,21 @@
 (* ポイントフェーズにおける無矛盾性判定 *)
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime ]
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, vars, pars, current,
+  cons, pcons, assum, vars, pars, current,
   Module[
-    {cpTrue, cpFalse},
-
+    {cpTrue, cpFalse, simplifiedCos},
+    simplifiedCons = Assuming[assum, Simplify[cons]];
     Quiet[
-         cpTrue = Reduce[Exists[vars, (cons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+      cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
     ];
     simplePrint[cpTrue];
     (* remove (Not)Element[] because it seems to be always true *)
@@ -33,10 +33,10 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+  checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(tmpCons //. prevRules) && constraint, initConstraint, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Simplify[tmpCons] //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -79,53 +79,51 @@ Module[
 
 publicMethod[
   checkConsistencyInterval,
-  cons, initCons, vars, prevRs, prevCons, pCons, pars,
+  cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
-    If[cons === True,
-      {{LogicalExpand[pCons]}, {False}},
-      sol = exDSolve[cons, prevRs];
-      simplePrint[sol];
-      prevVars = Map[makePrevVar, vars];
-      debugPrint["sol after exDSolve", sol];
-      If[sol === overConstrained,
-        {{False}, {LogicalExpand[pCons]}},
-        tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-        simplePrint[tRules];
-        tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
-        
-        simplePrint[tCons];
-        
-        cpTrue = False;
-        For[i = 1, i <= Length[tCons] && coTrue =!= False, i++,
-          conj = tCons[[i]];
-          eachCpTrue = prevCons && pCons;
-          simplePrint[eachCpTrue];
-          simplePrint[conj];
-          For[j = 1, j <= Length[conj] && eachCpTrue =!= False, j++,
-            simplePrint[eachCpTrue];
-            simplePrint[conj[[j]] ];
-            eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
-          ];
-          cpTrue = cpTrue || eachCpTrue
-        ];
-        cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-        toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+      If[cons === True,
+        {{LogicalExpand[pCons]}, {False}},
+        Assuming[assum, 
+          sol = exDSolve[cons, prevRs];
+          simplePrint[sol];
+          prevVars = Map[makePrevVar, vars];
+          debugPrint["sol after exDSolve", sol];
+          If[sol === overConstrained,
+            {{False}, {LogicalExpand[pCons]}},
+            tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+            simplePrint[tRules];
+            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+            
+            simplePrint[tCons];
+            
+            cpTrue = False;
+            For[i = 1, i <= Length[tCons], i++,
+              conj = tCons[[i]];
+              eachCpTrue = prevCons && pCons;
+              For[j = 1, j <= Length[conj], j++,
+                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+              ];
+              cpTrue = cpTrue || eachCpTrue
+            ];
+            cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+            toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+          ]
+        ]
       ]
-    ]
-  ]
+   ]
 ];
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, parameters, currentTime];
+createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, assumptions, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
-  cons, vars, pars, current,
+  cons, vars, assum, pars, current,
   Module[
     {ret, map, currentCons},
-    currentCons = cons /. t -> current;
+    currentCons = Assuming[assum, Simplify[cons] ] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
     map = Reduce[map, vars, Reals];
     If[Head[map] === Or,
@@ -302,6 +300,7 @@ publicMethod[
   constraint = True;
   pConstraint = True;
   initConstraint = True;
+  assumptions = True;
 ];
 
 publicMethod[
@@ -317,18 +316,26 @@ publicMethod[
 ];
 
 publicMethod[
+  addAssumption,
+  as,
+  debugPrint["as in addAssumption:", as];
+  assumptions = assumptions && as;
+];
+
+publicMethod[
   addConstraint,
   co,
   Module[
     {cons},
-    cons = If[Head[co] === List, And@@co, co] //. prevRules;
+    cons = If[Head[co] === List, And@@co, co];
+    cons = Assuming[assumptions, Simplify[cons]] //. prevRules;
     constraint = constraint && cons;
   ]
 ];
 
 addInitConstraint[co_] := Module[
-  {cons, vars},
-  cons = And@@co //. prevRules;
+  {cons},
+  cons = Assuming[assumptions, Simplify[And@@co]] //. prevRules;
   initConstraint = initConstraint && cons;
 ];
 
@@ -524,14 +531,20 @@ publicMethod[
       minT,
       resultList,
       onTime = True,
+      necessaryPCons,
+      parsInCons,
       maxCons,
       ret
     },
     (* Mathematica cannot solve some minimization problem with "t < Infinity", such 
     as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
+
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && pCons && maxCons}, {t}],
+    parsInCons = getParameters[tCons];
+    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
          onTime = False,
          Minimize::wksol
        ],
@@ -816,3 +829,47 @@ publicMethod[
 ];
 
 exDSolve::unkn = "unknown error occurred in exDSolve";
+
+borderIsIncluded[border_, lower_, upper_] := borderIsIncluded[border, lower, upper, parameters, pConstraint];
+
+publicMethod[
+  borderIsIncluded,
+  border,
+  lower,
+  upper,
+  pars,
+  pCons,
+  Module[
+    {necessaryPCons, parsInCons},
+    parsInCons = Union[getParameters[lower], getParameters[upper], getParameters[border]];
+    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    Reduce[ForAll[parsInCons, necessaryPCons, lower <= border <= upper]] === True
+  ]
+];  
+  
+
+onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameters, pConstraint];
+
+publicMethod[
+  onBorder,
+  borderExpr,
+  time,
+  pars,
+  pCons,
+  Module[
+    {eq},
+    If[borderExpr === True || borderExpr === False,
+      False, (* exclude case which the trajectory is continuously on the border *)
+      eq = Equal[borderExpr[[1]], borderExpr[[2]]];
+      eq = borderExpr /. t -> time;
+      simplePrint[eq];
+      Reduce[ForAll[pars, pCons, eq]] === True
+    ]
+  ]
+];
+
+publicMethod[
+  makeEquation,
+  expr,
+  Equal[expr[[1]], expr[[2]]]
+];

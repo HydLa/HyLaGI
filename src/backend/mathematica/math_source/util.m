@@ -1,4 +1,3 @@
-
 (*
  apply specified value for expression
  *)
@@ -58,25 +57,26 @@ publicMethod[
   ByteCount[constraint && initConstraint && prevConstraint && pConstraint]
 ];
 
+
 (* translate given relational expression in the form of f(V) = 0 *)
 publicMethod[
   relationToFunction,
   exp,
   cons,
   Module[
-  {
-    substituted,
-    rhs,
-    lhs
-  },
-  If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
-    InvalidRelop,
-    substituted = exp /. Map[(Rule@@#)&, cons];
-    If[substituted === False, 
-      undefined,
-      lhs = substituted[[1]];
-      rhs = substituted[[2]];
-      toReturnForm[lhs - rhs]
+    {
+      substituted,
+      rhs,
+      lhs
+      },
+    If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
+        InvalidRelop,
+      substituted = exp /. Map[(Rule@@#)&, cons];
+      If[substituted === False || substituted === True, 
+        toReturnForm[Infinity],
+        lhs = substituted[[1]];
+        rhs = substituted[[2]];
+        toReturnForm[lhs - rhs]
       ]
     ]
   ]
@@ -88,3 +88,4 @@ publicMethod[
   exp,
   toReturnForm[D[exp, t] ]
 ];
+

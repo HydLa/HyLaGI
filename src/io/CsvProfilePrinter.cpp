@@ -2,6 +2,8 @@
 #include "CsvProfilePrinter.h"
 #include "PhaseResult.h"
 
+#include <iomanip>
+
 using namespace std;
 
 namespace hydla{

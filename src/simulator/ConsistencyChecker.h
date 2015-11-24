@@ -84,8 +84,7 @@ public:
   std::map<std::string, int> get_differential_map(const variable_set_t &);
 
   bool check_continuity(Variable& var, variable_map_t &vm);
-
-
+  
 private:
   CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
 

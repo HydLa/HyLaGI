@@ -43,6 +43,7 @@ int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& p);
 bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
+void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
 bool process_opts(Opts& opts, ProgramOptions& p, bool use_default);
 void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix);
 
@@ -138,7 +139,7 @@ int hydla_main(int argc, char* argv[])
     string::size_type pos = comment.find('\n', output_pos);
     string var_string = comment.substr(output_pos, pos == string::npos ? string::npos : pos - output_pos);
 
-    add_vars_from_string(var_string, opts.output_vars, isOmit ? "#omit" : "#output"); 
+    add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
   
   pt->parse_string(input);

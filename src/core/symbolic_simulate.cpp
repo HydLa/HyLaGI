@@ -11,6 +11,7 @@
 #include "Timer.h"
 #include <sys/stat.h>
 #include <fstream>
+#include <regex>
 
 #include "version.h"
 #include "Logger.h"
@@ -141,7 +142,6 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
       auto right = buffer.find_last_not_of(" ");
       buffer = buffer.substr(left, right - left + 1);
     }
-    // 変数名に使えない文字が入っていたら警告
     boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
     boost::smatch match;
     if (!boost::regex_search(buffer, match, re))
@@ -175,9 +175,16 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
+  IF_SPECIFIED("numerize_without_validation")opts.numerize_mode =  po.count("numerize_without_validation") > 0 && po.get<char>("numerize_without_validation") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
+  IF_SPECIFIED("approximation_step")opts.approximation_step = po.get<int>("approximation_step");
+  IF_SPECIFIED("vars_to_approximate")
+  {
+    add_vars_from_string(po.get<string>("vars_to_approximate"), opts.vars_to_approximate, "");
+  }
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }
+
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {

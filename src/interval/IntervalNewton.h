@@ -23,6 +23,7 @@ typedef std::stack<itvd> itvs;
 typedef hydla::symbolic_expression::node_sptr node_sptr;
 typedef simulator::parameter_map_t            parameter_map_t;
 
+
 bool itvd_eqal(itvd x, itvd y);
 
 itvd intersect_interval(itvd x, itvd y);

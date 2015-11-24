@@ -1,0 +1,8 @@
+INIT <=> x = 1 & y = 0 & c = 1.
+BOUNCE <=> [](x- = y- => c = -c-).
+CIRCLE <=> [](x' =  c * y & y' = -c * x).
+CONSTDIR <=> [](c' = 0).
+
+INIT, CONSTDIR << BOUNCE, CIRCLE.
+
+//#hylagi -p 30 --fnd --finterval

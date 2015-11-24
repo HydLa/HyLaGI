@@ -114,11 +114,15 @@ void ProgramOptions::init_descriptions()
       )
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
+    ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
+
+    ("approximation_step", value<int>()->default_value(0), "the interval of step to approximate value of variable")
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
-    ;
-
+    ("vars_to_approximate",
+     value<std::string>()->default_value(""),
+     "variables to approximate (delimited by \",\")");
 
 
   options_description hidden_desc("Hidden options");
