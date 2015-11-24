@@ -501,21 +501,21 @@ Module[
   ]
 ];
 
-calculateConsistentTime[cause_, cons_] := calculateConsistentTime[cause, cons, pConstraint, currentTime];
+calculateConsistentTime[cause_, cons_, lower_] := calculateConsistentTime[cause, cons, lower, pConstraint, currentTime];
 
 findMinTime::minimizeFailure = "failed to minimize t";
 
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, pCons, current, 
+  cause, cons, lower, pCons, current, 
   Module[
     {
       tRemovedRules,
       resultCons
     },
     tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
-    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules];
+    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules] && lower < t;
     simplePrint[resultCons];
     toReturnForm[LogicalExpand[resultCons]]
   ]

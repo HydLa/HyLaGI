@@ -810,6 +810,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
         constraint_t cons = g;
+        value_t lower("0");
         if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
         {
           // exploit derivative of guard conditions
@@ -827,13 +828,11 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           }
           else if(width(min_interval) > 0)
           {
-            value_t lower(min_interval.lower());
+            lower = value_t(min_interval.lower());
             backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
-            lower += phase->current_time;
-            cons = constraint_t(new LogicalAnd(cons, new LessEqual(lower.get_node(), new SymbolicT())));
           }
         }
-        backend_->call("calculateConsistentTime", true, 2, "etmvt", "e", &cons, &related_vm,  &constraint_for_this_guard);
+        backend_->call("calculateConsistentTime", true, 3, "etmvtvlt", "e", &cons, &related_vm, &lower, &constraint_for_this_guard);
         other_guards.insert(g);
         guard_time_map[g] = constraint_for_this_guard;
       }
