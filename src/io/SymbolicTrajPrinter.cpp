@@ -152,8 +152,9 @@ ostream &stream, const variable_map_t& vm) const
   }
 }
 
-void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase) const
+void SymbolicTrajPrinter::output_one_phase(const phase_result_const_sptr_t& phase, const std::string& prefix) const
 {
+  ostream << prefix << endl;
   ostream << get_state_output(*phase);
   vector<parameter_map_t> par_maps = phase->get_parameter_maps();
   if(par_maps.size() > 0)

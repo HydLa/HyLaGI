@@ -51,7 +51,7 @@ static string get_file_without_ext(const string &path)
 
 void output_result(Simulator& ss, Opts& opts){
   std::stringstream sstr;
-
+  sstr << "------ Result of Simulation ------\n";
   hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, opts.interval);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_,true);}
 
