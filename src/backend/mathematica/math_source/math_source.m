@@ -503,7 +503,7 @@ Module[
 
 calculateConsistentTime[cause_, cons_, lower_] := calculateConsistentTime[cause, cons, lower, pConstraint, currentTime];
 
-findMinTime::minimizeFailure = "failed to minimize t";
+findMinTime::minimizeFailure = "failed to minimize `1`";
 
 
 publicMethod[
@@ -554,7 +554,7 @@ publicMethod[
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
     If[Head[minT] === Minimize,
-      error,
+      Message[findMinTime::minimizeFailure, minT],
       minT = First[minT];
       If[minT === Infinity,
         {},
