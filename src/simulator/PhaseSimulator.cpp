@@ -858,11 +858,20 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       Parameter parameter_prev("t", -1, ++time_id);
       Parameter parameter_current("t", -1, ++time_id);
       itvd prev_interval = itvd(0, 0);
+      bool empty = false;
       while(true)
       {
-        if(result_interval_list.empty())throw HYDLA_ERROR("there is no valid time for the guard :" + get_infix_string(guard));
-        itvd current_interval = result_interval_list.front();
-        result_interval_list.pop_front();
+        itvd current_interval;
+        if(result_interval_list.empty())
+        {
+          empty = true;
+          current_interval = upper_bound_of_itv_newton;
+        }
+        else
+        {
+          current_interval = result_interval_list.front();
+          result_interval_list.pop_front();
+        }
 
         // add temporary parameters for parameter_prev and parameter_current
         parameter_map_t pm_for_each = pm;
@@ -873,7 +882,12 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
 
-        if(guard_type == typeid(UnEqual))
+        if(empty)
+        {
+          if(guard_type == typeid(UnEqual)) guard_time_map[guard_by_newton] = constraint_t(new True());
+          else guard_time_map[guard_by_newton] = constraint_t(new False());
+        }
+        else if(guard_type == typeid(UnEqual))
         {
           guard_time_map[guard_by_newton] = constraint_t(new UnEqual(new se::Parameter(parameter_current), new SymbolicT()));
         }
@@ -897,6 +911,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           min_time_for_this_ask.front().range_by_newton = current_range;
           break;
         }
+        else if(empty)break;
         prev_interval = current_interval;
       }
     }
@@ -915,19 +930,21 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
       itvd lower_interval, upper_interval;
 
+      bool last_trial = false;
+      bool negated = false;
       if(entailed)
       {
         lower_interval = itvd(0,0);
       }
       else
       {
-        // TODO: deal with equation without any solution
-        HYDLA_ASSERT(!result_interval_list.empty());
-        lower_interval = result_interval_list.front();
-        result_interval_list.pop_front();
+        if(result_interval_list.empty()) negated = true;
+        else
+        {
+          lower_interval = result_interval_list.front();
+          result_interval_list.pop_front();
+        }
       }
-      bool last_trial = false;
-      bool negated = false;
       while(true)
       {
         if(!result_interval_list.empty())
@@ -1010,8 +1027,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         }
       }
     }
-    HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
-    min_time_for_this_ask.front().guard_by_newton = guard_by_newton;
+    HYDLA_ASSERT(min_time_for_this_ask.size() <= 1);
+    if(min_time_for_this_ask.size() == 1)min_time_for_this_ask.front().guard_by_newton = guard_by_newton;
   }
   else
   {
@@ -1168,6 +1185,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         }
       }
       timer::Timer find_min_time_timer;
+      if(opts_->interval && opts_->max_time != "")upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time).upper();
       for(auto ask : asks)
       {
         candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
@@ -1236,6 +1254,16 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
+            if(opts_->interval) 
+            {
+              // verify the time of the next discrete change
+              if(evaluate_interval(phase, candidate.time - upper_bound_of_itv_newton).lower() < 0)
+              {
+                string asks_str = "";
+                for(auto discrete_ask : next_todo->discrete_asks)asks_str += get_infix_string(discrete_ask.first);
+                throw HYDLA_ERROR("failed to calculate valid time of the discrete change for " + asks_str);
+              }
+            }
             if(opts_->interval || opts_->numerize_mode || opts_->epsilon_mode > 0)
             {
               // calculate discrete_guards
