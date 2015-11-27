@@ -90,7 +90,7 @@ publicMethod[
           prevVars = Map[makePrevVar, vars];
           debugPrint["sol after exDSolve", sol];
           If[sol === overConstrained,
-            {{False}, {LogicalExpand[pCons]}},
+            {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
             simplePrint[tRules];
             tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;

@@ -1257,7 +1257,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             if(opts_->interval) 
             {
               // verify the time of the next discrete change
-              if(evaluate_interval(phase, candidate.time - upper_bound_of_itv_newton).lower() < 0)
+              if(evaluate_interval(phase, value_t(upper_bound_of_itv_newton) - candidate.time).lower() < 0)
               {
                 string asks_str = "";
                 for(auto discrete_ask : next_todo->discrete_asks)asks_str += get_infix_string(discrete_ask.first);
