@@ -137,7 +137,7 @@ parameter_t Simulator::introduce_parameter(const string &name, int differential_
 parameter_t Simulator::introduce_parameter(const parameter_t &param, const ValueRange &range)
 {
   parameter_map_[param] = range;
-  backend->call("addParameter", false, 1, "p", "", &param);
+  backends_caller("addParameter", false, 1, "p", "", &param);
   return param;
 }
 

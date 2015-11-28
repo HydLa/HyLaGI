@@ -435,7 +435,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
     consistency_checker->set_prev_map(&original->prev_map);
   }
   HYDLA_LOGGER_DEBUG_VAR(original->additional_constraint_store);
-  backend_->call("addParameterConstraint", true, 1, "csn", "", &original->additional_constraint_store);
+  backends_caller("addParameterConstraint", true, 1, "csn", "", &original->additional_constraint_store);
   HYDLA_LOGGER_DEBUG_VAR(*branch_state_false);
   HYDLA_LOGGER_DEBUG_VAR(*original);
 }
@@ -996,7 +996,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm_for_each[parameter_prev] = prev_range;
         pm_for_each[parameter_current] = current_range;
 
-        backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
+        backends_caller("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
 
         if(guard_type == typeid(UnEqual))
         {
@@ -1023,7 +1023,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           ConstraintStore new_store = phase->get_parameter_constraint();
           new_store.add_constraint_store(current_range.create_range_constraint(node_sptr(new se::Parameter(parameter_current))));
           phase->set_parameter_constraint(new_store);
-          backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+          backends_caller("resetConstraintForParameter", false, 1, "csn", "", &new_store);
           break;
         }
         prev_interval = current_interval;
@@ -1069,7 +1069,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         pm_for_each[parameter_prev] = prev_range;
         pm_for_each[parameter_lower] = lower_range;
         pm_for_each[parameter_upper] = upper_range;
-        backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
+        backends_caller("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
 
         {
           constraint_t lb, ub;
@@ -1108,7 +1108,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           new_store.add_constraint_store(lower_range.create_range_constraint(node_sptr(new se::Parameter(parameter_lower))));
           new_store.add_constraint_store(upper_range.create_range_constraint(node_sptr(new se::Parameter(parameter_upper))));
           phase->set_parameter_constraint(new_store);
-          backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+          backends_caller("resetConstraintForParameter", false, 1, "csn", "", &new_store);
           break;
         }
         prev_interval = upper_interval;
@@ -1420,7 +1420,7 @@ pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existi
 
 void PhaseSimulator::reset_parameter_constraint(ConstraintStore par_cons)
 {
-  backend_->call("resetConstraintForParameter", false, 1, "csn", "", &par_cons);
+  backends_caller("resetConstraintForParameter", false, 1, "csn", "", &par_cons);
 }
 
 
