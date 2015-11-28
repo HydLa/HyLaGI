@@ -1485,5 +1485,24 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   return result_intervals;
 }
 
+void PhaseSimulator::backends_caller(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
+{
+  va_list args;
+  va_start(args, ret_fmt);
+  std::vector<std::thread> threads(opts_->num_threads);
+  for (int i=0; i<opts_->num_threads; ++i) {
+    threads[i] = std::thread ([i, &name, trace, arg_cnt, &args_fmt, &ret_fmt, &args, this](){
+        va_list args_copy;
+        va_copy(args_copy, args);
+        (*backends_)[i]->call(name, trace, arg_cnt, args_fmt, ret_fmt, args_copy);
+        va_end(args_copy);
+        });
+  }
+  for (int i=0; i<opts_->num_threads; ++i) {
+    threads[i].join();
+  }
+  va_end(args);
+}
+
 }
 }

@@ -158,6 +158,9 @@ protected:
   interval::AffineApproximator* affine_transformer_;
 private:
   static bool assert_call_back(BreakPoint, phase_result_sptr_t);
+
+  // backend caller for parallel backends
+  void backends_caller(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 };
 
 } //namespace simulator

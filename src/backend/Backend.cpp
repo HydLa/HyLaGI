@@ -398,6 +398,27 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
   return 0;
 }
 
+int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, va_list args)
+{
+  link_->trace = trace;
+  link_->pre_send();
+  link_->put_converted_function(name, arg_cnt);
+  for(int i = 0; args_fmt[i] != '\0'; i++)
+  {
+    void* arg = va_arg(args, void *);
+    i += read_args_fmt(args_fmt, i, arg);
+  }
+  link_->pre_receive();
+  for(int i = 0; ret_fmt[i] != '\0'; i++)
+  {
+    void* ret = va_arg(args, void *);
+    i += read_ret_fmt(ret_fmt, i, ret);
+  }
+  link_->post_receive();
+
+  return 0;
+}
+
 bool Backend::get_form(const char &form_c, VariableForm &form)
 {
   switch(form_c)

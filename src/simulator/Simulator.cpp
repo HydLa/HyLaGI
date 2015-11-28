@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <cassert>
+#include <thread>
 
 using namespace std;
 using namespace hydla::backend;
@@ -192,6 +193,25 @@ bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)
 int Simulator::get_exit_status()
 {
   return exit_status;
+}
+
+void Simulator::backends_caller(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
+{
+  va_list args;
+  va_start(args, ret_fmt);
+  std::vector<std::thread> threads(opts_->num_threads);
+  for (int i=0; i<opts_->num_threads; ++i) {
+    threads[i] = std::thread ([i, &name, trace, arg_cnt, &args_fmt, &ret_fmt, &args, this](){
+        va_list args_copy;
+        va_copy(args_copy, args);
+        (*backends)[i]->call(name, trace, arg_cnt, args_fmt, ret_fmt, args_copy);
+        va_end(args_copy);
+        });
+  }
+  for (int i=0; i<opts_->num_threads; ++i) {
+    threads[i].join();
+  }
+  va_end(args);
 }
 
 }

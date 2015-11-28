@@ -109,6 +109,9 @@ private:
 
   std::list<constraint_t> calculate_approximated_time_constraint(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, parameter_map_t &pm_for_newton, std::list<Parameter> &parameters);
 
+  // backend caller for parallel backends
+  void backends_caller(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
+
   Simulator* simulator_;
 
   const Opts *opts_;

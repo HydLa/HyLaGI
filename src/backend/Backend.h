@@ -86,6 +86,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
    */
   int call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
+  int call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, va_list args);
 
   void set_variable_set(variable_set_t& v){
     call("resetVariables", false, 0, "", "");
