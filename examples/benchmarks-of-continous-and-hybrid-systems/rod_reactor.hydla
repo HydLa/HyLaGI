@@ -1,0 +1,17 @@
+INIT <=> x = 510 & c1 = 20 & c2 = 20 & rod = 0.
+
+CONT(arg, v) <=> [](arg' = v).
+ADD_ROD1 <=> [](rod- = 0 & x- = 550 & c1 >= 20 => rod = 1 & c2 = c2-).
+REMOVE_ROD1 <=> [](rod- = 1 & x- = 510 => rod = 0 & c1 = 0).
+ADD_ROD2 <=> [](rod- = 0 & x- = 550 & c2 >= 20 => rod = 2 & c1 = c1-).
+REMOVE_ROD2 <=> [](rod- = 2 & x- = 510 => rod = 0 & c2 = 0).
+
+ROD1 <=> [](rod = 1 => x' = 0.1 * x - 56).
+NO_RODS <=> [](rod = 0 => x' = 0.1 * x - 50).
+ROD2 <=> [](rod = 2 => x' = 0.1 * x - 60).
+
+ASSERT(!(x = 550 & c1 < 20 & c2 < 20)).
+
+INIT, (CONT(rod, 0), CONT(c1, 1)) << (ADD_ROD1, REMOVE_ROD1) << $TRUE, (CONT(rod, 0), CONT(c2, 1)) << (ADD_ROD2, REMOVE_ROD2) << $TRUE, ROD1, NO_RODS, ROD2.
+
+//#hylagi -t 200

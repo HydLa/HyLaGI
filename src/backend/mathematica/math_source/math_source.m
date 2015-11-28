@@ -90,7 +90,7 @@ publicMethod[
           prevVars = Map[makePrevVar, vars];
           debugPrint["sol after exDSolve", sol];
           If[sol === overConstrained,
-            {{False}, {LogicalExpand[pCons]}},
+            {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
             simplePrint[tRules];
             tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
@@ -158,7 +158,7 @@ createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, 
 
 createVariableMapInterval[tvars_] := createVariableMapInterval[constraint, prevRules, tvars];
 
-createVariableMapInterval::underconstraint = "The system should not be underconstrained here.";
+createVariableMapInterval::underconstrained = "The system should not be underconstrained here.";
 
 publicMethod[
   createVariableMapInterval,
@@ -170,7 +170,7 @@ publicMethod[
     simplePrint["prevRs@cvminterval: ", prevRs];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
-      Message[createVariableMapInterval::underconstraint],
+      Message[createVariableMapInterval::underconstrained],
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
       ret = {convertExprs[tStore]};
@@ -501,21 +501,22 @@ Module[
   ]
 ];
 
-calculateConsistentTime[cause_, cons_] := calculateConsistentTime[cause, cons, pConstraint, currentTime];
+calculateConsistentTime[cause_, cons_, lower_] := calculateConsistentTime[cause, cons, lower, pConstraint, currentTime];
 
-findMinTime::minimizeFailure = "failed to minimize t";
+findMinTime::minimizeFailure = "failed to minimize `1`";
 
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, pCons, current, 
+  cause, cons, lower, pCons, current, 
   Module[
     {
       tRemovedRules,
       resultCons
     },
     tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
-    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules];
+    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules] && lower < t;
+    simplePrint[resultCons];
     toReturnForm[LogicalExpand[resultCons]]
   ]
 ];
@@ -553,7 +554,7 @@ publicMethod[
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
     If[Head[minT] === Minimize,
-      error,
+      Message[findMinTime::minimizeFailure, minT],
       minT = First[minT];
       If[minT === Infinity,
         {},
