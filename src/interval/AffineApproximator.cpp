@@ -34,9 +34,9 @@ void AffineApproximator::set_simulator(Simulator* s)
   simulator = s;
 }
 
-void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, int limit)
+void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
-  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
+/*  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
   if(!index_map.empty())
   {
     parameter_idx_map.clear();
@@ -56,6 +56,7 @@ void AffineApproximator::reduce_dummy_variables(ub::vector<affine_t> &formulas, 
       }
     }
   }
+*/
 }
 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)

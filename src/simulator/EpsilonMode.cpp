@@ -81,23 +81,22 @@ pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t origi
   return ret;
 }
 
-find_min_time_result_t hydla::simulator::find_min_time_epsilon(node_sptr trigger, variable_map_t &vm, value_t time_limit, phase_result_sptr_t& phase, Backend * backend)
+
+
+find_min_time_result_t hydla::simulator::reduce_unsuitable_case( find_min_time_result_t original_result, Backend* backend_, phase_result_sptr_t& phase)
 {
-  //結果の保存(ret)
-  find_min_time_result_t time_result;
-  HYDLA_LOGGER_DEBUG("come find min time epsilon");
-  time_result = calculate_tmp_result(phase,time_limit, trigger, backend, vm);
-
-  for(auto &tmp_candidate : time_result)
-  {
-    backend->call("simplify", true, 1, "vln", "vl", &tmp_candidate.time, &tmp_candidate.time);
+  find_min_time_result_t ret;
+  bool unsuitable;
+  for(auto original_candidate : original_result){
+    HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
+    unsuitable = false;
+    HYDLA_LOGGER_DEBUG_VAR(original_candidate.parameter_constraint);
+    backend_->call("unsuitableCase", true, 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
+    if(!unsuitable){
+      ret.push_back(original_candidate);
+    }
   }
-  backend->call("resetConstraintForVariable", false, 0, "", "");
-  backend->call("addConstraint", false, 1, "mv0t", "", &vm);
-
-  HYDLA_LOGGER_DEBUG("exit find min time epsilon");
-
-  return time_result;
+  return ret;
 }
 
 

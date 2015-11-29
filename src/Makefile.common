@@ -10,7 +10,7 @@ RM	 := rm #@RM@
 LN       := ln #@LN@
 
 LIBS += -lpthread
-LIBS_STATIC += -lboost_thread-mt
+LIBS_STATIC += -lboost_thread-mt -lboost_regex
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)

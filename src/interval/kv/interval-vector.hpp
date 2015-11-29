@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef INTERVAL_VECTOR_HPP
@@ -11,9 +11,10 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <kv/interval.hpp>
 
-namespace ub = boost::numeric::ublas;
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 template <class T> inline ub::vector<T> mid (const ub::vector< interval<T> >& I) {
 	int i;
@@ -229,9 +230,9 @@ template <class T> inline ub::matrix< interval<T> > intersect (const ub::matrix<
 template <class T> inline T max_norm (const ub::vector<T>& x) {
 	int i;
 	int s = x.size();
-	T tmp;
-	T r = 0.;
+	T r, tmp;
 
+	r = 0.;
 	for (i=0; i<s; i++) {
 		// tmp = abs(x(i));
 		tmp = (x(i) >= 0.) ? x(i) : -x(i);
@@ -245,9 +246,9 @@ template <class T> inline T max_norm (const ub::matrix<T>& x) {
 	int i, j;
 	int s1 = x.size1();
 	int s2 = x.size2();
-	T tmp, tmp2;
-	T r = 0;
+	T r, tmp, tmp2;
 
+	r = 0.;
 	for (i=0; i<s1; i++) {
 		tmp = 0.;
 		rop<T>::begin();
@@ -265,9 +266,9 @@ template <class T> inline T max_norm (const ub::matrix<T>& x) {
 template <class T> inline T max_norm (const ub::vector< interval<T> >& x) {
 	int i;
 	int s = x.size();
-	T tmp;
-	T r = 0.;
+	T r, tmp;
 
+	r = 0.;
 	for (i=0; i<s; i++) {
 		tmp = norm(x(i));
 		if (tmp > r) r = tmp;
@@ -280,9 +281,9 @@ template <class T> inline T max_norm (const ub::matrix< interval<T> >& x) {
 	int i, j;
 	int s1 = x.size1();
 	int s2 = x.size2();
-	T tmp;
-	T r = 0;
+	T r, tmp;
 
+	r = 0.;
 	for (i=0; i<s1; i++) {
 		tmp = 0.;
 		rop<T>::begin();

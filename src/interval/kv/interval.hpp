@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef INTERVAL_HPP
@@ -12,9 +12,11 @@
 #include <string>
 #include <sstream>
 
+#pragma clang diagnostic ignored "-Wunused-variable"
+
 #include <kv/convert.hpp>
 #include <kv/constants.hpp>
-#pragma GCC diagnostic ignored "-Wall" //added@hylagi
+
 
 namespace kv {
 
@@ -281,54 +283,80 @@ template <class T> class interval {
 		interval r;
 		T tmp;
 
+		using std::abs;
+
 		rop<T>::begin();
-		if (x.inf > 0.) {
-			if (y.inf > 0.) {
-				r.inf = rop<T>::mul_down(x.inf, y.inf);
-				r.sup = rop<T>::mul_up(x.sup, y.sup);
-			} else if (y.sup < 0.) {
-				r.inf = rop<T>::mul_down(x.sup, y.inf);
-				r.sup = rop<T>::mul_up(x.inf, y.sup);
+		if (x.inf >= 0.) {
+			if (x.sup == 0.) {
+				if (abs(y.inf) == std::numeric_limits<T>::infinity()
+				 || abs(y.sup) == std::numeric_limits<T>::infinity()) {
+					r = whole();
+				} else {
+					r = interval(0., 0.);
+				} 
 			} else {
-				r.inf = rop<T>::mul_down(x.sup, y.inf);
-				if (r.inf != r.inf) r = 0.;
-				r.sup = rop<T>::mul_up(x.sup, y.sup);
-				if (r.sup != r.sup) r = 0.;
+				if (y.inf >= 0.) {
+					if (y.sup == 0.) {
+						if (abs(x.inf) == std::numeric_limits<T>::infinity()
+						 || abs(x.sup) == std::numeric_limits<T>::infinity()) {
+							r = whole();
+						} else {
+							r = interval(0., 0.);
+						} 
+					} else {
+						r.inf = rop<T>::mul_down(x.inf, y.inf);
+						r.sup = rop<T>::mul_up(x.sup, y.sup);
+					}
+				} else if (y.sup <= 0.) {
+					r.inf = rop<T>::mul_down(x.sup, y.inf);
+					r.sup = rop<T>::mul_up(x.inf, y.sup);
+				} else {
+					r.inf = rop<T>::mul_down(x.sup, y.inf);
+					r.sup = rop<T>::mul_up(x.sup, y.sup);
+				}
 			}
-		} else if (x.sup < 0.) {
-			if (y.inf > 0.) {
-				r.inf = rop<T>::mul_down(x.inf, y.sup);
-				r.sup = rop<T>::mul_up(x.sup, y.inf);
-			} else if (y.sup < 0.) {
+		} else if (x.sup <= 0.) {
+			if (y.inf >= 0.) {
+				if (y.sup == 0.) {
+					if (abs(x.inf) == std::numeric_limits<T>::infinity()
+					 || abs(x.sup) == std::numeric_limits<T>::infinity()) {
+						r = whole();
+					} else {
+						r = interval(0., 0.);
+					} 
+				} else {
+					r.inf = rop<T>::mul_down(x.inf, y.sup);
+					r.sup = rop<T>::mul_up(x.sup, y.inf);
+				}
+			} else if (y.sup <= 0.) {
 				r.inf = rop<T>::mul_down(x.sup, y.sup);
 				r.sup = rop<T>::mul_up(x.inf, y.inf);
 			} else {
 				r.inf = rop<T>::mul_down(x.inf, y.sup);
-				if (r.inf != r.inf) r = 0.;
 				r.sup = rop<T>::mul_up(x.inf, y.inf);
-				if (r.sup != r.sup) r = 0.;
 			}
 		} else {
-			if (y.inf > 0.) {
-				r.inf = rop<T>::mul_down(x.inf, y.sup);
-				if (r.inf != r.inf) r = 0.;
-				r.sup = rop<T>::mul_up(x.sup, y.sup);
-				if (r.sup != r.sup) r = 0.;
-			} else if (y.sup < 0.) {
+			if (y.inf >= 0.) {
+				if (y.sup == 0.) {
+					if (abs(x.inf) == std::numeric_limits<T>::infinity()
+					 || abs(x.sup) == std::numeric_limits<T>::infinity()) {
+						r = whole();
+					} else {
+						r = interval(0., 0.);
+					} 
+				} else {
+					r.inf = rop<T>::mul_down(x.inf, y.sup);
+					r.sup = rop<T>::mul_up(x.sup, y.sup);
+				}
+			} else if (y.sup <= 0.) {
 				r.inf = rop<T>::mul_down(x.sup, y.inf);
-				if (r.inf != r.inf) r = 0.;
 				r.sup = rop<T>::mul_up(x.inf, y.inf);
-				if (r.sup != r.sup) r = 0.;
 			} else {
 				r.inf = rop<T>::mul_down(x.inf, y.sup);
-				if (r.inf != r.inf) r = 0.;
 				tmp = rop<T>::mul_down(x.sup, y.inf);
-				if (tmp != tmp) r = 0.;
 				if (tmp < r.inf) r.inf = tmp;
 				r.sup = rop<T>::mul_up(x.inf, y.inf);
-				if (r.sup != r.sup) r = 0.;
 				tmp = rop<T>::mul_up(x.sup, y.sup);
-				if (tmp != tmp) r = 0.;
 				if (tmp > r.sup) r.sup = tmp;
 			}
 		}
@@ -340,17 +368,24 @@ template <class T> class interval {
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, interval>::value, interval >::type operator*(const interval& x, const C& y) {
 		interval r;
 
+		using std::abs;
+
 		rop<T>::begin();
 		if (y > 0.) {
 			r.inf = rop<T>::mul_down(x.inf, T(y));
 			r.sup = rop<T>::mul_up(x.sup, T(y));
-		} else {
+		} else if (y < 0.) {
 			r.inf = rop<T>::mul_down(x.sup, T(y));
 			r.sup = rop<T>::mul_up(x.inf, T(y));
+		} else {
+			if (abs(x.inf) == std::numeric_limits<T>::infinity()
+			 || abs(x.sup) == std::numeric_limits<T>::infinity()) {
+				r = whole();
+			} else {
+				r = interval(0., 0.);
+			} 
 		}
 		rop<T>::end();
-		if (r.inf != r.inf) r = 0.;
-		if (r.sup != r.sup) r = 0.;
 
 		return r;
 	}
@@ -362,17 +397,24 @@ template <class T> class interval {
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, interval>::value, interval >::type operator*(const C& x, const interval& y) {
 		interval r;
 
+		using std::abs;
+
 		rop<T>::begin();
-		if (x >= 0.) {
+		if (x > 0.) {
 			r.inf = rop<T>::mul_down(T(x), y.inf);
 			r.sup = rop<T>::mul_up(T(x), y.sup);
-		} else {
+		} else if (x < 0.) {
 			r.inf = rop<T>::mul_down(T(x), y.sup);
 			r.sup = rop<T>::mul_up(T(x), y.inf);
+		} else {
+			if (abs(y.inf) == std::numeric_limits<T>::infinity()
+			 || abs(y.sup) == std::numeric_limits<T>::infinity()) {
+				r = whole();
+			} else {
+				r = interval(0., 0.);
+			} 
 		}
 		rop<T>::end();
-		if (r.inf != r.inf) r = 0.;
-		if (r.sup != r.sup) r = 0.;
 
 		return r;
 	}
@@ -424,7 +466,7 @@ template <class T> class interval {
 			}
 		} else {
 			rop<T>::end();
-			throw std::range_error("interval: division by 0");
+			throw std::domain_error("interval: division by 0");
 		}
 		rop<T>::end();
 
@@ -443,7 +485,7 @@ template <class T> class interval {
 			r.sup = rop<T>::div_up(x.inf, T(y));
 		} else {
 			rop<T>::end();
-			throw std::range_error("interval: division by 0");
+			throw std::domain_error("interval: division by 0");
 		}
 		rop<T>::end();
 
@@ -468,7 +510,7 @@ template <class T> class interval {
 			}
 		} else {
 			rop<T>::end();
-			throw std::range_error("interval: division by 0");
+			throw std::domain_error("interval: division by 0");
 		}
 		rop<T>::end();
 
@@ -505,6 +547,10 @@ template <class T> class interval {
 
 	friend interval sqrt(const interval& x) {
 		T tmp1, tmp2;
+
+		if (x.inf < 0.) {
+			throw std::domain_error("interval: sqrt of negative value");
+		}
 
 		rop<T>::begin();
 		tmp1 = rop<T>::sqrt_down(x.inf);
@@ -590,12 +636,18 @@ template <class T> class interval {
 		return tmp;
 	}
 
-	friend T median(const interval& x) {
-		return (x.inf + x.sup) * 0.5;
-	}
 
 	friend T mid(const interval& x) {
-		return median(x);
+		using std::abs;
+		if (abs(x.inf) > 1. && abs(x.sup) > 1.) {
+			return x.inf * 0.5 + x.sup * 0.5;
+		} else {
+			return (x.inf + x.sup) * 0.5;
+		}
+	}
+
+	friend T median(const interval& x) {
+		return mid(x);
 	}
 
 	friend T norm(const interval& x) {
@@ -637,7 +689,7 @@ template <class T> class interval {
 	}
 
 	friend bool proper_subset(const interval& x, const interval& y) {
-		return y.inf < x.inf && x.sup < y.sup;
+		return subset(x, y) && (y.inf < x.inf || x.sup < y.sup);
 	}
 
 	friend bool overlap(const interval& x, const interval& y) {
@@ -676,7 +728,7 @@ template <class T> class interval {
 	}
 
 	template <class C> friend typename boost::enable_if_c< acceptable_s<C, interval>::value, bool>::type operator<(const C& x, const interval& y) {
-		return rop<T>::fromstring_up(y) < y.inf;
+		return rop<T>::fromstring_up(x) < y.inf;
 	}
 
 
@@ -797,7 +849,7 @@ template <class T> class interval {
 		}
 
 		if (y.inf == 0. && y.sup == 0.) {
-			throw std::range_error("interval: division by 0");
+			throw std::domain_error("interval: division by 0");
 		}
 
 		rop<T>::begin();
@@ -859,7 +911,7 @@ template <class T> class interval {
 		}
 
 		if (y.inf == 0. && y.sup == 0.) {
-			throw std::range_error("interval: division by 0");
+			throw std::domain_error("interval: division by 0");
 		}
 
 		rop<T>::begin();
@@ -953,14 +1005,33 @@ template <class T> class interval {
 		return exp(y * log(x));
 	}
 
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, interval>::value && ! boost::is_integral<C>::value, interval>::type pow(const interval& x, const C& y) {
+		return pow(x, interval(y));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_s<C, interval>::value, interval>::type pow(const interval& x, const C& y) {
+		return pow(x, interval(y));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, interval>::value, interval>::type pow(const C& x, const interval& y) {
+		return pow(interval(x), y);
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_s<C, interval>::value, interval>::type pow(const C& x, const interval& y) {
+		return pow(interval(x), y);
+	}
+
 	// power by integer (i is passed by double)
 	static interval ipower(const interval& x, double i) {
 		double tmp;
 		interval xp = x;
 		interval r(1.);
 
+		if (i != i) return (interval)i; // NaN check
+
 		while (i != 0.) {
 			i *= 0.5;
+			using std::floor;
 			tmp = floor(i);
 			if (tmp != i) {
 				i = tmp;
@@ -978,10 +1049,10 @@ template <class T> class interval {
 		int i;
 
 		if (x == std::numeric_limits<T>::infinity()) {
-			return interval((std::numeric_limits<T>::max()), std::numeric_limits<T>::infinity());
+			return interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
 		}
 		if (x == -std::numeric_limits<T>::infinity()) {
-			return interval(0.);
+			return interval(0., std::numeric_limits<T>::denorm_min());
 		}
 
 		remainder = interval((1./sqrt(constants<interval>::e())).lower(), sqrt(constants<interval>::e()).upper());
@@ -1140,6 +1211,9 @@ template <class T> class interval {
 	}
 
 	friend interval log(const interval& I) {
+		if (I.inf < 0.) {
+			throw std::domain_error("interval: log of negative value");
+		}
 		return interval(log_point(I.lower(), -1), log_point(I.upper(), 1));
 	}
 
@@ -1187,6 +1261,9 @@ template <class T> class interval {
 	}
 
 	friend interval log1p(const interval& I) {
+		if (I.inf < -1.) {
+			throw std::domain_error("interval: log of negative value");
+		}
 		return interval(log1p_point(I.lower(), -1), log1p_point(I.upper(), 1));
 	}
 
@@ -1226,7 +1303,7 @@ template <class T> class interval {
 			y *= I;
 			y /= (T)i;
 			if (mag(y) < std::numeric_limits<T>::epsilon()) {
-				r += y * interval<T>(-1., 1.);
+				r += y * interval(-1., 1.);
 				break;
 			} else {
 				if (i % 2 == 0) {
@@ -1491,6 +1568,9 @@ template <class T> class interval {
 	static interval asin_point(const T& x) {
 		const interval pih = constants<interval>::pi() * 0.5;
 
+		if (x < -1. || x > 1.) {
+			throw std::domain_error("interval: asin domain error");
+		}
 		if (x == 1) return pih;
 		if (x == -1) return -pih;
 		using std::abs;
@@ -1505,7 +1585,7 @@ template <class T> class interval {
 		}
 	}
 
-	friend interval asin(const interval<T>& I) {
+	friend interval asin(const interval& I) {
 		return interval(asin_point(I.lower()).lower(), asin_point(I.upper()).upper());
 	}
 
@@ -1530,6 +1610,9 @@ template <class T> class interval {
 	static interval acos_point(const T& x) {
 		const interval pi = constants<interval>::pi();
 
+		if (x < -1. || x > 1.) {
+			throw std::domain_error("interval: acos domain error");
+		}
 		if (x == 1.) return interval(0.);
 		if (x == -1.) return pi;
 		using std::abs;
@@ -1644,6 +1727,9 @@ template <class T> class interval {
 		if (x >= -0.5 && x <= 0.5) {
 			return sinh_origin(x);
 		} else {
+			if (x == -std::numeric_limits<T>::infinity()) {
+				return -interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
+			}
 			interval tmp;
 			tmp = exp_point(x);
 			return (tmp - 1./tmp) * 0.5;
@@ -1655,6 +1741,9 @@ template <class T> class interval {
 	}
 
 	static interval cosh_point(const T& x) {
+		if (x == -std::numeric_limits<T>::infinity()) {
+			return interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
+		}
 		interval tmp;
 		tmp = exp_point(x);
 		return (tmp + 1./tmp) * 0.5;
@@ -1670,7 +1759,13 @@ template <class T> class interval {
 	}
 
 	static interval tanh_point(const T& x) {
-		return sinh_point(x) / cosh_point(x);
+		if (x > 0.5) {
+			return 1. - 2. / (1. + exp_point(2. * x));
+		} else if (x < -0.5) {
+			return 2. / (1. + exp_point(-2. * x)) - 1.;
+		} else {
+			return sinh_origin(x) / cosh_point(x);
+		}
 	}
 
 	friend interval tanh(const interval& I) {
@@ -1692,6 +1787,9 @@ template <class T> class interval {
 	}
 
 	static interval acosh_point(const T& x) {
+		if (x < 1.) {
+			throw std::domain_error("interval: acosh domain error");
+		}
 		if (x == 1.) {
 			return interval(0.);
 		} else if (x <= 1.5) {
@@ -1707,6 +1805,11 @@ template <class T> class interval {
 	}
 
 	static interval atanh_point(const T& x) {
+		if (x < -1. || x > 1.) {
+			throw std::domain_error("interval: atanh domain error");
+		}
+		if (x == -1.) return interval(-std::numeric_limits<T>::infinity(), -(std::numeric_limits<T>::max)());
+		if (x == 1.) return interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
 		if (x < -0.5) {
 			return 0.5 * log((1. + x) / (1. - interval(x)));
 		} else if (x <= 0.5) {
@@ -1724,32 +1827,89 @@ template <class T> class interval {
 
 template <class T> struct constants< interval<T> > {
 	static interval<T> pi() {
-		// static is used so that string is evaluated only "one time"
+		/*
 		static const interval<T> tmp(
 			"3.1415926535897932384626433832795028841971693993751",
 			"3.1415926535897932384626433832795028841971693993752"
 		);
+		*/
+		static interval<T> tmp(0.);
+		if (tmp.lower() != 0.) return tmp;
+
+		tmp = 16. * interval<T>::atan_origin(1. / interval<T>(5.)) - 4. * interval<T>::atan_origin(1. / interval<T>(239.));
 		return tmp;
 	}
 
 	static interval<T> e() {
+		/*
 		static const interval<T> tmp(
 			"2.7182818284590452353602874713526624977572470936999",
 			"2.7182818284590452353602874713526624977572470937000"
 		);
 		return tmp;
+		*/
+		static interval<T> tmp(0.);
+		if (tmp.lower() != 0.) return tmp;
+
+		static const interval<T> remainder("1", "2.71828182845904524");
+		interval<T> y;
+		int i;
+
+		tmp = 1.;
+		y = 1.;
+		for (i=1;  ; i++) {
+			y /= (T)i;
+			if (mag(y) * remainder.upper() < std::numeric_limits<T>::epsilon()) {
+				tmp += y * remainder;
+				break;
+			} else {
+				tmp += y;
+			}
+		}
+
+		return tmp;
 	}
 
 	static interval<T> ln2() {
+		/*
 		static const interval<T> tmp(
 			"0.69314718055994530941723212145817656807550013436025",
 			"0.69314718055994530941723212145817656807550013436026"
 		);
+		*/
+		static interval<T> tmp(0.);
+		if (tmp.lower() != 0.) return tmp;
+
+		interval<T> y, x2, x2m1, cinv, xn, xn2, t;
+		int i;
+
+		x2 = sqrt(sqrt(interval<T>(2.)));
+		x2m1 = x2 - 1.;
+		cinv = 1. / interval<T>::hull(x2, 1.);
+		tmp = 0.;
+		xn = -1.;
+		xn2 = -1.;
+		for (i=1;  ; i++) {
+			xn = -xn * x2m1; 
+			xn2 = -xn2 * cinv * x2m1;
+			t = xn2 / (T)i;
+			if (mag(t) < std::numeric_limits<T>::epsilon()) {
+				tmp += t;
+				break;
+			} else {
+				tmp += xn / (T)i;
+			}
+		}
+
+		tmp = tmp * 4.;
+
 		return tmp;
 	}
+
 	static interval<T> str(const std::string& s) {
 		return interval<T>(s, s);
 	}
+
 	static interval<T> str(const std::string& s1, const std::string& s2) {
 		return interval<T>(s1, s2);
 	}

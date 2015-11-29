@@ -1,0 +1,22 @@
+X := {x0..x4}.
+Y := {y0..y4}.
+
+INIT(x,y,x0,y0,vx0,vy0) <=> x = x0 & y = y0 & x' = vx0 & y' = vy0.
+
+COL(px1,py1,px2,py2,e) <=> 
+  []( (px1- - px2-)^2 + (py1- - py2-)^2 = 4 => 
+      px1' * (px1- - px2-) + py1' * (py1- - py2-) = e-*(px2'- * (px1- - px2-) + py2'- * (py1- - py2-)) &
+      e-*(px1'- * (px1- - px2-) + py1'- * (py1- - py2-)) = px2' * (px1- - px2-) + py2' * (py1- - py2-) &
+      px1' * (py1- - py2-) - py1' * (px1- - px2-) = px1'- * (py1- - py2-) - py1'- * (px1- - px2-) &
+      px2' * (py1- - py2-) - py2' * (px1- - px2-) = px2'- * (py1- - py2-) - py2'- * (px1- - px2-) 
+  ).
+
+CONST(p) <=> [](p'' = 0).
+WALL(b,e) <=> []( (b- -1 = -10 | 5*|X| = b- +1) => b' = -e*b'- ).
+
+INIT(X[1],Y[1],0,0,10,8),
+{INIT(X[i],Y[i],3*i,3*i,0,0) | i in {1..|X|}, X[i] =!= X[1], Y[i] =!= Y[1]},
+{(CONST(X[i]), CONST(Y[i]), CONST(X[j]), CONST(Y[j])) << COL(X[i],Y[i],X[j],Y[j],1) | i in {1..|X|-1}, j in {i+1..|X|}}. 
+{CONST(p) << WALL(p,1) | p in X or Y}.
+
+//#hylagi -p100 --fnd --vars_to_approximate x0,y0,x1,y1,x2,y2,x3,y3,x4,y4,x0',x1',x2',x3',x4',y0',y1',y2',y3',y4'
