@@ -247,24 +247,18 @@ void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
   (*output_stream_) << "]";
 }
 
-// 自然対数の底
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
   (*output_stream_) << "E";
 }
 
-
-// 円周率
 void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
   (*output_stream_) << "Pi";
 }
 
-// 円周率
 void TreeInfixPrinter::visit(boost::shared_ptr<Infinity> node){
-  (*output_stream_) << "inf";
+  (*output_stream_) << "Infinity";
 }
 
-
-// 制約定義
 void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintDefinition> node){
   (*output_stream_) << node->get_name() << "(";
   Definition::bound_variables_iterator it = node->bound_variable_begin();
