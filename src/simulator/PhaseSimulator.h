@@ -98,6 +98,8 @@ private:
 
   bool calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks,   ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& always);
 
+  bool check_equality(const value_t &lhs, const value_t &rhs);
+
   kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
   
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint);

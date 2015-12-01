@@ -1078,7 +1078,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
         ret = symbolic_expression::node_sptr(new symbolic_expression::E());
       else if(symbol=="I")
         ret = symbolic_expression::node_sptr(new symbolic_expression::ImaginaryUnit());
-      else if(symbol=="Infinity")
+      else if(symbol=="inf")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
       else if(symbol=="True")
         ret = symbolic_expression::node_sptr(new symbolic_expression::True());

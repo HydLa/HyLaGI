@@ -413,7 +413,9 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
         else
         {
           Variable var(pair.first, max_d_count);
-          if(!consistency_checker->check_continuity(var, phase->variable_map))
+          if(phase->variable_map.count(var) == 0 || phase->prev_map.count(var) == 0
+             || phase->variable_map[var].unique() || phase->prev_map[var].unique()
+             || !check_equality(phase->variable_map[var].get_unique_value(), phase->prev_map[var].get_unique_value()))
             discrete_vs.insert(var);
         }
       }
@@ -430,6 +432,14 @@ ConstraintStore PhaseSimulator::get_current_parameter_constraint()
   backend_->call("getParameterConstraint", true, 0, "", "cs", &parameter_cons);
   return parameter_cons;
 }
+
+
+bool PhaseSimulator::check_equality(const value_t &lhs, const value_t &rhs){
+  bool equal;
+  backend_->call("exactlyEqual", true, 2, "vlnvln", "b", &lhs, &rhs, &equal);
+  return equal;
+}
+
 
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
   phase_result_sptr_t branch_state_false(new PhaseResult());

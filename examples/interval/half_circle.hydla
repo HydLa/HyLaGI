@@ -5,4 +5,4 @@ CONSTDIR <=> [](c' = 0).
 
 INIT, CONSTDIR << BOUNCE, CIRCLE.
 
-//#hylagi -p 30 --fnd --finterval
+//#hylagi -p 30 --fnd --finterval --approximation_step 1 --vars_to_approximate x,y

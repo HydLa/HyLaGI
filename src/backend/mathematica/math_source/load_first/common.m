@@ -184,7 +184,7 @@ publicMethod[
 toReturnForm[expr_] := 
 Module[
   {ret},
-  If[expr === Infinity, Return[expr]];
+  If[expr === Infinity, Return[inf]];
   (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
   If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
   If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
