@@ -204,6 +204,12 @@ publicMethod[
   {toReturnForm[LogicalExpand[pConstraint] ]}
 ];
 
+publicMethod[
+  exactlyEqual,
+  lhs, rhs,
+  Simplify[lhs == rhs] === True
+];
+
 createParameterMaps[] := createParameterMaps[pConstraint];
 
 publicMethod[
