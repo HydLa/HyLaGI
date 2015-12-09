@@ -20,7 +20,7 @@ private:
   bool check_including(HybridAutomaton* larger,HybridAutomaton* smaller);
   void HA_translate(phase_result_sptr_t current, HA_node_list_t current_automaton_node);
   HA_node_list_t transition(HA_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker);
-  bool check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker);
+  HybridAutomaton* detect_loop_in_path(HybridAutomaton* new_node, automaton_node_list_t path);
   io::SymbolicTrajPrinter printer;
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
 };

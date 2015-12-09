@@ -34,10 +34,11 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
   try
     {
       consistency_checker.reset(new ConsistencyChecker(backend));
-      HybridAutomaton* init = new HybridAutomaton(result_root_);
+      HybridAutomaton* init = new HybridAutomaton("init",result_root_);
       HA_node_list_t start;
       start.push_back(init);
       HA_translate(result_root_,start);
+      init->dump();
     }
   catch(const std::runtime_error &se)
     {
@@ -81,10 +82,7 @@ void HybridAutomatonConverter::HA_translate(phase_result_sptr_t current, HA_node
       if(todo->simulation_state == NOT_SIMULATED){
         process_one_todo(todo);
         /* TODO: assertion違反が検出された場合の対応 */
-        if(current_automaton_node.empty()){
-        }else{
-          HA_node_list_t current_automaton_node = transition(current_automaton_node,todo,consistency_checker);
-        }
+        current_automaton_node = transition(current_automaton_node,todo,consistency_checker);
       }
       if(opts_->dump_in_progress){
         printer.output_one_phase(todo);
@@ -96,7 +94,32 @@ void HybridAutomatonConverter::HA_translate(phase_result_sptr_t current, HA_node
 
 HA_node_list_t HybridAutomatonConverter::transition(HA_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
   HA_node_list_t next_search;
+  for(HA_node_list_t::iterator current_HA_node = current.begin();current_HA_node != current.end();current_HA_node++){
+    HybridAutomaton* nextNode = new HybridAutomaton(phase);
+    //通常ループの探索
+    HybridAutomaton* loop_node = detect_loop_in_path(nextNode,(*current_HA_node)->trace_path);
+    //ループの場合
+    if(loop_node!=NULL){
+      (*current_HA_node)->add_next_edge(loop_node);
+    }
+    //ループでない場合
+    if(loop_node == NULL){
+      (*current_HA_node)->add_next_edge(nextNode);
+      next_search.push_back(nextNode);
+    }
+  }
   return next_search;
+}
+
+HybridAutomaton* HybridAutomatonConverter::detect_loop_in_path(HybridAutomaton* new_node, automaton_node_list_t path){
+  HybridAutomaton* ret = NULL;
+  for(automaton_node_list_t::iterator it = path.begin();it != path.end();it++){
+    if(check_including((HybridAutomaton*)*it,new_node)){
+      ret = (HybridAutomaton*)*it;
+      return ret;
+    }
+  }
+  return ret;
 }
 
 bool HybridAutomatonConverter::check_including(HybridAutomaton* larger,HybridAutomaton* smaller){
@@ -125,31 +148,6 @@ bool HybridAutomatonConverter::check_including(HybridAutomaton* larger,HybridAut
     // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
   }
   return include_ret;
-}
-
-bool HybridAutomatonConverter::check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker){
-  bool ret = false;
-  if(guard->get_node_type_name() == "True"){
-    return true;
-  }
-  ConstraintStore par_cons = phase->get_parameter_constraint();
-  backend->call("resetConstraintForParameter", true, 1, "mp", "", &par_cons);
-  CheckConsistencyResult cc_result;
-  HYDLA_LOGGER_DEBUG("entailed check start ===========================");
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
-  // variable_map_t related_vm = get_related_vm(guard, phase->variable_map);
-  switch(consistency_checker->check_entailment(phase->variable_map, cc_result, guard, phase->phase_type, phase->profile)){
-  case ENTAILED:
-    ret = true;
-    break;
-  case BRANCH_PAR:
-  case CONFLICTING:
-  case BRANCH_VAR:
-    break;
-  }
-  HYDLA_LOGGER_DEBUG(ret);
-  HYDLA_LOGGER_DEBUG("entailed check finish ===========================");
-  return ret;
 }
 
 }//namespace hydla

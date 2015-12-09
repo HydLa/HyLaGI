@@ -33,43 +33,14 @@ phase_result_sptr_t LTLModelChecker::simulate()
 
   try
     {
-      //############# test
-      cout << "test start" << endl;
-      Automaton* test_1 = new Automaton("test1");
-
-      Automaton* test_2 = new Automaton("test2");
-      Automaton* test_3 = new Automaton("test3");
-      Automaton* test_4 = new Automaton("test4");
-      Automaton* test_5 = new Automaton("test5");
-      test_1->add_next_link(test_2);
-      test_1->add_next_link(test_3);
-      test_1->add_next_link(test_4);
-      test_1->add_next_link(test_5);
-
-      Automaton* test_6 = new Automaton("test6");
-      Automaton* test_7 = new Automaton("test7");
-      Automaton* test_8 = new Automaton("test8");
-      Automaton* test_9 = new Automaton("test9");
-      test_2->add_next_link(test_6);
-      test_3->add_next_link(test_7);
-      test_3->add_next_link(test_8);
-      test_3->add_next_link(test_9);
-
-      test_9->trace();
-      test_9->dump();
-      test_9->set_color_to_trace_path("red");
-      test_1->output_dot();
-      test_3->dump();
-      cout << "test end" << endl;
-      //############# test
-
       consistency_checker.reset(new ConsistencyChecker(backend));
+
       //Property Automaton initialize
       int id = 0;
       //[True loop]:For making Hybrid Automaton test : if we detect a acceptance cycle, the cycle is HA
       PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       node_sptr true_node = node_sptr(new True());
-      property_init->add_next_link(true_node,property_init);
+      property_init->add_next_edge(property_init,true_node);
 
       //[bouncing ball 1]:Checking [](y<10) don't over first height
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
@@ -135,19 +106,17 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node1->addLink(true_node,node1);
 
       //init LTL search
-      PropertyNode *PropertyZero = new PropertyNode(0,ZERO);
-      LTLNode *LTLZero = new LTLNode(result_root_,PropertyZero);
+      LTLNode *LTL_init = new LTLNode("init",result_root_,property_init);
       ltl_node_list_t ltl_start;
+      ltl_start.push_back(LTL_init);
 
-      LTLsearch(result_root_,ltl_start,LTLZero,property_init);
-      // property_init->dot();
-      cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
-      printer.output_property_automaton(property_init);
-      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
-      // LTLZero->dot();
-      cout << "========== result ltl search ==========" << endl;
-      printer.output_ltl_node(LTLZero);
-      cout << "=======================================" << endl;
+      LTLsearch(result_root_,ltl_start,LTL_init);
+      // cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
+      property_init->dump();
+      // cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+      // cout << "========== result ltl search ==========" << endl;
+      LTL_init->dump();
+      // cout << "=======================================" << endl;
     }
   catch(const std::runtime_error &se)
     {
@@ -174,7 +143,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
   return result_root_;
 }
 
-void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init,PropertyNode* property_init)
+void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init)
 {
   if(signal_handler::interrupted)
     {
@@ -190,69 +159,56 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
       if(todo->simulation_state == NOT_SIMULATED){
         process_one_todo(todo);
         /* TODO: assertion違反が検出された場合の対応 */
-        if(ltl_current.empty()){
-          // cout << "come ltl search : 1" << endl;
-          //初期化
-          LTLNode *FirstState = new LTLNode(todo,property_init);
-          result_init->add_next_link(FirstState);
-          ltl_current.push_back(FirstState);
-        }else{
-          // cout << "come ltl search : n" << endl;
-          ltl_current = transition(ltl_current,todo,consistency_checker);
-        }
+        ltl_current = transition(ltl_current,todo,consistency_checker);
       }
       if(opts_->dump_in_progress){
         printer.output_one_phase(todo);
       }
-      //確認
-      // cout << "test::::::::::::::::::::" << endl;
-      // printer.output_ltl_node(result_init);
-      // cout << "test::::::::::::::::::::" << endl;
 
-      LTLsearch(todo,ltl_current,result_init,property_init);
+      LTLsearch(todo,ltl_current,result_init);
     }
   phase_simulator_->revert_diff(*current);
 }
 
 ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
   ltl_node_list_t next_search;
-  // for(ltl_node_list_t::iterator current_LTL_node = current.begin();current_LTL_node != current.end();current_LTL_node++){
-  //   for(property_link_list_t::iterator property_link = (*current_LTL_node)->property->link.begin();property_link != (*current_LTL_node)->property->link.end();property_link++){
-  //     //phase と propertylink->first で成否判定する
-  //     if(check_edge_guard(phase,property_link->first,consistency_checker)){
-  //       LTLNode* nextNode = new LTLNode(phase,property_link->second);
-  //       //acceptance cycleの探索
-  //       LTLNode* loop_node = detect_acceptance_cycle(nextNode,*current_LTL_node);
-  //       if(loop_node!=NULL){
-  //         (*current_LTL_node)->add_next_link(loop_node);
-  //         (*current_LTL_node)->set_color_to_trace_path("red");
-  //         next_search.clear();
-  //         return next_search;
-  //       }
-  //       //通常ループの探索
-  //       loop_node = detect_loop_in_path(nextNode,(*current_LTL_node)->trace_path);
-  //       //ループの場合
-  //       if(loop_node!=NULL){
-  //         (*current_LTL_node)->add_next_link(loop_node);
-  //       }
-  //       //ループでない場合
-  //       if(loop_node == NULL){
-  //         (*current_LTL_node)->add_next_link(nextNode);
-  //         next_search.push_back(nextNode);
-  //         //acceptance stateの場合
-  //         if(nextNode->acceptanceState()){
-  //           nextNode->set_color_to_trace_path("red");
-  //           next_search.clear();
-  //           return next_search;
-  //         }
-  //         //acceptance cycleの受理状態の場合
-  //         if(nextNode->acceptanceCycle()){
-  //           nextNode->acceptance_pathes.push_back(nextNode->trace_path);
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+  for(ltl_node_list_t::iterator current_LTL_node = current.begin();current_LTL_node != current.end();current_LTL_node++){
+    for(automaton_edge_list_t::iterator property_edge = (*current_LTL_node)->property->next_edge.begin();property_edge != (*current_LTL_node)->property->next_edge.end();property_edge++){
+      //phase と property_edge->second(edgeのguard条件) で成否判定する
+      if(check_edge_guard(phase,property_edge->second,consistency_checker)){
+        LTLNode* nextNode = new LTLNode(phase,(PropertyNode*)(property_edge->first));
+        //acceptance cycleの探索
+        LTLNode* loop_node = detect_acceptance_cycle(nextNode,*current_LTL_node);
+        if(loop_node!=NULL){
+          (*current_LTL_node)->add_next_edge(loop_node);
+          (*current_LTL_node)->set_color_to_trace_path("red");
+          next_search.clear();
+          return next_search;
+        }
+        //通常ループの探索
+        loop_node = detect_loop_in_path(nextNode,(*current_LTL_node)->trace_path);
+        //ループの場合
+        if(loop_node!=NULL){
+          (*current_LTL_node)->add_next_edge(loop_node);
+        }
+        //ループでない場合
+        if(loop_node == NULL){
+          (*current_LTL_node)->add_next_edge(nextNode);
+          next_search.push_back(nextNode);
+          //acceptance stateの場合
+          if(nextNode->acceptanceState()){
+            nextNode->set_color_to_trace_path("red");
+            next_search.clear();
+            return next_search;
+          }
+          //acceptance cycleの受理状態の場合
+          if(nextNode->acceptanceCycle()){
+            nextNode->acceptance_pathes.push_back(nextNode->trace_path);
+          }
+        }
+      }
+    }
+  }
   return next_search;
 }
 
@@ -302,11 +258,11 @@ LTLNode* LTLModelChecker::detect_acceptance_cycle(LTLNode* new_node,LTLNode* par
   return ret;
 }
 
-LTLNode* LTLModelChecker::detect_loop_in_path(LTLNode* new_node, ltl_node_list_t path){
+LTLNode* LTLModelChecker::detect_loop_in_path(LTLNode* new_node, automaton_node_list_t path){
   LTLNode* ret = NULL;
-  for(ltl_node_list_t::iterator it = path.begin();it != path.end();it++){
-    if(check_including(*it,new_node)){
-      ret = *it;
+  for(automaton_node_list_t::iterator it = path.begin();it != path.end();it++){
+    if(check_including((LTLNode*)*it,new_node)){
+      ret = (LTLNode*)*it;
       return ret;
     }
   }

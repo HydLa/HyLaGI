@@ -71,7 +71,7 @@ void ProgramOptions::init_descriptions()
     ("math_name",
      value<std::string>()->default_value("math"),
      "name of mathematica command")
-    
+
     ("time,t",
      value<std::string>()->default_value(""),
      "time limit of the model\n"
