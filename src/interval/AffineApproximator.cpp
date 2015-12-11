@@ -141,7 +141,6 @@ void AffineApproximator::approximate(const variable_t &variable_to_approximate, 
   if(condition.get() != nullptr)
   {
     //TODO: deal with general case (currently only for '=')
-    assert(typeid(*condition) == typeid(symbolic_expression::Equal));
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition);
@@ -180,7 +179,6 @@ void AffineApproximator::approximate_time(value_t& time, const variable_map_t& i
   if(condition.get() != nullptr)
   {
     //TODO: deal with general case (currently only for '=')
-    assert(typeid(*condition) == typeid(symbolic_expression::Equal));
     //Check whether the condition has approximated variable
     simulator::VariableFinder finder;
     finder.visit_node(condition);

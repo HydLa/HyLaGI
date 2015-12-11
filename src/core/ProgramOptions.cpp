@@ -122,7 +122,10 @@ void ProgramOptions::init_descriptions()
      "output each phase in progress")
     ("vars_to_approximate",
      value<std::string>()->default_value(""),
-     "variables to approximate (delimited by \",\")");
+     "variables to approximate (delimited by \",\")")
+    ("guards_to_interval_newton",
+     value<std::string>()->default_value(""),
+     "guards to be solved by interval newton method(delimited by \",\")");
 
 
   options_description hidden_desc("Hidden options");

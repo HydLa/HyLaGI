@@ -9,6 +9,7 @@
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
+#include "Utility.h"
 #include <sys/stat.h>
 #include <fstream>
 #include <regex>
@@ -128,6 +129,17 @@ void output_result(Simulator& ss, Opts& opts){
 }
 
 
+void trim_front_and_behind_space(std::string &buffer)
+{
+      // 前後の空白を取り除く
+  auto left = buffer.find_first_not_of(" ");
+  if (left != string::npos)
+  {
+    auto right = buffer.find_last_not_of(" ");
+    buffer = buffer.substr(left, right - left + 1);
+  }
+}
+
 void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix)
 {
   HYDLA_LOGGER_DEBUG_VAR(vars_list_string);
@@ -135,20 +147,13 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
   string buffer;
   while(std::getline(sstr, buffer, ','))
   {
-    // 前後の空白を取り除く
-    auto left = buffer.find_first_not_of(" ");
-    if (left != string::npos)
-    {
-      auto right = buffer.find_last_not_of(" ");
-      buffer = buffer.substr(left, right - left + 1);
-    }
+    trim_front_and_behind_space(buffer);
     boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
     boost::smatch match;
     if (!boost::regex_search(buffer, match, re))
     {
       cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
     }
-
     set_to_add.insert(buffer);
   }
 }
@@ -181,6 +186,16 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("vars_to_approximate")
   {
     add_vars_from_string(po.get<string>("vars_to_approximate"), opts.vars_to_approximate, "");
+  }
+  IF_SPECIFIED("guards_to_interval_newton")
+  {
+    std::stringstream sstr(po.get<string>("guards_to_interval_newton"));
+    string buffer;
+    while(std::getline(sstr, buffer, ','))
+    {
+      buffer = utility::replace(buffer, " ", "");
+      opts.guards_to_interval_newton.insert(buffer);
+    }
   }
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }

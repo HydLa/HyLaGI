@@ -59,7 +59,6 @@ public:
 
   void apply_diff(const PhaseResult &phase);
 
-  /// revert diff
   void revert_diff(const PhaseResult &phase);
   void revert_diff(const asks_t &positive_asks, const asks_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff);
 
