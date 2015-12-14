@@ -806,13 +806,25 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       bool by_newton = false;
       if(opts_->interval && guard_by_newton.get() == nullptr)
       {
-        cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
-        char c;
-        cin >> c;
-        if(c == 'y')
+        if(opts_->guards_to_interval_newton.empty())
         {
-          guard_by_newton = g;
-          by_newton = true;
+          cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
+          char c;
+          cin >> c;
+          if(c == 'y')
+          {
+            guard_by_newton = g;
+            by_newton = true;
+          }
+        }
+        else
+        {
+          // TODO: avoid string comparison
+          if(opts_->guards_to_interval_newton.count(get_infix_string(g)))
+          {
+            guard_by_newton = g;
+            by_newton = true;
+          }
         }
       }
       if(!by_newton)
@@ -1365,6 +1377,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
   {
     for(auto &entry: vm_to_approximate)
     {
+      cout << entry.first.get_string() << endl;
       if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
         continue;
       itvd interval = evaluate_interval(phase, entry.second);

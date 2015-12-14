@@ -36,6 +36,7 @@ struct Opts {
   EOutputMode output_mode;
   std::set<std::string> output_vars;
   std::set<std::string> vars_to_approximate;
+  std::set<std::string> guards_to_interval_newton;
 };
 
 }
