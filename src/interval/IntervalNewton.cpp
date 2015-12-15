@@ -57,22 +57,16 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
   
-  std::cerr.precision(17);
   double w = width(candidate);
   while(true)
   {
-    std::cout.precision(17);
-    HYDLA_LOGGER_DEBUG_VAR(width(candidate));
-    HYDLA_LOGGER_DEBUG_VAR(log10(width(candidate)));
-    HYDLA_LOGGER_DEBUG_VAR((int)log10(width(candidate)));
-    HYDLA_LOGGER_DEBUG_VAR(candidate);
+    std::cerr.precision(17);
     HYDLA_LOGGER_DEBUG_VAR(tmp);
   
     itvd n_x, div;
     bool parted;
     IntervalTreeVisitor visitor;
     itvd time_interval = itvd(mid(tmp));
-
 
     itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
     itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
@@ -91,7 +85,6 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
       w = w / 2.;
       tmp.lower() = candidate.lower() - w / 2.;
       tmp.upper() = candidate.upper() + w / 2.;
-      HYDLA_LOGGER_DEBUG_VAR(tmp);
       continue;
     }
   
@@ -107,7 +100,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     {
       HYDLA_LOGGER_DEBUG("Not Subset.");
       if(w == w /2.) return false;
-      w = w / 2. * 3.;
+      w = w * sqrt(2.);
       tmp.lower() = candidate.lower() - w / 2.;
       tmp.upper() = candidate.upper() + w / 2.;
     }
@@ -119,13 +112,10 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
 itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   bool parted;
-  itvd initial_interval, current_value, prev_value, div1, div2, tmp1, tmp2, x1, x2;
+  itvd current_value, prev_value, div1, div2, tmp1, tmp2, x1, x2;
   itvs candidate_stack;
 
-  // 暫定的な初期区間
-  initial_interval = init;
-
-  candidate_stack.push(initial_interval);
+  candidate_stack.push(init);
   
   while(!candidate_stack.empty())
   {
