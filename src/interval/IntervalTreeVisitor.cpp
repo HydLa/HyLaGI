@@ -380,5 +380,15 @@ void IntervalTreeVisitor::debug_print(std::string str, itvd x)
 }
 
 
+#define DEFINE_INVALID_NODE(NODE_NAME)                                \
+  void IntervalTreeVisitor::visit(boost::shared_ptr<NODE_NAME> node)  \
+{                                                                \
+  HYDLA_LOGGER_DEBUG("");                                        \
+  invalid_node(*node);                                           \
+}
+
+
+DEFINE_INVALID_NODE(symbolic_expression::UnsupportedFunction);
+
 } // namespace interval
 } // namespace hydla

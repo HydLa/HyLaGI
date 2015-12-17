@@ -57,6 +57,7 @@ class IntervalTreeVisitor : public DefaultTreeVisitor
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
 
   private:
 

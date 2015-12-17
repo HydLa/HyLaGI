@@ -76,7 +76,7 @@ publicMethod[
         toReturnForm[Infinity],
         lhs = substituted[[1]];
         rhs = substituted[[2]];
-        toReturnForm[lhs - rhs]
+        toReturnForm[FullSimplify[lhs - rhs] ]
       ]
     ]
   ]
@@ -86,6 +86,6 @@ publicMethod[
 publicMethod[
   differentiateWithTime,
   exp,
-  toReturnForm[D[exp, t] ]
+  toReturnForm[FullSimplify[D[exp, t] ] ]
 ];
 
