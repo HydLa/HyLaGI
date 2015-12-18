@@ -255,7 +255,7 @@ node_sptr Parser::factor(){
   node_sptr ret;
   position_t position = lexer.get_current_position();
   std::string name;
-  // Pi | E
+  // Pi | E | Infinity
   if((ret = constant())) return ret;
   // sum_of_list
   if((ret = sum_of_list())){ return ret;}

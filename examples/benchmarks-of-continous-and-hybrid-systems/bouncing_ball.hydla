@@ -7,4 +7,4 @@ ASSERT(x' < 10.7).
 
 INIT, MODE1 << JUMP1, VELOCITY.
 
-//#hylagi -t 994/100 --fnd
+//#hylagi -t 9.94 --fnd

@@ -15,7 +15,7 @@ struct Opts {
   enum EOutputMode { None, Omit, Output, };
   std::string mathlink;
   bool debug_mode;
-  std::string max_time;
+  symbolic_expression::node_sptr max_time;
   int epsilon_mode;
   bool interval;
   bool numerize_mode;
