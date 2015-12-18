@@ -9,6 +9,7 @@
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
+#include "Parser.h"
 #include <sys/stat.h>
 #include <fstream>
 #include <regex>
@@ -163,7 +164,11 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   {
     opts.debug_mode    = true;
   }
-  IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
+  IF_SPECIFIED("time")
+  {
+    parser::Parser parser(po.get<string>("time"));
+    opts.max_time = parser.arithmetic();
+  }
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';

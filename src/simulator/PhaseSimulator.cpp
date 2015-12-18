@@ -548,11 +548,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   root_information.negative_asks = relation_graph_->get_all_asks();
   result_root->set_full_information(root_information);
 
-  if(opts_->max_time != ""){
-    max_time = node_sptr(new se::Number(opts_->max_time));
-  }else{
-    max_time = node_sptr(new se::Infinity());
-  }
+  max_time = opts_->max_time;
 
   aborting = false;
 
