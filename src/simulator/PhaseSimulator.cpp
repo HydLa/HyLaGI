@@ -837,7 +837,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         {
           // exploit derivative of guard conditions
           vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
-          assert(parameter_map_vector.size() <= 1);
+          HYDLA_ASSERT(parameter_map_vector.size() <= 1);
           parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
           itvd min_interval = calculate_zero_crossing_of_derivative(g, related_vm, pm);
           HYDLA_LOGGER_DEBUG_VAR(min_interval);
