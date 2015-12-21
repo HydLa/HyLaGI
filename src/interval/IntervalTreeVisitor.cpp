@@ -8,6 +8,8 @@ namespace hydla
 namespace interval
 {
 
+using namespace hydla::symbolic_expression;
+
 itvd IntervalTreeVisitor::pi = kv::constants<itvd>::pi();
 itvd IntervalTreeVisitor::e = kv::constants<itvd>::e();
 
@@ -115,6 +117,11 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Ne
   current_value = -current_value;
 }
 
+void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
+{
+  accept(node->get_child());
+}
+
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
@@ -148,8 +155,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nu
   }
   catch(const boost::bad_lexical_cast &e)
   {
-    HYDLA_LOGGER_DEBUG("name: ",
-                       typeid(e).name(), "\n what: ", e.what());
+    // do nothing
   }
 
   itvd itv = itvd(number_str);
@@ -388,7 +394,71 @@ void IntervalTreeVisitor::debug_print(std::string str, itvd x)
 }
 
 
-DEFINE_INVALID_NODE(symbolic_expression::UnsupportedFunction);
+DEFINE_INVALID_NODE(Variable)
+DEFINE_INVALID_NODE(Differential)
+
+DEFINE_INVALID_NODE(ConstraintDefinition)
+DEFINE_INVALID_NODE(ProgramDefinition)
+DEFINE_INVALID_NODE(ConstraintCaller)
+DEFINE_INVALID_NODE(ProgramCaller)
+DEFINE_INVALID_NODE(Constraint)
+DEFINE_INVALID_NODE(Ask)
+DEFINE_INVALID_NODE(Tell)
+
+DEFINE_INVALID_NODE(Equal)
+DEFINE_INVALID_NODE(UnEqual)
+
+DEFINE_INVALID_NODE(Less)
+DEFINE_INVALID_NODE(LessEqual)
+
+DEFINE_INVALID_NODE(Greater)
+DEFINE_INVALID_NODE(GreaterEqual)
+
+DEFINE_INVALID_NODE(LogicalAnd)
+DEFINE_INVALID_NODE(LogicalOr)
+
+DEFINE_INVALID_NODE(Weaker)
+DEFINE_INVALID_NODE(Parallel)
+
+DEFINE_INVALID_NODE(Always)
+
+DEFINE_INVALID_NODE(Previous)
+
+DEFINE_INVALID_NODE(Print)
+DEFINE_INVALID_NODE(PrintPP)
+DEFINE_INVALID_NODE(PrintIP)
+DEFINE_INVALID_NODE(Scan)
+DEFINE_INVALID_NODE(Exit)
+DEFINE_INVALID_NODE(Abort)
+DEFINE_INVALID_NODE(SVtimer)
+
+DEFINE_INVALID_NODE(Not)
+
+DEFINE_INVALID_NODE(UnsupportedFunction)
+
+DEFINE_INVALID_NODE(ImaginaryUnit)
+DEFINE_INVALID_NODE(Infinity)
+DEFINE_INVALID_NODE(True)
+DEFINE_INVALID_NODE(False)
+
+DEFINE_INVALID_NODE(ProgramList)
+DEFINE_INVALID_NODE(ConditionalProgramList)
+DEFINE_INVALID_NODE(ExpressionList)
+DEFINE_INVALID_NODE(ConditionalExpressionList)
+DEFINE_INVALID_NODE(EachElement)
+DEFINE_INVALID_NODE(DifferentVariable)
+DEFINE_INVALID_NODE(ExpressionListElement)
+DEFINE_INVALID_NODE(ExpressionListCaller)
+DEFINE_INVALID_NODE(ExpressionListDefinition)
+DEFINE_INVALID_NODE(ProgramListElement)
+DEFINE_INVALID_NODE(ProgramListCaller)
+DEFINE_INVALID_NODE(ProgramListDefinition)
+DEFINE_INVALID_NODE(Range)
+DEFINE_INVALID_NODE(Union)
+DEFINE_INVALID_NODE(Intersection)
+DEFINE_INVALID_NODE(SumOfList)
+DEFINE_INVALID_NODE(SizeOfList)
+
 
 } // namespace interval
 } // namespace hydla

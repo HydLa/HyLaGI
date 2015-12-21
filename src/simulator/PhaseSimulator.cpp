@@ -1373,7 +1373,6 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
   {
     for(auto &entry: vm_to_approximate)
     {
-      cout << entry.first.get_string() << endl;
       if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
         continue;
       itvd interval = evaluate_interval(phase, entry.second);

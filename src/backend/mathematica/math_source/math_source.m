@@ -538,6 +538,8 @@ publicMethod[
       resultList,
       onTime = True,
       necessaryPCons,
+      consList,
+      restPCons,
       parsInCons,
       maxCons,
       ret
@@ -547,8 +549,13 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    parsInCons = getParameters[tCons];
-    necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    parsInCons = Union[getParameters[tCons], getParameters[maxTime] ];
+    consList = applyList[pCons];
+    necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    restPCons = And@@Complement[consList, necessaryPCons];
+    necessaryPCons = And@@necessaryPCons;
+    simplePrint[necessaryPCons];
+    simplePrint[restPCons];
 
     Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
          onTime = False,
@@ -563,9 +570,9 @@ publicMethod[
       minT = First[minT];
       If[minT === Infinity,
         {},
-        ret = makeListFromPiecewise[minT, pCons];
+        ret = makeListFromPiecewise[minT, necessaryPCons];
+        ret = Map[({#[[1]], #[[2]] && restPCons})&, ret];
         (* 時刻が0となる場合はinfとする．*)
-
         ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
         ret = Select[ret, (#[[2]] =!= False)&];
 
