@@ -80,26 +80,7 @@ void ConsistencyChecker::send_prev_constraint(const Variable &var){
 void ConsistencyChecker::send_init_equation(Variable &var, string fmt)
 {
   fmt += "vp";
-  backend->call("addInitEquation", false, 2, fmt.c_str(), "", &var, &var);
-}
-
-bool ConsistencyChecker::check_continuity(Variable &var, variable_map_t &vm){
-  if(!vm.count(var)) return false;
-
-  backend->call("resetConstraintForVariable", false, 0, "", "");
-  send_init_equation(var, "vn");
-  send_prev_constraint(var);
-  send_range_constraint(var, vm, false);
-
-  symbolic_expression::node_sptr var_node = symbolic_expression::node_sptr(new symbolic_expression::Variable(var.get_name()));
-  for(int i=0; i<var.get_differential_count(); i++){
-    var_node = symbolic_expression::node_sptr(new symbolic_expression::Differential(var_node));
-  }
-  symbolic_expression::node_sptr prev_node = symbolic_expression::node_sptr(new symbolic_expression::Previous(var_node));
-  symbolic_expression::node_sptr eq_node = symbolic_expression::node_sptr(new symbolic_expression::Equal(var_node, prev_node));
-  CheckConsistencyResult cc_result = call_backend_check_consistency(POINT_PHASE, ConstraintStore(eq_node));
-  if(cc_result.consistent_store.consistent()) return true;
-  return false;
+  backend->call("addInitEquation", true, 2, fmt.c_str(), "", &var, &var);
 }
 
 void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType &phase, const constraint_t &constraint_for_default_continuity){
@@ -131,7 +112,7 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-      if(dm.count(entry.first))continue;;
+      if(dm.count(entry.first)) continue;
       for(int i = 0; i <= entry.second;i++){
         variable_t var(entry.first, i);
         send_init_equation(var, fmt);
@@ -177,7 +158,7 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   {
     backend->call("checkConsistencyPoint", true, 1, "csn", "cc", &tmp_cons, &ret);
     for(auto consistent : ret.consistent_store) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(consistent));
-    for(auto consistent : ret.inconsistent_store) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(consistent));
+    for(auto inconsistent : ret.inconsistent_store) HYDLA_LOGGER_DEBUG_VAR(get_infix_string(inconsistent));
   }
   else
   {
@@ -479,9 +460,10 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
-  backend->call("addConstraint", false, 1, fmt, "", &constraint_store);
+  backend->call("addConstraint", true, 1, fmt, "", &constraint_store);
   return call_backend_check_consistency(phase);
 }
+
 
 }
 

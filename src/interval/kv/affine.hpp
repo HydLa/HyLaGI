@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef AFFINE_HPP
@@ -20,8 +20,6 @@
 
 #include <kv/convert.hpp>
 
-#include <map> //added@hylagi
-#pragma GCC diagnostic ignored "-Wall" // added@hylagi
 
 /*
  * define simplicity of affine arithmetic
@@ -30,17 +28,30 @@
  *  ------------------------------------------+---+---+---
  *   add dummy epsilin on linear operation    | o | x | x
  *   add dummy epsilin on nonlinear operation | o | o | x
+ *
+ *  default: 1
  */
 
 #ifndef AFFINE_SIMPLE
 #define AFFINE_SIMPLE 1
 #endif
 
+/*
+ * select the method for multiplication
+ *
+ *  0: Stolfi's simple method (default, O(n))
+ *  1: better multiplication (give smaller extra epsilon but slow, O(n^2))
+ *  2: best multiplication (give smallest extra epsilon but slow, O(n^2))
+ */
 
-namespace ub = boost::numeric::ublas;
+#ifndef AFFINE_MULT
+#define AFFINE_MULT 0
+#endif
 
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 
 template <class T> class affine;
@@ -130,7 +141,7 @@ template <class T> class affine {
 
 	template <class C> explicit affine(const C& x, typename boost::enable_if_c< acceptable_s<C, affine>::value >::type* =0) {
 		int i;
-		interval<T> I = x;
+		interval<T> I(x);
 		maxnum()++;
 		a.resize(maxnum()+1);
 
@@ -159,7 +170,7 @@ template <class T> class affine {
 
 	template <class C> typename boost::enable_if_c< acceptable_s<C, affine>::value, affine& >::type operator=(const C& x) {
 		int i;
-		interval<T> I = interval<T>(x);
+		interval<T> I(x);
 		maxnum()++;
 		a.resize(maxnum()+1);
 
@@ -259,8 +270,9 @@ template <class T> class affine {
 		return r;
 	}
 
-	// operator+と同じだが、epsilonの追加をしない。
-	// 共通の0でないepsilonを持たない物同士を加えるときに使う。
+	// same as operator+, but do not add extra epsilon.
+	// This function can be used for adding affine variables
+	// which have no common epsilons.
 
 	friend affine append(const affine& x, const affine& y) {
 		affine r;
@@ -308,8 +320,8 @@ template <class T> class affine {
 		#endif
 
 		rop<T>::begin();
-		r.a(0) = rop<T>::add_down(x.a(0), y);
-		err = rop<T>::sub_up(rop<T>::add_up(x.a(0), y), r.a(0));
+		r.a(0) = rop<T>::add_down(x.a(0), (T)y);
+		err = rop<T>::sub_up(rop<T>::add_up(x.a(0), (T)y), r.a(0));
 		rop<T>::end();
 
 		for (i=1; i<xs; i++) {
@@ -345,8 +357,8 @@ template <class T> class affine {
 		#endif
 
 		rop<T>::begin();
-		r.a(0) = rop<T>::add_down(x, y.a(0));
-		err = rop<T>::sub_up(rop<T>::add_up(x, y.a(0)), r.a(0));
+		r.a(0) = rop<T>::add_down((T)x, y.a(0));
+		err = rop<T>::sub_up(rop<T>::add_up((T)x, y.a(0)), r.a(0));
 		rop<T>::end();
 
 		for (i=1; i<ys; i++) {
@@ -470,8 +482,8 @@ template <class T> class affine {
 		#endif
 
 		rop<T>::begin();
-		r.a(0) = rop<T>::sub_down(x.a(0), y);
-		err = rop<T>::sub_up(rop<T>::sub_up(x.a(0), y), r.a(0));
+		r.a(0) = rop<T>::sub_down(x.a(0), (T)y);
+		err = rop<T>::sub_up(rop<T>::sub_up(x.a(0), (T)y), r.a(0));
 		rop<T>::end();
 
 		for (i=1; i<xs; i++) {
@@ -507,8 +519,8 @@ template <class T> class affine {
 		#endif
 
 		rop<T>::begin();
-		r.a(0) = rop<T>::sub_down(x, y.a(0));
-		err = rop<T>::sub_up(rop<T>::sub_up(x, y.a(0)), r.a(0));
+		r.a(0) = rop<T>::sub_down((T)x, y.a(0));
+		err = rop<T>::sub_up(rop<T>::sub_up((T)x, y.a(0)), r.a(0));
 		rop<T>::end();
 
 		for (i=1; i<ys; i++) {
@@ -565,7 +577,7 @@ template <class T> class affine {
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, affine>::value, affine >::type operator*(const affine& x, const C& y) {
 		affine r;
 		int xs, i;
-		T err = 0.;
+		T err(0.);
 
 		xs = x.a.size();
 
@@ -578,10 +590,10 @@ template <class T> class affine {
 
 		rop<T>::begin();
 		for (i=0; i<xs; i++) {
-			r.a(i) = rop<T>::mul_down(x.a(i), y);
+			r.a(i) = rop<T>::mul_down(x.a(i), (T)y);
 		}
 		for (i=0; i<xs; i++) {
-			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::mul_up(x.a(i), y), r.a(i)));
+			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::mul_up(x.a(i), (T)y), r.a(i)));
 		}
 		rop<T>::end();
 
@@ -590,7 +602,7 @@ template <class T> class affine {
 		#endif
 		#if AFFINE_SIMPLE >= 1
 		rop<T>::begin();
-		r.er = rop<T>::add_up(rop<T>::mul_up(x.er, ((y >= 0.) ? y : -y)), err);
+		r.er = rop<T>::add_up(rop<T>::mul_up(x.er, (T)((y >= 0.) ? y : -y)), err);
 		rop<T>::end();
 		#else
 		r.a(maxnum()) = err;
@@ -602,7 +614,7 @@ template <class T> class affine {
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, affine>::value, affine >::type operator*(const C& x, const affine& y) {
 		affine r;
 		int ys, i;
-		T err = 0.;
+		T err(0.);
 
 		ys = y.a.size();
 
@@ -615,10 +627,10 @@ template <class T> class affine {
 
 		rop<T>::begin();
 		for (i=0; i<ys; i++) {
-			r.a(i) = rop<T>::mul_down(x, y.a(i));
+			r.a(i) = rop<T>::mul_down((T)x, y.a(i));
 		}
 		for (i=0; i<ys; i++) {
-			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::mul_up(x, y.a(i)), r.a(i)));
+			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::mul_up((T)x, y.a(i)), r.a(i)));
 		}
 		rop<T>::end();
 
@@ -627,7 +639,7 @@ template <class T> class affine {
 		#endif
 		#if AFFINE_SIMPLE >= 1
 		rop<T>::begin();
-		r.er = rop<T>::add_up(rop<T>::mul_up(y.er, ((x >= 0.) ? x : -x)), err);
+		r.er = rop<T>::add_up(rop<T>::mul_up(y.er, (T)((x >= 0.) ? x : -x)), err);
 		rop<T>::end();
 		#else
 		r.a(maxnum()) = err;
@@ -644,6 +656,104 @@ template <class T> class affine {
 		return affine(x) * y;
 	}
 
+
+	#if AFFINE_MULT >= 1
+
+	static interval<T> bestmult_error(const affine& x, const affine& y)
+	{
+		int n, i, j, s;
+		bool f1, f2;
+		ub::vector<T> vx, vy;
+		kv::interval<T> tmp, C, D, E, X, Y;
+
+		n = std::max(x.a.size(), y.a.size()) - 1;
+
+		#if AFFINE_SIMPLE >= 1
+		vx.resize(n+3);
+		vy.resize(n+3);
+		#else
+		vx.resize(n+1);
+		vy.resize(n+1);
+		#endif
+
+		for (i=0; i<x.a.size(); i++) {
+			vx(i) = x.a(i);
+		}
+		for (i=x.a.size(); i<=n; i++) {
+			vx(i) = 0.;
+		}
+		for (i=0; i<y.a.size(); i++) {
+			vy(i) = y.a(i);
+		}
+		for (i=y.a.size(); i<=n; i++) {
+			vy(i) = 0.;
+		}
+
+		#if AFFINE_SIMPLE >= 1
+		vx(n+1) = x.er;
+		vy(n+1) = 0.;
+		vx(n+2) = 0.;
+		vy(n+2) = y.er;
+		n += 2;
+		#endif
+
+		E = 0.;
+
+		#if AFFINE_MULT == 1
+		for (i=1; i<=n; i++) {
+			X = vx(i);
+			Y = vy(i);
+			E += X * Y * interval<T>(0., 1.);
+			for (j=i+1; j<=n; j++) {
+				tmp = X * vy(j) + Y * vx(j);
+				E += tmp * interval<T>(-1., 1.);
+			}
+		}
+		#else // AFFINE_MULT == 1
+
+		for (i=1; i<=n; i++) {
+			X = vx(i);
+			Y = vy(i);
+			if (X == 0. && Y == 0.) continue;
+			C = D = 0.;
+			for (j=1; j<=n; j++) {
+				if (j == i) continue;
+				if (vy(j) == 0. && vx(j) == 0.) continue;
+				tmp = X * vy(j) - Y * vx(j);
+				if (tmp.lower() >= 0.) {
+					C += vx(j);
+					D += vy(j);
+				} else if (tmp.upper() <= 0.) {
+					C -= vx(j);
+					D -= vy(j);
+				} else {
+					if ((X.upper() > 0. && vx(j) < 0.)
+					|| (X.lower() < 0. && vx(j) > 0.)) {
+						X -= vx(j);
+						Y -= vy(j);
+					} else {
+						X += vx(j);
+						Y += vy(j);
+					}
+				}
+			}
+			E = interval<T>::hull(E, X * Y + (X * D + Y * C) + C * D);
+			E = interval<T>::hull(E, X * Y - (X * D + Y * C) + C * D);
+			if (!zero_in(X * Y) ){
+				tmp = -0.5 * (X * D + Y * C) / (X * Y);
+				if (overlap(tmp, interval<T>(-1., 1.))) {
+					E = interval<T>::hull(E, X * Y * tmp * tmp + (X * D + Y * C) * tmp + C * D);
+				}
+			}
+		}
+
+		#endif // AFFINE_MULT == 1
+
+		return E;
+	}
+
+	#endif // AFFINE_MULT >= 1
+
 	friend affine operator*(const affine& x, const affine& y) {
 		affine r;
 		int i, j, xs, ys;
@@ -652,25 +762,22 @@ template <class T> class affine {
 
 		// if (&x == &y) return square(x);
 
-		#if AFFINE_SIMPLE != 2
-		maxnum()++;
-		r.a.resize(maxnum()+1);
-		#endif
-
 		xs = x.a.size();
 		ys = y.a.size();
 
 		#if AFFINE_SIMPLE != 2
+		maxnum()++;
+		r.a.resize(maxnum()+1);
+		#else
+		r.a.resize(std::max(xs, ys));
+		#endif
+
 		rop<T>::begin();
 		r.a(0) = rop<T>::mul_down(x.a(0), y.a(0));
 		err = rop<T>::sub_up(rop<T>::mul_up(x.a(0), y.a(0)), r.a(0));
 		rop<T>::end();
-		#endif
 
 		if (xs > ys) {
-			#if AFFINE_SIMPLE == 2
-			r.a.resize(xs);
-			#endif
 			rop<T>::begin();
 			for (i=1; i<ys; i++) {
 				r.a(i) = rop<T>::add_down(rop<T>::mul_down(y.a(0), x.a(i)), rop<T>::mul_down(x.a(0), y.a(i)));
@@ -691,9 +798,6 @@ template <class T> class affine {
 			}
 			#endif
 		} else {
-			#if AFFINE_SIMPLE == 2
-			r.a.resize(ys);
-			#endif
 			rop<T>::begin();
 			for (i=1; i<xs; i++) {
 				r.a(i) = rop<T>::add_down(rop<T>::mul_down(y.a(0), x.a(i)), rop<T>::mul_down(x.a(0), y.a(i)));
@@ -715,23 +819,30 @@ template <class T> class affine {
 			#endif
 		}
 
-		#if AFFINE_SIMPLE == 2
+		#if AFFINE_MULT >= 1
+
+		interval<T> E;
+		E = r.a(0) + bestmult_error(x, y);
 		rop<T>::begin();
-		r.a(0) = rop<T>::mul_down(x.a(0), y.a(0));
-		err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::mul_up(x.a(0), y.a(0)), r.a(0)));
+		r.a(0) = rop<T>::mul_up(rop<T>::add_up(E.upper(), E.lower()), 0.5);
+		err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), E.lower()));
 		rop<T>::end();
-		#endif
+
+		#else // AFFINE_MULT >= 1
 
 		tmp_l = rad(x);
 		tmp_u = rad(y);
-
 		rop<T>::begin();
-		#if AFFINE_SIMPLE >= 1
-		err = rop<T>::add_up(err, rop<T>::add_up(rop<T>::add_up(rop<T>::mul_up(tmp_l, tmp_u), rop<T>::mul_up((y.a(0) >= 0.) ? y.a(0) : -y.a(0), x.er)), rop<T>::mul_up((x.a(0) >= 0.) ? x.a(0) : -x.a(0), y.er)));
-		#else
 		err = rop<T>::add_up(err, rop<T>::mul_up(tmp_l, tmp_u));
-		#endif
 		rop<T>::end();
+
+		#endif // AFFINE_MULT >= 1
+
+		#if AFFINE_SIMPLE >= 1
+		rop<T>::begin();
+		err = rop<T>::add_up(err, rop<T>::add_up(rop<T>::mul_up((y.a(0) >= 0.) ? y.a(0) : -y.a(0), x.er), rop<T>::mul_up((x.a(0) >= 0.) ? x.a(0) : -x.a(0), y.er)));
+		rop<T>::end();
+		#endif
 
 		#if AFFINE_SIMPLE == 2
 		r.er = err;
@@ -781,7 +892,7 @@ template <class T> class affine {
 		l = I.lower();
 		u = I.upper();
 		if (l < 0. && u > 0.) {
-			throw std::range_error("affine: division by 0");
+			throw std::domain_error("affine: division by 0");
 		}
 
 		a = -1. /(l * u);
@@ -841,7 +952,7 @@ template <class T> class affine {
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, affine>::value, affine >::type operator/(const affine& x, const C& y) {
 		affine r;
 		int xs, i;
-		T err = 0.;
+		T err(0.);
 
 		xs = x.a.size();
 
@@ -854,10 +965,10 @@ template <class T> class affine {
 
 		rop<T>::begin();
 		for (i=0; i<xs; i++) {
-			r.a(i) = rop<T>::div_down(x.a(i), y);
+			r.a(i) = rop<T>::div_down(x.a(i), (T)y);
 		}
 		for (i=0; i<xs; i++) {
-			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::div_up(x.a(i), y), r.a(i)));
+			err = rop<T>::add_up(err, rop<T>::sub_up(rop<T>::div_up(x.a(i), (T)y), r.a(i)));
 		}
 		rop<T>::end();
 
@@ -867,7 +978,7 @@ template <class T> class affine {
 		#if AFFINE_SIMPLE >= 1
 		// r.er = x.er / abs(y) + err;
 		rop<T>::begin();
-		r.er = rop<T>::add_up(err, rop<T>::div_up(x.er, ((y >= 0.) ? y : -y)));
+		r.er = rop<T>::add_up(err, rop<T>::div_up(x.er, (T)((y >= 0.) ? y : -y)));
 		rop<T>::end();
 		#else
 		r.a(maxnum()) = err;
@@ -920,7 +1031,7 @@ template <class T> class affine {
 		l = I.lower();
 		u = I.upper();
 		if (l < 0.) {
-			throw std::range_error("affine: sqrt of negative value");
+			throw std::domain_error("affine: sqrt of negative value");
 
 		}
 
@@ -1115,7 +1226,7 @@ template <class T> class affine {
 		u = I.upper();
 
 		if (l <= 0.) {
-			throw std::range_error("affine: log of nagative value");
+			throw std::domain_error("affine: log of nagative value");
 		}
 
 		using std::log;
@@ -1229,6 +1340,53 @@ template <class T> class affine {
 		return r;
 	}
 
+	// lazy implementation of integer pow
+	friend affine pow(const affine& x, int y) {
+		affine r, xp;
+		int a, tmp;
+
+		if (y == 0) return affine(1.);
+
+		a = (y >= 0) ? y : -y;
+
+		tmp = a;
+		r = 1.;
+		xp = x;
+		while (tmp != 0) {
+			if (tmp % 2 != 0) {
+				r *= xp;
+			}
+			tmp /= 2;
+			xp = xp * xp;
+		}
+
+		if (y < 0) {
+			r = 1. / r;
+		}
+
+		return r;
+	}
+
+	friend affine pow(const affine& x, const affine& y) {
+		return exp(y * log(x));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, affine>::value && ! boost::is_integral<C>::value, affine >::type pow(const affine& x, const C& y) {
+		return pow(x, affine(y));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_s<C, affine>::value, affine >::type pow(const affine& x, const C& y) {
+		return pow(x, affine(y));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, affine>::value, affine >::type pow(const C& x, const affine& y) {
+		return pow(affine(x), y);
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_s<C, affine>::value, affine >::type pow(const C& x, const affine& y) {
+		return pow(affine(x), y);
+	}
+
 	// lazy implementation of sin
 	friend affine sin(const affine& x) {
 		// return sin((interval<T>)(x.a(0))) + cos(to_interval(x)) * (x - x.a(0));
@@ -1265,7 +1423,7 @@ template <class T> class affine {
 		return r + m * tmp;
 	}
 
-	// lazy implementation of tan 
+	// lazy implementation of tan
 	friend affine tan(const affine& x) {
 		// return tan((interval<T>)(x.a(0))) + pow(cos(to_interval(x)), -2) * (x - x.a(0));
 
@@ -1277,6 +1435,168 @@ template <class T> class affine {
 		tmp.a(0) = 0.;
 		r = tan((interval<T>)(x.a(0)));
 		r2 = pow(cos(to_interval(x)), -2);
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of asin
+	friend affine asin(const affine& x) {
+		// return asin((interval<T>)(x.a(0))) + (1. / sqrt(1. - pow(to_interval(x), 2))) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = asin((interval<T>)(x.a(0)));
+		r2 = 1. / sqrt(1. - pow(to_interval(x), 2));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of acos
+	friend affine acos(const affine& x) {
+		// return acos((interval<T>)(x.a(0))) + (- 1. / sqrt(1. - pow(to_interval(x), 2))) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = acos((interval<T>)(x.a(0)));
+		r2 = - 1. / sqrt(1. - pow(to_interval(x), 2));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of atan
+	friend affine atan(const affine& x) {
+		// return atan((interval<T>)(x.a(0))) + (1. / sqrt(1. + pow(to_interval(x), 2))) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = atan((interval<T>)(x.a(0)));
+		r2 = 1. / sqrt(1. + pow(to_interval(x), 2));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of sinh
+	friend affine sinh(const affine& x) {
+		// return sinh((interval<T>)(x.a(0))) + cosh(to_interval(x)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = sinh((interval<T>)(x.a(0)));
+		r2 = cosh(to_interval(x));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of cosh
+	friend affine cosh(const affine& x) {
+		// return cosh((interval<T>)(x.a(0))) + sinh(to_interval(x)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = cosh((interval<T>)(x.a(0)));
+		r2 = sinh(to_interval(x));
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of tanh
+	friend affine tanh(const affine& x) {
+		// return tanh((interval<T>)(x.a(0))) + pow(cosh(to_interval(x)), -2) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = tanh((interval<T>)(x.a(0)));
+		r2 = pow(cosh(to_interval(x)), -2);
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of asinh
+	friend affine asinh(const affine& x) {
+		// return asinh((interval<T>)(x.a(0))) + (1 / sqrt(pow(to_interval(x), 2) + 1)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = asinh((interval<T>)(x.a(0)));
+		r2 = 1 / sqrt(pow(to_interval(x), 2) + 1);
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of acosh
+	friend affine acosh(const affine& x) {
+		// return acosh((interval<T>)(x.a(0))) + (1 / sqrt(pow(to_interval(x), 2) - 1)) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = acosh((interval<T>)(x.a(0)));
+		r2 = 1 / sqrt(pow(to_interval(x), 2) - 1);
+		m = mid(r2);
+		r += (r2 - m) * to_interval(tmp);
+		
+		return r + m * tmp;
+	}
+
+	// lazy implementation of atanh
+	friend affine atanh(const affine& x) {
+		// return atanh((interval<T>)(x.a(0))) + (1 / (1 - pow(to_interval(x), 2))) * (x - x.a(0));
+
+		affine tmp;
+		interval<T> r, r2;
+		T m;
+
+		tmp = x;
+		tmp.a(0) = 0.;
+		r = atanh((interval<T>)(x.a(0)));
+		r2 = 1 / (1 - pow(to_interval(x), 2));
 		m = mid(r2);
 		r += (r2 - m) * to_interval(tmp);
 		
@@ -1343,22 +1663,29 @@ template <class T> inline ub::vector< interval<T> > to_interval(const ub::vector
 	return r;
 }
 
-// epsilonの最大数をnに圧縮する。
-// n-s個の「意味のある」epsilonを残し、残りをs次元超直方体にまとめてしまう。
 
-// 縦ベクトルとその「重要度」を格納するクラス。
+/*
+ * epsilon_reduce(x, n, n_limit)
+ *  x: vector of affine (overwrited)
+ *  reduce the number of epsilons to n if the number of epsilons > n_limit.
+ *  
+ *  s: size of x
+ *  keep n-s "important" epsilons and convert other "non-important" epsilons
+ *  to s-dimensional rectangular.
+ */
+
+
+// a class to store column vector and its "importance"
+
 template <class T> class ep_reduce_v {
 	public:
 	ub::vector<T> v;
 	T score;
-  int index; // added@hylagi to identify intervalized dummy variables
 	void calc_score() {
 		int s = v.size();
 		int i, j;
-
 		T m1, m2, tmp;
 		using std::abs;
-    if (s<2){score = abs(v(0)); return;} // added@hylagi
 		m1 = abs(v(0));
 		m2 = abs(v(1));
 		if (m2 > m1) {
@@ -1377,6 +1704,9 @@ template <class T> class ep_reduce_v {
 	}
 };
 
+
+// function to sort column vector by score
+
 template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* b) {
 #ifdef EP_REDUCE_REVERSE
 	return a->score < b->score;
@@ -1385,8 +1715,7 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
 #endif
 }
 
-//template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
-template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // modified@hylagi
+template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
 	int s = x.size();
 	int m = affine<T>::maxnum();
 	int i, j;
@@ -1394,24 +1723,17 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 	std::vector< ep_reduce_v<T>* > pa;
 	ub::vector< affine<T> > r;
 	T tmp;
-  std::map<int, int> result_map; // added@hylagi
 
 	if (n_limit < n) n_limit = n;
 
-//	if (m <= n_limit) return;
-//	if (n < s) return; // impossible
-  // modified@hylagi
-	if (m <= n_limit) return result_map; 
-	if (n < s) return result_map; // impossible
-
+	if (m <= n_limit) return;
+	if (n < s) return; // impossible
 
 	a.resize(m);
 	pa.resize(m);
 
 	for (i=1; i<=m; i++) {
 		a[i-1].v.resize(s);
-    a[i-1].index = i;// added@hylagi
-    result_map.insert(std::make_pair(i, -1)); // added@hylagi
 		for (j=0; j<s; j++) {
 			a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;
 		}
@@ -1432,10 +1754,8 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 		for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
 			r(i).a(j+1) = pa[m-1-j]->v(i);
-      result_map[pa[m-1-j]->index] = j+1; // added@hylagi
 #else
 			r(i).a(j+1) = pa[j]->v(i);
-      result_map[pa[j]->index] = j+1; // added@hylagi
 #endif
 		}
 		tmp = 0.;
@@ -1463,7 +1783,6 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 	x = r;
 	affine<T>::maxnum() = n;
-  return result_map; //added@hylagi
 }
 
 

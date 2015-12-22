@@ -89,12 +89,14 @@ struct FullInformation
   asks_t                       positive_asks, negative_asks;
 };
 
-
 struct FindMinTimeCandidate
 {
   value_t         time;
   bool            on_time;
   ConstraintStore parameter_constraint;
+  ValueRange     range_by_newton;
+  constraint_t   guard_by_newton;
+  std::map<constraint_t, constraint_t>  other_guards_to_time_condition;
 };
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
@@ -119,7 +121,7 @@ typedef std::map<constraint_t, constraint_t>      guard_time_map_t;
 /// map from variables to candidates of next PP whose time is minimum
 typedef std::map<ask_t, find_min_time_result_t>   next_pp_candidate_map_t;
 
-typedef std::map<std::string, unsigned long int>  profile_t;
+typedef std::map<std::string, double>  profile_t;
 
 /**
  * A class to express the result of each phase.
@@ -160,6 +162,7 @@ public:
 
   // trigger conditions
   std::map<ask_t, bool>        discrete_asks;
+  std::set<constraint_t>        discrete_guards;
   
   profile_t                    profile;
 

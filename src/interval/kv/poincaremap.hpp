@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef POINCAREMAP_HPP
@@ -7,9 +7,10 @@
 
 #include <kv/strobomap.hpp>
 
-namespace ub = boost::numeric::ublas;
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 template <class F1, class F2, class T> class PoincareMap {
 	public:
@@ -18,8 +19,8 @@ template <class F1, class F2, class T> class PoincareMap {
 	interval<T> start;
 	ode_param<T> p;
 
-	PoincareMap(F1 f1_v, F2 f2_v, interval<T> start_v, ode_param<T> p_v = ode_param<T>())
-	: f1(f1_v), f2(f2_v), start(start_v), p(p_v) {}
+	PoincareMap(F1 f1, F2 f2, interval<T> start, ode_param<T> p = ode_param<T>())
+	: f1(f1), f2(f2), start(start), p(p) {}
 
 	ub::vector<T> operator() (const ub::vector<T>& x) {
 		int s = x.size();
@@ -60,11 +61,8 @@ template <class F1, class F2, class T> class PoincareMap {
 		y = st(x2);
 
 		/*
-		  解の終了時刻tに関する微分が出来ないので、後付けしている。
-		  dx/dt = f(x,t)なので、解をtで微分したものは方程式の
-		  右辺に解と終了時刻を代入すると得られる。
-		  pをそれに関して微分している変数とすると、
-		  dx/dp = (dx/dt) * (dt/dp)
+		  adding "derivative of solution w.r.t. end time" afterwards
+		  using dx/dt = f(x,t) and dx/dp = (dx/dt) * (dt/dp)
 		*/
 		for (i=0; i<s-1; i++) y2(i) = y(i).v;
 		dxdt = f1(y2, mid(t));
@@ -118,11 +116,8 @@ template <class F1, class F2, class T> class PoincareMap {
 		y = st(x2);
 
 		/*
-		  解の終了時刻tに関する微分が出来ないので、後付けしている。
-		  dx/dt = f(x,t)なので、解をtで微分したものは方程式の
-		  右辺に解と終了時刻を代入すると得られる。
-		  pをそれに関して微分している変数とすると、
-		  dx/dp = (dx/dt) * (dt/dp)
+		  adding "derivative of solution w.r.t. end time" afterwards
+		  using dx/dt = f(x,t) and dx/dp = (dx/dt) * (dt/dp)
 		*/
 		for (i=0; i<s-1; i++) y2(i) = y(i).v;
 		dxdt = f1(y2, t);

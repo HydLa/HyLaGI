@@ -12,6 +12,7 @@ using namespace symbolic_expression;
 
 /**
  * constant := "Pi"
+ *           | "Infinity"
  *           | "E"
  */
 node_sptr Parser::constant(){
@@ -19,6 +20,7 @@ node_sptr Parser::constant(){
   if(lexer.get_token() == UPPER_IDENTIFIER){
     std::string str = lexer.get_current_token_string();
     if(str == "Pi") return boost::shared_ptr<Pi>(new Pi());
+    if(str == "Infinity") return boost::shared_ptr<Infinity>(new Infinity());
     if(str == "E") return boost::shared_ptr<E>(new E());
   }
   lexer.set_current_position(position);

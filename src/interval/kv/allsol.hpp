@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef ALLSOL_HPP
@@ -20,9 +20,6 @@
 // #include <boost/random.hpp>
 #include <kv/matrix-inversion.hpp>
 #include <kv/autodif.hpp>
-
-namespace bn = boost::numeric;
-namespace ub = boost::numeric::ublas;
 
 
 #ifndef EDGE_RATIO
@@ -65,10 +62,36 @@ namespace ub = boost::numeric::ublas;
 #define USE_SUPERLINEAR 1
 #endif
 
+#ifndef UNIFY_REST
+#define UNIFY_REST 1
+#endif
+
+#ifndef EXISTENCE_RATIO
+#define EXISTENCE_RATIO 0.8
+#endif
+
+#ifndef ITER_STOP_RATIO
+#define ITER_STOP_RATIO 0.9
+#endif
+
+#ifndef ENABLE_INFINITY
+#define ENABLE_INFINITY 1
+#endif
+
+#ifndef WEIGHTED_MAX
+#define WEIGHTED_MAX 1
+#endif
+
+
+
 namespace kv {
 
+namespace bn = boost::numeric;
+namespace ub = boost::numeric::ublas;
 
-// 最大幅の成分を与える
+namespace allsol_sub {
+
+// return index of I_i which has maximum width
 
 template <class T> int search_maxwidth (const ub::vector< interval<T> >& I) {
 	int s = I.size();
@@ -77,7 +100,11 @@ template <class T> int search_maxwidth (const ub::vector< interval<T> >& I) {
 
 	m = 0.;
 	for (i=0; i<s; i++) {
+#if WEIGHTED_MAX == 1
+		tmp = width(I(i)) / (1. + mag(I(i)) / (std::numeric_limits<T>::max)() * mag(I(i)));
+#else
 		tmp = width(I(i));
+#endif
 		if (tmp > m) {
 			m = tmp; mi = i;
 		}
@@ -86,7 +113,7 @@ template <class T> int search_maxwidth (const ub::vector< interval<T> >& I) {
 	return mi;
 }
 
-// 区間ベクトルの幅の比を成分毎に計算し、その最大値
+// return max width(I_i) / width(J_i)
 
 template <class T> T widthratio_max (const ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J) {
 	int s = I.size();
@@ -103,7 +130,7 @@ template <class T> T widthratio_max (const ub::vector< interval<T> >& I, const u
 	return r;
 }
 
-// 区間ベクトルの幅の比を成分毎に計算し、その最小値
+// return min width(I_i) / width(J_i)
 
 template <class T> T widthratio_min (const ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J) {
 	int s = I.size();
@@ -120,9 +147,10 @@ template <class T> T widthratio_min (const ub::vector< interval<T> >& I, const u
 	return r;
 }
 
-// Jが元、Iが縮小後として、成分毎に、縮小比が小さすぎる(ratio以下)な
-// 成分があったら、ratioの比になるようにIを膨らませる。
-// 膨らませるときは、Jの外にははみ出ないようにする。
+// J: original interval, I: shrinked interval
+// If width(I(i)) < ratio * width(J(i)) then inflate I(i)
+//  until width(I(i)) = ratio * width(J(i))
+// Inflation outside J(i) is "not allowed".
 
 template <class T> void recovery_inflation (ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J, T ratio) {
 	int s = I.size();
@@ -142,13 +170,16 @@ template <class T> void recovery_inflation (ub::vector< interval<T> >& I, const 
 				l -= (u - J(i).upper());
 				u = J(i).upper();
 			}
-			// 数学的厳密性のため念のため
+			// to be sure that new I(i) includes original I(i)
 			I(i) = interval<T>::hull(I(i), interval<T>(l, u));
 		}
 	}
 }
 
-// はみ出ても良いversion
+// J: original interval, I: shrinked interval
+// If width(I(i)) < ratio * width(J(i)) then inflate I(i)
+//  until width(I(i)) = ratio * width(J(i))
+// Inflation outside J(i) is "allowed".
 
 template <class T> void recovery_inflation2 (ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J, T ratio) {
 	int s = I.size();
@@ -161,83 +192,31 @@ template <class T> void recovery_inflation2 (ub::vector< interval<T> >& I, const
 			tmp2 = rad(J(i)) * ratio;
 			l = tmp - tmp2;
 			u = tmp + tmp2;
-			// 数学的厳密性のため念のため
+			// to be sure that new I(i) includes original I(i)
 			I(i) = interval<T>::hull(I(i), interval<T>(l, u));
 		}
 	}
 }
 
-#if 0
-// 渡されたJより比率が悪くなるのを禁止するversion
-// rateに意味は無い。
-template <class T> void recovery_inflation (ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J, T rate) {
-	int s = I.size();
+#if UNIFY_REST == 1
+// convex hull of interval vector
+template <class T> ub::vector< interval<T> > iv_hull (const ub::vector< interval<T> >& x, const ub::vector< interval<T> >& y) {
 	int i;
-	T tmp, tmp2, l, u, m, limit;
+	int s = x.size();
+	ub::vector< interval<T> > r;
 
-	u = 0.;
-	l = std::numeric_limits<T>::max();
-	m = 0.;
+	r.resize(s);
 	for (i=0; i<s; i++) {
-		tmp = width(J(i));
-		if (tmp > u) u = tmp;
-		if (tmp < l) l = tmp;
-		tmp = width(I(i));
-		if (tmp > m) m = tmp;
+		r(i) = interval<T>::hull(x(i), y(i));
 	}
-	limit = m / u * l;
 
-	for (i=0; i<s; i++) {
-		if ( width(I(i)) < limit ) {
-			tmp = mid(I(i));
-			tmp2 = limit / 2.;
-			l = tmp - tmp2;
-			u = tmp + tmp2;
-			if (l < J(i).lower()) {
-				u += (J(i).lower() - l);
-				l = J(i).lower();
-			} else if (u > J(i).upper()) {
-				l -= (u - J(i).upper());
-				u = J(i).upper();
-			}
-			// 数学的厳密性のため念のため
-			I(i) = interval<T>::hull(I(i), interval<T>(l, u));
-		}
-	}
+	return r;
 }
+#endif // UNIFY_REST == 1
 
-template <class T> void recovery_inflation2 (ub::vector< interval<T> >& I, const ub::vector< interval<T> >& J, T rate) {
-	int s = I.size();
-	int i;
-	T tmp, tmp2, l, u, m, limit;
-
-	u = 0.;
-	l = std::numeric_limits<T>::max();
-	m = 0.;
-	for (i=0; i<s; i++) {
-		tmp = width(J(i));
-		if (tmp > u) u = tmp;
-		if (tmp < l) l = tmp;
-		tmp = width(I(i));
-		if (tmp > m) m = tmp;
-	}
-	limit = m / u * l;
-
-	for (i=0; i<s; i++) {
-		if ( width(I(i)) < limit ) {
-			tmp = mid(I(i));
-			tmp2 = limit / 2.;
-			l = tmp - tmp2;
-			u = tmp + tmp2;
-			// 数学的厳密性のため念のため
-			I(i) = interval<T>::hull(I(i), interval<T>(l, u));
-		}
-	}
-}
-#endif
-
-// 分割後のIの半径をscaled normとしたとき、
-// Mのノルムが最も小さく見えるような分割方向を返す。
+// **not used**
+// return index of division such that norm of M seems to be smallest
+// under the scaled norm u = rad(I:divided)
 
 template <class T> int search_optimal_divide (const ub::matrix< interval<T> >& M, const ub::vector< interval<T> >& I) {
 	int n = I.size();
@@ -277,7 +256,9 @@ template <class T> int search_optimal_divide (const ub::matrix< interval<T> >& M
 	return mp;
 }
 
-// K(I)とIの幅を比べて相対的に最もKが小さいような成分を返す。
+// **not used**
+// return index such that width(K(i)) is relatively smallest
+// compared with width(I(i))
 
 template <class T> int search_optimal_divide2 (const ub::vector< interval<T> >& K, const ub::vector< interval<T> >& I) {
 	int n = I.size();
@@ -296,29 +277,159 @@ template <class T> int search_optimal_divide2 (const ub::vector< interval<T> >& 
 	return r;
 }
 
+#if ENABLE_INFINITY == 1
 
-// 全解探索 中身はallsol_list
+template <class T> T mid_infinity (const interval<T>& I) {
+	if (I.upper() == std::numeric_limits<T>::infinity()) {
+		if (I.lower() == -std::numeric_limits<T>::infinity()) {
+			return T(0.);
+		} else {
+			return mid(interval<T>((std::numeric_limits<T>::max)(), I.lower()));
+			#if 0
+			if (I.lower() < 0.) {
+				return T(0.);
+			} else if (I.lower() == 0.) {
+				return T(1.);
+			} else {
+				using std::sqrt;
+				return sqrt((std::numeric_limits<T>::max)()) * sqrt(I.lower());
+			}
+			#endif
+		}
+	} else {
+		if (I.lower() == -std::numeric_limits<T>::infinity()) {
+			return mid(interval<T>(-(std::numeric_limits<T>::max)(), I.upper()));
+			#if 0
+			if (I.upper() > 0.) {
+				return T(0.);
+			} else if (I.upper() == 0.) {
+				return T(-1.);
+			} else {
+				using std::sqrt;
+				return -sqrt((std::numeric_limits<T>::max)()) * sqrt(-I.upper());
+			}
+			#endif
+		} else {
+			return mid(I);
+		}
+	}
+}
+
+template <class T> ub::vector<T> mid_infinity (const ub::vector< interval<T> >& I) {
+	int n = I.size();
+	int i;
+	ub::vector<T> r(n);
+
+	for (i=0; i<n; i++) {
+		r(i) = mid_infinity(I(i));
+	}
+
+	return r;
+}
+
+template <class T> bool include_infinity (const interval<T>& I) {
+	if (I.lower() == -std::numeric_limits<T>::infinity() || I.upper() == std::numeric_limits<T>::infinity()) return true;
+	return false;
+}
+
+template <class T> bool include_infinity (const ub::vector< interval<T> >& I) {
+	int n = I.size();
+	int i;
+	ub::vector<T> r(n);
+
+	for (i=0; i<n; i++) {
+		if (include_infinity(I(i))) return true;
+	}
+
+	return false;
+}
+
+template <class T> int search_maxwidth_infinity (const ub::vector< interval<T> >& I) {
+	int s = I.size();
+	int i, mi, r, tr;
+	T m, tmp, tmp2;
+
+	m = 0.;
+	r = 0.;
+	for (i=0; i<s; i++) {
+		if (I(i).lower() == -std::numeric_limits<T>::infinity()) {
+			if (I(i).upper() == std::numeric_limits<T>::infinity()) {
+				return i;
+			} else {
+				tr = 1;
+				tmp = I(i).upper();
+			}
+		} else {
+			if (I(i).upper() == std::numeric_limits<T>::infinity()) {
+				tr = 1;
+				tmp = -I(i).lower();
+			} else {
+				tr = 0;
+#if WEIGHTED_MAX == 1
+				tmp = width(I(i)) / (1. + mag(I(i)) / (std::numeric_limits<T>::max)() * mag(I(i)));
+#else
+				tmp = width(I(i));
+#endif
+			}
+		}
+		if (tr > r || (tr == r &&  tmp > m)) {
+			r = tr; m = tmp; mi = i;
+		}
+	}
+
+	return mi;
+}
+
+template <class T> int search_maxwidth_finite (const ub::vector< interval<T> >& I) {
+	int s = I.size();
+	int i, mi;
+	T m, tmp, tmp2;
+
+	mi = -1;
+	m = 0.;
+	for (i=0; i<s; i++) {
+		if (include_infinity(I(i))) continue;
+#if WEIGHTED_MAX == 1
+		tmp = width(I(i)) / (1. + mag(I(i)) / (std::numeric_limits<T>::max)() * mag(I(i)));
+#else
+		tmp = width(I(i));
+#endif
+		if (tmp > m) {
+			m = tmp; mi = i;
+		}
+	}
+
+	return mi;
+}
+
+#endif // ENABLE_INFINITY
+
+} // namespace allsol_sub
+
+
+// find all solution of f in I
 
 template <class T, class F> std::list< ub::vector< interval<T> > >
-allsol (const ub::vector< interval<T> >& init,
+allsol (
 F f,
+const ub::vector< interval<T> >& I,
 int verbose=1,
 T giveup = T(0.),
 std::list< ub::vector < interval<T> > >* rest=NULL
 )
 {
 	std::list< ub::vector < interval<T> > > targets;
-	targets.push_back(init);
-	return allsol_list(targets, f, verbose, giveup, rest);
+	targets.push_back(I);
+	return allsol_list(f, targets, verbose, giveup, rest);
 }
 
 
-// 初期区間をリストで複数与えるallsol
+// find all solution of f in targets (list of intervals)
 
 template <class T, class F> std::list< ub::vector< interval<T> > >
 allsol_list (
-std::list< ub::vector< interval<T> > > targets,
 F f,
+std::list< ub::vector< interval<T> > > targets,
 int verbose=1,
 T giveup = T(0.),
 std::list< ub::vector < interval<T> > >* rest=NULL
@@ -343,6 +454,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 	typename std::list< ub::vector< interval<T> > >::iterator p, p2;
 	int i, j, k, mi;
 	T tmp, tmp2;
+	T wmax;
 	bool r, M_calculated, flag, flag2, flag3;
 	interval<T> A, B, J, J2, Itmp;
 
@@ -386,7 +498,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 
 		Iorg = I;
 
-		// 以下、非存在テスト
+		// non-existence test
 
 		#pragma omp atomic
 		count_ne_test++;
@@ -395,7 +507,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		try {
 			fi = f(I);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 
@@ -413,7 +525,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		try {
 			autodif< interval<T> >::split(f(autodif< interval<T> >::init(I)), fi, fdi);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 
@@ -429,11 +541,15 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 #endif
 
+#if ENABLE_INFINITY == 1
+		C = allsol_sub::mid_infinity(I);
+#else
 		C = mid(I);
+#endif
 		try {
 			fc = f(C);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 
@@ -448,19 +564,35 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			continue;
 		}
 
-#if USE_TRIM == 1
-		// 区間縮小
-		IR = I;
-		flag = false; // 解の非存在が言えたか
-		flag2 = false; // Iの削減が発生したか
-#if USE_ZERODIVIDE == 2
-		flag3 = false; // Iの分割が発生したか
+#if ENABLE_INFINITY == 1
+		if (allsol_sub::include_infinity(I)) goto label;
 #endif
+
+#if USE_TRIM == 1
+		// interval shrinking
+		IR = I;
+		flag = false; // non-existence in I turns out or not
+		flag2 = false; // shrinking of I occurs or not
+#if USE_ZERODIVIDE == 2
+		flag3 = false; // division of I occurs or not
+#endif
+
+		// maximum width for using TRIM
+		wmax = 0.;
+		for (i=0; i<s; i++) {
+			tmp = width(I(i));
+			if (tmp > wmax) wmax = tmp;
+		}
+		wmax *= RECOVER_RATIO;
+
 		for (i=0; i<s; i++) {
 			for (j=0; j<s; j++) {
+				// do not use TRIM for narrow component
+				if (width(I(j)) < wmax) continue;
+
 				B = fdi(i, j);
 
-				// Aをmvfから逆算して計算
+				// calculate back A from mvf
 				A = mvf(i);
 				Itmp = B * (I(j)-C(j));
 				rop<T>::begin();
@@ -469,7 +601,8 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 				rop<T>::end();
 				A.assign(tmp, tmp2);
 #if 0
-				// Aを真面目に計算すると遅い。
+				// calculate A simply
+				// below is simple but slow
 				A = 0.;
 				for (k=0; k<s; k++) {
 					if (k == j) continue;
@@ -488,13 +621,13 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 						if (overlap(IR(j), J2)) {
 #if USE_ZERODIVIDE == 2
 							if (overlap(J, J2)) continue;
-							// 区間分割
+							// interval division
 							I1 = IR;
 							I2 = IR;
 							I1(j) = intersect(IR(j), J);
 							I2(j) = intersect(IR(j), J2);
-							recovery_inflation(I1, Iorg, (T)RECOVER_RATIO);
-							recovery_inflation(I2, Iorg, (T)RECOVER_RATIO);
+							allsol_sub::recovery_inflation(I1, Iorg, (T)RECOVER_RATIO);
+							allsol_sub::recovery_inflation(I2, Iorg, (T)RECOVER_RATIO);
 							#pragma omp critical (targets)
 							{
 							targets.push_back(I1);
@@ -546,11 +679,11 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		} // loop i
 
 #if USE_ZERODIVIDE == 2
-		// 区間縮小で区間分割が発生
+		// interval division occurs
 		if (flag3 == true) continue;
 #endif
 
-		// 区間縮小で非存在が判明
+		// non-existence in I turns out
 		if (flag == true) {
 			#pragma omp atomic
 			count_ne++;
@@ -562,11 +695,13 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 
 		if (flag2 == true) {
-			recovery_inflation(IR, Iorg, (T)RECOVER_RATIO);
+			allsol_sub::recovery_inflation(IR, Iorg, (T)RECOVER_RATIO);
 #if USE_MULTITRIM == 1
-			// 区間縮小が「分割予定成分」に関して半分以下なら
-			// 存在チェックをせずに再度区間縮小する。
-			mi = search_maxwidth(I);
+			// if radius of I is smaller than half on the 
+			// "division scheduled" index by interval shrinking,
+			// skip the existence test and do interval
+			// shrinking again.
+			mi = allsol_sub::search_maxwidth(I);
 			if (rad(IR(mi)) <= 0.5 * rad(I(mi))) {
 				#pragma omp critical (targets)
 				{
@@ -576,18 +711,18 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			}
 #endif
 
-			// Iを更新し、Cとf(C)も更新してしまう。
-			// f'(I)はコストが高いと思われるので更新せず。
+			// renew I, C and f(C)
+			// do not renew f'(I) because of calculation cost
 			I = IR;
 			C = mid(I);
 			try {
 				fc = f(C);
 			}
-			catch (std::range_error& e) {
+			catch (std::domain_error& e) {
 				goto label;
 			}
 
-			// 一応mvfをもう一度
+			// re-check mvf
 			mvf = fc + prod(fdi, I - C);
 			if (!zero_in(mvf)) {
 				#pragma omp atomic
@@ -621,18 +756,18 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 #endif
 
-		// 以下、存在テスト
+		// existence test
 
 		M_calculated = false;
 
-		// migを用いて存在テストをスキップ
+		// skip existence test using mig
 #if USE_MIGSKIP >= 1
 #if USE_MIGSKIP == 1
-		// Inflationが行われなくなるのを防ぐためにやや条件を緩く
-		// interval<T> が無いと場合によってはcompile error
+		// use "loose" condition
+		// interval<T> is for avoiding compile error
 		mvf = fc + prod(mig(fdi), interval<T>(1. + EDGE_RATIO) * (I - C));
 #else
-		// 手加減無し
+		// use "strict" condition
 		mvf = fc + prod(mig(fdi), I - C);
 #endif
 		if (!zero_in(mvf)) goto label;
@@ -641,13 +776,15 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		L = mid(fdi);
 
 #if 0
-		// migと同等?
+		// **not used**
+		// below is same as mig?
 		I1 = - fc + prod(L-fdi, I-C);
 		I2 = prod(L, I-C);
 		if (!subset(I1, I2)) goto label;
 #endif
 
 #if 0
+		// **not used**
 		// prod(mag(L) - mag(L - fdi), rad(I));
 		L2 = L - fdi;
 		v = prod(mag(L) - mag(L2), rad(I));
@@ -680,8 +817,8 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 
 #if 0
-		// 実験したところ、上の!overlap(K, I)と 
-		// 全く同じ条件なので意味無し。
+		// **not used**
+		// same condition as above !overlap(K, I)
 		I1 = Rfc + prod(Rfdi, I - C);
 		if (!zero_in(I1)) {
 			count_ne++;
@@ -689,10 +826,10 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 #endif
 
-		if (proper_subset(K, I)) {
+		if (proper_subset(K, I) && allsol_sub::widthratio_max(K, I) < EXISTENCE_RATIO ) {
 			#pragma omp critical (solutions)
 			{
-			// 以下、既に見付かっている解との重複チェック
+			// check whether the solution is already found or not
 			flag = true;
 			p = solutions.begin();
 			p2 = solutions_big.begin();
@@ -726,7 +863,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 				p++;
 				p2++;
 			}
-			if (flag) { // 新しい解が見付かった
+			if (flag) { // new solution found
 				if (verbose >= 1) {
 					#pragma omp critical (cout)
 					{
@@ -734,7 +871,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 					}
 				}
 				solutions_big.push_back(I);
-				// 反復改良
+				// iterative refinement
 				while (1) {
 					C = mid(K);
 					#if USE_SUPERLINEAR == 1
@@ -745,9 +882,9 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 					#endif
 					I1 = C - prod(R, f(C)) + prod(M, K - C);
 					I1 = intersect(K, I1);
-					tmp = widthratio_min(I1, K);
+					tmp = allsol_sub::widthratio_min(I1, K);
 					K = I1;
-					if (tmp > 0.9) break;
+					if (tmp > ITER_STOP_RATIO) break;
 				}
 				solutions.push_back(K);
 				count_ex++;
@@ -766,10 +903,15 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			continue;
 		}
 
-		// 解が境界またはその近くに有るかも知れないケース
-		// Kをそのまま次回のテスト区間に使う。
-		if (widthratio_max(K, I) < EDGE_RATIO) {
-			recovery_inflation2(K, Iorg, (T)RECOVER_RATIO);
+		// check the case that solution may exist near boundary.
+		// If so, use K as next interval
+#if ENABLE_INFINITY == 1
+		if (!allsol_sub::include_infinity(I) && allsol_sub::widthratio_max(K, I) < EDGE_RATIO)
+#else
+		if (allsol_sub::widthratio_max(K, I) < EDGE_RATIO)
+#endif
+		{
+			allsol_sub::recovery_inflation2(K, Iorg, (T)RECOVER_RATIO);
 			#pragma omp critical (targets)
 			{
 			targets.push_back(K);
@@ -779,19 +921,24 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 
 
 		I = intersect(I, K);
-		recovery_inflation(I, Iorg, (T)RECOVER_RATIO);
+		allsol_sub::recovery_inflation(I, Iorg, (T)RECOVER_RATIO);
 
 		label:
 
-		// どの成分で分割するか選択
+		// divide interval
 
 		// if (M_calculated) mi = search_optimal_divide(M, I);
 		// if (M_calculated) mi = search_optimal_divide2(K, I);
-		// else mi = search_maxwidth(I);
+		// else mi = allsol_sub::search_maxwidth(I);
 		// mi = rand();
 
 #if USE_SLOWDIVIDE == 1
-		if (widthratio_max(I, Iorg) <= 0.5) {
+#if ENABLE_INFINITY == 1
+		if (!allsol_sub::include_infinity(I) && allsol_sub::widthratio_max(I, Iorg) <= 0.5)
+#else
+		if (allsol_sub::widthratio_max(I, Iorg) <= 0.5)
+#endif
+		{
 			#pragma omp critical (targets)
 			{
 			targets.push_back(I);
@@ -801,10 +948,12 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 #endif
 
 #ifdef USE_SLOWDIVIDE_OLD
-		// 区間縮小が「分割予定成分」に関して半分以下なら
-		// 分割しない。そうでなければ普通に分割。
+		
+		// if radius of I is smaller than half on the 
+		// "division scheduled" index by interval shrinking,
+		// skip division.
 
-		mi = search_maxwidth(Iorg);
+		mi = allsol_sub::search_maxwidth(Iorg);
 		if (rad(I(mi)) <= 0.5 * rad(Iorg(mi))) {
 			#pragma omp critical (targets)
 			{
@@ -813,10 +962,18 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			continue;
 		}
 #else
-		mi = search_maxwidth(I);
+#if ENABLE_INFINITY == 1
+		mi = allsol_sub::search_maxwidth_infinity(I);
+#else
+		mi = allsol_sub::search_maxwidth(I);
+#endif
 #endif
 
+#if ENABLE_INFINITY == 1
+		tmp = allsol_sub::mid_infinity(I(mi));
+#else
 		tmp = mid(I(mi));
+#endif
 		if (width(I(mi)) < giveup || tmp == I(mi).lower() || tmp == I(mi).upper()) {
 			if (verbose >= 2) {
 				std::cout << "too small interval (may be multiple root?):\n" << I << "\n";
@@ -824,7 +981,28 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			if (rest != NULL) {
 				#pragma omp critical (rest)
 				{
+				#if UNIFY_REST == 1
+				I1 = I;
+				while (true) {
+					flag = false;
+					p = (*rest).begin();
+					while (p != (*rest).end()) {
+						if (overlap(*p, I1)) {
+							I1 = allsol_sub::iv_hull(I1, *p);
+							p = (*rest).erase(p);
+							// #pragma omp atomic
+							// count_giveup--;
+							flag = true;
+							continue;
+						}
+						p++;
+					}
+					if (flag == false) break;
+				}
+				(*rest).push_back(I1);
+				#else // UNIFY_REST == 1
 				(*rest).push_back(I);
+				#endif // UNIFY_REST == 1
 				}
 			}
 			#pragma omp atomic
@@ -839,6 +1017,38 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		I1 = I; I2 = I;
 		I1(mi).assign(I1(mi).lower(), tmp);
 		I2(mi).assign(tmp, I2(mi).upper());
+#if ENABLE_INFINITY == 1
+		ub::vector< interval<T> > I3;
+		int mi2;
+		if (allsol_sub::include_infinity(I1(mi))) {
+			mi2 = allsol_sub::search_maxwidth_finite(I1);
+			if (mi2 != -1) {
+				I3 = I1;
+				tmp = mid(I1(mi2));
+				I1(mi2).assign(I1(mi2).lower(), tmp);
+				I3(mi2).assign(tmp, I3(mi2).upper());
+				#pragma omp critical (targets)
+				{
+				targets.push_back(I3);
+				count_unknown += 1;
+				}
+			}
+		}
+		if (allsol_sub::include_infinity(I2(mi))) {
+			mi2 = allsol_sub::search_maxwidth_finite(I2);
+			if (mi2 != -1) {
+				I3 = I2;
+				tmp = mid(I2(mi2));
+				I2(mi2).assign(I2(mi2).lower(), tmp);
+				I3(mi2).assign(tmp, I3(mi2).upper());
+				#pragma omp critical (targets)
+				{
+				targets.push_back(I3);
+				count_unknown += 1;
+				}
+			}
+		}
+#endif
 		#pragma omp critical (targets)
 		{
 		targets.push_back(I1);

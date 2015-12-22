@@ -73,9 +73,8 @@ void ProgramOptions::init_descriptions()
      "name of mathematica command")
 
     ("time,t",
-     value<std::string>()->default_value(""),
-     "time limit of the model\n"
-     "  empty: infinity")
+     value<std::string>()->default_value("Infinity"),
+     "time limit of the model")
 
     ("phase,p",
      value<int>()->default_value(-1),
@@ -109,16 +108,20 @@ void ProgramOptions::init_descriptions()
     ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
     ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
-     "current canidates: DSolve::bvnul, Reduce::ztest1\n"
+     "current canidates: DSolve::bvnul, Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
      "Note: Warnings from HyLaGI itself are always activated"
       )
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
+    ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
+
+    ("approximation_step", value<int>()->default_value(0), "the interval of step to approximate value of variable")
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
-    ;
-
+    ("vars_to_approximate",
+     value<std::string>()->default_value(""),
+     "variables to approximate (delimited by \",\")");
 
 
   options_description hidden_desc("Hidden options");

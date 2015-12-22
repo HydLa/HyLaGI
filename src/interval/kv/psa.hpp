@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef PSA_HPP
@@ -9,15 +9,15 @@
 
 #include <iostream>
 #include <list>
+#include <algorithm>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <kv/convert.hpp>
 
-namespace ub = boost::numeric::ublas;
-
-
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 
 template <class T> class psa;
@@ -290,6 +290,9 @@ template <class T> class psa {
 			if (use_history() == true) {
 				r = history().front();
 				old_size = r.v.size();
+				if (mode() == 2) {
+					old_size = std::min(old_size, (int)s - 1);
+				}
 				r.v.resize(s, true);
 			} else {
 				old_size = 0;
@@ -304,7 +307,8 @@ template <class T> class psa {
 			}
 
 			if (mode() == 2) {
-				// tmpの中身もhistoryが利用できそうだが、保留
+				// history may be able to be used for
+				// calculating tmp, but we do not use yet.
 				ub::vector<T> tmp(s);
 				tmp(0) = r.v(s-1);
 				for (i=1; i<s; i++) {
@@ -459,8 +463,10 @@ template <class T> class psa {
 		r = 1./a;
 		hn = 1.;
 		xn = 1./a;
-		range = evalrange(x);
-		xn2 = 1./range;
+		if (mode() == 2) {
+			range = evalrange(x);
+			xn2 = 1./range;
+		}
 		if (use_history() == true) {
 			old_size = history().front().v.size();
 		}
@@ -480,14 +486,18 @@ template <class T> class psa {
 			} else {
 				hn *= h;
 				xn = -xn / a;
-				xn2 = -xn2 / range;
+				if (mode() == 2) {
+					xn2 = -xn2 / range;
+				}
 				r += xn * hn;
 			}
 		}
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa sin (const psa& x) {
@@ -542,7 +552,9 @@ template <class T> class psa {
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa cos (const psa& x) {
@@ -597,7 +609,9 @@ template <class T> class psa {
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa exp (const psa& x) {
@@ -643,7 +657,9 @@ template <class T> class psa {
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa sqrt(const psa& x) {
@@ -663,8 +679,10 @@ template <class T> class psa {
 		r = sqrt_a;
 		hn = 1.;
 		xn = 1./(2. * sqrt_a);
-		range = evalrange(x);
-		xn2 = 1./(2. * sqrt(range));
+		if (mode() == 2) {
+			range = evalrange(x);
+			xn2 = 1./(2. * sqrt(range));
+		}
 		if (use_history() == true) {
 			old_size = history().front().v.size();
 		}
@@ -684,13 +702,17 @@ template <class T> class psa {
 				hn *= h;
 				r += xn * hn;
 				xn *= (1./2. - i) / a / (i + 1.);
-				xn2 *= (1./2. - i) / range / (i + 1.);
+				if (mode() == 2) {
+					xn2 *= (1./2. - i) / range / (i + 1.);
+				}
 			}
 		}
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa log(const psa& x) {
@@ -708,8 +730,10 @@ template <class T> class psa {
 		r = log(a);
 		hn = 1.;
 		xn = -1.;
-		range = evalrange(x);
-		xn2 = -1.;
+		if (mode() == 2) {
+			range = evalrange(x);
+			xn2 = -1.;
+		}
 		if (use_history() == true) {
 			old_size = history().front().v.size();
 		}
@@ -729,14 +753,18 @@ template <class T> class psa {
 			} else {
 				hn *= h;
 				xn = -xn / a;
-				xn2 = -xn2 / range;
+				if (mode() == 2) {
+					xn2 = -xn2 / range;
+				}
 				r += xn / (double)i * hn;
 			}
 		}
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa sinh (const psa& x) {
@@ -787,7 +815,9 @@ template <class T> class psa {
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
 	}
 
 	friend psa cosh (const psa& x) {
@@ -838,7 +868,17 @@ template <class T> class psa {
 		if (recover_uh) use_history() = true;
 		if (recover_rh) record_history() = true;
 
-		return r;
+		// dirty hack
+		// to ensure that history buffer will be used at least once.
+		return r * 1.;
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, psa>::value && ! boost::is_integral<C>::value, psa >::type pow(const psa& a, const C& b) {
+		return pow(a, psa(b));
+	}
+
+	template <class C> friend typename boost::enable_if_c< acceptable_n<C, psa>::value, psa >::type pow(const C& a, const psa& b) {
+		return pow(psa(a), b);
 	}
 
 	friend psa pow(const psa& x, int y) {
@@ -869,6 +909,14 @@ template <class T> class psa {
 
 	friend psa pow(const psa& x, const psa& y) {
 		return exp(y * log(x));
+	}
+
+	friend psa tan(const psa& x) {
+		return sin(x) / cos(x);
+	}
+
+	friend psa tanh(const psa& x) {
+		return sinh(x) / cosh(x);
 	}
 
 	friend std::ostream& operator<<(std::ostream& s, const psa& x) {
@@ -927,7 +975,7 @@ template <class T> class psa {
 		return polyrange(x.v, 0, s-1, psa::domain());
 	}
 
-	friend T eval(const psa& x, const T& a) {
+	template <class T1> friend T1 eval(const psa& x, const T1& a) {
 		int s = x.v.size();
 
 		return polyrange(x.v, 0, s-1, a);
@@ -936,10 +984,10 @@ template <class T> class psa {
 	/*
 	 *  evaluate { p[x] + p[x+1]t + ... p[y]t^(y-x) | a \in d }
 	 */
-	static T inline polyrange (const ub::vector<T>& p, int x, int y, const T& d)
+	template <class T1> static T1 inline polyrange (const ub::vector<T>& p, int x, int y, const T1& d)
 	{
 		int i;
-		T r;
+		T1 r;
 
 		r = p(y);
 
@@ -953,4 +1001,4 @@ template <class T> class psa {
 
 } // namespace kv
 
-#endif //PSA_HPP
+#endif // PSA_HPP

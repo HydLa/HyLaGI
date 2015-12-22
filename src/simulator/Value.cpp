@@ -85,6 +85,12 @@ bool Value::infinite() const
   return (typeid(*node_) == typeid(Infinity));
 }
 
+bool Value::isZero() const
+{
+  // TODO: avoid string comparison
+  return get_infix_string(node_) == "0";
+}
+
 
 Value::Value(){}
 

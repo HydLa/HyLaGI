@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef CONV_DD_HPP
@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 #include <cstdlib>
+#include <algorithm>
 
 
 namespace kv {
@@ -32,8 +33,8 @@ struct conv_dd {
 	static int get_exponent(double x) {
 		int i;
 
-		if (x >= ldexp(1., 1023)) return 1023;
-		if (x < ldexp(1., -1074)) return -1075;
+		if (x >= std::ldexp(1., 1023)) return 1023;
+		if (x < std::ldexp(1., -1074)) return -1075;
 
 		std::frexp(x, &i);
 
@@ -57,7 +58,7 @@ struct conv_dd {
 		if (x1 != x1 || x2 != x2) return "nan";
 
 		sign = get_sign_double(x1);
-		absx1 = fabs(x1);
+		absx1 = std::fabs(x1);
 
 		if (absx1 == 0.) {
 			if (sign == -1) {
@@ -86,7 +87,7 @@ struct conv_dd {
 		double dtmp, dtmp2;
 
 		dtmp = absx1;
-		dtmp2 = ldexp(1., ex1);
+		dtmp2 = std::ldexp(1., ex1);
 
 		for (i=0; i<=52; i++) {
 			if (dtmp >= dtmp2) {
@@ -110,12 +111,12 @@ struct conv_dd {
 		int carry, tmp;
 
 		sign2 = get_sign_double(x2);
-		absx2 = fabs(x2);
+		absx2 = std::fabs(x2);
 
 		if (absx2 != 0.) {
 			ex2 = get_exponent(absx2);
 			dtmp = absx2;
-			dtmp2 = ldexp(1., ex2);
+			dtmp2 = std::ldexp(1., ex2);
 
 			for (i=0; i<=52; i++) {
 				if (dtmp >= dtmp2) {
@@ -149,14 +150,14 @@ struct conv_dd {
 				// NOTICE: tmp may become negative
 				tmp = buf[offset + i] + s * buf2[offset + i] + carry;
 				carry = (int)std::floor(tmp / 2.);
-				buf[offset + i] = tmp % 2;
+				buf[offset + i] = tmp - carry * 2;
 			}
-			for (i=emax2+1; emax; i++) {
+			for (i=emax2+1; i<=emax; i++) {
 				if (carry == 0) break;
 				// NOTICE: tmp may become negative
 				tmp = buf[offset + i] + carry;
 				carry = (int)std::floor(tmp / 2.);
-				buf[offset + i] = tmp % 2;
+				buf[offset + i] = tmp - carry * 2;
 			}
 			while (buf[offset + emax] == 0) {
 				emax--;
@@ -681,24 +682,24 @@ struct conv_dd {
 				if (sign == 1) {
 					if (result[offset2 + i] == 0) {
 					} else {
-						r += ldexp(1., i+1);
+						r += std::ldexp(1., i+1);
 						flag = 1;
 					}
 				} else {
 					if (result[offset2 + i] == 0) {
 					} else {
-						r += ldexp(1., i+1);
+						r += std::ldexp(1., i+1);
 						flag = 1;
 					}
 				}
 				result_max2 = i;
 				break;
 			}
-			r += ldexp((double)result[offset2 + i], i);
+			r += std::ldexp((double)result[offset2 + i], i);
 		}
 
 		if (flag) {
-			r2 = - ldexp(1., result_max2 + 1);
+			r2 = - std::ldexp(1., result_max2 + 1);
 		} else {
 			r2 = 0.;
 		}
@@ -717,18 +718,18 @@ struct conv_dd {
 					} else if (mode == 0) {
 						if (result[offset2 + i] == 0) {
 						} else {
-							r2 += ldexp(1., i+1);
+							r2 += std::ldexp(1., i+1);
 						}
 					} else {
-						r2 += ldexp(1., i+1);
+						r2 += std::ldexp(1., i+1);
 					}
 				} else {
 					if (mode == -1) {
-						r2 += ldexp(1., i+1);
+						r2 += std::ldexp(1., i+1);
 					} else if (mode == 0) {
 						if (result[offset2 + i] == 0) {
 						} else {
-							r2 += ldexp(1., i+1);
+							r2 += std::ldexp(1., i+1);
 						}
 					} else {
 					}
@@ -736,7 +737,7 @@ struct conv_dd {
 				break;
 			}
 			tmp = result[offset2 + i];
-			r2 += ldexp((double)tmp, i);
+			r2 += std::ldexp((double)tmp, i);
 			if (msb == std::numeric_limits<int>::min() && ((flag == true && tmp == 0) || (flag == false && tmp == 1))) {
 				msb = i;
 			}

@@ -10,8 +10,10 @@
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
+#include "Parser.h"
 #include <sys/stat.h>
 #include <fstream>
+#include <regex>
 
 #include "version.h"
 #include "Logger.h"
@@ -51,7 +53,7 @@ static string get_file_without_ext(const string &path)
 
 void output_result(Simulator& ss, Opts& opts){
   std::stringstream sstr;
-
+  sstr << "------ Result of Simulation ------\n";
   hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, opts.interval);
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_,true);}
 
@@ -142,7 +144,6 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
       auto right = buffer.find_last_not_of(" ");
       buffer = buffer.substr(left, right - left + 1);
     }
-    // 変数名に使えない文字が入っていたら警告
     boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
     boost::smatch match;
     if (!boost::regex_search(buffer, match, re))
@@ -164,7 +165,11 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   {
     opts.debug_mode    = true;
   }
-  IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
+  IF_SPECIFIED("time")
+  {
+    parser::Parser parser(po.get<string>("time"));
+    opts.max_time = parser.arithmetic();
+  }
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
@@ -176,9 +181,16 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
+  IF_SPECIFIED("numerize_without_validation")opts.numerize_mode =  po.count("numerize_without_validation") > 0 && po.get<char>("numerize_without_validation") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
+  IF_SPECIFIED("approximation_step")opts.approximation_step = po.get<int>("approximation_step");
+  IF_SPECIFIED("vars_to_approximate")
+  {
+    add_vars_from_string(po.get<string>("vars_to_approximate"), opts.vars_to_approximate, "");
+  }
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }
+
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {

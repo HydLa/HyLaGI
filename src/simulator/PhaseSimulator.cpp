@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "PhaseSimulator.h"
 
@@ -21,6 +22,8 @@
 #include "TreeInfixPrinter.h"
 
 #include "IntervalNewton.h"
+#include "IntervalTreeVisitor.h"
+#include "kv/interval.hpp"
 
 namespace hydla
 {
@@ -62,7 +65,8 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
   else
   {
-    todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
+    if(todo->phase_type == INTERVAL_PHASE)
+      todo->set_parameter_constraint(todo->parent->get_parameter_constraint());
 
     if(todo->parent->parent == result_root.get())
     {
@@ -101,13 +105,15 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     {
       make_next_todo(phase);
 
-
       // warn against unreferenced variables
+      std::string warning_var_str = "";
       for(auto var: *variable_set_)
       {
+
         if(var.get_differential_count() == 0 &&
-           !phase->variable_map.count(var))HYDLA_LOGGER_WARN(var, " is completely unbound at phase... ", *phase);
+           !phase->variable_map.count(var))warning_var_str += var.get_string() + " ";
       }
+      if(warning_var_str.length() > 0)HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
 
       if(aborting)break;
     }
@@ -116,6 +122,14 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
 }
 
+value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range)
+{
+  itvd itv = evaluate_interval(phase, range);
+  double mid_double = (itv.lower() + itv.upper())/2;
+  value_t mid_val(mid_double);
+  backend_->call("transformToRational", false, 1, "vln", "vl", &mid_val, &mid_val);
+  return mid_val;
+}
 
 std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_result_sptr_t& todo)
 {
@@ -123,10 +137,47 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   timer::Timer preprocess_timer;
 
   backend_->call("resetConstraint", false, 0, "", "");
+  HYDLA_LOGGER_DEBUG_VAR(*todo);
+  consistency_checker->set_prev_map(&todo->prev_map);
+  // add assumptions
+  // TODO: If the discrete_guard is not approximated, this process may be redundant
+  if(todo->phase_type == INTERVAL_PHASE)
+  {
+    for(auto it = todo->discrete_guards.begin();it != todo->discrete_guards.end();)
+    {
+      constraint_t guard = *it;
+      VariableFinder finder;
+      finder.visit_node(guard);
+      bool discrete_changed = false;
+      variable_set_t vars_in_guard = finder.get_all_variable_set();
+      for(auto var: todo->parent->discrete_differential_set)
+      {
+        if(vars_in_guard.count(var) > 0)
+        {
+          discrete_changed = true;
+          break;
+        }
+      }
+      if(discrete_changed)
+      {
+        todo->discrete_guards.erase(it++);
+      }
+      else ++it;
+    }
+  }
+  for(auto guard : todo->discrete_guards)
+  {
+    constraint_t cons = guard;
+    backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
+    backend_->call("addAssumption", true, 1, "en", "", &cons);
+  }
+
+
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
+  HYDLA_LOGGER_DEBUG_VAR(parameter_cons);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
   backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
-  consistency_checker->set_prev_map(&todo->prev_map);
+
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
@@ -240,7 +291,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms, module_
   return module_diff;
 }
 
-
+// phase = todo
 list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t phase, asks_t trigger_asks)
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
@@ -310,7 +361,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       //cut_high_order : approx count n > 0.(n=1,2,3...)
       variable_map_t before_map = phase->variable_map;
       value_t before_time = phase->current_time;
-      cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode);
+      cut_high_order_epsilon(backend_.get(),phase, opts_->epsilon_mode );
       HYDLA_LOGGER_DEBUG("#epsilon before : time : ",before_time);
       for(auto var_entry : before_map)HYDLA_LOGGER_DEBUG("#epsilon before : ",var_entry.first," : ",var_entry.second);
       HYDLA_LOGGER_DEBUG("#epsilon after : time : ",phase->current_time);
@@ -362,7 +413,9 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
         else
         {
           Variable var(pair.first, max_d_count);
-          if(!consistency_checker->check_continuity(var, phase->variable_map))
+          if(phase->variable_map.count(var) == 0 || phase->prev_map.count(var) == 0
+             || phase->variable_map[var].unique() || phase->prev_map[var].unique()
+             || !check_equality(phase->variable_map[var].get_unique_value(), phase->prev_map[var].get_unique_value()))
             discrete_vs.insert(var);
         }
       }
@@ -375,26 +428,18 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
 ConstraintStore PhaseSimulator::get_current_parameter_constraint()
 {
-  //For epsilon mode
-  // if(opts_->epsilon_mode >= 0){
-  //   parameter_map_t tmp_pm;
-  //   int i=0;
-  //   for(auto parmap : parameter_maps){
-  //     if(i==0){
-  //       tmp_pm = parmap;
-  //     }
-  //     for(auto par : parmap){
-  //       HYDLA_LOGGER_DEBUG("#epsilon par  : ",par.first," : ",par.second);
-  //     }
-  //     i++;
-  //   }
-  //   parameter_maps.clear();
-  //   parameter_maps.push_back(tmp_pm);
-  // }
   ConstraintStore parameter_cons;
   backend_->call("getParameterConstraint", true, 0, "", "cs", &parameter_cons);
   return parameter_cons;
 }
+
+
+bool PhaseSimulator::check_equality(const value_t &lhs, const value_t &rhs){
+  bool equal;
+  backend_->call("exactlyEqual", true, 2, "vlnvln", "b", &lhs, &rhs, &equal);
+  return equal;
+}
+
 
 void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
   phase_result_sptr_t branch_state_false(new PhaseResult());
@@ -503,11 +548,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   root_information.negative_asks = relation_graph_->get_all_asks();
   result_root->set_full_information(root_information);
 
-  if(opts_->max_time != ""){
-    max_time = node_sptr(new se::Number(opts_->max_time));
-  }else{
-    max_time = node_sptr(new se::Infinity());
-  }
+  max_time = opts_->max_time;
 
   aborting = false;
 
@@ -583,7 +624,7 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase
   return result;
 }
 
-
+// phase = todo
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
@@ -728,94 +769,6 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   return related_vm;
 }
 
-find_min_time_result_t PhaseSimulator::find_min_time_test(phase_result_sptr_t &phase, const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
-{
-  HYDLA_LOGGER_DEBUG("#epsilon find min time start");
-  // 現在のガード条件(ask)に関する最小時刻の探索
-  find_min_time_result_t min_time_for_this_ask;
-  min_time_for_this_ask = calculate_tmp_min_time(phase, guard, min_time_calculator, guard_time_map, original_vm, time_limit, entailed);
-  return min_time_for_this_ask;
-}
-
-find_min_time_result_t PhaseSimulator::calculate_tmp_min_time(phase_result_sptr_t &phase, const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed)
-{
-  find_min_time_result_t ret;
-  bool limit_is_zero = false;
-  //前回の離散変化条件との比較
-  bool same_guard;
-  for(auto entry: phase->parent->discrete_asks){
-    if(guard == (*(entry.first)).get_guard()){
-      same_guard = true;
-      break;
-    }
-  }
-  // 一時的な最小時間候補の導出
-  find_min_time_result_t min_time_candidate;
-
-  min_time_candidate = find_min_time(guard, min_time_calculator, guard_time_map, original_vm, time_limit, entailed, phase);
-
-  find_min_time_result_t before = min_time_candidate;
-
-  for(auto target : min_time_candidate){
-    //最小時間候補を検査し、不適切な候補の削減を行う
-    value_t target_time = target.time;
-    backend_->call("limitIsZero", true, 1, "vln", "b", &target_time, &limit_is_zero);
-    if(!limit_is_zero || !same_guard){
-      //時刻をずらさない場合
-      ret.push_back(target);
-      continue;
-    }
-    // // TODO: 2回以上の離散時刻の変更に対応していない
-    // while(limit_is_zero && same_guard){ //再帰でする必要がありそう
-    //   //時刻をずらす場合
-    //   find_min_time_result_t tmp_min_time_result;
-    //   tmp_min_time_result = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, target_time);
-    //   for(auto tmp_target : tmp_min_time_result){
-    //     bool ret;
-    //     backend_->call("limitIsZero", 1, "vln", "b", &target_time, &ret);
-    //     limit_is_zero = limit_is_zero & ret;
-    //     ret.push_back(tmp_target);
-    //   }
-    // }
-
-    // 2回以上の離散時刻の変更に対応している
-    if(limit_is_zero && same_guard){
-      //時刻ずらし
-      find_min_time_result_t tmp_min_time;
-      node_sptr moving_time = target_time.get_node();
-      moving_time = node_sptr(new Times(node_sptr(new Number("-1")), moving_time));
-      variable_map_t shifted_vm;
-      ValueModifier modifier(*backend_);
-      shifted_vm = modifier.shift_time(moving_time, original_vm);
-      value_t tmp_time_limit = time_limit;
-      tmp_time_limit -= target_time;
-      guard_time_map.clear();
-      for(auto var : original_vm) HYDLA_LOGGER_DEBUG("#epsilon original : ",var.first," : ",var.second);
-      for(auto var : shifted_vm)  HYDLA_LOGGER_DEBUG("#epsilon shifted : ",var.first," : ",var.second);
-      //再帰
-      tmp_min_time = calculate_tmp_min_time(phase,guard,min_time_calculator,guard_time_map,shifted_vm,tmp_time_limit,entailed);
-      //tmp_min_time = find_min_time(guard,min_time_calculator,guard_time_map,shifted_vm,tmp_time_limit,entailed);
-      for(auto &tmp_candidate : tmp_min_time){
-        tmp_candidate.time += target_time;
-        if (opts_->fullsimplify) {
-          backend_->call("fullsimplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
-        } else {
-          backend_->call("simplify", false, 1, "vln", "vl", &(tmp_candidate.time), &(tmp_candidate.time));
-        }
-        ret.push_back(tmp_candidate);
-      }
-    }
-  }
-  HYDLA_LOGGER_DEBUG("#epsilon check find min time result");
-  for(auto candidate : before){
-    HYDLA_LOGGER_DEBUG("#epsilon before : ",candidate.time);
-  }
-  for(auto candidate : ret){
-    HYDLA_LOGGER_DEBUG("#epsilon after  : ",candidate.time);
-  }
-  return ret;
-}
-
 ValueRange PhaseSimulator::create_range_from_interval(itvd itv)
 {
   value_t lower(itv.lower()), upper(itv.upper());
@@ -828,9 +781,17 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 {
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
-  bool by_newton = false;
   list<Parameter> parameters;
-  constraint_t guard_for_newton;
+  constraint_t guard_by_newton;
+  constraints_t other_guards;
+
+  HYDLA_LOGGER_DEBUG_VAR(phase->discrete_guards.size());
+
+  for(auto guard : phase->discrete_guards)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+  }
+  
   for(auto atomic_guard : guards)
   {
     constraint_t g = atomic_guard->constraint;
@@ -838,23 +799,15 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     if(!guard_time_map.count(g))
     {
       variable_map_t related_vm = get_related_vm(g, original_vm);
-      /*
-        TODO: implement
-        if(opts_->epsilon_mode >= 0)
-        {
-        min_time_for_this_guard = find_min_time_epsilon(trigger, related_vm,
-        time_limit, phase, backend_.get());
-        }
-      */
-      if(opts_->interval && guard_for_newton.get() == nullptr)
+      bool by_newton = false;
+      if(opts_->interval && guard_by_newton.get() == nullptr)
       {
         cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
         char c;
         cin >> c;
-        bool by_newton = false;
         if(c == 'y')
         {
-          guard_for_newton = g;
+          guard_by_newton = g;
           by_newton = true;
         }
       }
@@ -862,22 +815,48 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       {
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
-        backend_->call("calculateConsistentTime", true, 2, "etmvt", "e", &g, &related_vm,  &constraint_for_this_guard);
+        constraint_t cons = g;
+        value_t lower("0");
+        if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
+        {
+          // exploit derivative of guard conditions
+          vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
+          assert(parameter_map_vector.size() <= 1);
+          parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
+          itvd min_interval = calculate_zero_crossing_of_derivative(g, related_vm, pm);
+          HYDLA_LOGGER_DEBUG_VAR(min_interval);
+          if(min_interval == itvd(0.0))
+          {
+            //TODO: validate that there are no answers for this guard
+            guard_time_map[g] = constraint_t(new symbolic_expression::False);
+            other_guards.insert(g);
+            continue;
+          }
+          else if(width(min_interval) > 0)
+          {
+            lower = value_t(min_interval.lower());
+            backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
+          }
+        }
+        backend_->call("calculateConsistentTime", true, 3, "etmvtvlt", "e", &cons, &related_vm, &lower, &constraint_for_this_guard);
+        other_guards.insert(g);
         guard_time_map[g] = constraint_for_this_guard;
       }
     }
   }
-
+  
   find_min_time_result_t min_time_for_this_ask;
-  if(guard_for_newton.get() != nullptr)
+  if(guard_by_newton.get() != nullptr)
   {
-    variable_map_t related_vm = get_related_vm(guard_for_newton, original_vm);
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard_by_newton));
+
+    variable_map_t related_vm = get_related_vm(guard_by_newton, original_vm);
     // TODO: deal with multiple parameter maps
     vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
-    assert(parameter_map_vector.size() <= 1);
+    HYDLA_ASSERT(parameter_map_vector.size() <= 1);
     parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
-    list<itvd> result_interval_list = calculate_interval_newton_nd(guard_for_newton, related_vm, pm);
-    const type_info &guard_type = typeid(*guard_for_newton);
+    list<itvd> result_interval_list = calculate_interval_newton_nd(guard_by_newton, related_vm, pm, phase->discrete_guards.count(guard_by_newton) > 0);
+    const type_info &guard_type = typeid(*guard_by_newton);
 
     // TODO: integrate process for both equalities and inequalities
     if(guard_type == typeid(Equal) || guard_type == typeid(UnEqual))
@@ -902,30 +881,26 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         if(guard_type == typeid(UnEqual))
         {
-          guard_time_map[guard_for_newton] = constraint_t(new UnEqual(new se::Parameter(parameter_current), new SymbolicT()));
+          guard_time_map[guard_by_newton] = constraint_t(new UnEqual(new se::Parameter(parameter_current), new SymbolicT()));
         }
         else
         {
-          guard_time_map[guard_for_newton] = constraint_t(new Equal(new se::Parameter(parameter_current), new SymbolicT()));
+          guard_time_map[guard_by_newton] = constraint_t(new Equal(new se::Parameter(parameter_current), new SymbolicT()));
         }
         constraint_t lb, ub;
         lb.reset(new LessEqual(new se::Parameter(parameter_prev), new SymbolicT()));
-        ub.reset(new Less(new SymbolicT(), new se::Parameter(parameter_current)));
+        ub.reset(new LessEqual(new SymbolicT(), new se::Parameter(parameter_current)));
         constraint_t time_bound;
         // prev_t < t /\ t < current_t
         time_bound.reset(new LogicalAnd(lb, ub));
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-
-        if(!min_time_for_this_ask.empty())
+        if(!min_time_for_this_ask.empty()) 
         {
-          assert(min_time_for_this_ask.size() == 1);
-          simulator_->introduce_parameter(parameter_current, current_range);
-          ConstraintStore new_store = phase->get_parameter_constraint();
-          new_store.add_constraint_store(current_range.create_range_constraint(node_sptr(new se::Parameter(parameter_current))));
-          phase->set_parameter_constraint(new_store);
-          backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+          HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
+          add_parameter_constraint(phase, parameter_current, current_range);
+          min_time_for_this_ask.front().range_by_newton = current_range;
           break;
         }
         prev_interval = current_interval;
@@ -933,7 +908,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     }
     else
     {
-      assert(guard_type == typeid(se::LessEqual) ||
+      HYDLA_ASSERT(guard_type == typeid(se::LessEqual) ||
              guard_type == typeid(se::Less) ||
              guard_type == typeid(se::Greater) ||
              guard_type == typeid(se::GreaterEqual));
@@ -952,16 +927,25 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       }
       else
       {
-        assert(!result_interval_list.empty());
+        // TODO: deal with equation without any solution
+        HYDLA_ASSERT(!result_interval_list.empty());
         lower_interval = result_interval_list.front();
         result_interval_list.pop_front();
       }
-
+      bool last_trial = false;
+      bool negated = false;
       while(true)
       {
-        assert(!result_interval_list.empty());
-        upper_interval = result_interval_list.front();
-        result_interval_list.pop_front();
+        if(!result_interval_list.empty())
+        {
+          upper_interval = result_interval_list.front();
+          result_interval_list.pop_front();
+        }
+        else
+        {
+          upper_interval = upper_bound_of_itv_newton;
+          last_trial = true;
+        }
 
         // add temporary parameters for parameter_prev and parameter_current
         parameter_map_t pm_for_each = pm;
@@ -985,25 +969,26 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
             lb.reset(new Less(new se::Parameter(parameter_lower), new SymbolicT()));
             ub.reset(new Less(new SymbolicT(), new se::Parameter(parameter_upper)));
           }
-          guard_time_map[guard_for_newton] = constraint_t(new LogicalAnd(lb, ub));
+          if(!negated)  guard_time_map[guard_by_newton] = constraint_t(new LogicalAnd(lb, ub));
+          else  guard_time_map[guard_by_newton] = constraint_t(new Not(new LogicalAnd(lb, ub)));
         }
 
         constraint_t time_bound;
         {
           constraint_t lb, ub;
-          lb.reset(new LessEqual(new se::Parameter(parameter_prev), new SymbolicT()));
+          if(negated) lb.reset(new LessEqual(new se::Parameter(parameter_lower), new SymbolicT()));
+          else lb.reset(new LessEqual(new se::Parameter(parameter_prev), new SymbolicT()));
           ub.reset(new Less(new SymbolicT(), new se::Parameter(parameter_upper)));
 
           // prev_t < t /\ t < current_t
           time_bound.reset(new LogicalAnd(lb, ub));
         }
 
-        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard_for_newton, entailed, time_limit, time_bound);
+        min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-
-        if(!min_time_for_this_ask.empty())
+        if(!min_time_for_this_ask.empty() && !min_time_for_this_ask.front().time.infinite()) 
         {
-          assert(min_time_for_this_ask.size() == 1);
+          HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
           simulator_->introduce_parameter(parameter_upper, upper_range);
           simulator_->introduce_parameter(parameter_lower, lower_range);
           ConstraintStore new_store = phase->get_parameter_constraint();
@@ -1011,18 +996,45 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
           new_store.add_constraint_store(upper_range.create_range_constraint(node_sptr(new se::Parameter(parameter_upper))));
           phase->set_parameter_constraint(new_store);
           backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+
+          min_time_for_this_ask.front().range_by_newton = ValueRange(value_t(parameter_lower), value_t(parameter_upper));
           break;
         }
         prev_interval = upper_interval;
+        if(last_trial)break;
 
-        // TODO: deal with the last elements
-        assert(!result_interval_list.empty());
-        lower_interval = result_interval_list.front();
-        result_interval_list.pop_front();
+        if(!result_interval_list.empty())
+        {
+          lower_interval = result_interval_list.front();
+          result_interval_list.pop_front();
+        }
+        else
+        {
+          // deal with remaining interval ( ub of upper_interval -> upper_bound_of_itv_newton)
+          negated = true;
+          lower_interval = upper_interval;
+        }
+      }
+    }
+    HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
+    min_time_for_this_ask.front().guard_by_newton = guard_by_newton;
+  }
+  else
+  {
+    min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
+  }
+
+  if(opts_->numerize_mode || opts_->epsilon_mode > 0)
+  {
+    for(auto &each_case: min_time_for_this_ask)
+    {
+      for(auto guard : other_guards)
+      {
+        each_case.other_guards_to_time_condition[guard] = guard_time_map[guard];
       }
     }
   }
-  else min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
+  
   return min_time_for_this_ask;
 }
 
@@ -1053,6 +1065,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           phase->variable_map[var] = vm_to_take_over[var];
         }
       }
+      approximate_phase(phase, phase->variable_map);
     }
     check_break_points(phase, phase->variable_map);
     if(!aborting)
@@ -1064,6 +1077,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       next_todo->diff_sum = phase->diff_sum;
       next_todo->current_time = phase->end_time = phase->current_time;
       next_todo->discrete_asks = phase->discrete_asks;
+      next_todo->discrete_guards = phase->discrete_guards;
       phase->todo_list.push_back(next_todo);
     }
   }
@@ -1110,15 +1124,18 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             if(!candidate.parameter_constraint.consistent())entry.second.erase(cand_it++);
             else
             {
+              for(auto &entry : candidate.other_guards_to_time_condition)
+              {
+                entry.second = value_modifier->shift_time(-(phase->current_time - phase->parent->parent->current_time), value_t(entry.second) ).get_node();
+              }
               cand_it++;
+              
             }
           }
         }
       }
 
       next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
-
-
 
       variable_set_t diff_variables;
       {
@@ -1159,27 +1176,25 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       timer::Timer find_min_time_timer;
       for(auto ask : asks)
       {
-        if(opts_->epsilon_mode >= 0)
-        {
-          candidate_map[ask] = find_min_time_test(phase,ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask));
-        }else{
-          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
-        }
+        candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
       }
-
+      
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase);
       }
       phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
-      HYDLA_LOGGER_DEBUG("");
       pp_time_result_t time_result;
       // 各askに関する最小時刻を比較して最小のものを選ぶ．
       timer::Timer compare_min_time_timer;
       for(auto entry : candidate_map)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
+        for(auto candidate : entry.second)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(candidate.time); 
+        }
       }
       for(auto entry : break_point_list)
       {
@@ -1187,21 +1202,18 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         time_result = compare_min_time(time_result, entry.second, null_ask);
       }
       phase->profile["CompareMinTime"] += compare_min_time_timer.get_elapsed_us();
-      /*
-        if(opts_->epsilon_mode >= 0){
-        time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
-      }*/
-
-
+/*
       if(opts_->epsilon_mode >= 0){
         for(auto entry : time_result){
           HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);
         }
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
+        
         for(auto entry : time_result){
           HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
         }
       }
+*/
 
       if(time_result.empty())
       {
@@ -1230,6 +1242,44 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
+            if(opts_->interval || opts_->numerize_mode || opts_->epsilon_mode > 0)
+            {
+              // calculate discrete_guards
+              for(auto discrete_ask : next_todo->discrete_asks)
+              {
+                find_min_time_result_t &f_result = candidate_map[discrete_ask.first];
+                bool included_by_newton_guard = false;
+
+                if(opts_->epsilon_mode >= 0){
+                  for(auto entry : time_result){
+                    HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);
+                  }
+                  f_result = reduce_unsuitable_case(f_result, backend_.get(), phase);
+                  for(auto entry : time_result){
+                    HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
+                  }
+                }
+                HYDLA_ASSERT(f_result.size() == 1);
+                FindMinTimeCandidate candidate = f_result.front();
+                constraints_t guards_on_border;
+                if(candidate.guard_by_newton.get() != nullptr)
+                {
+                  backend_->call("borderIsIncluded", true, 3, "vlnvlnvln", "b", &candidate.time, &candidate.range_by_newton.get_lower_bound().value, &candidate.range_by_newton.get_upper_bound().value, &included_by_newton_guard);
+                  next_todo->discrete_guards.insert(candidate.guard_by_newton);
+                }
+                for(auto guard : candidate.other_guards_to_time_condition)
+                {
+                  bool on_border;
+                  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard.first));
+                  backend_->call("onBorder", true, 2, "etvlt", "b", &guard.second, &candidate.time, &on_border);
+                  if(on_border)
+                  {
+                    if(included_by_newton_guard)throw HYDLA_ERROR("Both of 2 guards are on the border: " + get_infix_string(guard.first) +", " + get_infix_string(candidate.guard_by_newton));
+                    next_todo->discrete_guards.insert(guard.first);
+                  }
+                }
+              }
+            }
             next_todo->next_pp_candidate_map = phase->next_pp_candidate_map;
             for(auto ask : next_todo->discrete_asks)
             {
@@ -1241,6 +1291,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
+            approximate_phase(next_todo, next_todo->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
           }
@@ -1265,6 +1316,38 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
   revert_diff(*phase);
 
   phase->profile["MakeNextTodo"] = next_todo_timer.get_elapsed_us();
+}
+
+void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_t &vm_to_approximate)
+{
+  // approximation
+  if(opts_->numerize_mode)
+  {
+    phase->current_time = calculate_middle_value(phase, ValueRange(phase->current_time));
+    for(auto &entry: vm_to_approximate)
+    {
+      entry.second.set_unique_value(calculate_middle_value(phase, entry.second));
+    }
+  }
+  else if(opts_->interval && opts_->approximation_step > 0 && (phase->step/2) % opts_->approximation_step == 0)
+  {
+    for(auto &entry: vm_to_approximate)
+    {
+      if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
+        continue;
+      itvd interval = evaluate_interval(phase, entry.second);
+      if(width(interval) > 0)
+      {
+        ValueRange range = create_range_from_interval(interval);
+        Parameter param(entry.first, *phase);
+        add_parameter_constraint(phase, param, range);
+        entry.second = param.as_value();
+        stringstream sstr;
+        sstr << param.get_name() << "_" <<  param.get_differential_count();
+        phase->profile[sstr.str()] = width(interval);
+      }
+    }
+  }
 }
 
 pp_time_result_t PhaseSimulator::compare_min_time(const pp_time_result_t &existings, const find_min_time_result_t &newcomers, const ask_t& ask)
@@ -1373,7 +1456,25 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   }
 }
 
-list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm)
+itvd PhaseSimulator::calculate_zero_crossing_of_derivative(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm)
+{
+  node_sptr dexp, ddexp;
+  value_t criteria_val;
+  backend_->call("relationToFunction", true, 2, "etmvt", "vl", &guard, &related_vm, &criteria_val);
+  if(criteria_val.infinite())return itvd(0, 0);
+  backend_->call("differentiateWithTime", true, 1, "vlt", "e", &criteria_val, &dexp);
+  backend_->call("differentiateWithTime", true, 1, "et", "e", &dexp, &ddexp);
+  HYDLA_LOGGER_DEBUG_VAR(criteria_val);
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ddexp));
+  // TODO: avoid string comparison
+  if(get_infix_string(ddexp) == "0")return itvd(0., 0.);
+  itvd init = itvd(0.,100);
+  itvd result_interval = interval::calculate_interval_newton(init, dexp, ddexp, pm);
+  return result_interval;
+}
+
+list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint)
 {
   node_sptr exp;
   node_sptr dexp;
@@ -1381,10 +1482,49 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& guar
   backend_->call("differentiateWithTime", true, 1, "et", "e", &exp, &dexp);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(exp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
-  itvd init = itvd(0.,100);
+
+
+  double start_of_init = 0;
+  if(additional_constraint)
+  {
+    itvd min_interval = calculate_zero_crossing_of_derivative(guard, related_vm, pm);
+    if(width(min_interval) > 0)
+    {
+      start_of_init = min_interval.lower();
+    }
+  }
+  itvd init = itvd(start_of_init,upper_bound_of_itv_newton);
+  HYDLA_LOGGER_DEBUG_VAR(init);
+  for(auto entry : pm)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(entry.first);
+    HYDLA_LOGGER_DEBUG_VAR(entry.second);
+  }
   list<itvd> result_intervals =
     interval::calculate_interval_newton_nd(init, exp, dexp, pm);
   return result_intervals;
+}
+
+itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range)
+{
+  VariableReplacer v_replacer(phase->variable_map);
+  v_replacer.replace_range(range);
+  range = value_modifier->apply_function(opts_->fullsimplify?"fullsimplify":"simplify", range);
+  interval::IntervalTreeVisitor interval_visitor;
+  vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
+  assert(parameter_map_vector.size() <= 1);
+  parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
+  HYDLA_ASSERT(range.unique());
+  return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
+}
+
+void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange range)
+{
+  simulator_->introduce_parameter(parameter, range);
+  ConstraintStore new_store = phase->get_parameter_constraint();
+  new_store.add_constraint_store(range.create_range_constraint(node_sptr(new se::Parameter(parameter))));
+  phase->set_parameter_constraint(new_store);
+  backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef OPTIMIZE_HPP
@@ -16,10 +16,10 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <kv/autodif.hpp>
 
-namespace ub = boost::numeric::ublas;
-
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 
 template <class T, class F>
@@ -55,7 +55,7 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 		try {
 			fi = f(I);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 
@@ -68,7 +68,7 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 			fc = f(C);
 			autodif< interval<T> >::split(f(autodif< interval<T> >::init(I)), fi, fdi);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 
@@ -77,11 +77,11 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 			continue;
 		}
 
-		// 点Cでdeltaを更新
+		// update delta at C
 		tmp = fc.upper();
 		if (tmp < delta) delta = tmp;
 
-		// 値が小さくなりそうな点C2を計算
+		// C2 is likely to give small value
 		for (i=0; i<s; i++) {
 			tmp = mid(fdi(i));
 			if (tmp > 0.) tmp2 = I(i).lower();
@@ -90,24 +90,24 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 			C2(i).assign(tmp2, tmp2);
 		}
 
-		// 点C2でdeltaを更新
+		// update delta at C2
 		try {
 			fc2 = f(C2);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			goto label;
 		}
 		tmp = fc2.upper();
 		if (tmp < delta) delta = tmp;
 
 #if USE_TRIM == 1
-		// 区間縮小
+		// interval shrinking
 		IR = I;
-		flag = false; // 解の非存在が言えたか
+		flag = false; // non-existence in I turns out or not
 		for (j=0; j<s; j++) {
 			B = fdi(j);
 
-			// Aをmvfから逆算して計算
+			// calculate back A from mvf
 			A = mvf;
 			Itmp = B * (I(j)-C(j));
 			rop<T>::begin();
@@ -116,7 +116,8 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 			rop<T>::end();
 			A.assign(tmp, tmp2);
 #if 0
-			// Aを真面目に計算すると遅い。
+			// calculate A simply
+			// below is simple but slow
 			A = 0.;
 			for (k=0; k<s; k++) {
 				if (k == j) continue;
@@ -137,7 +138,7 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 					if (overlap(IR(j), J2)) {
 #if USE_ZERODIVIDE == 2
 						if (overlap(J, J2)) continue;
-						// 区間分割
+						// interval division
 						I1 = IR;
 						I2 = IR;
 						I1(j) = intersect(IR(j), J);
@@ -180,7 +181,7 @@ optimize_list(std::list< ub::vector< interval<T> > > targets, F f, T limit, int 
 			}
 		}
 
-		// 区間縮小で非存在が判明
+		// non-existence in I turns out
 		if (flag == true) {
 			continue;
 		}
