@@ -76,9 +76,9 @@ void Automaton::trace(){
       std::cout << "\"init\"" << " -> " << "\"" << (*it)->name << "\"" << "[color=\"" << (*it)->color << "\"];" << std::endl;
     }
     if((it + 1) != trace_path.end()){
-      std::cout << "\"" << (*it)->name << "\"" << " " << "[color=" << (*it)->color << "];" << std::endl;
+      std::cout << "\"" << (*it)->name << "\"" << " " << "[color=\"" << (*it)->color << "\"];" << std::endl;
       if((*it)->color == (*(it + 1))->color){
-        std::cout << "\"" << (*it)->name << "\"" << " -> " << "\"" << (*(it + 1))->name << "\"" << "[color=" << (*it)->color << "];" << std::endl;
+        std::cout << "\"" << (*it)->name << "\"" << " -> " << "\"" << (*(it + 1))->name << "\"" << "[color=\"" << (*it)->color << "\"];" << std::endl;
       }else{
         std::cout << "\"" << (*it)->name << "\"" << " -> " << "\"" << (*(it + 1))->name << "\"" << ";" << std::endl;
       }

@@ -38,72 +38,72 @@ phase_result_sptr_t LTLModelChecker::simulate()
       //Property Automaton initialize
       int id = 0;
       //[True loop]:For making Hybrid Automaton test : if we detect a acceptance cycle, the cycle is HA
-      PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-      node_sptr true_node = node_sptr(new True());
-      property_init->add_next_edge(property_init,true_node);
+      // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // property_init->add_next_edge(property_init,true_node);
 
       //[bouncing ball 1]:Checking [](y<10) don't over first height
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_geq_15,node1);
-      // node1->addLink(true_node,node1);
+      // property_init->add_next_edge(property_init,true_node);
+      // property_init->add_next_edge(node1,y_geq_15);
+      // node1->add_next_edge(node1,true_node);
 
       //[bouncing ball 2]:Checking []<>(y=0) & []<>(y!=0) ball is bouncing repeatedly
-      // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
-      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-      // PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-      // node_sptr true_node = node_sptr(new True());
-      // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-      // node_sptr y_neq_0 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_eq_0,node1);
-      // property_init->addLink(y_neq_0,node2);
-      // node1->addLink(y_eq_0,node1);
-      // node2->addLink(y_neq_0,node2);
+      PropertyNode *property_init = new PropertyNode(id++,NOMAL);
+      PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      node_sptr true_node = node_sptr(new True());
+      node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
+      node_sptr y_neq_0 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
+      property_init->add_next_edge(property_init,true_node);
+      property_init->add_next_edge(node1,y_eq_0);
+      property_init->add_next_edge(node2,y_neq_0);
+      node1->add_next_edge(node1,y_eq_0);
+      node2->add_next_edge(node2,y_neq_0);
 
       //[bouncing ball 3]:Checking [](y'<10) don't over first speed
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_geq_15,node1);
-      // node1->addLink(true_node,node1);
+      // property_init->add_next_edge(true_node,property_init);
+      // property_init->add_next_edge(y_geq_15,node1);
+      // node1->add_next_edge(true_node,node1);
 
       //[hot air balloon]:Checking flying [](y>0) : don't work
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_ng_0 = node_sptr(new Not(node_sptr(new Greater(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_ng_0,node1);
-      // node1->addLink(true_node,node1);
+      // property_init->add_next_edge(true_node,property_init);
+      // property_init->add_next_edge(y_ng_0,node1);
+      // node1->add_next_edge(true_node,node1);
 
       //[water tank 1]:Checking whether the tank is filled up with water <>(y=12)
       // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
-      // property_init->addLink(y_neq_12,property_init);
+      // property_init->add_next_edge(y_neq_12,property_init);
 
       //[water tank 2]:Checking wheter water level reach certain value repeatedly []<>(y=6) : need 20 phase
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_neq_6 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_neq_6,node1);
-      // node1->addLink(y_neq_6,node1);
+      // property_init->add_next_edge(true_node,property_init);
+      // property_init->add_next_edge(y_neq_6,node1);
+      // node1->add_next_edge(y_neq_6,node1);
 
       //[Artificial Example]:For testing wheter I can deal with the inclusion of phase correctly
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       // node_sptr true_node = node_sptr(new True());
       // node_sptr y_geq_3 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("3"))));
-      // property_init->addLink(true_node,property_init);
-      // property_init->addLink(y_geq_3,node1);
-      // node1->addLink(true_node,node1);
+      // property_init->add_next_edge(true_node,property_init);
+      // property_init->add_next_edge(y_geq_3,node1);
+      // node1->add_next_edge(true_node,node1);
 
       //init LTL search
       LTLNode *LTL_init = new LTLNode("init",result_root_,property_init);
@@ -111,12 +111,12 @@ phase_result_sptr_t LTLModelChecker::simulate()
       ltl_start.push_back(LTL_init);
 
       LTLsearch(result_root_,ltl_start,LTL_init);
-      // cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
+      cout << "~~~~~~~~~~ property automaton ~~~~~~~~~" << endl;
       property_init->dump();
-      // cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
-      // cout << "========== result ltl search ==========" << endl;
-      LTL_init->dump();
-      // cout << "=======================================" << endl;
+      cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+      cout << "========== result ltl search ==========" << endl;
+      (LTL_init->next_edge.begin())->first->dump();
+      cout << "=======================================" << endl;
     }
   catch(const std::runtime_error &se)
     {
@@ -164,7 +164,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
       if(opts_->dump_in_progress){
         printer.output_one_phase(todo);
       }
-
+      //debug print
+      // result_init->dump();
       LTLsearch(todo,ltl_current,result_init);
     }
   phase_simulator_->revert_diff(*current);
@@ -271,15 +272,21 @@ LTLNode* LTLModelChecker::detect_loop_in_path(LTLNode* new_node, automaton_node_
 
 bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker){
   bool ret = false;
+  // cout << "come here 1" << endl;
   if(guard->get_node_type_name() == "True"){
     return true;
   }
-  ConstraintStore par_cons = phase->get_parameter_constraint();
-  backend->call("resetConstraintForParameter", true, 1, "mp", "", &par_cons);
+  // cout << "come here 2" << endl;
+  // ConstraintStore par_cons = phase->get_parameter_constraint();
+  // cout << "come here 3" << endl;
+  // backend->call("resetConstraintForParameter", true, 1, "mp", "", &par_cons);
+  // cout << "come here 4" << endl;
   CheckConsistencyResult cc_result;
+  // cout << "come here 5" << endl;
   HYDLA_LOGGER_DEBUG("entailed check start ===========================");
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   // variable_map_t related_vm = get_related_vm(guard, phase->variable_map);
+
   switch(consistency_checker->check_entailment(phase->variable_map, cc_result, guard, phase->phase_type, phase->profile)){
   case ENTAILED:
     ret = true;
