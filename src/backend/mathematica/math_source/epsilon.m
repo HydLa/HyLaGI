@@ -1,86 +1,38 @@
 (* phaseの包含を判定する *)
 publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
-             Module[{ret,i,tmpLargeTime,tmpSmallTime,tmpSmallVm,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+             Module[{ret,i,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
                     ret = True;
-                    tmpLargeVm = largeVm //. p -> p1;
-                    tmpSmallVm = smallVm //. p -> p2;
-                    tmpLargeTime = largeTime //. p -> p1;
-                    tmpSmallTime = smallTime //. p -> p2;
-                    (* debugPrint["# tmpLargeVm", tmpLargeVm];
-                     debugPrint["# tmpSmallVm", tmpSmallVm]; *)
+
+                    tmpLargeVm = largeVm /. p -> pL;
+                    tmpLargeTime = largeTime /. p -> pL;
                     (* compare variable num *)
-                    If[Length[tmpLargeVm] == Length[tmpSmallVm],
-                       ret = And[ret,True],
-                       ret = And[ret,False]
-                       ];
                     For[i=1,And[ret, Length[tmpLargeVm] >= i],i++,
-                        (* debugPrint["# largeVm[i]",tmpLargeVm[[i]]];
-                         debugPrint["# largeVm[i][0]",tmpLargeVm[[i]][[0]]];
-                         debugPrint["# largeVm[i][1]",tmpLargeVm[[i]][[1]]];
-                         debugPrint["# largeVm[i][2]",tmpLargeVm[[i]][[2]]];
-                         debugPrint["# smallVm[i]",tmpSmallVm[[i]]];
-                         debugPrint["# smallVm[i][0]",tmpSmallVm[[i]][[0]]];
-                         debugPrint["# smallVm[i][1]",tmpSmallVm[[i]][[1]]];
-                         debugPrint["# smallVm[i][2]",tmpSmallVm[[i]][[2]]]; *)
                         (* compare variable name *)
-                        If[tmpLargeVm[[i]][[1]] == tmpSmallVm[[i]][[1]],
-                           ret = And[ret,True],
-                           ret = And[ret,False]
-                           ];
-                        (* correct expr : large.2 == small.2 *)
-                        (* debugPrint["# adding expr left : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime]];
-                         debugPrint["# adding expr right : ",Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]];
-                         debugPrint["# adding expr : ",Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]; *)
-                        If[i == 1,
-                           allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime],
-                           allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[tmpSmallVm[[i]][[2]] /. t -> tmpSmallTime]]
-                           ];
+                        If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]],
+                           ret = False
                         ];
+                        (* correct expr : large.2 == small.2 *)
+                        If[i == 1,
+                           allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime],
+                           allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]]
+                        ];
+                    ];
                     allExpr = Simplify[allExpr];
-                    debugPrint["# all Expr from vm", allExpr];
                     If[allExpr === False,
                        ret = False];
-                    tmpLargePm = largePm //. p -> p1;
-                    tmpSmallPm = smallPm //. p -> p2;
-                    (* debugPrint["# tmpLargePm", tmpLargePm];
-                     debugPrint["# tmpSmallPm", tmpSmallPm]; *)
-                    listLarge = {};
-                    listSmall = {};
-                    For[i=1,And[ret,Length[tmpLargePm] >= i],i++,
-                        (* debugPrint["# largePm[i]",tmpLargePm[[i]]];
-                         debugPrint["# largePm[i][0]",tmpLargePm[[i]][[0]]];
-                         debugPrint["# largePm[i][1]",tmpLargePm[[i]][[1]]];
-                         debugPrint["# largePm[i][2]",tmpLargePm[[i]][[2]]]; *)
-                        listLarge = Append[listLarge,tmpLargePm[[i]][[1]]];
-                        ];
-                    listLarge = DeleteDuplicates[listLarge];
-                    (* debugPrint["# large list",listLarge]; *)
-                    For[i=1,And[ret,Length[tmpSmallPm] >= i],i++,
-                        (* debugPrint["# smallPm[i]",tmpSmallPm[[i]]];
-                         debugPrint["# smallPm[i][0]",tmpSmallPm[[i]][[0]]];
-                         debugPrint["# smallPm[i][1]",tmpSmallPm[[i]][[1]]];
-                         debugPrint["# smallPm[i][2]",tmpSmallPm[[i]][[2]]]; *)
-                        listSmall = Append[listSmall,tmpSmallPm[[i]][[1]]];
-                        ];
-                    listSmall = DeleteDuplicates[listSmall];
-                    (* debugPrint["# small list",listSmall]; *)
-                    (* tmpLargePm = And[tmpLargePm, t>0];
-                     tmpSmallPm = And[tmpSmallPm, t>0]; *)
+                    tmpLargePm = largePm /. p -> pL;
+                    tmpSmallPm = smallPm;
+                    listLarge = getParameters[largePm] /. p -> pL;
+                    listSmall = getParameters[smallPm];
                     If[ret,
-                       (* debugPrint["#listLarge",listLarge];
-                        debugPrint["#listSmall",listSmall];
-                        debugPrint["#tmpLargePm",tmpLargePm];
-                        debugPrint["#tmpSmallPm",tmpSmallPm];
-                        debugPrint["#allExpr",allExpr];
-                        debugPrint["#forall exists",forAll[evaluate[listSmall],tmpSmallPm,exists[evaluate[listLarge],tmpLargePm,allExpr]]]; *)
-                       ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]]],
-                       ret = False
-                       ];
-                    If[ret =!= True,ret = False,ret = True];
+                       simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+                       ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]]]
+                    ];
+                    If[ret =!= True,ret = False];
                     (* debugPrint["# final return", ret]; *)
                     ret
-                    ]
-             ];
+             ]
+       ];
 
 
 (* check whether the pCons includes case where the p[peps, 0, 1] = 0 *)

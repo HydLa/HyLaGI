@@ -16,7 +16,7 @@ public:
   void output_one_phase(const phase_result_const_sptr_t&, const std::string& prefix = "")const;
 
   std::string get_state_output(const phase_result_t& result) const;
-  
+
 
   void output_parameter_map(const parameter_map_t& pm) const;
 
@@ -38,7 +38,7 @@ public:
 private:
 
   void output_asks(std::ostream &stream, const phase_result_t &phase)const;
-  
+
   void output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const;
 
   std::ostream& ostream;

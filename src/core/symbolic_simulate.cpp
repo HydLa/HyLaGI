@@ -5,6 +5,7 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 #include "LTLModelChecker.h"
+#include "HybridAutomatonConverter.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
@@ -194,7 +195,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   process_opts(opts, cmdline_options, false);
-  
+
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
 
@@ -203,13 +204,17 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)
-  {
-    simulator_ = new LTLModelChecker(opts);
-  }
+    {
+      simulator_ = new LTLModelChecker(opts);
+    }
+  else if(opts.ha_convert_mode)
+    {
+      simulator_ = new HybridAutomatonConverter(opts);
+    }
   else
-  {
-    simulator_ = new SequentialSimulator(opts);
-  }
+    {
+      simulator_ = new SequentialSimulator(opts);
+    }
 
   simulator_->set_backend(backend_);
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
