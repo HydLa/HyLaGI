@@ -1,0 +1,7 @@
+INIT <=> x = 0 & x' = 0 & fire = 1.
+UP <=> [](x''=0.5 & fire'=0).
+DOWN <=> [](fire=0 => x''=-1).
+CUT <=> [](x-=20 => fire=0).
+CONNECT <=> [](x-=19.9 => fire=1).
+
+INIT, UP << (DOWN, CUT, CONNECT).

@@ -87,8 +87,9 @@ private:
 
   std::list<phase_result_sptr_t> make_results_from_todo(phase_result_sptr_t& todo);
 
-  void push_branch_states(phase_result_sptr_t &original,
+  void push_branch_states(phase_result_sptr_t original,
                           CheckConsistencyResult &result);
+  phase_result_sptr_t clone_branch_state(phase_result_sptr_t original);
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 

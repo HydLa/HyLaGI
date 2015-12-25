@@ -140,6 +140,7 @@ public:
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
 
 
+  ConstraintStore              additional_parameter_constraint; /// use for case analysis
   ConstraintStore              additional_constraint_store; /// use for case analysis
   ConstraintStore              diff_sum;
   variable_set_t               discrete_differential_set;
