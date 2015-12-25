@@ -5,10 +5,12 @@
 #include "StdProfilePrinter.h"
 #include "CsvProfilePrinter.h"
 #include "LTLModelChecker.h"
+#include "HybridAutomatonConverter.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
+#include "Parser.h"
 #include <sys/stat.h>
 #include <fstream>
 #include <regex>
@@ -164,7 +166,11 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   {
     opts.debug_mode    = true;
   }
-  IF_SPECIFIED("time")opts.max_time      = po.get<string>("time");
+  IF_SPECIFIED("time")
+  {
+    parser::Parser parser(po.get<string>("time"));
+    opts.max_time = parser.arithmetic();
+  }
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
@@ -191,7 +197,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   process_opts(opts, cmdline_options, false);
-  
+
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
 
@@ -210,13 +216,17 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)
-  {
-    simulator_ = new LTLModelChecker(opts);
-  }
+    {
+      simulator_ = new LTLModelChecker(opts);
+    }
+  else if(opts.ha_convert_mode)
+    {
+      simulator_ = new HybridAutomatonConverter(opts);
+    }
   else
-  {
-    simulator_ = new SequentialSimulator(opts);
-  }
+    {
+      simulator_ = new SequentialSimulator(opts);
+    }
 
   simulator_->set_backend(backends_);
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));

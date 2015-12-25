@@ -167,7 +167,6 @@ publicMethod[
     {sol, tStore, ret},
     sol = exDSolve[cons, prevRs];
     sol = sol /. prevRs;
-    simplePrint["prevRs@cvminterval: ", prevRs];
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
       Message[createVariableMapInterval::underconstrained],
@@ -202,6 +201,12 @@ publicMethod[
 publicMethod[
   getParameterConstraint,
   {toReturnForm[LogicalExpand[pConstraint] ]}
+];
+
+publicMethod[
+  exactlyEqual,
+  lhs, rhs,
+  Simplify[lhs == rhs] === True
 ];
 
 createParameterMaps[] := createParameterMaps[pConstraint];
@@ -701,7 +706,7 @@ Module[
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       listExpr = listExpr //. prevRs;
-      If[MemberQ[listExpr, ele /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
+      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];

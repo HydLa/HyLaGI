@@ -1,13 +1,19 @@
 #pragma once
+#include "PropertyNode.h"
+#include "PhaseResult.h"
+#include "Automaton.h"
+#include "Backend.h"
+#include <iostream>
+#include <vector>
+#include <string>
+#include "Variable.h"
+#include "ValueRange.h"
+#include "ModuleSet.h"
+#include "ModuleSetContainer.h"
+#include "ConstraintStore.h"
+#include "Parameter.h"
 
-#include "Simulator.h"
-#include "LTLNode.h"
-#include "SymbolicTrajPrinter.h"
-#include "ConsistencyChecker.h"
-
-namespace hydla {
-namespace simulator {
-
+class HybridAutomaton;
 typedef boost::shared_ptr<hydla::simulator::ConsistencyChecker>  consistency_checker_t;
 typedef boost::shared_ptr<hydla::symbolic_expression::Ask>                       ask_t;
 typedef std::set<ask_t >                                                        asks_t;
@@ -28,31 +34,17 @@ typedef std::map<module_set_t::module_t, bool>                                  
 typedef hydla::hierarchy::ModuleSet                                                    module_set_t;
 typedef std::set<module_set_t>                                                     module_set_set_t;
 
-typedef std::vector<LTLNode*>            ltl_node_list_t;
-typedef std::vector<automaton_node_list_t>   path_list_t;
-typedef std::pair<LTLNode*,node_sptr>         ltl_edge_t;
-typedef std::vector<ltl_edge_t>          ltl_edge_list_t;
+typedef std::vector<HybridAutomaton*>            HA_node_list_t;
+typedef std::vector<automaton_node_list_t>       HA_path_list_t;
+typedef std::pair<HybridAutomaton*,node_sptr>         HA_edge_t;
+typedef std::vector<HA_edge_t>                   HA_edge_list_t;
 
 
-class LTLModelChecker: public Simulator{
-public:
-  LTLModelChecker(Opts &opts);
-  virtual ~LTLModelChecker();
-  /**
-   * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
-   */
-  virtual phase_result_sptr_t simulate();
-private:
-  void LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init);
-  ltl_node_list_t transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker);
-  bool check_including(LTLNode* larger,LTLNode* smaller);
-  LTLNode* detect_acceptance_cycle(LTLNode* new_node,LTLNode* parent_node);
-  LTLNode* detect_loop_in_path(LTLNode* new_node, automaton_node_list_t path);
-  bool check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker);
-
-  io::SymbolicTrajPrinter printer;
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+class HybridAutomaton : public Automaton
+{
+ public:
+  hydla::simulator::phase_result_sptr_t phase;
+  HybridAutomaton(hydla::simulator::phase_result_sptr_t set_phase);
+  HybridAutomaton(std::string name,hydla::simulator::phase_result_sptr_t set_phase);
+  /* ~HybridAutomaton(); */
 };
-
-} // simulator
-} // hydla

@@ -77,9 +77,8 @@ void ProgramOptions::init_descriptions()
      "use NUM threads and Mathematica process")
 
     ("time,t",
-     value<std::string>()->default_value(""),
-     "time limit of the model\n"
-     "  empty: infinity")
+     value<std::string>()->default_value("Infinity"),
+     "time limit of the model")
 
     ("phase,p",
      value<int>()->default_value(-1),
