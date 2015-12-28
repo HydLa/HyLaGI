@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 
+namespace hydla{
+namespace simulator{
+
 class PropertyNode;
 
 typedef enum {
@@ -17,7 +20,7 @@ typedef enum {
 /* typedef std::vector<property_link_t> property_link_list_t; */
 typedef hydla::symbolic_expression::node_sptr                     node_sptr;
 
-class PropertyNode : public Automaton
+class PropertyNode : public AutomatonNode
 {
  public:
   PropertyNodeType type;
@@ -26,3 +29,6 @@ class PropertyNode : public Automaton
   ~PropertyNode();
   /* void add_next_link(node_sptr guard,PropertyNode* child); */
 };
+
+}
+}

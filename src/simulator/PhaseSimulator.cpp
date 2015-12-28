@@ -47,7 +47,7 @@ PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator
 
 PhaseSimulator::~PhaseSimulator(){}
 
-void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
+phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
   timer::Timer phase_timer;
   module_set_container->reset();
@@ -120,6 +120,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
 
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
+  return phase_list;
 }
 
 value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range)

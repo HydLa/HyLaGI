@@ -52,7 +52,7 @@ public:
                           phase_result_sptr_t root);
 
 
-  void process_todo(phase_result_sptr_t&);
+  phase_list_t process_todo(phase_result_sptr_t&);
 
 
   void set_backend(backend_sptr_t);

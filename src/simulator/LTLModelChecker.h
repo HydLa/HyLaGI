@@ -15,7 +15,7 @@ typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always
 typedef hydla::hierarchy::ModuleSet                                       module_set_t;
 typedef boost::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                         phase_result_sptrs_t;
-typedef std::list<phase_result_sptr_t >                                    todo_list_t;
+typedef std::list<phase_result_sptr_t >                                    phase_list_t;
 typedef hydla::simulator::Value                                                value_t;
 typedef hydla::simulator::ValueRange                                           range_t;
 typedef hydla::simulator::Variable                                          variable_t;

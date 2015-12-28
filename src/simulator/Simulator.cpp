@@ -103,8 +103,6 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
-  typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
-
   for(auto entry : parse_tree->get_variable_map())
   {
     for(int d = 0; d <= entry.second; ++d)
@@ -152,18 +150,18 @@ phase_result_sptr_t Simulator::make_initial_todo()
   return todo;
 }
 
-void Simulator::process_one_todo(phase_result_sptr_t& todo)
+phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo)
 {
   if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase){
     todo->parent->simulation_state = simulator::STEP_LIMIT;
-    return;
+    return phase_list_t();
   }
   HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
   HYDLA_LOGGER_DEBUG("\n--- prev map ---\n", todo->prev_map);
-
+  phase_list_t result_list;
   try{
     timer::Timer phase_timer;
-    phase_simulator_->process_todo(todo);
+    result_list = phase_simulator_->process_todo(todo);
     todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
   }
   catch(const timeout::TimeOutError &te)
@@ -175,6 +173,7 @@ void Simulator::process_one_todo(phase_result_sptr_t& todo)
     exit_status = EXIT_FAILURE;
   }
   HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
+  return result_list;
 }
 
 bool Simulator::assert_call_back(BreakPoint bp, phase_result_sptr_t phase)

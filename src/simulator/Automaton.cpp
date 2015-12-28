@@ -3,74 +3,143 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include "HydLaError.h"
+#include "Logger.h"
+
 using namespace std;
 using namespace hydla;
 using namespace simulator;
 using namespace symbolic_expression;
 
-Automaton::Automaton(){
-  this->id = 0;
-  this->name = "no_name";
-  this->parent_node = NULL;
-  this->color =  "#000000";
-  this->write = 0;
-  this->trace_path.push_back(this);
-}
-
-Automaton::Automaton(std::string name){
-  this->id = 0;
-  this->name = name;
-  this->parent_node = NULL;
-  this->color =  "#000000";
-  this->write = 0;
-  this->trace_path.push_back(this);
-}
-
-Automaton::Automaton(std::string name,int id){
+AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id){
   this->id = id;
   this->name = name;
-  this->parent_node = NULL;
+  this->phase = phase;
   this->color =  "#000000";
-  this->write = 0;
-  this->trace_path.push_back(this);
 }
 
-void Automaton::add_next_edge(Automaton * child){
-  node_sptr true_node = node_sptr(new hydla::symbolic_expression::True());
-  add_next_edge(child,true_node);
+void AutomatonNode::add_edge(AutomatonNode* child,node_sptr guard){
+  this->edges.push_back(std::pair<AutomatonNode*,node_sptr>(child,guard));
+  child->reversed_edges.push_back(this);
 }
 
-void Automaton::add_next_edge(Automaton * child,node_sptr guard){
-  this->next_edge.push_back(std::pair<Automaton*,node_sptr>(child,guard));
-  if(child->parent_node == NULL){
-    std::vector<Automaton *> child_trace_path = this->trace_path;
-    child_trace_path.push_back(child);
-    child->parent_node = this;
-    child->trace_path = child_trace_path;
-  }
-}
-
-void Automaton::set_id(int id){
+void AutomatonNode::set_id(int id){
   this->id = id;
 }
 
-void Automaton::set_name(std::string name){
+void AutomatonNode::set_name(std::string name){
   this->name = name;
 }
 
-void Automaton::set_color(std::string color){
+void AutomatonNode::set_color(std::string color){
   this->color = color;
 }
 
-void Automaton::set_color_to_trace_path(std::string color){
-  for(typename std::vector<Automaton *>::iterator it = trace_path.begin();it != trace_path.end();it++){
-    (*it)->set_color(color);
+void AutomatonNode::dump(ostream& ost)
+{
+  ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\"];" << endl;
+  for(auto it = edges.begin();it != edges.end();it++){
+    if(this->color == (*it).first->color){
+      ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[color=\"" << this->color << "\"];" << endl;
+    }else{
+      ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << ";" << endl;
+    }
+  }  
+}
+
+void AutomatonNode::remove()
+{
+  for(auto node : reversed_edges)
+  {
+    for(auto edge_it = node->edges.begin(); edge_it != node->edges.end(); edge_it++)
+    {
+      if(edge_it->first == this)
+      {
+        node->edges.erase(edge_it);
+        break;
+      }
+    }
   }
 }
 
-void Automaton::trace(){
+
+void Automaton::dump_node(AutomatonNode *node, ostream &ost){
+  node->dump(ost);
+  visited_nodes.insert(node);
+  for(auto edge : node->edges)
+  {
+    if(!visited_nodes.count(edge.first))dump_node(edge.first, ost);
+  }
+}
+
+
+void Automaton::dump(ostream& ost){
+  visited_nodes.clear();
+  ost << "digraph g{" << endl;
+  dump_node(initial_node, ost);
+  ost << "}" << endl;
+}
+
+Automaton Automaton::clone()
+{
+  Automaton cloned_automaton;
+  map<int, AutomatonNode *> cloned_nodes;
+  cloned_automaton.clone_node(initial_node, cloned_nodes);
+  return cloned_automaton;
+}
+
+void Automaton::clone_node(AutomatonNode *original_node, map<int, AutomatonNode*> &cloned_nodes)
+{
+  AutomatonNode *cloned_node = new AutomatonNode(*original_node);
+  cloned_nodes.insert(make_pair(original_node->id, cloned_node));
+  cloned_node->edges.clear();
+  cloned_node->reversed_edges.clear();
+  if(initial_node == nullptr)initial_node = cloned_node;
+
+  for(auto node : original_node->reversed_edges)
+  {
+    if(cloned_nodes.count(node->id) == 0)
+    {
+      clone_node(node, cloned_nodes);
+      HYDLA_ASSERT(cloned_nodes.count(node->id) > 0);
+    }
+    cloned_node->reversed_edges.push_back(cloned_nodes[node->id]);
+  }
+  for(auto edge : original_node->edges)
+  {
+    AutomatonNode* node = edge.first;
+    if(cloned_nodes.count(node->id) == 0)
+    {
+      clone_node(node, cloned_nodes);
+      HYDLA_ASSERT(cloned_nodes.count(node->id) > 0);
+    }
+    cloned_node->edges.push_back(make_pair(cloned_nodes[node->id], edge.second));
+  }
+}
+
+list<AutomatonNode *> Automaton::get_all_nodes()
+{
+  visited_nodes.clear();
+  list<AutomatonNode *> all_nodes;
+  get_nodes(initial_node, all_nodes);
+  all_nodes.push_back(initial_node);
+  return all_nodes;
+}
+
+void Automaton::get_nodes(AutomatonNode *node, list<AutomatonNode *> &result_list)
+{
+  visited_nodes.insert(node);
+  result_list.push_back(node);
+  for(auto edge: node->edges)
+  {
+    if(!visited_nodes.count(edge.first))get_nodes(node, result_list);
+  }
+}
+
+/*
+void AutomatonNode::trace(){
   std::cout << "// this is trace of " << this->name << "." << std::endl;
-  for(typename std::vector<Automaton *>::iterator it = this->trace_path.begin();it + 1 != this->trace_path.end();it++){
+  for(typename std::vector<AutomatonNode *>::iterator it = this->trace_path.begin();it + 1 != this->trace_path.end();it++){
     if(it == this->trace_path.begin()){
       std::cout << "\"init\"[shape=\"point\"];" << std::endl;
       std::cout << "\"init\"" << " -> " << "\"" << (*it)->name << "\"" << "[color=\"" << (*it)->color << "\"];" << std::endl;
@@ -111,11 +180,11 @@ void Automaton::output_dot(){
   std::cout << "==================================" << std::endl;
 }
 
-void Automaton::dump_node_and_edge(){
+void AutomatonNode::dump_node_and_edge(){
   if(write == 0){
     write++;
     std::cout << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\"];" << std::endl;
-    for(typename std::vector<std::pair<Automaton *,node_sptr>>::iterator it = next_edge.begin();it != next_edge.end();it++){
+    for(typename std::vector<std::pair<AutomatonNode *,node_sptr>>::iterator it = next_edge.begin();it != next_edge.end();it++){
       if(this->name == (*it).first->name){
         std::cout << "\"" << this->name << "\"" << " -> " << "\"" << this->name << "\"" << " " <<  "[color=\"" << this->color << "\"];" << std::endl;
       }else{
@@ -129,12 +198,4 @@ void Automaton::dump_node_and_edge(){
     }
   }
 }
-
-void Automaton::write_reset(){
-  if(write > 0){
-    write = 0;
-    for(typename std::vector<std::pair<Automaton *,node_sptr>>::iterator it = next_edge.begin();it != next_edge.end();it++){
-      (*it).first->write_reset();
-    }
-  }
-}
+*/
