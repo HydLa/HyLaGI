@@ -93,6 +93,8 @@ struct FindMinTimeCandidate
 {
   value_t         time;
   bool            on_time;
+  std::list<int>             guard_indices;
+  std::list<constraint_t>    discrete_guards;
   ConstraintStore parameter_constraint;
   ValueRange     range_by_newton;
   constraint_t   guard_by_newton;

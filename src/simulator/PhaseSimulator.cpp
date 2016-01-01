@@ -779,6 +779,7 @@ ValueRange PhaseSimulator::create_range_from_interval(itvd itv)
 
 find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase)
 {
+  if(opts_->step_by_step)return find_min_time_step_by_step(guard, original_vm, time_limit, phase, entailed);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   list<Parameter> parameters;
@@ -1069,6 +1070,201 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
 
 
+
+
+find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed)
+{
+  struct TimeListElement{
+    value_t time;
+    ConstraintStore parameter_constraint;
+    constraint_t guard;
+  };
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+  std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
+  list<Parameter> parameters;
+  HYDLA_LOGGER_DEBUG_VAR(phase->discrete_guards.size());
+
+  for(auto guard : phase->discrete_guards)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+  }
+
+  vector<TimeListElement > time_list;
+  map<constraint_t, bool> guard_map;
+
+  vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
+  HYDLA_ASSERT(parameter_map_vector.size() <= 1);
+  parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
+  for(auto atomic_guard : guards)
+  {
+    constraint_t g = atomic_guard->constraint;
+    variable_map_t related_vm = get_related_vm(g, original_vm);
+    bool by_newton = false;
+    if(opts_->interval)
+    {
+      if(opts_->guards_to_interval_newton.empty())
+      {
+        cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
+        char c;
+        cin >> c;
+        if(c == 'y')
+        {
+          by_newton = true;
+        }
+      }
+      else
+      {
+        // TODO: avoid string comparison
+        if(opts_->guards_to_interval_newton.count(get_infix_string(g)))
+        {
+          by_newton = true;
+        }
+      }
+    }
+    value_t lower("0");
+    if(by_newton)
+    {
+      list<itvd> result_interval_list = calculate_interval_newton_nd(g, related_vm, pm, phase->discrete_guards.count(g) > 0);
+      for(auto itv : result_interval_list)
+      {
+        Parameter parameter("t", -1, ++time_id);
+        ValueRange current_range = create_range_from_interval(itv);
+        TimeListElement elem;
+        elem.time = value_t(parameter);
+        elem.parameter_constraint = phase->get_parameter_constraint();
+        elem.parameter_constraint.add_constraint_store(current_range.create_range_constraint(node_sptr(new se::Parameter(parameter))));
+        elem.guard = g;
+        simulator_->introduce_parameter(parameter, current_range);
+        time_list.push_back(elem);
+      }
+    }
+    else
+    {
+      //TODO: on_timeを適切に設定
+      if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(atomic_guard->constraint) > 0)
+      {
+        // exploit derivative of guard conditions
+        itvd min_interval = calculate_zero_crossing_of_derivative(g, related_vm, pm);
+        if(min_interval == itvd(0.0))
+        {
+          //TODO: validate that there are no answers for this guard
+          guard_map[atomic_guard->constraint] = false;
+          continue;
+        }
+        else
+        {
+          lower = value_t(min_interval.lower());
+          backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
+        }
+      }
+      find_min_time_result_t time_list_for_this_guard;
+      backend_->call("solveTimeEquation", true, 3, "etmvtvlt", "f", &g, &related_vm, &lower, &time_list_for_this_guard);
+      for(auto candidate : time_list_for_this_guard)
+      {
+        TimeListElement elem;
+        elem.time = candidate.time;
+        elem.parameter_constraint = candidate.parameter_constraint;
+        elem.guard = g;
+        time_list.push_back(elem);
+      }
+    }
+
+    const type_info &guard_type = typeid(*(atomic_guard->constraint));
+    if(guard_type == typeid(Equal) || guard_type == typeid(UnEqual))
+    {
+      guard_map[atomic_guard->constraint] = (guard_type == typeid(Equal));
+    }
+    else
+    {
+      bool true_at_initial_time;
+      backend_->call("trueAtInitialTime", true, 1, "et", "b", &g, &true_at_initial_time);
+      guard_map[atomic_guard->constraint] = true_at_initial_time;
+    }
+  }
+
+  ConstraintStore current_parameter_constraint  = phase->get_parameter_constraint();
+  find_min_time_result_t min_time_for_this_ask;
+  while(!time_list.empty())
+  {
+    find_min_time_result_t minimum_candidates;
+    backend_->call("getMinimum", true, 2, "tlcsn", "f", &time_list, &current_parameter_constraint, &minimum_candidates);
+    //TODO: deal with case branching
+    HYDLA_ASSERT(minimum_candidates.size() == 1);
+    for(auto &candidate : minimum_candidates)
+    {
+      std::list<constraint_t> guard_list;
+      candidate.guard_indices.sort(greater<int>());
+      for(int index : candidate.guard_indices)
+      {
+        //TODO: improve efficiency;
+        guard_list.push_back(time_list[index].guard);
+        time_list.erase(time_list.begin() + index);
+      }
+      bool on_time;
+      bool satisfied = checkAndUpdateGuards(guard_map, guard, guard_list, on_time, entailed);
+      if(satisfied)
+      {
+        FindMinTimeCandidate new_candidate;
+        new_candidate.time = candidate.time;
+        new_candidate.discrete_guards = guard_list;
+        new_candidate.parameter_constraint = candidate.parameter_constraint;
+        new_candidate.on_time = on_time;
+        min_time_for_this_ask.push_back(candidate);
+        backend_->call("productOfConstraints", true, 1, "csncsn", "cs", &current_parameter_constraint, &candidate.parameter_constraint, &current_parameter_constraint);
+        if(!current_parameter_constraint.consistent())break;
+      }
+    }
+  }
+  return min_time_for_this_ask;
+}
+
+bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, constraint_t guard, list<constraint_t> guard_list, bool &on_time, bool entailed)
+{
+  map<constraint_t, bool> guard_map_prev = guard_map;
+  bool satisfied = false;
+  for(auto &atomic_guard : guard_list)
+  {
+    const type_info &guard_type = typeid(*(atomic_guard));
+    if(guard_type == typeid(Equal) || guard_type == typeid(LessEqual) || guard_type == typeid(GreaterEqual))
+    {
+      guard_map[atomic_guard] = true;
+    }
+    else guard_map[atomic_guard] = false;
+  }
+  
+  backend_->call("isGuardSatisfied", true, 2, "engm", "b", &guard, &guard_map, &satisfied);
+  if(satisfied)
+  {
+    on_time = true;
+    return true;
+  }
+  for(auto &atomic_guard : guard_list)
+  {
+    const type_info &guard_type = typeid(*(atomic_guard));
+    if(guard_type == typeid(Equal))
+    {
+      guard_map[atomic_guard] = false;
+    }
+    else if(guard_type == typeid(Equal))
+    {
+      guard_map[atomic_guard] = true;
+    }
+    else
+    {
+      guard_map[atomic_guard] = !guard_map_prev[atomic_guard];
+    }
+  }
+  backend_->call("isGuardSatisfied", true, 2, "engm", "b", &guard, &guard_map, &satisfied);
+  if(satisfied)
+  {
+    on_time = false;
+    return true;
+  }
+  return false;
+}
+    
+
+
 void
 PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 {
@@ -1282,7 +1478,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 throw HYDLA_ERROR("failed to calculate valid time of the discrete change for " + asks_str);
               }
             }
-            if(opts_->interval || opts_->numerize_mode || opts_->epsilon_mode > 0)
+            if(!opts_->step_by_step && (opts_->interval || opts_->numerize_mode || opts_->epsilon_mode > 0))
             {
               // calculate discrete_guards
               for(auto discrete_ask : next_todo->discrete_asks)
