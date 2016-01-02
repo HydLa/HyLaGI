@@ -51,10 +51,6 @@ itvd intersect_interval(itvd x, itvd y)
 bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   itvd tmp;
-  tmp.lower() = candidate.lower() - width(candidate) / 2.;
-  tmp.upper() = candidate.upper() + width(candidate) / 2.;
-  // tmp.lower() = nextafter(candidate.lower(), -100.0);
-  // tmp.upper() = nextafter(candidate.upper(), 100.0);
 
   if(candidate == candidate.lower() && candidate == candidate.upper() &&
      candidate != itvd(0.,0.))
@@ -62,9 +58,15 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
   
-  double w = width(candidate);
+
+  double max_width = width(candidate) * 2;
+  double min_width = 0;
   while(true)
   {
+    if(max_width <= min_width) return false;
+    double w = (max_width + min_width)/ 2;
+    tmp.lower() = candidate.lower() - w / 2.;
+    tmp.upper() = candidate.upper() + w / 2.;
     std::cerr.precision(17);
     HYDLA_LOGGER_DEBUG_VAR(tmp);
   
@@ -82,14 +84,12 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     div = division_part1(f_result, d_result, parted);
 
     HYDLA_LOGGER_DEBUG("div : ", div);
-    HYDLA_LOGGER_DEBUG("parted: ", parted);
+
 
     if(parted || in(0.,d_result))
     {
-      if(w == w /2.) return false;
-      w = w / 2.;
-      tmp.lower() = candidate.lower() - w / 2.;
-      tmp.upper() = candidate.upper() + w / 2.;
+      max_width = (max_width + min_width) / 2;
+      HYDLA_LOGGER_DEBUG("partition occured.");
       continue;
     }
   
@@ -103,11 +103,9 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     }
     else
     {
-      HYDLA_LOGGER_DEBUG("Not Subset.");
-      if(w == w /2.) return false;
-      w = w * sqrt(2.);
-      tmp.lower() = candidate.lower() - w / 2.;
-      tmp.upper() = candidate.upper() + w / 2.;
+      HYDLA_LOGGER_DEBUG("proper_subset failed");
+      min_width = max_width + min_width / 2;
+      continue;
     }
   }
 }
