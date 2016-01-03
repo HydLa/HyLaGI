@@ -152,7 +152,7 @@ ostream &stream, const phase_result_t &result) const
     }
     
     stream << it->first << "\t: " << it->second << "\n";
-    if(false && opts.interval && it->second.unique() && result.phase_type == POINT_PHASE)
+    if(opts.interval && it->second.unique() && result.phase_type == POINT_PHASE)
     {
       vector<parameter_map_t> par_maps = result.get_parameter_maps();
       if(par_maps.size() == 1)
