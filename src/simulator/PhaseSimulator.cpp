@@ -414,7 +414,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
         {
           Variable var(pair.first, max_d_count);
           if(phase->variable_map.count(var) == 0 || phase->prev_map.count(var) == 0
-             || phase->variable_map[var].unique() || phase->prev_map[var].unique()
+             || !phase->variable_map[var].unique() || !phase->prev_map[var].unique()
              || !check_equality(phase->variable_map[var].get_unique_value(), phase->prev_map[var].get_unique_value()))
             discrete_vs.insert(var);
         }
@@ -1054,7 +1054,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
   }
 
-  if(opts_->numerize_mode || opts_->epsilon_mode > 0)
+  if(opts_->numerize_mode || opts_->epsilon_mode || opts_->interval > 0)
   {
     for(auto &each_case: min_time_for_this_ask)
     {
@@ -1495,6 +1495,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                     HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
                   }
                 }
+
                 HYDLA_ASSERT(f_result.size() == 1);
                 FindMinTimeCandidate candidate = f_result.front();
                 constraints_t guards_on_border;
