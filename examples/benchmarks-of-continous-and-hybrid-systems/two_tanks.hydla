@@ -1,16 +1,14 @@
 // in the original model, u can be always changed with in range [-0.01. 0.01].
-INIT <=> 1.9 <= x1 <= 1.91 & x2 = 1 & v1 = v2 = 0 & u = 0 & [](u' = 0).
-// INIT <=> 1.5 <= x1 <= 2.5 & x2 = 1 & v1 = v2 = 0 & u = 0 & [](u' = 0). // The original version
+INIT <=> 1.9 <= x1 <= 1.91 & x2 = 1 & v1 = 0 & v2 = 1.
 V1_CONST <=> [](v1' = 0).
 V2_CONST <=> [](v2' = 0).
 V1_OFF2ON <=> [](v1- = 0 & x1- = -1 => v1 = 1).
-V1_ON2OFF <=> [](v1- = 1 & x1- = 1 => v1 = 0).
-V2_OFF2ON <=> [](v2- = 0 & x2- = 1 => v2 = 1).
+V1_ON2OFF <=> [](v1- = 1 & v2- = 1 & x1- = 1 => v1 = 0).
+V2_OFF2ON <=> [](v2- = 0 & x2- = 1 => v2 = 1 & v1 = 0).
 V2_ON2OFF <=> [](v2- = 1 & x2- = 0 => v2 = 0).
-X1 <=> []((v1 = 0 => x1' = -x1 -2 + u) & (v1 = 1 => x1' = -x1 + 3 + u)).
-X2 <=> []((v2 = 0 => x2' = x1 + u) & (v2 = 1 => x2' = x1 - x2 - 5 + u)).
+X1 <=> []((v1 = 0 => x1' = -x1 -2) & (v1 = 1 => x1' = -x1 + 3)).
+X2 <=> []((v2 = 0 => x2' = x1) & (v2 = 1 => x2' = x1 - x2 - 5)).
 
-INIT, V1_CONST << (V1_OFF2ON, V1_ON2OFF), V2_CONST << (V2_OFF2ON, V2_ON2OFF), X1, X2.
+INIT, (V1_CONST, V2_CONST) << (V1_OFF2ON, V1_ON2OFF, V2_OFF2ON, V2_ON2OFF), X1, X2.
 
-
-//#hylagi --fnd -t 5 --finterval --guards_to_interval_newton x1-=-1,x1-=1,x2-=1,x2-=0 --vars_to_approximate x1,x2,x1',x2'
+//#hylagi --fnd  --finterval --guards_to_interval_newton x1-=-1,x1-=1,x2-=1,x2-=0
