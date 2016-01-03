@@ -18,7 +18,7 @@ struct Opts {
   symbolic_expression::node_sptr max_time;
   int epsilon_mode;
   bool interval;
-  bool step_by_step = true; //TODO: set this from command line
+  bool step_by_step = false; //TODO: set this from command line
   bool numerize_mode;
   bool ltl_model_check_mode;
 

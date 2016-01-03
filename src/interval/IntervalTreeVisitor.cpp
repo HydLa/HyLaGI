@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include <exception>
 #include <boost/lexical_cast.hpp>
+#include "HydLaError.h"
 
 namespace hydla
 {
@@ -13,12 +14,6 @@ using namespace hydla::symbolic_expression;
 itvd IntervalTreeVisitor::pi = kv::constants<itvd>::pi();
 itvd IntervalTreeVisitor::e = kv::constants<itvd>::e();
 
-class IntervalException : public std::runtime_error
-{
-  public:
-  IntervalException(const std::string& msg):
-    std::runtime_error("error occured in interval calculation: " + msg){}
-};
 
 
 IntervalTreeVisitor::IntervalTreeVisitor()
@@ -30,6 +25,8 @@ itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, par
 {
   time_interval = t;
   parameter_map = map;
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
+  if(map != nullptr)HYDLA_LOGGER_DEBUG_VAR(*map);
   accept(node);
   if(current_value.is_integer)
     return itvd(current_value.integer);
@@ -343,6 +340,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
                     node->get_differential_count(),
                     node->get_phase_id());
   auto param_it = parameter_map->find(param);
+  HYDLA_LOGGER_DEBUG_VAR(param);
   if(param_it == parameter_map->end())invalid_node(*node);
 
   range_t range = param_it->second;;
@@ -377,7 +375,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
 
 void IntervalTreeVisitor::invalid_node(symbolic_expression::Node &node)
 {
-  throw IntervalException("invalid node: " + node.get_string());
+  throw HYDLA_ERROR("invalid node: " + node.get_string());
 }
 
 void IntervalTreeVisitor::debug_print(std::string str, itvd x)

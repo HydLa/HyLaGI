@@ -7,6 +7,7 @@
 #include "EpsilonMode.h"
 #include "LTLNode.h"
 #include "PropertyNode.h"
+#include "IntervalTreeVisitor.h"
 
 extern hydla::Opts opts;
 
@@ -16,6 +17,7 @@ namespace io{
 using namespace simulator;
 using namespace backend;
 using namespace std;
+using namespace interval;
 
 SymbolicTrajPrinter::SymbolicTrajPrinter(backend_sptr_t b, std::ostream& ost, bool numerize_par):
   ostream(ost), backend(b), numerize_parameter(numerize_par){
@@ -46,7 +48,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
     output_limit_of_time(sstr,backend.get(),result);
   }
 
-  output_variable_map(sstr, result.variable_map);
+  output_variable_map(sstr, result);
 
   if(epsilon_mode_flag && backend.get()){
     output_limits_of_variable_map(sstr,backend.get(),result,result.variable_map);
@@ -122,8 +124,9 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
 }
 
 void SymbolicTrajPrinter::output_variable_map(std::
-ostream &stream, const variable_map_t& vm) const
+ostream &stream, const phase_result_t &result) const
 {
+  variable_map_t vm = result.variable_map;
   for(auto it = vm.begin(); it!=vm.end(); ++it) {
 
     // 出力変数を指定した場合
@@ -147,8 +150,24 @@ ostream &stream, const variable_map_t& vm) const
           break;
       }
     }
-
+    
     stream << it->first << "\t: " << it->second << "\n";
+    if(false && opts.interval && it->second.unique() && result.phase_type == POINT_PHASE)
+    {
+      vector<parameter_map_t> par_maps = result.get_parameter_maps();
+      if(par_maps.size() == 1)
+      {
+        IntervalTreeVisitor visitor;
+        itvd dummy = itvd(0, 0);
+        try{
+          itvd itv = visitor.get_interval_value(it->second.get_unique_value().get_node(), &dummy, &par_maps[0]);
+          stream << "width(" << it->first << "): " << width(itv) << endl;
+        }catch(IntervalException)
+        {
+          //do nothing
+        }
+      }
+    }
   }
 }
 

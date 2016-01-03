@@ -20,7 +20,7 @@ public:
 
   void output_parameter_map(const parameter_map_t& pm) const;
 
-  void output_variable_map(std::ostream &stream, const variable_map_t& vm) const;
+  void output_variable_map(std::ostream &stream, const phase_result_t& result) const;
 
   void output_result_node(const phase_result_const_sptr_t &node,
     std::vector<std::string> &result, int &case_num, int &phase_num) const;

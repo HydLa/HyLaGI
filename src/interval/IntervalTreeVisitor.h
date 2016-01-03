@@ -131,6 +131,13 @@ class IntervalTreeVisitor : public symbolic_expression::TreeVisitor
   parameter_map_t *parameter_map;
 };
 
+class IntervalException : public std::runtime_error
+{
+  public:
+  IntervalException(const std::string& msg):
+    std::runtime_error("error occured in interval calculation: " + msg){}
+};
+
 
 }
 }

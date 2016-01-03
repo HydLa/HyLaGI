@@ -209,15 +209,16 @@ publicMethod[
   Simplify[lhs == rhs] === True
 ];
 
-createParameterMaps[] := createParameterMaps[pConstraint];
+createParameterMaps[] := createParameterMaps[pConstraint, parameters];
+createParameterMaps[pcons_] := createParameterMaps[pcons, parameters];
 
 publicMethod[
   createParameterMaps,
-  pCons,
+  pCons, pars,
   Module[
     {map},
     map = removeUnnecessaryConstraints[pCons, hasParameter];
-    map = Reduce[map, Reals];
+    map = Reduce[map, pars, Reals];
     map = removeUnnecessaryConstraints[map, hasParameter];
     
     If[map === True, Return[{{}}] ];
