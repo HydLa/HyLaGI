@@ -22,4 +22,4 @@ BOUNCE_PLUS <=> [](y- = tan(s) * x- =>
 
 INIT, A << (BOUNCE_PLUS,BOUNCE_MINUS).
 
-//#hylagi -p10 --fnd --finterval --fdump_in_progress --approximation_step 1 --constants s',s,k,k',x',x'',y',y''
+//#hylagi -p10 --fnd --finterval --fdump_in_progress --guards_to_interval_newton y-=tan[s]*x-,y-=(-tan[s])*x-

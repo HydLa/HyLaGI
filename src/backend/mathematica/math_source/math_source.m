@@ -4,7 +4,7 @@ checkConsistencyPoint[] := (
   checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(tmpCons /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ] /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
@@ -221,16 +221,19 @@ publicMethod[
     map = Reduce[map, pars, Reals];
     map = removeUnnecessaryConstraints[map, hasParameter];
     
-    If[map === True, Return[{{}}] ];
-    If[map === False, Return[{}] ];
-      
-    map = LogicalExpand[map];
-    map = applyListToOr[map];
-    map = Map[(applyList[#])&, map];
-    map = Map[(adjustExprs[#, isParameter])&, map];
-    debugPrint["map after adjustExprs in createParameterMap", map];
-    map = Map[(convertExprs[#])&, map];
-    map
+    If[map === True,
+      {{}},
+      If[map === False,
+        {},
+        map = LogicalExpand[map];
+        map = applyListToOr[map];
+        map = Map[(applyList[#])&, map];
+        map = Map[(adjustExprs[#, isParameter])&, map];
+        debugPrint["map after adjustExprs in createParameterMap", map];
+        map = Map[(convertExprs[#])&, map];
+        map
+      ]
+    ]
   ]  
 ];
 

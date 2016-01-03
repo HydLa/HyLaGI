@@ -1527,7 +1527,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
-            approximate_phase(next_todo, next_todo->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
           }
