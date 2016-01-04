@@ -8,6 +8,7 @@
 #include "LTLNode.h"
 #include "PropertyNode.h"
 #include "IntervalTreeVisitor.h"
+#include "HydLaError.h"
 
 extern hydla::Opts opts;
 
@@ -162,7 +163,7 @@ ostream &stream, const phase_result_t &result) const
         try{
           itvd itv = visitor.get_interval_value(it->second.get_unique_value().get_node(), &dummy, &par_maps[0]);
           stream << "width(" << it->first << "): " << width(itv) << endl;
-        }catch(IntervalException)
+        }catch(HydLaError)
         {
           //do nothing
         }
