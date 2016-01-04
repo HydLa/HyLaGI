@@ -202,6 +202,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
       opts.guards_to_interval_newton.insert(buffer);
     }
   }
+  IF_SPECIFIED("step_by_step")opts.step_by_step = po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
 }
 
