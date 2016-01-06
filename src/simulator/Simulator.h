@@ -134,7 +134,7 @@ protected:
 
   void init_module_set_container(const parse_tree_sptr& parse_tree);
 
-  virtual void process_one_todo(phase_result_sptr_t& todo);  
+  virtual phase_list_t process_one_todo(phase_result_sptr_t& todo);  
   
   void reset_result_root();
 

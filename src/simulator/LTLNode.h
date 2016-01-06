@@ -13,17 +13,19 @@
 #include "ConstraintStore.h"
 #include "Parameter.h"
 
+namespace hydla{
+namespace simulator{
+
 class LTLNode;
 
 typedef std::vector<LTLNode*>               ltl_node_list_t;
 typedef std::vector<automaton_node_list_t>      path_list_t;
-typedef std::pair<LTLNode*,node_sptr>            ltl_edge_t;
+typedef std::pair<LTLNode*, node_sptr>            ltl_edge_t;
 typedef std::vector<ltl_edge_t>             ltl_edge_list_t;
 
-class LTLNode : public Automaton
+class LTLNode : public AutomatonNode
 {
  public:
-  hydla::simulator::phase_result_sptr_t phase;
   PropertyNode* property;
   path_list_t acceptance_pathes;
   bool checked_next_link;
@@ -38,3 +40,6 @@ class LTLNode : public Automaton
   /* LTLNode* detectAcceptanceCycle(LTLNode* parent_node,hydla::simulator::backend_sptr_t backend); */
   /* bool search_parameter(value_t var); */
 };
+
+}
+}

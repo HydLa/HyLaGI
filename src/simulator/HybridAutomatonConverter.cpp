@@ -1,6 +1,5 @@
 #include "HybridAutomatonConverter.h"
 #include "Timer.h"
-#include "SymbolicTrajPrinter.h"
 #include "PhaseSimulator.h"
 #include "ValueModifier.h"
 #include "SignalHandler.h"
@@ -11,9 +10,8 @@
 #include <string>
 #include "Backend.h"
 #include "ValueModifier.h"
-#include "Automaton.h"
-#include "HybridAutomaton.h"
 #include <stdio.h>
+#include "SymbolicTrajPrinter.h"
 
 using namespace std;
 
@@ -23,7 +21,7 @@ namespace simulator {
 using namespace std;
 using namespace symbolic_expression;
 
-HybridAutomatonConverter::HybridAutomatonConverter(Opts &opts):Simulator(opts), printer(backend){}
+HybridAutomatonConverter::HybridAutomatonConverter(Opts &opts):Simulator(opts){}
 
 HybridAutomatonConverter::~HybridAutomatonConverter(){}
 
@@ -33,12 +31,16 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
   make_initial_todo();
   try
     {
-      consistency_checker.reset(new ConsistencyChecker(backend));
-      HybridAutomaton* init = new HybridAutomaton("init",result_root_);
-      HA_node_list_t start;
-      start.push_back(init);
-      HA_translate(result_root_,start);
-      init->dump();
+      AutomatonNode* init = new AutomatonNode(result_root_, "init");
+      current_automaton.initial_node = init;
+      HA_node_list_t created_nodes;
+      HA_translate(result_root_, init, created_nodes);
+      int automaton_count = 1;
+      for(auto automaton: result_automata)
+      {
+        cout << "===== Automaton" << automaton_count++ << " =====" << endl;
+        automaton.dump(cout);
+      }
     }
   catch(const std::runtime_error &se)
     {
@@ -50,79 +52,93 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
       std::cout << error_str;
     }
 
-
-  if(signal_handler::interrupted){
-    // // TODO: 各未実行フェーズを適切に処理
-    // while(!todo_stack_->empty())
-    // {
-    //   simulation_job_sptr_t todo(todo_stack_->pop_todo());
-    //   todo->parent->simulation_state = INTERRUPTED;
-    //   // TODO: restart simulation from each interrupted phase
-    // }
-  }
-
   HYDLA_LOGGER_DEBUG("%% simulation ended");
   return result_root_;
 }
 
-void HybridAutomatonConverter::HA_translate(phase_result_sptr_t current, HA_node_list_t current_automaton_node)
+void HybridAutomatonConverter::HA_translate(phase_result_sptr_t current, AutomatonNode * current_automaton_node, HA_node_list_t created_nodes)
 {
+  io::SymbolicTrajPrinter printer(backend);
   if(signal_handler::interrupted)
     {
       current->simulation_state = INTERRUPTED;
       return;
     }
   phase_simulator_->apply_diff(*current);
+  HYDLA_LOGGER_DEBUG_VAR(*current);
   while(!current->todo_list.empty())
     {
       phase_result_sptr_t todo = current->todo_list.front();
       current->todo_list.pop_front();
       profile_vector_->insert(todo);
-
       if(todo->simulation_state == NOT_SIMULATED){
-        process_one_todo(todo);
-        /* TODO: assertion違反が検出された場合の対応 */
-        current_automaton_node = transition(current_automaton_node,todo,consistency_checker);
+        phase_list_t result_list = process_one_todo(todo);
+        for(auto result : result_list)
+        {
+          if(result->todo_list.empty())
+          {
+            // The simulation for this case is terminated
+            AutomatonNode* next_node = create_phase_node(result);
+            current_automaton_node->add_edge(next_node);
+            Automaton result_automaton = current_automaton.clone();
+            next_node->remove(); // remove from original Automaton
+            result_automata.push_back(result_automaton);
+          }
+        }
+        if(opts_->dump_in_progress){
+          printer.output_one_phase(todo);
+        }
       }
-      if(opts_->dump_in_progress){
-        printer.output_one_phase(todo);
+      /* TODO: assertion違反が検出された場合の対応 */
+      AutomatonNode* next_node = transition(current_automaton_node, todo, created_nodes);
+      if(next_node == nullptr)
+      {
+        HYDLA_LOGGER_DEBUG("A loop is detected");
+        HYDLA_LOGGER_DEBUG_VAR(*todo);
+        result_automata.push_back(current_automaton.clone());
       }
-      HA_translate(todo,current_automaton_node);
+      else
+      {
+        HA_translate(todo, next_node, created_nodes);
+      }
     }
   phase_simulator_->revert_diff(*current);
+  current_automaton_node->remove();
 }
 
-HA_node_list_t HybridAutomatonConverter::transition(HA_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
-  HA_node_list_t next_search;
-  for(HA_node_list_t::iterator current_HA_node = current.begin();current_HA_node != current.end();current_HA_node++){
-    HybridAutomaton* nextNode = new HybridAutomaton(phase);
-    //通常ループの探索
-    HybridAutomaton* loop_node = detect_loop_in_path(nextNode,(*current_HA_node)->trace_path);
-    //ループの場合
-    if(loop_node!=NULL){
-      (*current_HA_node)->add_next_edge(loop_node);
-    }
-    //ループでない場合
-    if(loop_node == NULL){
-      (*current_HA_node)->add_next_edge(nextNode);
-      next_search.push_back(nextNode);
+
+AutomatonNode* HybridAutomatonConverter::create_phase_node(phase_result_sptr_t phase)
+{
+  return new AutomatonNode(phase, "Phase " + to_string(phase->id), phase->id);
+}
+
+AutomatonNode* HybridAutomatonConverter::transition(AutomatonNode* current_HA_node,phase_result_sptr_t phase, HA_node_list_t &created_nodes){
+  AutomatonNode* next_node = create_phase_node(phase);
+  //通常ループの探索
+  AutomatonNode* loop_node = detect_loop(next_node, created_nodes);
+  //ループの場合
+  if(loop_node!=NULL){
+    current_HA_node->add_edge(loop_node);
+    return nullptr;
+  }
+  //ループでない場合
+  else{
+    current_HA_node->add_edge(next_node);
+    created_nodes.push_back(next_node);
+    return next_node;
+  }
+}
+
+AutomatonNode* HybridAutomatonConverter::detect_loop(AutomatonNode* new_node, HA_node_list_t path){
+  for(auto node: path){
+    if(check_including(node,new_node)){
+      return node;
     }
   }
-  return next_search;
+  return nullptr;
 }
 
-HybridAutomaton* HybridAutomatonConverter::detect_loop_in_path(HybridAutomaton* new_node, automaton_node_list_t path){
-  HybridAutomaton* ret = NULL;
-  for(automaton_node_list_t::iterator it = path.begin();it != path.end();it++){
-    if(check_including((HybridAutomaton*)*it,new_node)){
-      ret = (HybridAutomaton*)*it;
-      return ret;
-    }
-  }
-  return ret;
-}
-
-bool HybridAutomatonConverter::check_including(HybridAutomaton* larger,HybridAutomaton* smaller){
+bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNode* smaller){
   bool include_ret;
   //phase typeの比較
   if(larger->phase->phase_type != smaller->phase->phase_type){

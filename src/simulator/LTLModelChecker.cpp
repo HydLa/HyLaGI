@@ -52,6 +52,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node1->add_next_edge(node1,true_node);
 
       //[bouncing ball 2]:Checking []<>(y=0) & []<>(y!=0) ball is bouncing repeatedly
+      /* TODO: implement
       PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
       PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
@@ -63,7 +64,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       property_init->add_next_edge(node2,y_neq_0);
       node1->add_next_edge(node1,y_eq_0);
       node2->add_next_edge(node2,y_neq_0);
-
+*/
       //[bouncing ball 3]:Checking [](y'<10) don't over first speed
       // PropertyNode *property_init = new PropertyNode(id++,NOMAL);
       // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
@@ -106,6 +107,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node1->add_next_edge(true_node,node1);
 
       //init LTL search
+      /* TODO: implement
       LTLNode *LTL_init = new LTLNode("init",result_root_,property_init);
       ltl_node_list_t ltl_start;
       ltl_start.push_back(LTL_init);
@@ -117,6 +119,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       cout << "========== result ltl search ==========" << endl;
       (LTL_init->next_edge.begin())->first->dump();
       cout << "=======================================" << endl;
+      */
     }
   catch(const std::runtime_error &se)
     {
@@ -172,6 +175,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_
 }
 
 ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker){
+  /* TODO: implement
   ltl_node_list_t next_search;
   for(ltl_node_list_t::iterator current_LTL_node = current.begin();current_LTL_node != current.end();current_LTL_node++){
     for(automaton_edge_list_t::iterator property_edge = (*current_LTL_node)->property->next_edge.begin();property_edge != (*current_LTL_node)->property->next_edge.end();property_edge++){
@@ -211,6 +215,7 @@ ltl_node_list_t LTLModelChecker::transition(ltl_node_list_t current,phase_result
     }
   }
   return next_search;
+  */
 }
 
 bool LTLModelChecker::check_including(LTLNode* larger,LTLNode* smaller){

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Simulator.h"
-#include "SymbolicTrajPrinter.h"
 #include "ConsistencyChecker.h"
-#include "HybridAutomaton.h"
+#include "Automaton.h"
 
 namespace hydla {
 namespace simulator {
+
+typedef std::list<AutomatonNode*>            HA_node_list_t;
 
 class HybridAutomatonConverter: public Simulator{
 public:
@@ -17,12 +18,13 @@ public:
    */
   virtual phase_result_sptr_t simulate();
 private:
-  bool check_including(HybridAutomaton* larger,HybridAutomaton* smaller);
-  void HA_translate(phase_result_sptr_t current, HA_node_list_t current_automaton_node);
-  HA_node_list_t transition(HA_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker);
-  HybridAutomaton* detect_loop_in_path(HybridAutomaton* new_node, automaton_node_list_t path);
-  io::SymbolicTrajPrinter printer;
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  bool check_including(AutomatonNode* larger,AutomatonNode* smaller);
+  void HA_translate(phase_result_sptr_t current, AutomatonNode * current_automaton_node, HA_node_list_t created_nodes);
+  AutomatonNode* create_phase_node(phase_result_sptr_t phase);
+  AutomatonNode* transition(AutomatonNode *current, phase_result_sptr_t phase, HA_node_list_t &trace_path);
+  AutomatonNode* detect_loop(AutomatonNode *new_node, HA_node_list_t trace_path);
+  Automaton current_automaton;
+  std::list<Automaton> result_automata;
 };
 
 } // simulator

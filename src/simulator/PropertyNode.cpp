@@ -8,7 +8,8 @@
 using namespace std;
 using namespace hydla;
 using namespace symbolic_expression;
+using namespace simulator;
 
-PropertyNode::PropertyNode(int id, PropertyNodeType type):Automaton(to_string(id),id){
+PropertyNode::PropertyNode(int id, PropertyNodeType type):AutomatonNode(phase_result_sptr_t(), to_string(id),id){
   this->type = type;
 }

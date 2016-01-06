@@ -58,7 +58,7 @@ typedef hierarchy::ModuleSet                              module_set_t;
 
 typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
-typedef std::list<phase_result_sptr_t >                   todo_list_t;
+typedef std::list<phase_result_sptr_t >                   phase_list_t;
 
 typedef Value                                             value_t;
 typedef ValueRange                                        range_t;
@@ -140,6 +140,7 @@ public:
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
 
 
+  ConstraintStore              additional_parameter_constraint; /// use for case analysis
   ConstraintStore              additional_constraint_store; /// use for case analysis
   ConstraintStore              diff_sum;
   variable_set_t               discrete_differential_set;
@@ -158,7 +159,7 @@ public:
   SimulationState              simulation_state;
   PhaseResult                 *parent;
   phase_result_sptrs_t         children;
-  todo_list_t                  todo_list;
+  phase_list_t                  todo_list;
 
   // trigger conditions
   std::map<ask_t, bool>        discrete_asks;

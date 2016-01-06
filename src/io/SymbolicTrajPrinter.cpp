@@ -447,7 +447,7 @@ void SymbolicTrajPrinter::dump_property_automaton(PropertyNode* node){
   // }
 }
 
-void SymbolicTrajPrinter::output_ltl_node(LTLNode* node)
+void SymbolicTrajPrinter::output_ltl_node(simulator::LTLNode* node)
 {
   // if(node->property->type != ZERO){
   //   node->write_reset();
@@ -462,7 +462,7 @@ void SymbolicTrajPrinter::output_ltl_node(LTLNode* node)
   //   output_ltl_node(*it);
   // }
 }
-void SymbolicTrajPrinter::dump_ltl_node(LTLNode* node){
+void SymbolicTrajPrinter::dump_ltl_node(simulator::LTLNode* node){
   // if(node->write == 0){
   //   node->write++;
   //   ostream << "\"" << node->id << "\"" << " ";

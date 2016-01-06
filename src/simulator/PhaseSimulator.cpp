@@ -49,7 +49,7 @@ PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts): simulator
 
 PhaseSimulator::~PhaseSimulator(){}
 
-void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
+phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
   timer::Timer phase_timer;
   module_set_container->reset();
@@ -122,6 +122,7 @@ void PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
 
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
+  return phase_list;
 }
 
 value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range)
@@ -182,11 +183,11 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     backends_caller("addAssumption", true, 1, "en", "", &cons);
   }
 
-
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
   HYDLA_LOGGER_DEBUG_VAR(parameter_cons);
   backends_caller("addParameterConstraint", true, 1, "csn", "", &parameter_cons);
-  backends_caller("addParameterConstraint", true, 1, "csn", "", &todo->additional_constraint_store);
+  backends_caller("addParameterConstraint", true, 1, "csn", "", &todo->additional_parameter_constraint);
+  backends_caller("addAssumption", true, 1, todo->phase_type == INTERVAL_PHASE?"cst":"csn", "", &todo->additional_constraint_store);
 
   relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
 
@@ -451,16 +452,35 @@ bool PhaseSimulator::check_equality(const value_t &lhs, const value_t &rhs){
 }
 
 
-void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckConsistencyResult &result){
-  phase_result_sptr_t branch_state_false(new PhaseResult());
+void PhaseSimulator::push_branch_states(phase_result_sptr_t original, CheckConsistencyResult &result){
+  phase_result_sptr_t branch_state_false = clone_branch_state(original);
   // copy necesarry information for branching
+
+  branch_state_false->additional_parameter_constraint.add_constraint_store(replace_prev_store(original->parent, result.inconsistent_store));
+
+  original->parent->todo_list.push_back(branch_state_false);
+  original->additional_parameter_constraint.add_constraint_store(replace_prev_store(original->parent, result.consistent_store));
+  if(original->phase_type == INTERVAL_PHASE)
+  {
+    original->prev_map = original->parent->variable_map;
+    consistency_checker->set_prev_map(&original->prev_map);
+  }
+  HYDLA_LOGGER_DEBUG_VAR(original->additional_parameter_constraint);
+  backend_->call("addParameterConstraint", true, 1, "csn", "", &original->additional_parameter_constraint);
+  HYDLA_LOGGER_DEBUG_VAR(*branch_state_false);
+  HYDLA_LOGGER_DEBUG_VAR(*original);
+}
+
+phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t original)
+{
+  phase_result_sptr_t branch_state_false(new PhaseResult());
   branch_state_false->phase_type = original->phase_type;
   branch_state_false->id = ++phase_sum_;
   branch_state_false->step = original->step;
   branch_state_false->current_time = original->current_time;
   branch_state_false->prev_map = original->prev_map;
   branch_state_false->set_parameter_constraint(original->get_parameter_constraint());
-  branch_state_false->additional_constraint_store = original->additional_constraint_store;
+  branch_state_false->additional_parameter_constraint = original->additional_parameter_constraint;
 
   branch_state_false->discrete_differential_set = original->discrete_differential_set;
   branch_state_false->parent = original->parent;
@@ -468,21 +488,7 @@ void PhaseSimulator::push_branch_states(phase_result_sptr_t &original, CheckCons
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
-
-
-  branch_state_false->additional_constraint_store.add_constraint_store(replace_prev_store(original->parent, result.inconsistent_store));
-
-  original->parent->todo_list.push_back(branch_state_false);
-  original->additional_constraint_store.add_constraint_store(replace_prev_store(original->parent, result.consistent_store));
-  if(original->phase_type == INTERVAL_PHASE)
-  {
-    original->prev_map = original->parent->variable_map;
-    consistency_checker->set_prev_map(&original->prev_map);
-  }
-  HYDLA_LOGGER_DEBUG_VAR(original->additional_constraint_store);
-  backends_caller("addParameterConstraint", true, 1, "csn", "", &original->additional_constraint_store);
-  HYDLA_LOGGER_DEBUG_VAR(*branch_state_false);
-  HYDLA_LOGGER_DEBUG_VAR(*original);
+  return branch_state_false;
 }
 
 ConstraintStore PhaseSimulator::replace_prev_store(PhaseResult *parent, ConstraintStore orig)
@@ -638,7 +644,6 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase
   return result;
 }
 
-// phase = todo
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& expanded_always)
 {
   asks_t unknown_asks = trigger_asks;
@@ -847,7 +852,14 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
   }while(expanded);
 
   if(!unknown_asks.empty()){
-    //TODO: implement branching here
+    phase_result_sptr_t branch_state_false = clone_branch_state(phase);
+    constraint_t unknown_guard = (*unknown_asks.begin())->get_guard();
+    branch_state_false->additional_constraint_store.add_constraint(constraint_t(new Not(unknown_guard)));
+    phase->parent->todo_list.push_back(branch_state_false);
+    phase->additional_constraint_store.add_constraint(unknown_guard);
+    HYDLA_LOGGER_DEBUG_VAR(branch_state_false->additional_constraint_store);
+    backend_->call("addAssumption", true, 1, phase->phase_type==INTERVAL_PHASE?"et":"en", "", &unknown_guard);
+    return calculate_closure(phase, trigger_asks, diff_sum, positive_asks, negative_asks, expanded_always);
   }
   return true;
 }
