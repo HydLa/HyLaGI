@@ -153,12 +153,33 @@ bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNo
 
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
+
+  // betsuno kaizou
+  variable_map_t larger_vm, smaller_vm;
+  for (const auto& x : larger->phase->variable_map) {
+    if (x.first.name == "s1" || x.first.name == "s2") {
+      larger_vm.insert(x);
+      cout << x.first.name << " (" << x.first.differential_count << ") " << endl;
+    }
+  }
+  for (const auto& x : smaller->phase->variable_map) {
+    if (x.first.name == "s1" || x.first.name == "s2") {
+      smaller_vm.insert(x);
+      cout << x.first.name << " (" << x.first.differential_count << ") " << endl;
+    }
+  }
+  //
   //compareing set of variables
+  /*
   backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
                 &(larger->phase->current_time), &(larger->phase->variable_map), &larger_cons,
                 &(smaller->phase->current_time), &(smaller->phase->variable_map), &smaller_cons, &include_ret);
+  */
+  backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
+                &(larger->phase->current_time), &(larger_vm), &larger_cons,
+                &(smaller->phase->current_time), &(smaller_vm), &smaller_cons, &include_ret);
   if(include_ret){
-    // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
+    cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
   }
   else{
     // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
