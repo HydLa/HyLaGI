@@ -9,7 +9,7 @@ namespace simulator {
 
 
 
-VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
+VariableReplacer::VariableReplacer(const variable_map_t* map):variable_map(map)
 {}
 
 VariableReplacer::~VariableReplacer()
@@ -22,6 +22,22 @@ void VariableReplacer::replace_node(symbolic_expression::node_sptr& node)
   new_child_.reset();
   accept(node);
   if(new_child_) node = new_child_;
+}
+
+void VariableReplacer::replace_variable_map(variable_map_t* vm)
+{
+  const variable_map_t *prev_vm = variable_map;
+  variable_map = vm;
+  for(auto &entry : *vm)
+  {
+    replace_range(entry.second);
+  }
+  variable_map = prev_vm;
+}
+
+void VariableReplacer::set_variable_map(const variable_map_t* map)
+{
+  variable_map = map;
 }
 
 void VariableReplacer::replace_value(value_t& val)
@@ -56,12 +72,11 @@ void VariableReplacer::replace_range(ValueRange &range)
 void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   string v_name = node->get_name();
-  for(auto it = variable_map.begin();it != variable_map.end(); it++)
+  for(auto it = variable_map->begin();it != variable_map->end(); it++)
     {
-      if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt)
+      if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt && it->second.unique())
       {
         //TODO: 値が範囲を持っている場合にも対応する
-        assert(it->second.unique());
         node_sptr node = it->second.get_unique_value().get_node()->clone();
         VariableReplacer replacer(variable_map);
         replace_node(node);
@@ -69,7 +84,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Varia
         new_child_ = node;
         replace_cnt++;
         // upper_bound to avoid infinite loop (may be caused by circular reference)
-        if(replace_cnt >= variable_map.size())
+        if(replace_cnt >= variable_map->size())
         {
           assert(0);
         }

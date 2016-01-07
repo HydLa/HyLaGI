@@ -4,6 +4,7 @@
 #include "ValueModifier.h"
 #include "SignalHandler.h"
 #include "TimeOutError.h"
+#include "VariableReplacer.h"
 #include "Logger.h"
 #include "Utility.h"
 #include <limits.h>
@@ -140,16 +141,25 @@ AutomatonNode* HybridAutomatonConverter::detect_loop(AutomatonNode* new_node, HA
 
 bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNode* smaller){
   bool include_ret;
+
+  
   //phase typeの比較
   if(larger->phase->phase_type != smaller->phase->phase_type){
-    // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+    HYDLA_LOGGER_DEBUG("different phase type :\n\t \"", larger->id, "\" : \"", smaller->id, "\"");
     return false;
   }
   //phase の変数表の大きさの比較
   if(larger->phase->variable_map.size() != smaller->phase->variable_map.size()){
-    // cout << "different size of variable map :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+    HYDLA_LOGGER_DEBUG("different size of variable map :\n\t \"", larger->id, "\" : \"", smaller->id, "\"");
     return false;
   }
+
+
+  VariableReplacer replacer(&larger->phase->variable_map);
+  replacer.replace_variable_map(&larger->phase->variable_map);
+  replacer.replace_variable_map(&smaller->phase->variable_map);
+  
+
 
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();

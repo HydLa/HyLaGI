@@ -6,12 +6,12 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
                     tmpLargeVm = largeVm /. p -> pL;
                     tmpLargeTime = largeTime /. p -> pL;
                     (* compare variable num *)
-                    For[i=1,And[ret, Length[tmpLargeVm] >= i],i++,
+                    For[i=1,ret && Length[tmpLargeVm] >= i,i++,
                         (* compare variable name *)
                         If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]],
                            ret = False
                         ];
-                        (* correct expr : large.2 == small.2 *)
+                        (* collect expr : large.2 == small.2 *)
                         If[i == 1,
                            allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime],
                            allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]]

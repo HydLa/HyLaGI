@@ -21,7 +21,7 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
 
   public:
 
-  VariableReplacer(const variable_map_t& map);
+  VariableReplacer(const variable_map_t* map);
 
   void replace_node(symbolic_expression::node_sptr& node);
 
@@ -29,6 +29,8 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
 
   void replace_value(value_t &val);
   void replace_range(ValueRange &range);
+  void replace_variable_map(variable_map_t* dm);
+  void set_variable_map(const variable_map_t* map);
   
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
@@ -57,7 +59,7 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
   private:
   int differential_cnt;
   uint replace_cnt;
-  const variable_map_t& variable_map;
+  const variable_map_t* variable_map;
 
 
   symbolic_expression::node_sptr new_child_;
