@@ -1,0 +1,30 @@
+// SW_ON, SW_OFF �Υ����ɾ��� sw- ���ޤޤ��ȡ�[](Loop invariant) �ξ������񤷤��ʤ�
+// �����ƥब Loop invariant �γ����˽Ф����򸡽ФǤ��ʤ�����
+// �к����Σ� �����˽Ф����Ȥ򸡽Ф���������ɲä���
+
+// #omit eps', goal
+INIT <=> x = 0 &  0 < x' < 50 & sw = 0 & eps = 0.5 & [](goal = 100).
+// INIT <=> x = 0 & 0 < x' < 100 & sw = 0 & [](eps = 0.5) & [](goal = 100).
+SW_CONST <=> [](sw' = 0).
+CON <=> [](eps' = 0).
+
+S <=> [](s1 = x' + x - 100 &
+         s2 = x' + x - (100 + eps) &
+         s1' = s1' & s2' = s2'
+         ).
+SW_ON  <=> [](
+  s2- = 0 & sw- = 0 => sw = 1 - sw-
+).
+SW_OFF <=> [](
+  s1- = 0 & sw- = 1 => sw = 1 - sw-
+).
+SW_NOCHANGE <=> [](
+// s1- = 0 | s2- = 0 => 1 = 1
+  s1- = 0 | s2- = 0 => sw = sw-
+).
+
+
+CAR <=> [](x' >=0 => x'' = -50 * sw).
+STOP <=> [](x' = 0 => x'' = 0).
+
+INIT, SW_CONST << SW_NOCHANGE << (SW_ON, SW_OFF), S, CAR, STOP, CON.

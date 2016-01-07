@@ -1,0 +1,16 @@
+// for ipsj
+INIT <=> x = - eps / 2 & x' = 0.1 & y = 0 & y' = 1 & [](a = 1) & 0 < eps & [](eps' = 0).
+S <=> [](s1 = a * x - y & s2 = a * x - y + eps & s1' = s1' & s2' = s2').
+XCONST <=> [](x'' = 0).
+YCONST <=> [](y'' = 0).
+REFLECT_1 <=> [](s1- = 0 =>
+    x' = (1*(x'- + a*y'-) + a*(-a*x'- + y'-)) / (a^2 + 1) &
+    y' = (a*(x'- + a*y'-) - 1*(-a*x'- + y'-)) / (a^2 + 1)
+    ).
+REFLECT_2 <=> [](s2- = 0 =>
+    x' = (1*(x'- + a*y'-) + a*(-a*x'- + y'-)) / (a^2 + 1) &
+    y' = (a*(x'- + a*y'-) - 1*(-a*x'- + y'-)) / (a^2 + 1)
+    ).
+GOAL <=> [](x'- = 100 => x' = 0 & y' = 0).
+
+INIT, S, (XCONST, YCONST) << (REFLECT_1, REFLECT_2) << GOAL.
