@@ -103,8 +103,6 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
-  typedef hydla::parse_tree::ParseTree::variable_map_const_iterator vmci;
-
   for(auto entry : parse_tree->get_variable_map())
   {
     for(int d = 0; d <= entry.second; ++d)

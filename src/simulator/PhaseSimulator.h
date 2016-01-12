@@ -38,6 +38,12 @@ struct BreakPoint
   void *tag;
 };
 
+struct TimeListElement{
+  value_t time;
+  ConstraintStore parameter_constraint;
+  constraint_t guard;
+  TimeListElement(value_t t, constraint_t g):time(t), guard(g){}
+};
 
 
 class PhaseSimulator{
@@ -51,9 +57,7 @@ public:
                           module_set_container_sptr &msc,
                           phase_result_sptr_t root);
 
-
   void process_todo(phase_result_sptr_t&);
-
 
   void set_backend(backend_sptr_t);
 
@@ -67,6 +71,8 @@ public:
   boost::shared_ptr<RelationGraph> relation_graph_;
 
 private:
+
+  struct StateOfIntervalNewton;
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
 
@@ -103,11 +109,13 @@ private:
 
   bool check_equality(const value_t &lhs, const value_t &rhs);
 
-  kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
+  kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard,  parameter_map_t &pm);
   
-  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint);
+  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm, bool additional_constraint);
 
   kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
+
+  StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm, bool lower);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
    

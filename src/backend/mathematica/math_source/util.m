@@ -62,26 +62,26 @@ publicMethod[
 publicMethod[
   relationToFunction,
   exp,
-  cons,
   Module[
     {
-      substituted,
       rhs,
       lhs
       },
     If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
-        InvalidRelop,
-      substituted = exp /. Map[(Rule@@#)&, cons];
-      If[substituted === False || substituted === True, 
-        toReturnForm[Infinity],
-        lhs = substituted[[1]];
-        rhs = substituted[[2]];
-        toReturnForm[FullSimplify[lhs - rhs] ]
-      ]
+      InvalidRelop,
+      lhs = exp[[1]];
+      rhs = exp[[2]];
+      toReturnForm[FullSimplify[lhs - rhs] ]
     ]
   ]
 ];
 
+publicMethod[
+  substituteVM,
+  expr,
+  variableMap,
+  toReturnForm[expr //. Map[(Rule@@#)&, variableMap]]
+];
 
 publicMethod[
   differentiateWithTime,

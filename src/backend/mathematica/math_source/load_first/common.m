@@ -107,11 +107,10 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 SetAttributes[symbolToString, HoldAll];
 
 SetAttributes[prev, Constant];
-SetAttributes[parameter, Constant];
+SetAttributes[p, Constant];
 
 SetAttributes[prev, NHoldAll];
-SetAttributes[parameter, NHoldAll];
-
+SetAttributes[p, NHoldAll];
 
 If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく *)
   debugPrint[arg___] := Print[InputForm[{arg}]];

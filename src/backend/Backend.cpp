@@ -113,12 +113,8 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       }
       else
       {
-        constraint_store_t *cs = (constraint_store_t *)arg;
-        link_->put_converted_function("And", cs->size());
-        for(auto constraint : *cs)
-        {
-          send_node(constraint, form);
-        }
+        ConstraintStore *cs = (ConstraintStore *)arg;
+        send_cs(*cs, form);
       }
     }
     break;
@@ -173,6 +169,16 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     link_->put_parameter(par_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
+
+  case 't':
+  {
+    if(args_fmt[++i] != 'l')invalid_fmt(args_fmt, i);
+    else{
+      vector<TimeListElement> *time_list = (vector<TimeListElement> *)arg;
+      send_time_list(*time_list);
+    }
+    break;
+  }
 
   
 
@@ -422,6 +428,18 @@ bool Backend::get_form(const char &form_c, VariableForm &form)
   }
 }
 
+void Backend::send_time_list(const vector<TimeListElement>& time_list)
+{
+  link_->put_function("List", time_list.size());
+  for(auto elem : time_list)
+  {
+    link_->put_function("List", 2);
+    send_value(elem.time, VF_NONE);
+    send_cs(elem.parameter_constraint, VF_NONE);
+  }
+}
+  
+
 int Backend::send_node(const symbolic_expression::node_sptr& node, const VariableForm &form)
 {
   differential_count_ = 0;
@@ -430,6 +448,17 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const Variabl
   accept(node);
   return 0;
 }
+
+
+void Backend::send_cs(const ConstraintStore& cs, const VariableForm& vf)
+{
+  link_->put_converted_function("And", cs.size());
+  for(auto constraint : cs)
+  {
+    send_node(constraint, vf);
+  }
+}
+
 
 int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf, const bool &send_derivative)
 {
@@ -710,6 +739,15 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
+void Backend::visit(boost::shared_ptr<Range> node)
+{
+  link_->put_converted_function("Interval", 1);
+  link_->put_converted_function("List", 2);
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+
 void Backend::send_value(const value_t &val, const VariableForm& var)
 {
   send_node(val.get_node(), var);
@@ -904,6 +942,7 @@ find_min_time_result_t Backend::receive_find_min_time_result()
 
     // 条件を受け取る
     candidate.parameter_constraint = receive_cs();
+    candidate.guard_indices.push_back(link_->get_integer());
     result.push_back(candidate);
   }
   return result;

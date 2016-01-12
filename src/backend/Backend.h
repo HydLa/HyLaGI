@@ -63,10 +63,13 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *  @return 0 for success, otherwise non-zero value
    *
    *  format is like below
-   *    r: MidpointRadius: midpoint_radius form (receive only)
-   *    i: int: integer
-   *    db: double
+
+
    *    b: bool: boolean value
+   *    cp: compare_min_time_result_t (receive only)
+   *    db: double
+   *    gm: map<constraint_t, bool> : map of guard satisfaction
+   *    i: int: integer
    *    s: const char*: symbol (send only)
    *    e(n, p, c, z, t): symbolic_expression::node_sptr: expression (Variables are handled like n:x, c:x (ignoring prev), p:prev[x], z:x[0], t:x[t], needed only for sending)
    *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending)
@@ -76,9 +79,11 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
    *    mp: parameter_map_t : send only
    *    mps: std::vector<parameter_map_t> : receive only
-   *    cp: compare_min_time_result_t (receive only)
+   *    r: MidpointRadius: midpoint_radius form (receive only)
+
    *    f: find_min_time_result_t (receive only)
    *    p: parameter_t (send only)
+   *    tl: std::vector<simulator::TimeListElement> (send only)
    *    v(n, p, z, t): variable_t: variable (Characters after them are the same as 'e') (send only)
    *    vs(n, p, z, t): variable_set_t: variable set
    *  example: call("Add", "ii", "i", &lhs, &rhs, &res)
@@ -110,8 +115,9 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   int send_variable_map(const variable_map_t& vm, const VariableForm &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
 
-  void send_value(const simulator::value_t& val, const VariableForm &var);
-
+  void send_value(const simulator::value_t& val, const VariableForm &vf);
+  void send_time_list(const std::vector<simulator::TimeListElement> &list);
+  void send_cs(const simulator::ConstraintStore &cs, const VariableForm& vf);
 
   int receive_map(variable_map_t &vm);
   void receive_bool(bool &b);
@@ -139,6 +145,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    */
   void send_variable(const variable_t &var, const VariableForm& variable_arg);
   void send_variable(const std::string& variable_name, int diff_count, const VariableForm& variable_arg);
+
 
 
   int read_args_fmt(const char* args_fmt, const int& idx, void* arg);
@@ -223,6 +230,8 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
   
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
 
   VariableForm adapt_variable_form(VariableForm orig, bool in_prev);
   

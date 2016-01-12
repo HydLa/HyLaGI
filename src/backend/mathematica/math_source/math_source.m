@@ -36,7 +36,7 @@ checkConsistencyInterval[] :=  (
   checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Simplify[tmpCons] //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[tmpCons && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
 ccIntervalForEach[cond_, pCons_] :=
@@ -89,6 +89,7 @@ publicMethod[
           simplePrint[sol];
           prevVars = Map[makePrevVar, vars];
           debugPrint["sol after exDSolve", sol];
+          sol = Simplify[sol //. prevRs];
           If[sol === overConstrained,
             {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
@@ -510,21 +511,19 @@ Module[
   ]
 ];
 
-calculateConsistentTime[cause_, cons_, lower_] := calculateConsistentTime[cause, cons, lower, pConstraint, currentTime];
+calculateConsistentTime[cause_, lower_] := calculateConsistentTime[cause, lower, pConstraint, currentTime];
 
 findMinTime::minimizeFailure = "failed to minimize `1`";
 
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, lower, pCons, current, 
+  cause, lower, pCons, current, 
   Module[
     {
-      tRemovedRules,
       resultCons
     },
-    tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, cons];
-    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x /. t -> t + current /. tRemovedRules] && lower < t;
+    resultCons = ToRadicals[cause /. x_[t] /; isVariable[x] -> x] && lower < t;
     simplePrint[resultCons];
     toReturnForm[LogicalExpand[resultCons]]
   ]
@@ -581,7 +580,7 @@ publicMethod[
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)
-        resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]} })&, ret];
+        resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]}, -1})&, ret];
         resultList
       ]
     ]
@@ -890,3 +889,72 @@ publicMethod[
   expr,
   Equal[expr[[1]], expr[[2]]]
 ];
+
+
+solveTimeEquation[guard_, lowerBound_] :=
+  solveTimeEquation[guard, lowerBound, pConstraint, parameters];
+
+publicMethod[
+  solveTimeEquation,
+  guard, lowerBound, pCons, pars,
+  Module[
+  {rules, borderCond, sol, timeList},
+    borderCond = Equal@@guard;
+    sol = Solve[borderCond && t > 0, {t}];
+    timeList = Map[(#[[1,2]])&, sol];
+    timeList = Map[({toReturnForm[#], 1, {toReturnForm[pCons]}, -1})&, timeList];
+    timeList
+  ]
+];
+
+ (* TODO: consider case branching *)
+sortWithParameters[timeList_, pCons_, pars_] := Sort[timeList, Reduce[#1 < #2 && pCons, Join[pars, t], Reals] =!= False];
+
+trueAtInitialTime[guard_] := trueAtInitialTime[guard, parameters, pConstraint];
+
+publicMethod[
+  trueAtInitialTime,
+  guard, pars, pCons,
+  Quiet[Reduce[(guard /. t -> 0) && pCons, pars, Reals] =!= False]
+]
+
+getMinimum[timeList_] := getMinimum[timeList, pConstraint, parameters]; 
+
+publicMethod[
+  getMinimum,
+  timeList,
+  pCons, 
+  pars,
+  Module[
+    {minimum, i, minimumIndex},
+    minimum = timeList[[1, 1]];
+    minimumIndex = 0;
+    (* TODO: deal with case branching *)
+    For[i = 2, i <= Length[timeList], i++,
+      If[Reduce[minimum[[1]] <= timeList[[i, 1]] && pCons, pars, Reals] === False,
+        minimum = timeList[[i, 1]];
+        minimumIndex = i - 1;
+      ];
+    ];
+    {{toReturnForm[minimum], 1, {toReturnForm[LogicalExpand[pCons] ]}, minimumIndex}}
+  ]
+];
+
+publicMethod[
+  isGuardSatisfied,
+  guard,
+  guard
+];
+
+
+productWithNegatedConstraint[cons_, toBeNegated_] := productWithNegatedConstraint[cons, toBeNegated, parameters];
+
+publicMethod[
+  productWithNegatedConstraint,
+  cons,
+  toBeNegated,
+  pars,
+(*  toReturnForm[{LogicalExpand[Reduce[cons && Not[toBeNegated], pars, Reals] ]} ] *)
+  (* TODO: implement *)
+  toReturnForm[{False}]
+]
