@@ -1176,11 +1176,11 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       if(by_newton)
       {
         StateOfIntervalNewton state = initialize_newton_state(time_guard, pm, phase->discrete_guards.count(g) > 0);
+        lower = value_t(state.stack.top().lower());
         newton_guard_state_map[g] = state;
       }
       else
       {
-        //TODO: on_timeを適切に設定
         if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
         {
           // exploit derivative of guard conditions
@@ -1215,7 +1215,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       else
       {
         bool true_at_initial_time;
-        backend_->call("trueAtInitialTime", true, 1, "et", "b", &time_guard, &true_at_initial_time);
+        backend_->call("trueAtInitialTime", true, 2, "etvlt", "b", &time_guard, &lower, &true_at_initial_time);
         atomic_guard_map[atomic_guard->constraint] = true_at_initial_time;
       }
     }
@@ -1307,7 +1307,7 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
   
   constraint_t applied_guard = applier.apply(guard, &guard_map);
   backend_->call("isGuardSatisfied", true, 1, "en", "b", &applied_guard, &satisfied);
-  if(satisfied)
+  if((!entailed && satisfied) || (entailed && !satisfied))
   {
     on_time = true;
     return true;
@@ -1330,7 +1330,7 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
   }
   applied_guard = applier.apply(guard, &guard_map);
   backend_->call("isGuardSatisfied", true, 1, "en", "b", &applied_guard, &satisfied);
-  if(satisfied)
+  if((!entailed && satisfied) || (entailed && !satisfied) )
   {
     on_time = false;
     return true;

@@ -338,7 +338,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
                     node->get_differential_count(),
                     node->get_phase_id());
   auto param_it = parameter_map->find(param);
-  HYDLA_LOGGER_DEBUG_VAR(param);
   if(param_it == parameter_map->end())invalid_node(*node);
 
   range_t range = param_it->second;;

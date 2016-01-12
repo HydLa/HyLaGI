@@ -4,7 +4,7 @@ checkConsistencyPoint[] := (
   checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ] /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ] /. prevRules) && constraint && (initConstraint /. prevRules) && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
 );
 
 
@@ -84,7 +84,7 @@ publicMethod[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
-        Assuming[assum, 
+        Assuming[assum /. prevRs, 
           sol = exDSolve[cons, prevRs];
           simplePrint[sol];
           prevVars = Map[makePrevVar, vars];
@@ -94,7 +94,7 @@ publicMethod[
             {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
             simplePrint[tRules];
-            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules /. prevRs;
             
             simplePrint[tCons];
             
@@ -117,7 +117,7 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && initConstraint, variables, assumptions, parameters, currentTime];
+createVariableMap[] := createVariableMap[constraint && pConstraint && (initConstraint /. prevRules), variables, assumptions, parameters, currentTime];
 
 publicMethod[
   createVariableMap,
@@ -345,7 +345,7 @@ publicMethod[
 
 addInitConstraint[co_] := Module[
   {cons},
-  cons = Assuming[assumptions, Simplify[And@@co]] //. prevRules;
+  cons = Assuming[assumptions, Simplify[And@@co]];
   initConstraint = initConstraint && cons;
 ];
 
@@ -910,12 +910,12 @@ publicMethod[
  (* TODO: consider case branching *)
 sortWithParameters[timeList_, pCons_, pars_] := Sort[timeList, Reduce[#1 < #2 && pCons, Join[pars, t], Reals] =!= False];
 
-trueAtInitialTime[guard_] := trueAtInitialTime[guard, parameters, pConstraint];
+trueAtInitialTime[guard_, initialTime_] := trueAtInitialTime[guard, initialTime, parameters, pConstraint];
 
 publicMethod[
   trueAtInitialTime,
-  guard, pars, pCons,
-  Quiet[Reduce[(guard /. t -> 0) && pCons, pars, Reals] =!= False]
+  guard, initialTime, pars, pCons, 
+  Quiet[Reduce[(guard /. t -> initialTime) && pCons, pars, Reals] =!= False]
 ]
 
 getMinimum[timeList_] := getMinimum[timeList, pConstraint, parameters]; 
