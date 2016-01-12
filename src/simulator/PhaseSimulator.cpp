@@ -833,7 +833,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         constraint_t cons = g;
         constraint_t constraint_for_this_guard;
         variable_map_t related_vm = get_related_vm(g, original_vm);
-        backend_->call("substituteVM", true, 2, "etmvt", "e", &cons, &related_vm, &cons);
+        backend_->call("substituteVM", true, 3, "etmvtvlt", "e", &cons, &related_vm, &phase->current_time, &cons);
 
         value_t lower("0");
         if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
@@ -871,7 +871,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
     constraint_t time_guard_by_newton;
     variable_map_t related_vm = get_related_vm(guard_by_newton, original_vm);
-    backend_->call("substituteVM", true, 2, "etmvt", "e", &guard_by_newton, &related_vm, &time_guard_by_newton);
+    backend_->call("substituteVM", true, 3, "etmvtvlt", "e", &guard_by_newton, &related_vm, &phase->current_time, &time_guard_by_newton);
 
 
     // TODO: deal with multiple parameter maps
@@ -1161,15 +1161,15 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
     }
     value_t lower("0");
     constraint_t time_guard;
-    backend_->call("substituteVM", true, 2, "etmvt", "e", &g, &related_vm, &time_guard);
+    backend_->call("substituteVM", true, 3, "etmvtvlt", "e", &g, &related_vm, &phase->current_time, &time_guard);
     if(typeid(*(time_guard)) == typeid(True))
     {
       //TODO: consider to improve efficiency by exploiting the information that this guard will be forever true
-      atomic_guard_map[time_guard] = true;
+      atomic_guard_map[g] = true;
     }
     else if(typeid(*(time_guard)) == typeid(False))
     {
-      atomic_guard_map[time_guard] = false;
+      atomic_guard_map[g] = false;
     }
     else
     {

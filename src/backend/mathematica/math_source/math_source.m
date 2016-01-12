@@ -902,7 +902,7 @@ publicMethod[
     borderCond = Equal@@guard;
     sol = Solve[borderCond && t > 0, {t}];
     timeList = Map[(#[[1,2]])&, sol];
-    timeList = Map[({toReturnForm[#], 1, {toReturnForm[pCons]}, -1})&, timeList];
+    timeList = Map[({toReturnForm[#], 1, {toReturnForm[LogicalExpand[pCons] ]}, -1})&, timeList];
     timeList
   ]
 ];
