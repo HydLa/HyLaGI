@@ -931,7 +931,7 @@ publicMethod[
     minimumIndex = 0;
     (* TODO: deal with case branching *)
     For[i = 2, i <= Length[timeList], i++,
-      If[Reduce[minimum[[1]] <= timeList[[i, 1]] && pCons, pars, Reals] === False,
+      If[Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals] === False,
         minimum = timeList[[i, 1]];
         minimumIndex = i - 1;
       ];
