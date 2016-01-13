@@ -84,7 +84,7 @@ publicMethod[
   Module[
     {tRemovedRules},
     tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, variableMap];
-    toReturnForm[((expr /. x_[t] /; isVariable[x] -> x) /. t -> t + currentTime )//. tRemovedRules]]
+    toReturnForm[((expr /. x_[t] /; isVariable[x] -> x) /. t -> t + currentTime) //. tRemovedRules]
   ]
 ];
 
