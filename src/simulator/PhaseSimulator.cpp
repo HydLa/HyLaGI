@@ -1228,6 +1228,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
   {
     vector<TimeListElement > time_list;
     parameter_map_t pm_for_each = pm;
+    map<constraint_t, Parameter> guard_parameter_map;
     for(auto entry : symbolic_guard_times_map)
     {
       if(entry.second.empty())continue;
@@ -1247,6 +1248,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       ValueRange range = create_range_from_interval(*state.min_interval);
       pm_for_each[parameter] = range;
       TimeListElement elem(value_t(parameter), entry.first);
+      guard_parameter_map.insert(make_pair(entry.first, parameter));
       time_list.push_back(elem);
     }
     if(time_list.empty())break;
@@ -1259,12 +1261,9 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
     {
       std::list<constraint_t> guard_list;
       candidate.guard_indices.sort(greater<int>());
-      HYDLA_LOGGER_DEBUG_VAR(candidate.guard_indices.size());
       for(int index : candidate.guard_indices)
       {
-        //TODO: improve efficiency;
         guard_list.push_back(time_list[index].guard);
-        HYDLA_LOGGER_DEBUG_VAR(index);
         constraint_t guard = (time_list.begin() + index)->guard;
         auto newton_it = newton_guard_state_map.find(guard);
         if(newton_it != newton_guard_state_map.end())newton_guard_state_map.erase(newton_it);
@@ -1280,6 +1279,13 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         new_candidate.parameter_constraint = candidate.parameter_constraint;
         new_candidate.on_time = on_time;
         min_time_for_this_ask.push_back(new_candidate);
+        HYDLA_ASSERT(guard_list.size() == 1);
+        auto guard_it = guard_parameter_map.find(guard_list.front());
+        if(guard_it != guard_parameter_map.end())
+        {
+          Parameter param = guard_it->second;
+          simulator_->introduce_parameter(param, pm_for_each[param]);
+        }
         backend_->call("productWithNegatedConstraint", true, 2, "csncsn", "cs", &current_parameter_constraint, &candidate.parameter_constraint, &current_parameter_constraint);
         HYDLA_LOGGER_DEBUG_VAR(current_parameter_constraint.consistent());
         if(!current_parameter_constraint.consistent())break;
