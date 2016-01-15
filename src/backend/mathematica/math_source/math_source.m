@@ -481,7 +481,7 @@ makeListFromPiecewise[minT_, others_] := Module[
   retMinT = minT[[1]];
   tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
-  retMinT = Map[({#[[1]], Reduce[others && #[[2]] ]})&, retMinT];
+  retMinT = Map[({#[[1]], Reduce[others && #[[2]], Reals ]})&, retMinT];
   If[ tmpCondition === False,
     retMinT,
     Append[retMinT, {minT[[2]], tmpCondition}]
