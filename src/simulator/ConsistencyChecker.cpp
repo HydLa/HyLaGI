@@ -112,7 +112,7 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-      if(dm.count(entry.first)) continue;
+      if(dm.count(entry.first) >= entry.second) continue;
       for(int i = 0; i <= entry.second;i++){
         variable_t var(entry.first, i);
         send_init_equation(var, fmt);
