@@ -94,7 +94,7 @@ publicMethod[
             {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
             simplePrint[tRules];
-            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules /. prevRs;
+            tCons = sol[[2]] /. tRules /. prevRs;
             
             simplePrint[tCons];
             
@@ -119,19 +119,26 @@ publicMethod[
 
 createVariableMap[] := createVariableMap[constraint && pConstraint && (initConstraint /. prevRules), variables, assumptions, parameters, currentTime];
 
+freeFromInequalities[expr_] := FreeQ[expr, Less] && FreeQ[expr, LessEqual] && FreeQ[expr, Greater] && FreeQ[expr, GreaterEqual] && FreeQ[expr, Unequal];
+
 publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {ret, map, currentCons},
+    {ret, map, currentCons, solved = False},
     currentCons = Assuming[assum, Simplify[cons] ] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
-    map = Reduce[map, vars, Reals];
-    If[Head[map] === Or,
-       (* try to solve with parameters *)
-       map = removeUnnecessaryConstraints[currentCons, hasVariableOrParameter];
-       map = Reduce[map, vars, Reals];
+    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], Solve::svars]; solved = True];
+    If[solved && Length[map] == 1,
+      map = And@@Map[(Equal@@#)&, map[[1]]],
+      map = Reduce[map, vars, Reals];
+      If[Head[map] === Or,
+        (* try to solve with parameters *)
+        map = removeUnnecessaryConstraints[currentCons, hasVariableOrParameter];
+        map = Reduce[map, vars, Reals];
+      ];
     ];
+    
 
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True, 
@@ -900,8 +907,10 @@ publicMethod[
   Module[
   {rules, borderCond, sol, timeList},
     borderCond = Equal@@guard;
-    sol = Solve[borderCond && t > 0, {t}];
+    sol = Solve[borderCond && t > 0 && pCons, {t}];
+    (*TODO: consider case branching*)
     timeList = Map[(#[[1,2]])&, sol];
+    timeList = Map[(If[Head[#] === ConditionalExpression, #[[1]], #])&, timeList];
     timeList = Map[({toReturnForm[#], 1, {toReturnForm[LogicalExpand[pCons] ]}, -1})&, timeList];
     timeList
   ]
