@@ -1,13 +1,25 @@
 // 2015/6/28
+// 2016/1/19 Rewrite
 // Tsutomu WADA
 // The shape of floor is sin.
 
-INIT <=> x = Pi/2 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 4/5 /\ [](e' = 0).
+INIT <=> x = 0 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
 FALL <=> [](y'' = -10).
 CONSTX <=> [](x'' = 0).
-BOUNCE <=> []( y- = sin(x-) => x' = (1 - e * cos(x-)^2)/(1 + cos(x-)^2)*x'- + (1 + e)*((1 + cos(x-))/(1 + cos(x-)^2))*y'- /\
-        y' = -(1 + e)*((1 + cos(x-))/(1 + cos(x-)^2))*x'- - (e + cos(x-)^2)/(1 + cos(x-)^2)*y'-).
+/**
+*     sin = f'(x) / (1+f'(x)^2)^(1/2)
+*     cos =     1 / (1+f'(x)^2)^(1/2)
+*  new x' = (-k * sin^2 + cos^2) * x' + (k+1) * sin * cos      * y'
+*  new y' = (k+1) * sin * cos    * x' + (sin^2 + (-k) * cos^2) * y'
+*/
+CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) /\
+             c = 1      /(1 + cos(x-)^2)^(1/2)).
+BOUNCE <=> []( y- = sin(x-) => 
+        x' = ((-e) * s^2 + c^2) * x'- + ((e+1) * s * c) * y'-
+        /\
+        y' = ((e+1) * s * c) * x'- + (s^2 + (-e) * c^2) * y'-).
 
-INIT, (FALL, CONSTX) << BOUNCE.
+INIT, CONST, (FALL, CONSTX) << BOUNCE.
 
-//#hylagi -p 10 --finterval --fdump_in_progress
+//#hylagi -p10 --fnd
+//#omit s,c,e,e',y'',x''

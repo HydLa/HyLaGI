@@ -28,7 +28,7 @@ struct CompareMinTimeResult
 };
 
 typedef std::list<parameter_map_t>                       parameter_maps_t;
-typedef symbolic_expression::node_sptr                     node_sptr;
+ typedef symbolic_expression::node_sptr                     node_sptr;
 
 
 struct BreakPoint
@@ -57,7 +57,7 @@ public:
                           module_set_container_sptr &msc,
                           phase_result_sptr_t root);
 
-  void process_todo(phase_result_sptr_t&);
+  phase_list_t process_todo(phase_result_sptr_t&);
 
   void set_backend(backend_sptr_t);
 
@@ -92,8 +92,9 @@ private:
 
   std::list<phase_result_sptr_t> make_results_from_todo(phase_result_sptr_t& todo);
 
-  void push_branch_states(phase_result_sptr_t &original,
+  void push_branch_states(phase_result_sptr_t original,
                           CheckConsistencyResult &result);
+  phase_result_sptr_t clone_branch_state(phase_result_sptr_t original);
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
@@ -118,7 +119,7 @@ private:
   StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm, bool lower);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
-   
+
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
 

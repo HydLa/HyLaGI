@@ -85,7 +85,7 @@ publicMethod[
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
         Assuming[assum /. prevRs, 
-          sol = exDSolve[cons, prevRs];
+          sol = exDSolve[Simplify[cons], prevRs];
           simplePrint[sol];
           prevVars = Map[makePrevVar, vars];
           debugPrint["sol after exDSolve", sol];
@@ -450,7 +450,6 @@ publicMethod[
 publicMethod[
   addInitEquation,
   lhs, rhs,
-  lhs
   addInitConstraint[{lhs == rhs}]
 ];
 
