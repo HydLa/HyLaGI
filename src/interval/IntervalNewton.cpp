@@ -63,8 +63,8 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
   double min_width = 0;
   while(true)
   {
-    if(max_width <= min_width) return false;
     double w = (max_width + min_width)/ 2;
+    if(max_width <= min_width || w == max_width || w == min_width) throw HYDLA_ERROR("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". "); 
     tmp.lower() = candidate.lower() - w / 2.;
     tmp.upper() = candidate.upper() + w / 2.;
     std::cerr.precision(17);
@@ -104,7 +104,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     else
     {
       HYDLA_LOGGER_DEBUG("proper_subset failed");
-      min_width = max_width + min_width / 2;
+      min_width = (max_width + min_width) / 2;
       continue;
     }
   }
