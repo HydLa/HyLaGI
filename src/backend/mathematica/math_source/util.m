@@ -71,7 +71,7 @@ publicMethod[
       InvalidRelop,
       lhs = exp[[1]];
       rhs = exp[[2]];
-      toReturnForm[FullSimplify[lhs - rhs] ]
+      toReturnForm[timeConstrainedFullSimplify[lhs - rhs] ]
     ]
   ]
 ];
@@ -91,6 +91,6 @@ publicMethod[
 publicMethod[
   differentiateWithTime,
   exp,
-  toReturnForm[FullSimplify[D[exp, t] ] ]
+  toReturnForm[timeConstrainedFullSimplify[D[exp, t] ] ]
 ];
 

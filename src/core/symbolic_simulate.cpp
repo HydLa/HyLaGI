@@ -175,6 +175,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
     parser::Parser parser(po.get<string>("time"));
     opts.max_time = parser.arithmetic();
   }
+  IF_SPECIFIED("simplify_time")opts.simplify_time = po.get<string>("simplify_time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
@@ -216,7 +217,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   else     Logger::instance().set_log_level(Logger::Warn);
 
 
-  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time)));
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)

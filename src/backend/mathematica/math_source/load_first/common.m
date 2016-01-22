@@ -235,13 +235,13 @@ getExprCode[expr_] := Switch[Head[expr],
 
 
 (* AndではなくListでくくる *)
-
 applyList[reduceSol_] :=
   If[reduceSol === True, {}, If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]]];
 
 (* OrではなくListでくくる *)
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+
 
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
@@ -266,3 +266,7 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 variablePrefix = "u";
+
+
+timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
+timeConstrainedFullSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];

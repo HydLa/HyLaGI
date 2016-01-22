@@ -68,9 +68,13 @@ void ProgramOptions::init_descriptions()
 
     ("debug,d", "display debug trace\n")
 
+    ("simplify_time",
+     value<std::string>()->default_value("1"),
+     "time limit of simplifying expressions in the backend")
+
     ("math_name",
      value<std::string>()->default_value("math"),
-     "name of mathematica command")
+     "name of the command to execute mathematica")
 
     ("time,t",
      value<std::string>()->default_value("Infinity"),

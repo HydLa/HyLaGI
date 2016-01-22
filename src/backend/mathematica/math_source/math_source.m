@@ -12,17 +12,30 @@ publicMethod[
   checkConsistencyPoint,
   cons, pcons, assum, vars, pars, current,
   Module[
-    {cpTrue, cpFalse, simplifiedCos},
-    simplifiedCons = Assuming[assum, Simplify[cons]];
-    Quiet[
-      cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+    {cpTrue, cpFalse, simplifiedCons, sol, solved = False},
+    simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ];
+    simplePrint[simplifiedCons];
+    If[freeFromInequalities[simplifiedCons],
+      sol = Quiet[Solve[simplifiedCons, vars, Reals], Solve::svars];
+      If[FreeQ[sol, ConditionalExpression], solved = True];
     ];
-    simplePrint[cpTrue];
-    (* remove (Not)Element[] because it seems to be always true *)
-    cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
-    checkMessage;
-    Quiet[
-      cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
+    If[solved,
+      If[Length[sol] > 0, 
+        cpTrue = pcons;
+        cpFalse = False,
+        cpTrue = False;
+        cpFalse = pcons
+      ]
+      Quiet[
+        cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+      ];
+      simplePrint[cpTrue];
+      (* remove (Not)Element[] because it seems to be always true *)
+      cpTrue = cpTrue /. {NotElement[_, _] -> True, Element[_, _] -> True};
+      checkMessage;
+      Quiet[
+        cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
+      ];
     ];
     checkMessage;
     simplePrint[cpFalse];
@@ -85,11 +98,11 @@ publicMethod[
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
         Assuming[assum /. prevRs, 
-          sol = exDSolve[Simplify[cons], prevRs];
+          sol = exDSolve[timeConstrainedSimplify[cons], prevRs];
           simplePrint[sol];
           prevVars = Map[makePrevVar, vars];
           debugPrint["sol after exDSolve", sol];
-          sol = Simplify[sol //. prevRs];
+          sol = timeConstrainedSimplify[sol //. prevRs];
           If[sol === overConstrained,
             {{False}, {toReturnForm[LogicalExpand[pCons]]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
@@ -126,9 +139,9 @@ publicMethod[
   cons, vars, assum, pars, current,
   Module[
     {ret, map, currentCons, solved = False},
-    currentCons = Assuming[assum, Simplify[cons] ] /. t -> current;
+    currentCons = Assuming[assum, timeConstrainedSimplify[cons]] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
-    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], Solve::svars]; solved = True];
+    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], Solve::svars]; If[FreeQ[sol, ConditionalExpression], solved = True] ];
     If[solved && Length[map] == 1,
       map = And@@Map[(Equal@@#)&, map[[1]]],
       map = Reduce[map, vars, Reals];
@@ -345,14 +358,14 @@ publicMethod[
   Module[
     {cons},
     cons = If[Head[co] === List, And@@co, co];
-    cons = Assuming[assumptions, Simplify[cons]] //. prevRules;
+    cons = Assuming[assumptions, timeConstrainedSimplify[cons]] //. prevRules;
     constraint = constraint && cons;
   ]
 ];
 
 addInitConstraint[co_] := Module[
   {cons},
-  cons = Assuming[assumptions, Simplify[And@@co]];
+  cons = Assuming[assumptions, timeConstrainedSimplify[And@@co]];
   initConstraint = initConstraint && cons;
 ];
 
@@ -834,7 +847,7 @@ Module[
   ];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
-    If[Count[Map[(Simplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
+    If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
       sol = Drop[sol, {i}];
       --i;
     ]
