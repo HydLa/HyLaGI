@@ -25,7 +25,7 @@ publicMethod[
         cpFalse = False,
         cpTrue = False;
         cpFalse = pcons
-      ]
+      ],
       Quiet[
         cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
       ];
