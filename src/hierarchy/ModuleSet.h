@@ -34,6 +34,7 @@ public:
   ModuleSet();
   ModuleSet(const std::string& name, hydla::symbolic_expression::node_sptr node);
   ModuleSet(ModuleSet& lhs, ModuleSet& rhs);
+  //ModuleSet(const ModuleSet &ms);
 
   ~ModuleSet();
 

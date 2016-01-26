@@ -74,7 +74,11 @@ void ProgramOptions::init_descriptions()
 
     ("threads",
      value<int>()->default_value(1),
-     "use NUM threads and Mathematica process")
+     "use NUM threads and Mathematica process (must be integral multiple value of \"phasesimulators\")")
+
+    ("phasesimulators",
+     value<int>()->default_value(1),
+     "use NUM of PhaseSimulators (simulate NUM cases in parallel)")
 
     ("time,t",
      value<std::string>()->default_value("Infinity"),

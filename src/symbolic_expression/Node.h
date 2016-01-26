@@ -729,6 +729,12 @@ public:
     return BinaryNode::clone(n);
   }
 
+  virtual boost::shared_ptr<Ask> clone_ask()
+  {
+    boost::shared_ptr<Ask> n(new Ask(lhs_->clone(), rhs_->clone()));
+    return n;
+  }
+
   virtual std::string get_node_type_name() const {
     return "Ask";
   }

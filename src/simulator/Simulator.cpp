@@ -37,10 +37,12 @@ Simulator::~Simulator()
 {
 }
 
-void Simulator::set_phase_simulator(phase_simulator_t *ps){
-  phase_simulator_.reset(ps);
-  phase_simulator_->set_backend(*backends);
-
+void Simulator::set_phase_simulator(phase_simulators_vector_t& ps){
+  phase_simulators_ = &ps;
+  int num_backends = (opts_->num_threads)/(opts_->num_phasesimulators);
+  for (int i=0; i<opts_->num_phasesimulators; ++i) {
+    (*phase_simulators_)[i]->set_backend(*backends, i*num_backends, (i+1)*num_backends);
+  }
 }
 
 void Simulator::set_backend(backends_vector_t& back)
@@ -63,8 +65,11 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
 
-  phase_simulator_->initialize(variable_set_, parameter_map_,
-                               original_map_, module_set_container_, result_root_);
+  for (int i=0; i<phase_simulators_->size(); ++i)
+  {
+    (*phase_simulators_)[i]->initialize(variable_set_, parameter_map_,
+                                        original_map_, module_set_container_, result_root_);
+  }
 
   if(opts_->assertion)
   {
@@ -72,7 +77,8 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
     bp.condition.reset(new symbolic_expression::Not(opts_->assertion));
     bp.call_back = assert_call_back;
     bp.tag = this;
-    phase_simulator_->add_break_point(bp);
+    for (int i=0; i<phase_simulators_->size(); ++i)
+      (*phase_simulators_)[i]->add_break_point(bp);
   }
 
   profile_vector_.reset(new entire_profile_t());
@@ -163,7 +169,33 @@ phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo)
   phase_list_t result_list;
   try{
     timer::Timer phase_timer;
-    result_list = phase_simulator_->process_todo(todo);
+    result_list = (*phase_simulators_)[0]->process_todo(todo);
+    todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
+  }
+  catch(const timeout::TimeOutError &te)
+  {
+    HYDLA_LOGGER_DEBUG(te.what());
+    phase_result_sptr_t phase(new PhaseResult(*todo));
+    phase->simulation_state = TIME_OUT_REACHED;
+    todo->parent->children.push_back(phase);
+    exit_status = EXIT_FAILURE;
+  }
+  HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
+  return result_list;
+}
+
+phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo, int ps_num)
+{
+  if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase){
+    todo->parent->simulation_state = simulator::STEP_LIMIT;
+    return phase_list_t();
+  }
+  HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
+  HYDLA_LOGGER_DEBUG("\n--- prev map ---\n", todo->prev_map);
+  phase_list_t result_list;
+  try{
+    timer::Timer phase_timer;
+    result_list = (*phase_simulators_)[ps_num]->process_todo(todo);
     todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
   }
   catch(const timeout::TimeOutError &te)

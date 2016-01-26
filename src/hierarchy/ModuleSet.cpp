@@ -26,6 +26,14 @@ ModuleSet::ModuleSet(ModuleSet& lhs, ModuleSet& rhs)
   module_list_.insert(rhs.module_list_.begin(), rhs.module_list_.end());
 }
 
+/*
+ModuleSet::ModuleSet(const ModuleSet &ms)
+{
+  for(auto module : ms.module_list_)
+    module_list_.insert(module_t(module.first, module.second->clone()));
+}
+*/
+
 ModuleSet::~ModuleSet()
 {
 }

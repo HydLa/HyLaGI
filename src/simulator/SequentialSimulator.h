@@ -15,7 +15,7 @@ public:
    */
   virtual phase_result_sptr_t simulate();
 private:
-  void dfs(phase_result_sptr_t current);
+  void dfs(phase_result_sptr_t current, int ps_begin, int ps_end, int level);
   void omit_following_todos(phase_result_sptr_t current);
   io::SymbolicTrajPrinter printer;
 };

@@ -20,6 +20,58 @@ RelationGraph::RelationGraph(const module_set_t &ms)
   ignore_prev = true;
 }
 
+RelationGraph::RelationGraph(const RelationGraph &rg) : module_ask_nodes_map(rg.module_ask_nodes_map), visit_mode(rg.visit_mode), in_always(rg.in_always), ignore_prev(rg.ignore_prev)
+{
+  for(auto elm : rg.variable_node_map) {
+    VariableNode* vn = new VariableNode(*elm.second);
+    variable_node_map[elm.first] = vn;
+    variable_nodes.push_back(vn);
+    var_name_nodes_map[elm.first.get_name()].push_back(vn);
+  }
+  for(auto elm : rg.tell_node_map) {
+    TellNode* tn = elm.second->clone();
+    tell_node_map[elm.first] = tn;
+    tell_nodes.push_back(tn);
+    constraint_node_map[elm.first] = tn;
+    module_tell_nodes_map[tn->module].push_back(tn);
+  }
+  for(auto elm : rg.ask_node_map) {
+    AskNode* an = elm.second->clone();
+    ask_node_map[elm.first] = an;
+    ask_nodes.push_back(an);
+    constraint_node_map[elm.first] = an;
+  }
+  for(auto elm : rg.guard_node_map) {
+    if (typeid(*elm.second) != typeid(AtomicGuardNode)) {
+      GuardNode* gn = elm.second->clone();
+      guard_node_map[elm.first] = gn;
+      guard_nodes.push_back(gn);
+    } else {
+      AtomicGuardNode* agn = reinterpret_cast<AtomicGuardNode *>(elm.second->clone());
+      guard_node_map[elm.first] = agn;
+      guard_nodes.push_back(agn);
+      atomic_guard_list.push_back(agn);
+    }
+  }
+  if(rg.parent_ask != nullptr)
+    parent_ask = rg.parent_ask->clone();
+  else
+    parent_ask = nullptr;
+  current_module = rg.current_module;
+  always_list = rg.always_list;
+  if(rg.current_guard_node != nullptr)
+    current_guard_node = rg.current_guard_node->clone();
+  else
+    current_guard_node = nullptr;
+  /*
+  for(auto ag : rg.atomic_guard_list) {
+    AtomicGuardNode* agn = ag->clone();
+    atomic_guard_list.push_back(agn);
+    guard_node_map[agn->atomic_guard.constraint] = agn;
+  }
+  */
+}
+
 RelationGraph::~RelationGraph()
 {
   for(auto var : variable_nodes){
@@ -152,6 +204,28 @@ string VariableNode::get_name() const
   return variable.get_string();
 }
 
+VariableNode* VariableNode::clone() const
+{
+  /*
+  VariableNode* vn = new VariableNode(variable);
+  std::queue<EdgeToConstraint> bfs_queue;
+  for (EdgeToConstraint edge : edges) {
+    edge.visited = true;
+    bfs_queue.push(edge);
+  }
+  while (!bfs_queue.empty()) {
+    EdgeToConstraint current_edge = bfs_queue.front();
+    bfs_queue.pop();
+    for (EdgeToVariable next_edge : current_edge.tell_node->edges) {
+      if (!next_edge.visited) {
+        next_edge.visited = true;
+        //bfs
+      }
+    }
+  }
+  return vn;
+  */
+}
 
 string get_constraint_name(const constraint_t &constraint, const module_t &module)
 {
@@ -170,11 +244,32 @@ string TellNode::get_name() const
   return (always?"[]":"") + get_constraint_name(constraint, module);
 }
 
+/*
+TellNode::TellNode(const TellNode &tn):ConstraintNode(tn)
+{
+  module = std::make_pair(tn.module.first, tn.module.second->clone());
+  constraint = tn.constraint;//->clone();
+  // parent = tn.parent->clone();
+  for (auto edge : tn.edges) {
+    edges.push_back(edge); // check
+  }
+}
+*/
+
+TellNode* TellNode::clone() const
+{
+  return new TellNode(*this);
+}
+
 string AskNode::get_name() const
 {
   return (always?"[]":"") + get_constraint_name(ask->get_guard(), module);
 }
 
+AskNode* AskNode::clone() const
+{
+  return new AskNode(*this);
+}
 
 bool ConstraintNode::is_active() const
 {
@@ -502,6 +597,24 @@ AskNode::AskNode(const ask_t &a, const module_t &mod, GuardNode *g):ConstraintNo
   finder.visit_node(ask->get_guard());
   prev = finder.get_variable_set().empty();
 }
+
+/*
+AskNode::AskNode(const AskNode &an):ConstraintNode(an), prev(an.prev), entailed(an.entailed), always_children(an.always_children)
+{
+  ask = an.ask;
+  module = std::make_pair(an.module.first, an.module.second->clone());
+  for (auto edge : an.edges) {
+    edges.push_back(edge); // check
+  }
+  guard_node = an.guard_node->clone();
+  for (auto agl : an.atomic_guard_list) {
+    atomic_guard_list.push_back(agl->clone());
+  }
+  for (auto chl : an.children) {
+    children.push_back(chl->clone());
+  }
+}
+*/
 
 
 variable_set_t RelationGraph::get_related_variables(constraint_t cons){

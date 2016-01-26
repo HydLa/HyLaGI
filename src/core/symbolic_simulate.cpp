@@ -191,6 +191,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   }
   IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
   opts.num_threads   = po.get<int>("threads");
+  opts.num_phasesimulators = po.get<int>("phasesimulators");
 }
 
 
@@ -229,7 +230,13 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     }
 
   simulator_->set_backend(backends_);
-  simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
+
+  phase_simulators_vector_t phase_simulators_(opts.num_phasesimulators);
+  for (int i=0; i<opts.num_phasesimulators; ++i) {
+    phase_simulators_[i].reset(new PhaseSimulator(simulator_, opts));
+  }
+
+  simulator_->set_phase_simulator(phase_simulators_);
   simulator_->initialize(parse_tree);
   simulator_->simulate();
   if(!opts.ha_convert_mode)

@@ -8,6 +8,7 @@
 #include "ConstraintStore.h"
 #include "GuardNode.h"
 
+#include <unordered_map>
 
 namespace hydla {
 namespace simulator {
@@ -23,15 +24,16 @@ struct ConstraintNode;
 struct TellNode;
 struct AskNode;
 struct AtomicGuardNode;
-typedef std::list<VariableNode *> var_nodes_t;
-typedef std::list<TellNode *> tell_nodes_t;
-typedef std::list<AskNode *> ask_nodes_t;
+typedef std::list<VariableNode *> var_nodes_t; // graph
+typedef std::list<TellNode *> tell_nodes_t; // graph
+typedef std::list<AskNode *> ask_nodes_t; // graph
 typedef std::list<GuardNode *> guard_nodes_t;
 
 struct EdgeToVariable
 {
   VariableNode *variable_node;
   bool ref_prev;               // indicates whether the reference is only for left hand limit or not
+  bool visited = false; // for cloning
   EdgeToVariable(VariableNode *, bool);
 };
 
@@ -39,6 +41,7 @@ struct EdgeToConstraint
 {
   TellNode *tell_node;
   bool ref_prev;               // indicates whether the reference is only for left hand limit or not
+  bool visited = false; // for cloning
   EdgeToConstraint(TellNode *, bool);
 };
 
@@ -50,18 +53,22 @@ struct ConstraintNode{
   bool always;
   AskNode* parent;
   ConstraintNode(const module_t &mod):module(mod), module_adopted(true), expanded(false){}
+  // ConstraintNode(const ConstraintNode &cn):collected(cn.collected), module_adopted(cn.module_adopted), expanded(cn.expanded), always(cn.always){}
   virtual ~ConstraintNode(){}
   std::vector<EdgeToVariable> edges;
   bool is_active() const;
   virtual std::string get_name() const = 0;
+  virtual ConstraintNode* clone() const = 0;
 };
   
 struct TellNode: public ConstraintNode{
   constraint_t constraint;
   TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), constraint(cons)
     {}
+  // TellNode(const TellNode &tn);
   virtual ~TellNode(){}
   std::string get_name() const;
+  TellNode* clone() const;
 };
 
 typedef enum{
@@ -79,8 +86,10 @@ struct AskNode: public ConstraintNode{
   ConstraintStore always_children;
   std::list<ConstraintNode*> children;
   AskNode(const ask_t &a, const module_t &mod, GuardNode *guard);
+  // AskNode(const AskNode &an);
   virtual ~AskNode(){}
   std::string get_name() const;
+  AskNode* clone() const;
 };
 
   
@@ -94,6 +103,7 @@ struct VariableNode{
   VariableNode(Variable var):variable(var)
     {}
   std::string get_name() const;
+  VariableNode* clone() const;
 };
 
 
@@ -106,6 +116,9 @@ class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
 public:
 
   RelationGraph(const module_set_t &mods);
+
+  // copy constructor
+  RelationGraph(const RelationGraph &rg);
 
   virtual ~RelationGraph();
 
@@ -291,6 +304,10 @@ private:
   tell_nodes_t tell_nodes;
   guard_nodes_t guard_nodes;
   
+  std::unordered_map<int, VariableNode*> int_variable_node_map;
+  std::unordered_map<int, AskNode*> id_ask_node_map;
+  std::unordered_map<int, TellNode*> id_tell_node_map;
+  std::unordered_map<int, GuardNode*> id_guard_node_map;
 
   AskNode* parent_ask;
   module_t current_module;

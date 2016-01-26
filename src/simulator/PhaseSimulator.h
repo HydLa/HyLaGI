@@ -55,7 +55,7 @@ public:
   phase_list_t process_todo(phase_result_sptr_t&);
 
 
-  void set_backend(backends_vector_t&);
+  void set_backend(backends_vector_t&, int begin, int end);
 
   void apply_diff(const PhaseResult &phase);
 
@@ -66,6 +66,7 @@ public:
   void add_break_point(BreakPoint b);
 
   boost::shared_ptr<RelationGraph> relation_graph_;
+  int                                   phase_sum_, time_id; // share with other threads
 
 private:
 
@@ -139,7 +140,6 @@ private:
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
   std::vector<boost::shared_ptr<ConsistencyChecker>> consistency_checkers;
-  int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
   boost::shared_ptr<ValueModifier>      value_modifier;
@@ -151,6 +151,8 @@ private:
   /// pointer to the backend to be used
   backend_sptr_t backend_;
   backends_vector_t* backends_;
+
+  int backends_begin, backends_end;
 };
 
 

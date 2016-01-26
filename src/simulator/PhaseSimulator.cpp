@@ -141,13 +141,14 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
   backends_caller("resetConstraint", false, 0, "", "");
   HYDLA_LOGGER_DEBUG_VAR(*todo);
-  std::vector<std::thread> threads(opts_->num_threads);
-  for (int i=0; i<opts_->num_threads; ++i) {
+  int num_backends = backends_end - backends_begin;
+  std::vector<std::thread> threads(num_backends);
+  for (int i=0; i<num_backends; ++i) {
     threads[i] = std::thread ([i,&todo,this](){
         consistency_checkers[i]->set_prev_map(&todo->prev_map);
     });
   }
-  for (int i=0; i<opts_->num_threads; ++i) {
+  for (int i=0; i<num_backends; ++i) {
     threads[i].join();
   }
   // add assumptions
@@ -352,7 +353,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       phase.reset(new PhaseResult(*phase));
       phase->id = ++phase_sum_;
       phase->profile.clear();
-      phase->parent->todo_list.push_back(phase);
+      phase->parent->todo_list.push_back(phase); // here
     }
 
     phase->unadopted_mss.insert(unadopted_ms);
@@ -620,11 +621,13 @@ void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
 
 
 
-void PhaseSimulator::set_backend(backends_vector_t& back)
+void PhaseSimulator::set_backend(backends_vector_t& back, int begin, int end)
 {
+  backends_begin = begin;
+  backends_end = end;
   backends_ = &back;
-  backend_ = back[0];
-  for (int i=0; i<opts_->num_threads; ++i) {
+  backend_ = back[begin];
+  for (int i=begin; i<end; ++i) {
     consistency_checkers.push_back(boost::make_shared<ConsistencyChecker>(back[i]));
   }
   consistency_checker = consistency_checkers[0];
@@ -798,7 +801,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     };
     const int num_asks = unknown_asks.size();
     if (num_asks != 0) {
-      const int max_threads = opts_->num_threads;
+      const int max_threads = backends_end - backends_begin;
       const int num_threads = num_asks>max_threads ? max_threads : num_asks;
       const int asks_per_thread = num_asks/num_threads;
       int odd_asks = num_asks%num_threads;
@@ -1188,7 +1191,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       next_todo->current_time = phase->end_time = phase->current_time;
       next_todo->discrete_asks = phase->discrete_asks;
       next_todo->discrete_guards = phase->discrete_guards;
-      phase->todo_list.push_back(next_todo);
+      phase->todo_list.push_back(next_todo); // here
     }
   }
   else
@@ -1403,7 +1406,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->current_time = phase->end_time;
             approximate_phase(next_todo, next_todo->prev_map);
             phase->simulation_state = SIMULATED;
-            phase->todo_list.push_back(next_todo);
+            phase->todo_list.push_back(next_todo); // here
           }
 
           if(++time_it == time_result.end())break;
@@ -1411,7 +1414,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           phase.reset(new PhaseResult(*phase));
           phase->id = ++phase_sum_;
           phase->parent->children.push_back(phase);
-          phase->parent->todo_list.push_back(phase);
+          phase->parent->todo_list.push_back(phase); // here
           phase->todo_list.clear();
           if(!(candidate.time.undefined() || candidate.time.infinite()) )
           {
@@ -1641,20 +1644,22 @@ void PhaseSimulator::backends_caller(const char* name, bool trace, int arg_cnt, 
 {
   va_list args;
   va_start(args, ret_fmt);
-  std::vector<std::thread> threads(opts_->num_threads);
-  for (int i=0; i<opts_->num_threads; ++i) {
+  int num_backends = backends_end - backends_begin;
+  std::vector<std::thread> threads(num_backends);
+  for (int i=0; i<num_backends; ++i) {
     threads[i] = std::thread ([i, &name, trace, arg_cnt, &args_fmt, &ret_fmt, &args, this](){
         va_list args_copy;
         va_copy(args_copy, args);
-        (*backends_)[i]->call(name, trace, arg_cnt, args_fmt, ret_fmt, args_copy);
+        (*backends_)[i+backends_begin]->call(name, trace, arg_cnt, args_fmt, ret_fmt, args_copy);
         va_end(args_copy);
         });
   }
-  for (int i=0; i<opts_->num_threads; ++i) {
+  for (int i=0; i<num_backends; ++i) {
     threads[i].join();
   }
   va_end(args);
 }
+
 
 }
 }

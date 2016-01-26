@@ -34,6 +34,7 @@ struct Opts {
   symbolic_expression::node_sptr assertion;
   int max_phase;
   int num_threads;
+  int num_phasesimulators;
   EOutputMode output_mode;
   std::set<std::string> output_vars;
   std::set<std::string> vars_to_approximate;

@@ -49,6 +49,8 @@ class PhaseSimulator;
 
 typedef PhaseResult                                       phase_result_t;
 typedef PhaseSimulator                                    phase_simulator_t;
+typedef boost::shared_ptr<phase_simulator_t>              phase_simulator_sptr_t;
+typedef std::vector<phase_simulator_sptr_t>               phase_simulators_vector_t;
 
 typedef std::set<variable_t, VariableComparator>          variable_set_t;
 
@@ -72,7 +74,7 @@ public:
    * set the phase simulator which this simulator uses in each phase
    * @param ps a pointer to an instance of phase_simlulator_t (caller must not delete the instance)
    */
-  virtual void set_phase_simulator(phase_simulator_t *ps);
+  virtual void set_phase_simulator(phase_simulators_vector_t& ps);
 
   void set_backend(backends_vector_t& back);
 
@@ -124,6 +126,7 @@ public:
   backends_vector_t* backends;
 
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
+  phase_simulators_vector_t* phase_simulators_;
 
 protected:
 
@@ -135,6 +138,7 @@ protected:
   void init_module_set_container(const parse_tree_sptr& parse_tree);
 
   virtual phase_list_t process_one_todo(phase_result_sptr_t& todo);  
+  virtual phase_list_t process_one_todo(phase_result_sptr_t& todo, int ps_num);
   
   void reset_result_root();
 
