@@ -10,10 +10,10 @@ namespace hydla{
 namespace simulator{
 
 class AutomatonNode;
-typedef hydla::symbolic_expression::node_sptr          node_sptr;
+typedef hydla::symbolic_expression::node_sptr              node_sptr;
 typedef std::vector<AutomatonNode*>            automaton_node_list_t;
 typedef std::pair<AutomatonNode*,node_sptr>         automaton_edge_t;
-typedef std::vector<automaton_edge_t>      automaton_edge_list_t;
+typedef std::vector<automaton_edge_t>          automaton_edge_list_t;
 
 //TODO: fix memory leak (memory leak is caused by never freed AutomatonNode)
 class AutomatonNode
@@ -45,7 +45,9 @@ public:
   AutomatonNode* initial_node = nullptr;
   void dump(std::ostream &ost = std::cout);
   std::list<AutomatonNode *> get_all_nodes();
-  
+  AutomatonNode* exist_node(std::string name);
+  bool exist_edge(AutomatonNode *base, AutomatonNode *end);
+
 /*
   void trace();
   void dump_node_and_edge();

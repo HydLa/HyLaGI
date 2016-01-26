@@ -44,7 +44,7 @@ void AutomatonNode::dump(ostream& ost)
     }else{
       ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << ";" << endl;
     }
-  }  
+  }
 }
 
 void AutomatonNode::remove()
@@ -132,8 +132,23 @@ void Automaton::get_nodes(AutomatonNode *node, list<AutomatonNode *> &result_lis
   result_list.push_back(node);
   for(auto edge: node->edges)
   {
-    if(!visited_nodes.count(edge.first))get_nodes(node, result_list);
+    if(!visited_nodes.count(edge.first))get_nodes(edge.first, result_list);
   }
+}
+
+AutomatonNode* Automaton::exist_node(std::string name){
+  std::list<AutomatonNode *> exist_nodes = this->get_all_nodes();
+  for(auto exist_node : exist_nodes){
+    if(exist_node->name == name) return exist_node;
+  }
+  return nullptr;
+}
+
+bool Automaton::exist_edge(AutomatonNode *base, AutomatonNode *end){
+  for(auto exist_edge : base->edges){
+    if(exist_edge.first == end) return true;
+  }
+  return false;
 }
 
 /*
