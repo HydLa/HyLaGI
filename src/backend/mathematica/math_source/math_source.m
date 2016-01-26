@@ -132,6 +132,16 @@ publicMethod[
 
 createVariableMap[] := createVariableMap[constraint && pConstraint && (initConstraint /. prevRules), variables, assumptions, parameters, currentTime];
 
+containsAny[expr_, list_List] := 
+Module[
+  {i},
+  For[i = 0, i <= Length[list], i++,
+    If[MemberQ[expr, list[[i]], {0, Infinity}], Return[True]]
+  ];
+  Return[False]
+];
+
+
 freeFromInequalities[expr_] := FreeQ[expr, Less] && FreeQ[expr, LessEqual] && FreeQ[expr, Greater] && FreeQ[expr, GreaterEqual] && FreeQ[expr, Unequal];
 
 publicMethod[
@@ -274,23 +284,23 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
-getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], Infinity], Cases[exprs, Derivative[_][_][_], Infinity]];
+getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
+getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}, Heads->True], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
 getVariablesWithDerivatives[exprs_] := Union[getVariables[expr], getDerivatives[exprs] ];
 
 
 (* 式中に出現するprev値を取得 *)
-getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
+getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 (* 式中に出現する記号定数を取得 *)
 
-getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
+getParameters[exprs_] := Cases[exprs, p[_, _, _], {0, Infinity}];
 
 (* 式中に定数名が出現するか否か *)
 
-hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
+hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], {0, Infinity}] ] > 0;
 
-hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Infinity] ] > 0;
+hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], {0, Infinity}] ] > 0;
 
 hasVariableOrParameter[exprs_] := hasParameter[exprs] || hasVariable[exprs];
 
@@ -302,13 +312,13 @@ isParameter[exprs_] := Head[exprs] === p;
 isParameterOrPrev[exprs_] := Head[exprs] === p || Head[exprs] === prev;
 
 (* 式が指定されたシンボルを持つか *)
-hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
+hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), {0, Infinity} ];
 
 (* 式がprev変数そのものか否か *)
 isPrevVariable[exprs_] := Head[exprs] === prev;
 
 (* 式がprev変数を持つか *)
-hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
+hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 adjustExprs[andExprs_, judgeFunction_] :=
@@ -616,14 +626,21 @@ publicMethod[
   time1, time2, pCons1, pCons2,
   Module[
     {
-      andCond, caseEq, caseLe, caseGr, ret
+      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons
     },
-    andCond = Reduce[pCons1 && pCons2, Reals];
+    usedPars = Union[getParameters[time1], getParameters[time2] ];
+    andCond = pCons1 && pCons2;
+    necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
+    otherPCons = Complement[andCond, necessaryPCons];
+    necessaryPCons = Reduce[necessaryPCons, Reals];
     If[andCond === False,
       {{False}, {False}, {False}},
-      caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
-      caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
-      caseGr = Reduce[andCond && !caseLe && !caseEq];
+      caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+      caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+      caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+      caseEq = caseEq && otherPCons;
+      caseLe = caseLe && otherPCons;
+      caseGr = caseGr && otherPCons;
       {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
     ]
   ]
@@ -735,7 +752,7 @@ Module[
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       listExpr = listExpr //. prevRs;
-      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
+      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];

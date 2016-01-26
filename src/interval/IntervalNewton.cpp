@@ -175,11 +175,13 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
     candidate_stack.pop();
 
     HYDLA_LOGGER_DEBUG("pop new interval: ", current_interval);
-    for(int i=0;i<100;i++)
+    int i = 0;
+    while(true)
     {
+      ++i;
       if(current_interval == itvd(0.,0.))
       {
-        HYDLA_LOGGER_DEBUG("Wrong Interval");
+        HYDLA_LOGGER_DEBUG("Empty Interval");
         break;
       }
       prev_interval = current_interval;
@@ -225,8 +227,8 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
       if(itvd_equal(prev_interval, current_interval))
       {
         HYDLA_LOGGER_DEBUG_VAR(current_interval);
-        HYDLA_LOGGER_DEBUG("Stopped at step ", i+1);
-        break;
+        HYDLA_LOGGER_DEBUG("Stopped at step ", i);
+        return current_interval;
       }
     }
     if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))

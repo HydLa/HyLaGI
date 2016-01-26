@@ -26,6 +26,9 @@ itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, par
   time_interval = t;
   parameter_map = map;
   accept(node);
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
+  HYDLA_LOGGER_DEBUG_VAR(*map);
+  HYDLA_LOGGER_DEBUG_VAR(current_value);
   if(current_value.is_integer)
     return itvd(current_value.integer);
   else

@@ -1247,7 +1247,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       TimeListElement elem(entry.second.front(), entry.first);
       time_list.push_back(elem);
     }
-    for(auto entry : newton_guard_state_map)
+    for(auto &entry : newton_guard_state_map)
     {
       StateOfIntervalNewton &state = entry.second;
       if(!state.min_interval)
@@ -1278,7 +1278,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         guard_list.push_back(time_list[index].guard);
         constraint_t guard = (time_list.begin() + index)->guard;
         auto newton_it = newton_guard_state_map.find(guard);
-        if(newton_it != newton_guard_state_map.end())newton_guard_state_map.erase(newton_it);
+        if(newton_it != newton_guard_state_map.end())newton_it->second.min_interval = boost::none;
         else symbolic_guard_times_map[guard].pop_front();
       }
       bool on_time;
