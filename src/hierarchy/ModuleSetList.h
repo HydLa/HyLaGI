@@ -58,6 +58,8 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
+  virtual ModuleSetContainer *clone()const ;
+
   void init(){}
 };
 

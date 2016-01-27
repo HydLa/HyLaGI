@@ -133,6 +133,8 @@ private:
    */
   virtual void update_by_new_mss(module_set_set_t&);
 
+  virtual ModuleSetContainer *clone() const;
+
   /**
    * stronger_data_[module_t ms] is a map which has stronger modules than ms.
    * children_data_[module_t ms] is a map which has weaker modules than ms.

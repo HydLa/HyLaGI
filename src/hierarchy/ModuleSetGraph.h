@@ -74,6 +74,8 @@ public:
    */
   std::ostream& dump_graphviz(std::ostream& s) const;
 
+  virtual ModuleSetContainer *clone()const;
+
   void init(){}
   
 

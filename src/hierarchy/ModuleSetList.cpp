@@ -122,5 +122,12 @@ std::ostream& ModuleSetList::dump_node_trees(std::ostream& s) const
   return s;
 }
 
+ModuleSetContainer *ModuleSetList::clone() const
+{
+  ModuleSetContainer *clone = new ModuleSetList(*this);
+  return clone;
+}
+
+
 } // namespace hierarchy
 } // namespace hydla

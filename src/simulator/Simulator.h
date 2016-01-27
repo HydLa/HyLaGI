@@ -135,7 +135,7 @@ protected:
    */
   virtual void init_variable_map(const parse_tree_sptr& parse_tree);
 
-  void init_module_set_container(const parse_tree_sptr& parse_tree);
+  module_set_container_sptr init_module_set_container(const parse_tree_sptr& parse_tree);
 
   virtual phase_list_t process_one_todo(phase_result_sptr_t& todo);  
   virtual phase_list_t process_one_todo(phase_result_sptr_t& todo, int ps_num);
@@ -145,7 +145,7 @@ protected:
   parse_tree_sptr parse_tree_;  
 
   /// container for candidate module sets
-  module_set_container_sptr module_set_container_;
+  std::vector<module_set_container_sptr> module_set_containers_;
   
   /// vector for results of profiling
   boost::shared_ptr<entire_profile_t> profile_vector_;

@@ -219,5 +219,13 @@ void ModuleSetGraph::reset(const module_set_set_t &mss){
   visited_module_sets_.clear();
 }
 
+
+ModuleSetContainer *ModuleSetGraph::clone() const
+{
+  ModuleSetContainer *clone = new ModuleSetGraph(*this);
+  return clone;
+}
+
+
 } // namespace hierarchy
 } // namespace hydla

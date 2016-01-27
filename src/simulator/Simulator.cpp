@@ -53,7 +53,7 @@ void Simulator::set_backend(backends_vector_t& back)
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
-  init_module_set_container(parse_tree);
+  module_set_container_sptr module_set_container = init_module_set_container(parse_tree);
 
   assertion_failed = false;
 
@@ -64,11 +64,15 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   init_variable_map(parse_tree);
 
   hydla::parse_tree::ParseTree::variable_map_t vm = parse_tree_->get_variable_map();
-
+  module_set_containers_.push_back(module_set_container);
+  for (int i=1; i<phase_simulators_->size(); ++i)
+  {
+    module_set_containers_.push_back(module_set_container_sptr(module_set_container->clone()));
+  }
   for (int i=0; i<phase_simulators_->size(); ++i)
   {
     (*phase_simulators_)[i]->initialize(variable_set_, parameter_map_,
-                                        original_map_, module_set_container_, result_root_);
+                                        original_map_, module_set_containers_[i], result_root_);
   }
 
   if(opts_->assertion)
@@ -93,20 +97,22 @@ void Simulator::reset_result_root()
 }
 
 
-void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
-{    
+module_set_container_sptr Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
+{
+  module_set_container_sptr module_set_container;
   if(opts_->static_generation_of_module_sets){
     if(opts_->nd_mode){
       ModuleSetContainerInitializer::init<hierarchy::ModuleSetGraph>(
-          parse_tree, module_set_container_);
+          parse_tree, module_set_container);
     }else{
       ModuleSetContainerInitializer::init<hierarchy::ModuleSetList>(
-          parse_tree, module_set_container_);
+          parse_tree, module_set_container);
     }
   }else{ 
     ModuleSetContainerInitializer::init<hierarchy::IncrementalModuleSet>(
-        parse_tree, module_set_container_);
+        parse_tree, module_set_container);
   }
+  return module_set_container;
 }
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)

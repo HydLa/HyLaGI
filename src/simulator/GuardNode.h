@@ -13,14 +13,12 @@ class GuardVisitor;
   
 struct GuardNode
 {
-  std::list<AskNode *> asks;
   GuardNode *parent;
   virtual std::list<AtomicConstraint *> get_atomic_guards() = 0;
 
   virtual void accept(GuardVisitor *visitor) = 0;
   GuardNode();
   virtual ~GuardNode();
-  virtual GuardNode* clone() const = 0;
 };
 
 struct OrGuardNode : public GuardNode
@@ -29,7 +27,6 @@ struct OrGuardNode : public GuardNode
   virtual void accept(GuardVisitor *visitor);
   OrGuardNode(GuardNode *l, GuardNode *r);
   GuardNode *lhs, *rhs;
-  OrGuardNode* clone() const;
 };
 
 struct AndGuardNode : public GuardNode
@@ -38,7 +35,6 @@ struct AndGuardNode : public GuardNode
   AndGuardNode(GuardNode *l, GuardNode *r);
   virtual void accept(GuardVisitor *visitor);
   GuardNode *lhs, *rhs;
-  AndGuardNode* clone() const;
 };
 
 struct NotGuardNode : public GuardNode
@@ -48,7 +44,6 @@ struct NotGuardNode : public GuardNode
   virtual void accept(GuardVisitor *visitor);
   virtual ~NotGuardNode();
   GuardNode *child;
-  NotGuardNode* clone() const;
 };
   
 struct AtomicGuardNode: public GuardNode{
@@ -58,7 +53,6 @@ struct AtomicGuardNode: public GuardNode{
   AtomicGuardNode(const AtomicConstraint &guard);
   virtual void accept(GuardVisitor *visitor);
   virtual ~AtomicGuardNode();
-  AtomicGuardNode* clone() const;
 };
 
 }

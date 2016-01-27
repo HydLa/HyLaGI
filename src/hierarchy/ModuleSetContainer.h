@@ -69,6 +69,8 @@ public:
    * その上で最初に探索すべきモジュール集合に注目する．
    */
   virtual void reset(const module_set_set_t &mss);
+
+  virtual ModuleSetContainer *clone()const = 0;
   
   protected:
   module_set_set_t full_module_set_set_;

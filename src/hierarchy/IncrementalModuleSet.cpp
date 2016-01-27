@@ -290,5 +290,11 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
     ms_to_visit_.insert(ModuleSet());
   }
 
+ModuleSetContainer *IncrementalModuleSet::clone() const
+{
+  ModuleSetContainer *clone = new IncrementalModuleSet(*this);
+  return clone;
+}
+
 } // namespace hierarchy
 } // namespace hydla

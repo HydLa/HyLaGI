@@ -904,13 +904,14 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
   {
     HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   }
-  
+  HYDLA_LOGGER_DEBUG_VAR(original_vm);  
   for(auto atomic_guard : guards)
   {
     constraint_t g = atomic_guard->constraint;
 
     if(!guard_time_map.count(g))
     {
+
       variable_map_t related_vm = get_related_vm(g, original_vm);
       bool by_newton = false;
       if(opts_->interval && guard_by_newton.get() == nullptr)

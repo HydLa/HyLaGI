@@ -65,7 +65,6 @@ struct TellNode: public ConstraintNode{
   constraint_t constraint;
   TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), constraint(cons)
     {}
-  // TellNode(const TellNode &tn);
   virtual ~TellNode(){}
   std::string get_name() const;
 };
@@ -85,7 +84,6 @@ struct AskNode: public ConstraintNode{
   ConstraintStore always_children;
   std::list<int> child_ids;
   AskNode(const ask_t &a, const module_t &mod, GuardNode *guard);
-  // AskNode(const AskNode &an);
   virtual ~AskNode(){}
   std::string get_name() const;
 };
@@ -255,11 +253,6 @@ public:
   asks_t get_all_asks();
 
   /**
-   * Get all atomic guards
-   */
-  constraints_t get_all_guards();
-
-  /**
    * if true, the left hand limit is regareded as a constant (ignoring its relation)
    */
   void set_ignore_prev(bool);
@@ -272,8 +265,6 @@ public:
   GuardNode *get_guard_node(const constraint_t &guard);
 
 private:
-  typedef std::map<Variable, VariableNode*> variable_map_t;
-
   const int INVALID_ID = -1;
   
   void add(module_t &mod);
@@ -332,19 +323,14 @@ private:
 
 
 
-  std::list<AtomicGuardNode *> atomic_guard_list;
-
   int id_for_graph_nodes = 0;
 
   // member variables to use temporalily in each function
-  
   AskNode* parent_ask;
   module_t current_module;
-
-  ConstraintStore always_list; /// temporary variables to return always
-
+  ConstraintStore always_list;
   GuardNode *current_guard_node;
-
+  std::list<AtomicGuardNode *> atomic_guard_list;
   VisitMode visit_mode;
   bool in_always;
   bool ignore_prev;

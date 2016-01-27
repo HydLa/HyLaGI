@@ -27,10 +27,6 @@ list<AtomicConstraint *> OrGuardNode::get_atomic_guards()
   return ret;
 }
 
-OrGuardNode* OrGuardNode::clone() const
-{
-  return new OrGuardNode(lhs->clone(), rhs->clone());
-}
 
 AndGuardNode::AndGuardNode(GuardNode *l, GuardNode *r):lhs(l), rhs(r){}
 
@@ -44,11 +40,6 @@ list<AtomicConstraint *> AndGuardNode::get_atomic_guards()
   auto ret = lhs->get_atomic_guards();
   ret.merge(rhs->get_atomic_guards());
   return ret;
-}
-
-AndGuardNode* AndGuardNode::clone() const
-{
-  return new AndGuardNode(lhs->clone(), rhs->clone());
 }
 
 AtomicGuardNode::AtomicGuardNode(const AtomicConstraint &guard):atomic_guard(guard)
@@ -72,10 +63,6 @@ list<AtomicConstraint *> AtomicGuardNode::get_atomic_guards()
   return ret;
 }
 
-AtomicGuardNode* AtomicGuardNode::clone() const
-{
-  return new AtomicGuardNode(atomic_guard);
-}
 
 NotGuardNode::NotGuardNode(GuardNode *c):child(c){}
 NotGuardNode::~NotGuardNode(){}
@@ -89,11 +76,6 @@ void NotGuardNode::accept(GuardVisitor *visitor)
 list<AtomicConstraint *> NotGuardNode::get_atomic_guards()
 {
   return child->get_atomic_guards();
-}
-
-NotGuardNode* NotGuardNode::clone() const
-{
-  return new NotGuardNode(child->clone());
 }
 
 }

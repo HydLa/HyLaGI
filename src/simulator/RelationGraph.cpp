@@ -30,8 +30,7 @@ RelationGraph::RelationGraph(const RelationGraph &rg)
     variable_node_id_map(rg.variable_node_id_map),
     guard_node_map(rg.guard_node_map),
     var_name_node_ids_map(rg.var_name_node_ids_map),
-    atomic_guard_list(rg.atomic_guard_list),
-  id_for_graph_nodes(rg.id_for_graph_nodes)
+    id_for_graph_nodes(rg.id_for_graph_nodes)
 {
   for(auto var_node: rg.variable_nodes)
   {
@@ -554,25 +553,6 @@ AskNode::AskNode(const ask_t &a, const module_t &mod, GuardNode *g):ConstraintNo
   prev = finder.get_variable_set().empty();
 }
 
-/*
-AskNode::AskNode(const AskNode &an):ConstraintNode(an), prev(an.prev), entailed(an.entailed), always_children(an.always_children)
-{
-  ask = an.ask;
-  module = std::make_pair(an.module.first, an.module.second->clone());
-  for (auto edge : an.edges) {
-    edges.push_back(edge); // check
-  }
-  guard_node = an.guard_node->clone();
-  for (auto agl : an.atomic_guard_list) {
-    atomic_guard_list.push_back(agl->clone());
-  }
-  for (auto chl : an.children) {
-    children.push_back(chl->clone());
-  }
-}
-*/
-
-
 variable_set_t RelationGraph::get_related_variables(constraint_t cons){
 
   variable_set_t vars;
@@ -676,16 +656,6 @@ void RelationGraph::set_ignore_prev(bool ignore)
   ignore_prev = ignore;
 }
 
-constraints_t RelationGraph::get_all_guards()
-{
-  constraints_t result;
-  for(auto atomic_guard_node : atomic_guard_list)
-  {
-    result.insert(atomic_guard_node->atomic_guard.constraint);
-  }
-  return result;
-}
-
 void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node)
 {
   if(visit_mode == ADDING_ASK)
@@ -694,7 +664,6 @@ void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expressio
     atomic_guard.constraint = node;
     AtomicGuardNode *atomic_node = new AtomicGuardNode(atomic_guard);
     current_guard_node = atomic_node;
-    atomic_guard_list.push_back(atomic_node);
     guard_nodes.push_back(boost::shared_ptr<GuardNode>(current_guard_node));
     guard_node_map[node] = atomic_node;
   }
@@ -814,7 +783,6 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     ask_node = new AskNode(ask, current_module, current_guard_node);
     ask_node->id = ++id_for_graph_nodes;
     id_ask_node_map.insert(make_pair(ask_node->id, ask_node));
-    current_guard_node->asks.push_back(ask_node);
     ask_node->atomic_guard_list = atomic_guard_list;
 
     ask_nodes.push_back(ask_node);
