@@ -27,38 +27,38 @@ struct AtomicGuardNode;
 typedef std::list<VariableNode *> var_nodes_t; // graph
 typedef std::list<TellNode *> tell_nodes_t; // graph
 typedef std::list<AskNode *> ask_nodes_t; // graph
-typedef std::list<GuardNode *> guard_nodes_t;
+typedef std::list<boost::shared_ptr<GuardNode> > guard_nodes_t;
 
-struct EdgeToVariable
+struct Edge
 {
-  VariableNode *variable_node;
+  int id;
+//  VariableNode *variable_node;
   bool ref_prev;               // indicates whether the reference is only for left hand limit or not
-  bool visited = false; // for cloning
-  EdgeToVariable(VariableNode *, bool);
+  Edge(int, bool);
 };
-
+/*
 struct EdgeToConstraint
 {
-  TellNode *tell_node;
+  int id;
+//  TellNode *tell_node;
   bool ref_prev;               // indicates whether the reference is only for left hand limit or not
-  bool visited = false; // for cloning
   EdgeToConstraint(TellNode *, bool);
 };
-
+*/
 struct ConstraintNode{
+  int id;
   module_t module; /// module which the constraint belongs to
   bool collected;
   bool module_adopted; /// whether the module is in ms
   bool expanded;
   bool always;
-  AskNode* parent;
+  int parent_id;
   ConstraintNode(const module_t &mod):module(mod), module_adopted(true), expanded(false){}
   // ConstraintNode(const ConstraintNode &cn):collected(cn.collected), module_adopted(cn.module_adopted), expanded(cn.expanded), always(cn.always){}
   virtual ~ConstraintNode(){}
-  std::vector<EdgeToVariable> edges;
+  std::vector<Edge> edges;
   bool is_active() const;
   virtual std::string get_name() const = 0;
-  virtual ConstraintNode* clone() const = 0;
 };
   
 struct TellNode: public ConstraintNode{
@@ -68,7 +68,6 @@ struct TellNode: public ConstraintNode{
   // TellNode(const TellNode &tn);
   virtual ~TellNode(){}
   std::string get_name() const;
-  TellNode* clone() const;
 };
 
 typedef enum{
@@ -81,29 +80,28 @@ typedef enum{
 struct AskNode: public ConstraintNode{
   ask_t ask;
   bool prev, entailed;
-  GuardNode *guard_node;
+  GuardNode* guard_node;
   std::list<AtomicGuardNode *> atomic_guard_list;
   ConstraintStore always_children;
-  std::list<ConstraintNode*> children;
+  std::list<int> child_ids;
   AskNode(const ask_t &a, const module_t &mod, GuardNode *guard);
   // AskNode(const AskNode &an);
   virtual ~AskNode(){}
   std::string get_name() const;
-  AskNode* clone() const;
 };
 
-  
+
 /**
  * Node for variable
  */
 struct VariableNode{
+  int id;
   Variable variable;
-  std::vector<EdgeToConstraint> edges;
-  std::vector<AskNode *> ask_edges;
+  std::vector<Edge> edges;
+  std::vector<int> ask_edges;
   VariableNode(Variable var):variable(var)
     {}
   std::string get_name() const;
-  VariableNode* clone() const;
 };
 
 
@@ -117,7 +115,7 @@ public:
 
   RelationGraph(const module_set_t &mods);
 
-  // copy constructor
+  // copy constructor for deep copy
   RelationGraph(const RelationGraph &rg);
 
   virtual ~RelationGraph();
@@ -274,7 +272,9 @@ public:
   GuardNode *get_guard_node(const constraint_t &guard);
 
 private:
-  typedef std::map<Variable, VariableNode*> variable_map_t;  
+  typedef std::map<Variable, VariableNode*> variable_map_t;
+
+  const int INVALID_ID = -1;
   
   void add(module_t &mod);
 
@@ -298,19 +298,21 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
   void visit(boost::shared_ptr<symbolic_expression::Always> always); 
   void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> binary);
-  
+
+  ConstraintNode* get_constraint_node(int id);
+
+  void dump_tell_node(TellNode *node, std::ostream &os) const;
+  void dump_ask_node(AskNode *node, std::ostream &os) const;
+
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;
   tell_nodes_t tell_nodes;
   guard_nodes_t guard_nodes;
   
-  std::unordered_map<int, VariableNode*> int_variable_node_map;
+  std::unordered_map<int, VariableNode*> id_variable_node_map;
   std::unordered_map<int, AskNode*> id_ask_node_map;
   std::unordered_map<int, TellNode*> id_tell_node_map;
-  std::unordered_map<int, GuardNode*> id_guard_node_map;
-
-  AskNode* parent_ask;
-  module_t current_module;
+  
 
   typedef enum{
     EXPANDING,
@@ -319,20 +321,29 @@ private:
     ADDING_ASK
   }VisitMode;
 
-  std::map<module_t, tell_nodes_t>  module_tell_nodes_map;
-  std::map<constraint_t, TellNode*> tell_node_map;
-  std::map<constraint_t, ConstraintNode*> constraint_node_map;
+  std::map<module_t, std::list<int> >  module_tell_node_ids_map;
+  std::map<module_t, std::list<int> > module_ask_node_ids_map;
+  std::map<constraint_t, int> tell_node_id_map;
+  std::map<ask_t, int> ask_node_id_map;
+  std::map<constraint_t, int> constraint_node_id_map;
+  std::map<Variable, int> variable_node_id_map;
   std::map<constraint_t, GuardNode*> guard_node_map;
-  std::map<Variable, VariableNode*> variable_node_map;
-  std::map<std::string, std::list<VariableNode*> > var_name_nodes_map;
+  std::map<std::string, std::list<int> > var_name_node_ids_map;
 
-  std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
-  std::map<ask_t, AskNode*> ask_node_map;
+
+
+  std::list<AtomicGuardNode *> atomic_guard_list;
+
+  int id_for_graph_nodes = 0;
+
+  // member variables to use temporalily in each function
+  
+  AskNode* parent_ask;
+  module_t current_module;
 
   ConstraintStore always_list; /// temporary variables to return always
 
   GuardNode *current_guard_node;
-  std::list<AtomicGuardNode *> atomic_guard_list;
 
   VisitMode visit_mode;
   bool in_always;

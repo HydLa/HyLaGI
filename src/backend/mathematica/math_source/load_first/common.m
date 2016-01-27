@@ -37,6 +37,8 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
+prevRules = {};
+initConstraint = True;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
