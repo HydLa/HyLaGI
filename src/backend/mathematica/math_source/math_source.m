@@ -630,9 +630,13 @@ publicMethod[
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
     andCond = pCons1 && pCons2;
-    necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
-    otherPCons = Complement[andCond, necessaryPCons];
-    necessaryPCons = Reduce[necessaryPCons, Reals];
+    If[andCond === True,
+      necessaryPCons = True;
+      otherPCons = True,
+      necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
+      otherPCons = Complement[andCond, necessaryPCons];
+      necessaryPCons = Reduce[necessaryPCons, Reals]
+    ];
     If[andCond === False,
       {{False}, {False}, {False}},
       caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
