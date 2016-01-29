@@ -25,6 +25,7 @@ public:
   phase_result_sptr_t phase;
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
+  int peripheries;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
 
@@ -34,6 +35,7 @@ public:
   void set_id(int id);
   void set_name(std::string name);
   void set_color(std::string color);
+  void set_peripheries(int num);
   void dump(std::ostream &ost = std::cout);
 };
 

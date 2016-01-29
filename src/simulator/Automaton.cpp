@@ -1,4 +1,6 @@
 #include "Automaton.h"
+#include "PropertyNode.h"
+#include "LTLNode.h"
 #include "../symbolic_expression/Node.h"
 #include <iostream>
 #include <vector>
@@ -16,6 +18,7 @@ AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id)
   this->name = name;
   this->phase = phase;
   this->color =  "#000000";
+  this->peripheries = 0;
 }
 
 void AutomatonNode::add_edge(AutomatonNode* child,node_sptr guard){
@@ -35,9 +38,17 @@ void AutomatonNode::set_color(std::string color){
   this->color = color;
 }
 
+void AutomatonNode::set_peripheries(int num){
+  this->peripheries = num;
+}
+
 void AutomatonNode::dump(ostream& ost)
 {
-  ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\"];" << endl;
+  if(this->peripheries > 0){
+    ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\",peripheries = " << this->peripheries << "];" << endl;
+  }else{
+    ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\"];" << endl;
+  }
   for(auto it = edges.begin();it != edges.end();it++){
     if(this->color == (*it).first->color){
       ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[color=\"" << this->color << "\"];" << endl;
