@@ -351,7 +351,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       // branching by multiple maximal consistent modulesets
       // clone the existing phase
       phase.reset(new PhaseResult(*phase));
-      phase->id = ++phase_sum_;
+      phase->id = increment_phase_sum();
       phase->profile.clear();
       phase->parent->todo_list.push_back(phase); // here
     }
@@ -476,7 +476,7 @@ phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t origi
 {
   phase_result_sptr_t branch_state_false(new PhaseResult());
   branch_state_false->phase_type = original->phase_type;
-  branch_state_false->id = ++phase_sum_;
+  branch_state_false->id = increment_phase_sum();
   branch_state_false->step = original->step;
   branch_state_false->current_time = original->current_time;
   branch_state_false->prev_map = original->prev_map;
@@ -541,7 +541,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   variable_set_ = &v;
   parameter_map_ = &p;
   variable_map_ = &m;
-  phase_sum_ = 1;
+  increment_phase_sum(); // phase_sum_ = 1;
   time_id = 0;
   module_set_container = msc;
   result_root = root;
@@ -1185,7 +1185,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     if(!aborting)
     {
       next_todo->set_parameter_constraint(phase->get_parameter_constraint());
-      next_todo->id = ++phase_sum_;
+      next_todo->id = increment_phase_sum();
       next_todo->phase_type = INTERVAL_PHASE;
       next_todo->parent = phase.get();
       next_todo->diff_sum = phase->diff_sum;
@@ -1354,7 +1354,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           }
           else
           {
-            next_todo->id = ++phase_sum_;
+            next_todo->id = increment_phase_sum();
             next_todo->discrete_asks = candidate.discrete_asks;
             if(opts_->interval || opts_->numerize_mode || opts_->epsilon_mode > 0)
             {
@@ -1413,7 +1413,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           if(++time_it == time_result.end())break;
           //prepare new PhaseResult
           phase.reset(new PhaseResult(*phase));
-          phase->id = ++phase_sum_;
+          phase->id = increment_phase_sum();
           phase->parent->children.push_back(phase);
           phase->parent->todo_list.push_back(phase); // here
           phase->todo_list.clear();
@@ -1421,7 +1421,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             // prepare new todo
             next_todo.reset(new PhaseResult(*next_todo));
-            next_todo->id = ++phase_sum_;
+            next_todo->id = increment_phase_sum();
           }
         }
       }
@@ -1661,6 +1661,15 @@ void PhaseSimulator::backends_caller(const char* name, bool trace, int arg_cnt, 
   va_end(args);
 }
 
+int PhaseSimulator::increment_phase_sum() {
+  static int counter=0;
+  static std::mutex counter_mtx;
+  counter_mtx.lock();
+  const int new_phase_sum = ++counter;
+  counter_mtx.unlock();
+  phase_sum_ = new_phase_sum;
+  return new_phase_sum;
+}
 
 }
 }

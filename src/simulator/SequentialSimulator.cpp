@@ -92,8 +92,7 @@ void SequentialSimulator::dfs(phase_result_sptr_t current, int ps_begin, int ps_
     for (int i = 0; i < num_threads; ++i) {
       if(i!=0) {
         (*phase_simulators_)[ps_begin+i*ps_per_dfs]->relation_graph_.reset(new RelationGraph(*((*phase_simulators_)[ps_begin]->relation_graph_)));
-        (*phase_simulators_)[ps_begin+i*ps_per_dfs]->phase_sum_ = (*phase_simulators_)[ps_begin]->phase_sum_;
-        (*phase_simulators_)[ps_begin+i*ps_per_dfs]->time_id = (*phase_simulators_)[ps_begin]->time_id;
+        (*phase_simulators_)[ps_begin+i*ps_per_dfs]->increment_phase_sum();
       }
       std::cerr << "level" << level << " thread" << i << " " << ps_begin+i*ps_per_dfs << "-" << ps_begin+(i+1)*ps_per_dfs << std::endl;
       threads[i] = std::thread(dfs_worker, ps_begin+i*ps_per_dfs, ps_begin+(i+1)*ps_per_dfs);

@@ -66,7 +66,7 @@ public:
   void add_break_point(BreakPoint b);
 
   boost::shared_ptr<RelationGraph> relation_graph_;
-  int                                   phase_sum_, time_id; // share with other threads
+  int increment_phase_sum();
 
 private:
 
@@ -140,6 +140,7 @@ private:
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
   std::vector<boost::shared_ptr<ConsistencyChecker>> consistency_checkers;
+  int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
   boost::shared_ptr<ValueModifier>      value_modifier;
