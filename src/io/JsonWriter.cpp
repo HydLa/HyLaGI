@@ -82,6 +82,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   //TODO: deal with multiple parameter_maps
   if(pms.size() == 0)phase_object["parameter_map"] = for_pm(parameter_map_t());
   else phase_object["parameter_map"] = for_pm(pms[0]);
+
   phase_object["children"] = make_children(phase);
   phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
   return value(phase_object);

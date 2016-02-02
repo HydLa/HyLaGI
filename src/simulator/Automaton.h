@@ -26,6 +26,7 @@ public:
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
   int peripheries;
+  bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
 

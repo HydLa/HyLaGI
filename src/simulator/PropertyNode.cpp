@@ -15,4 +15,5 @@ PropertyNode::PropertyNode(int id, PropertyNodeType type):AutomatonNode(phase_re
   if(type == ACCEPTANCE_CYCLE | type == ACCEPTANCE_STATE){
     this->set_peripheries(2);
   }
+  this->edge_guard_write = true;
 }

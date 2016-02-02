@@ -80,13 +80,13 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->add_edge(property_init,y_eq_0);
 
       // [bouncing ball hole 1]
-      // : test []]y>=0
+      // : []y!=-1
       PropertyNode *property_init = new PropertyNode(id++,NORMAL);
       PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
       node_sptr true_node = node_sptr(new True());
-      node_sptr y_l_0 = node_sptr(new  Less(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
+      node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("-1"))));
       property_init->add_edge(property_init,true_node);
-      property_init->add_edge(node1,y_l_0);
+      property_init->add_edge(node1,y_eq_0);
       node1->add_edge(node1,true_node);
 
       // [Artificial Example]
@@ -166,9 +166,9 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,current_checking_nod
     // }
     result_automata.push_back(result_automaton);
   }
-  if(opts_->max_phase >= 0 && current->step >= opts_->max_phase){
-    cout << "come here " << endl;
-  }
+  // if(opts_->max_phase >= 0 && current->step >= opts_->max_phase){
+  //   cout << "come here " << endl;
+  // }
   while(!current->todo_list.empty())
   {
     phase_result_sptr_t todo = current->todo_list.front();

@@ -19,6 +19,7 @@ AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id)
   this->phase = phase;
   this->color =  "#000000";
   this->peripheries = 0;
+  this->edge_guard_write = false;
 }
 
 void AutomatonNode::add_edge(AutomatonNode* child,node_sptr guard){
@@ -45,15 +46,25 @@ void AutomatonNode::set_peripheries(int num){
 void AutomatonNode::dump(ostream& ost)
 {
   if(this->peripheries > 0){
-    ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\",peripheries = " << this->peripheries << "];" << endl;
+    ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\",peripheries=" << this->peripheries << "];" << endl;
   }else{
     ost << "\"" << this->name << "\"" << " " << "[color=\"" << this->color << "\"];" << endl;
   }
-  for(auto it = edges.begin();it != edges.end();it++){
-    if(this->color == (*it).first->color){
-      ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[color=\"" << this->color << "\"];" << endl;
-    }else{
-      ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << ";" << endl;
+  if(this->edge_guard_write){
+    for(auto it = edges.begin();it != edges.end();it++){
+      if(this->color == (*it).first->color){
+        ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[color=\"" << this->color << "\",label=\"" << get_infix_string((*it).second) << "\"];" << endl;
+      }else{
+        ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[label=\"" << get_infix_string((*it).second) << "\"];" << endl;
+      }
+    }
+  }else{
+    for(auto it = edges.begin();it != edges.end();it++){
+      if(this->color == (*it).first->color){
+        ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << "[color=\"" << this->color << "\"];" << endl;
+      }else{
+        ost << "\"" << this->name << "\"" << " -> " << "\"" << (*it).first->name << "\"" << ";" << endl;
+      }
     }
   }
 }
