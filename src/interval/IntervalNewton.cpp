@@ -228,7 +228,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
       {
         HYDLA_LOGGER_DEBUG_VAR(current_interval);
         HYDLA_LOGGER_DEBUG("Stopped at step ", i);
-        return current_interval;
+        break;
       }
     }
     if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
