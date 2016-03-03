@@ -25,6 +25,7 @@
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
 #include "kv/interval.hpp"
+#include "AffineApproximator.h"
 
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
@@ -1257,9 +1258,26 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       if(*state.min_interval == interval::INVALID_ITV)continue;
 
       Parameter parameter("t", -1, ++time_id);
-      ValueRange range = create_range_from_interval(*state.min_interval);
-      pm_for_each[parameter] = range;
-      TimeListElement elem(value_t(parameter), entry.first);
+      TimeListElement elem;
+      if(opts_->affine)
+      {
+        hydla::backend::MidpointRadius mr;
+        value_t lb = state.min_interval->lower();
+        value_t ub = state.min_interval->upper();
+        backend_->call("intervalToMidpointRadius", false, 2, "vltvlt", "r", &lb, &ub, &mr);
+        ValueRange range;
+        range.set_upper_bound(value_t("1"), true);
+        range.set_lower_bound(value_t("-1"), true);
+        value_t new_value(mr.midpoint + mr.radius * value_t(parameter));
+        pm_for_each[parameter] = range;
+        elem = TimeListElement(new_value, entry.first);
+      }
+      else
+      {
+        elem = TimeListElement(value_t(parameter), entry.first);
+        ValueRange range = create_range_from_interval(*state.min_interval);
+        pm_for_each[parameter] = range;
+      }
       guard_parameter_map.insert(make_pair(entry.first, parameter));
       time_list.push_back(elem);
     }
@@ -1678,16 +1696,26 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
     {
       if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
         continue;
-      itvd interval = evaluate_interval(phase, entry.second);
-      if(width(interval) > 0)
+
+      assert(entry.second.unique());
+
+      if(opts_->affine)
       {
-        ValueRange range = create_range_from_interval(interval);
-        Parameter param(entry.first, *phase);
-        add_parameter_constraint(phase, param, range);
-        entry.second = param.as_value();
-        stringstream sstr;
-        sstr << param.get_name() << "_" <<  param.get_differential_count();
-        phase->profile[sstr.str()] = width(interval);
+        entry.second.set_unique_value(evaluate_affine(phase, entry.second.get_unique_value()));
+      }
+      else
+      {
+        itvd interval = evaluate_interval(phase, entry.second);
+        if(width(interval) > 0)
+        {
+          ValueRange range = create_range_from_interval(interval);
+          Parameter param(entry.first, *phase);
+          add_parameter_constraint(phase, param, range);
+          entry.second = param.as_value();
+          stringstream sstr;
+          sstr << param.get_name() << "_" <<  param.get_differential_count();
+          phase->profile[sstr.str()] = width(interval);
+        }
       }
     }
   }
@@ -1863,6 +1891,24 @@ itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRan
   HYDLA_ASSERT(range.unique());
   return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
 }
+
+value_t PhaseSimulator::evaluate_affine(const phase_result_sptr_t phase, value_t val)
+{
+  HYDLA_LOGGER_DEBUG_VAR(val);
+  VariableReplacer v_replacer(phase->variable_map);
+  v_replacer.replace_value(val);
+  val = value_modifier->apply_function(opts_->fullsimplify?"fullsimplify":"simplify", val);
+  interval::AffineApproximator* approximator = interval::AffineApproximator::get_instance();
+  vector<parameter_map_t> parameter_maps = phase->get_parameter_maps();
+  assert(parameter_maps.size() == 1);
+  node_sptr node = val.get_node();
+  value_t result_val = approximator->approximate(node, parameter_maps[0], phase->variable_map);
+  HYDLA_LOGGER_DEBUG_VAR(result_val);
+  backend_->call("resetConstraintForParameter", false, 1, "mp", "", &parameter_maps[0]);
+  phase->set_parameter_constraint(get_current_parameter_constraint());
+  return result_val;
+}
+
 
 void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange range)
 {

@@ -288,6 +288,13 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
     if(current_val_.is_integer)current_val_.affine_value = log(current_val_.integer);
     else current_val_.affine_value = log(current_val_.affine_value);
   }
+  if(name == "cos")
+  {
+    if(node->get_arguments_size() != 1)invalid_node(*node);
+    accept(node->get_argument(0) );
+    if(current_val_.is_integer)current_val_.affine_value = cos(current_val_.integer);
+    else current_val_.affine_value = cos(current_val_.affine_value);
+  }
   else
   {
     invalid_node(*node);

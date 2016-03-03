@@ -106,6 +106,12 @@ void ProgramOptions::init_descriptions()
 
     ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
+    
+    ("affine",
+     value<char>()->default_value('n'),
+     "use affine arithmetic to approximate expressions")
+
+
     ("fail_on_stop",value<char>()->default_value('n'),
      "stop all simulation cases when assertion fails")
 

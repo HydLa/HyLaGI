@@ -43,6 +43,7 @@ struct TimeListElement{
   ConstraintStore parameter_constraint;
   constraint_t guard;
   TimeListElement(value_t t, constraint_t g):time(t), guard(g){}
+  TimeListElement(){}
 };
 
 
@@ -115,6 +116,8 @@ private:
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm, bool additional_constraint);
 
   kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
+
+  value_t evaluate_affine(const phase_result_sptr_t phase, value_t val);
 
   StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm, bool lower);
 

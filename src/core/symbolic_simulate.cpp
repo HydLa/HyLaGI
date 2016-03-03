@@ -36,7 +36,6 @@ using namespace hydla::io;
 using namespace hydla::logger;
 using namespace std;
 
-
 Simulator* simulator_;
 Opts opts;
 backend_sptr_t backend_;
@@ -108,9 +107,9 @@ void output_result(Simulator& ss, Opts& opts){
         struct stat st;
         int ret = stat(hydat_dir.c_str(), &st);
         if(ret == -1)
-          {
-            mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-          }
+        {
+          mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        }
     }
     writer.write(*simulator_, of_name);
   }
@@ -185,6 +184,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
   IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';
+  IF_SPECIFIED("affine")opts.affine = po.count("affine")>0 && po.get<char>("affine") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("numerize_without_validation")opts.numerize_mode =  po.count("numerize_without_validation") > 0 && po.get<char>("numerize_without_validation") == 'y';

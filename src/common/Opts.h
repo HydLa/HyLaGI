@@ -19,6 +19,7 @@ struct Opts {
   symbolic_expression::node_sptr max_time;
   int epsilon_mode;
   bool interval;
+  bool affine;
   bool step_by_step;
   bool numerize_mode;
   bool ltl_model_check_mode;

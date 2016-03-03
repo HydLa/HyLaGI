@@ -1,4 +1,4 @@
-INIT <=> 15 <= v <= 40 & timer = 0 & 0 <= timer <= 2.5 & x = 0 & loc = 1.
+INIT <=> v = 40 & timer = 0 & 0 <= timer <= 2.5 & x = 0 & loc = 1.
 LOC1 <=> [](loc = 1 => v' = -timer - 2.5 & timer' = 1).
 LOC2 <=> [](loc = 2 => v' = -5).
 LOC3 <=> [](loc = 3 => v' = -2.5).
@@ -10,7 +10,7 @@ LOC1TO2 <=> [](loc- = 1 & timer- = 2.5 & 15 <= v- <= 40 => loc = 2 & timer = tim
 LOC1TO4 <=> [](loc- = 1 & 0 <= timer- < 2.5 & 15 <= v- <= 16 => loc = 4 & timer = timer-). // because of urgent semantics in HydLa, this jump differs from the original one.
 LOC2TO4 <=> [](loc- = 2 & timer- = 2.5 & 15 <= v- <= 16 => loc = 4 & timer = 0).
 LOC3TO1 <=> [](loc- = 3 & timer- = 1.3 & 18 <= v- <= 20 => loc = 1 & timer = 0).
-LOC3TO5 <=> [](loc- = 3 & timer- = 1.3 & 5 <= v <= 11 => loc = 5).
+LOC3TO5 <=> [](loc- = 3 & timer- = 1.3 & 5 <= v- <= 11 => loc = 5).
 LOC4TO3 <=> [](loc- = 4 & timer- = 1.3 & 5 <= v- <= 20 => loc = 3 & timer = timer-).
 LOC4TO1 <=> [](loc- = 4 & 18 <= v- <= 20 => loc = 1 & timer = 0).
 LOC4TO5 <=> [](loc- = 4 & 5 <= v- <= 11 & 0 <= timer- <= 1.3 => loc = 5 & x = 0 & timer = timer-).
@@ -18,9 +18,8 @@ LOC5TO4 <=> [](loc- = 5 & 13 <= v- <= 15 => loc = 4 & timer = 0).
 LOC5TO6 <=> [](loc- = 5 & -15 <= v- <= -14 => loc = 6 & timer = timer-).
 LOC6TO5 <=> [](loc- = 6 & -6 <= v- <= -5 => loc = 5 & x = 0 & timer = timer-).
 
-ASSERT(v > -2).
 
 INIT, ([](v = v-), [](timer' = 0), [](loc != 5 => x' = 0), [](loc' = 0), [](loc = 5 => x' = v)) << (LOC1, LOC2, LOC3, LOC4, LOC5, LOC6)
  <<(LOC1TO2, LOC1TO4, LOC2TO4, LOC3TO1, LOC3TO5, LOC4TO3, LOC4TO1, LOC4TO5, LOC5TO4, LOC5TO6, LOC6TO5).
 
-//#hylagi -t 100
+//#hylagi -t 100 --finterval --fstep_by_step --guards_to_interval_newton -15<=v-,-6<=v-,5<=v-,13<=v-,15<=v-,18<=v-,v-<=-14,v-<=-5,v-<=11,v-<=15,v-<=16,v-<=20,v-<=40

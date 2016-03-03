@@ -236,7 +236,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
       HYDLA_LOGGER_DEBUG_VAR(current_interval);
-      return current_interval;;
+      return current_interval;
     }
   }
   return INVALID_ITV;

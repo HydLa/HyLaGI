@@ -36,7 +36,9 @@ void AffineApproximator::set_simulator(Simulator* s)
 
 void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
-/*  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
+  assert(0);
+/*
+  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
   if(!index_map.empty())
   {
     parameter_idx_map.clear();
@@ -130,80 +132,11 @@ value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parame
   return result_value;
 }
 
-
-void AffineApproximator::approximate(const variable_t &variable_to_approximate, variable_map_t&variable_map, parameter_map_t &parameter_map, node_sptr condition)
-{
-  range_t val = variable_map[variable_to_approximate];
-  assert(val.unique());
-  node_sptr node = val.get_unique_value().get_node();
-  value_t affine = approximate(node, parameter_map, variable_map);
-  variable_map[variable_to_approximate] = affine;
-  if(condition.get() != nullptr)
-  {
-    //TODO: deal with general case (currently only for '=')
-    //Check whether the condition has approximated variable
-    simulator::VariableFinder finder;
-    finder.visit_node(condition);
-    if(finder.include_variable(variable_to_approximate) || finder.include_variable_prev(variable_to_approximate))
-    {
-      variable_set_t variables = finder.get_all_variable_set();
-      if(variables.size() > 2)
-      {
-        //TODO: approximate n-2 variables
-        assert(0);
-      }
-      // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない（現状だと離散変化条件が直接言及している変数しか考慮していない）
-      variable_t remain_var;
-      for(auto var : variables)
-      {
-        if(var != variable_to_approximate)
-        {
-          remain_var = var;
-          break;
-        }
-      }
-      Value consistent_value;
-      simulator->backend->call("calculateConsistentValue", true, 4,
-                                "ecvnmvnmp", "vl",
-                                &condition, &remain_var, &variable_map, &parameter_map, &consistent_value);
-      variable_map[remain_var] = consistent_value;
-    }
-  }
-}
-
-
 void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
 {
   node_sptr node = time.get_node();
   time = approximate(node, parameter_map, prev_map);
-  if(condition.get() != nullptr)
-  {
-    //TODO: deal with general case (currently only for '=')
-    //Check whether the condition has approximated variable
-    simulator::VariableFinder finder;
-    finder.visit_node(condition);
-    variable_set_t variables = finder.get_all_variable_set();
-    
-    // TODO: 本来ならここで離散変化条件に関わる変数を全部考慮に入れないといけない
-    // 再計算する変数を１つだけ決める（暫定的に最初の要素とする）
-    if(variables.size() <= 1)return;
-    variable_t recalculate_variable = *(variables.begin());
-    for(auto vm_it = prev_map.begin(); vm_it != prev_map.end(); vm_it++)
-    {
-      // それ以外は新しいtを代入する．
-      // TODO: 使用する時刻はタイムシフト前の方が計算が楽なはず
-      ValueModifier modifier(*simulator->backend);
-      prev_map[vm_it->first] = modifier.substitute_time(time, ip_map.find(vm_it->first)->second);
-    }
-
-    Value consistent_value;
-    simulator->backend->call("calculateConsistentValue", true, 4,
-                             "ecvnmvnmp", "vl",
-                             &condition, &recalculate_variable, &prev_map, &parameter_map, &consistent_value);
-    prev_map[recalculate_variable] = consistent_value;
-  }
 }
-
 
 
 }
