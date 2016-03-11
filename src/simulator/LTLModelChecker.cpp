@@ -65,13 +65,13 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // : Checking []<>(y>7)
       // : ball is always eventually y>7
       // : for case devide (find acceptance cycle or not find)
-      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-      // node_sptr true_node = node_sptr(new True());
-      // node_sptr y_leq_7 = node_sptr(new LessEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("7"))));
-      // property_init->add_edge(property_init,true_node);
-      // property_init->add_edge(node1,y_leq_7);
-      // node1->add_edge(node1,y_leq_7);
+      PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      node_sptr true_node = node_sptr(new True());
+      node_sptr y_leq_7 = node_sptr(new LessEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("7"))));
+      property_init->add_edge(property_init,true_node);
+      property_init->add_edge(node1,y_leq_7);
+      node1->add_edge(node1,y_leq_7);
 
       // [bouncing ball 3]
       // : test <>y!=0
@@ -79,15 +79,73 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
       // property_init->add_edge(property_init,y_eq_0);
 
+      // [bouncing ball 4]
+      // : test []!(y<0)
+      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_less_0 = node_sptr(new  Less(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
+      // property_init->add_edge(property_init,true_node);
+      // property_init->add_edge(property_init,y_less_0);
+      // node1->add_edge(node1,true_node);
+
       // [bouncing ball hole 1]
       // : []y!=-1
-      PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-      PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
-      node_sptr true_node = node_sptr(new True());
-      node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("-1"))));
-      property_init->add_edge(property_init,true_node);
-      property_init->add_edge(node1,y_eq_0);
-      node1->add_edge(node1,true_node);
+      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("-1"))));
+      // property_init->add_edge(property_init,true_node);
+      // property_init->add_edge(node1,y_eq_0);
+      // node1->add_edge(node1,true_node);
+
+      // [triangle sawtooth 1]
+      // : [](y>=0 && y<=10)
+      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr y_less_0 = node_sptr(new  Less(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
+      // node_sptr y_great_10 = node_sptr(new  Greater(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("10"))));
+      // node_sptr guard1 = node_sptr(new LogicalOr(y_less_0,y_great_10));
+      // property_init->add_edge(property_init,true_node);
+      // property_init->add_edge(node1,guard1);
+      // node1->add_edge(node1,true_node);
+
+      // [triangle sawtooth 2]
+      // : <>[](<>f=11 || []f=-1)
+      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // PropertyNode *node2 = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node3 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // PropertyNode *node4 = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node5 = new PropertyNode(id++,NORMAL);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("f")),node_sptr(new Number("11"))))));
+      // node_sptr q = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("f")),node_sptr(new Number("-1"))))));
+      // node_sptr guard1 = node_sptr(new LogicalAnd(p,q));
+      // property_init->add_edge(node5,true_node);
+      // property_init->add_edge(node4,p);
+      // property_init->add_edge(node1,guard1);
+      // node1->add_edge(node4,p);
+      // node1->add_edge(node2,p);
+      // node1->add_edge(node1,guard1);
+      // node2->add_edge(node2,p);
+      // node2->add_edge(node3,p);
+      // node2->add_edge(node1,guard1);
+      // node3->add_edge(node4,p);
+      // node3->add_edge(node1,guard1);
+      // node4->add_edge(node4,p);
+      // node4->add_edge(node1,guard1);
+      // node5->add_edge(node5,true_node);
+      // node5->add_edge(node3,p);
+      // node5->add_edge(node1,guard1);
+
+      // [bouncing auto abstract]
+      // :
+      // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // // PropertyNode *node1 = PropertyNode(id++,ACCEPTANCE_CYCLE)
+      // node_sptr true_node = node_sptr(new True());
+      // property_init->add_edge(property_init,true_node);
 
       // [Artificial Example]
       // : For testing wheter I can deal with the inclusion of phase correctly
@@ -98,6 +156,22 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->add_edge(property_init,true_node);
       // property_init->add_edge(node1,y_geq_3);
       // node1->add_edge(node1,true_node);
+
+      // [water tank 1]
+      // :<>p
+      // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
+      // property_init->add_edge(property_init,p);
+
+      // [water tank 2]
+      // :[]<>p
+      // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
+      // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
+      // node_sptr true_node = node_sptr(new True());
+      // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
+      // property_init->add_edge(property_init,true_node);
+      // property_init->add_edge(node1,p);
+      // node1->add_edge(node1,p);
 
       Automaton property;
       property.initial_node = property_init;
@@ -182,15 +256,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,current_checking_nod
     }
     /* TODO: assertion違反が検出された場合の対応 */
     current_checking_node_list_t next_node_list = transition(checking_list, todo);
-    if(next_node_list.empty() & !checking_list.empty())
-    {
-      HYDLA_LOGGER_DEBUG("A loop is detected");
-      HYDLA_LOGGER_DEBUG_VAR(*todo);
-    }
-    // else
-    // {
     LTLsearch(todo, next_node_list);
-    // }
   }
   phase_simulator_->revert_diff(*current);
   for(auto checked_node : checking_list){
@@ -198,7 +264,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,current_checking_nod
   }
 }
 
-current_checking_node_list_t LTLModelChecker::transition(current_checking_node_list_t checking_list,phase_result_sptr_t phase){
+current_checking_node_list_t LTLModelChecker::transition(current_checking_node_list_t checking_list, phase_result_sptr_t phase){
   current_checking_node_list_t next_search;
   for(auto current : checking_list){
     for(auto property_node_edge : current.node->property->edges){
@@ -269,6 +335,10 @@ current_checking_node_list_t LTLModelChecker::transition(current_checking_node_l
         }
       }
     }
+  }
+  if(next_search.empty() & !checking_list.empty())
+  {
+    result_automata.push_back(current_automaton.clone());
   }
   return next_search;
 }
@@ -369,49 +439,3 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,node_sptr guard
 
 }//namespace hydla
 }//namespace simulator
-/*
-//[bouncing ball 1]:Checking [](y<10) don't over first height : old
-PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr true_node = node_sptr(new True());
-node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
-property_init->add_edge(property_init,true_node);
-property_init->add_edge(node1,y_geq_15);
-node1->add_edge(node1,true_node);
-//[bouncing ball 3]:Checking [](y'<10) don't over first speed
-PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr true_node = node_sptr(new True());
-node_sptr y_geq_15 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("15"))));
-property_init->add_edge(true_node,property_init);
-property_init->add_edge(y_geq_15,node1);
-node1->add_edge(true_node,node1);
-//[hot air balloon]:Checking flying [](y>0) : don't work
-PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr true_node = node_sptr(new True());
-node_sptr y_ng_0 = node_sptr(new Not(node_sptr(new Greater(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
-property_init->add_edge(true_node,property_init);
-property_init->add_edge(y_ng_0,node1);
-node1->add_edge(true_node,node1);
-//[water tank 1]:Checking whether the tank is filled up with water <>(y=12)
-PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr y_neq_12 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
-property_init->add_edge(y_neq_12,property_init);
-//[water tank 2]:Checking wheter water level reach certain value repeatedly []<>(y=6) : need 20 phase
-PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr true_node = node_sptr(new True());
-node_sptr y_neq_6 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
-property_init->add_edge(true_node,property_init);
-property_init->add_edge(y_neq_6,node1);
-node1->add_edge(y_neq_6,node1);
-//[Artificial Example]:For testing wheter I can deal with the inclusion of phase correctly
-PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-node_sptr true_node = node_sptr(new True());
-node_sptr y_geq_3 = node_sptr(new GreaterEqual(node_sptr(new symbolic_expression::Variable("y")),node_sptr(new Number("3"))));
-property_init->add_edge(true_node,property_init);
-property_init->add_edge(y_geq_3,node1);
-node1->add_edge(true_node,node1);
-*/
