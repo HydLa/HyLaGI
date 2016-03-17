@@ -49,6 +49,7 @@ PhaseSimulator::~PhaseSimulator(){}
 
 phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
+  HYDLA_LOGGER_DEBUG("\"ahoahoa\"",*todo);
   timer::Timer phase_timer;
   module_set_container->reset();
   todo->inconsistent_module_sets.clear();
@@ -58,10 +59,23 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   if(todo->parent == result_root.get())
   {
     for(auto module : module_set_container->get_max_module_set())
-    {
-      relation_graph_->set_expanded_recursive(module.second, true);
-    }
+      {
+        relation_graph_->set_expanded_recursive(module.second, true);
+      }
     todo->diff_sum.add_constraint_store(relation_graph_->get_constraints());
+    // // // ahoahoaho : for auto abstruction
+    // AlwaysFinder always_finder;
+    // ConstraintStore non_always;
+    // always_set_t always_set;
+    // asks_t diff_positives = todo->parent->get_diff_positive_asks();
+    // asks_t nonalways_asks;
+    // for(auto module : module_set_container->get_max_module_set())
+    //   {
+    //     always_finder.find_always(module.second, &always_set, &non_always, &diff_positives, &nonalways_asks);
+    //   }
+    // for(auto constraint : non_always)relation_graph_->set_expanded_atomic(constraint, false);
+    // for(auto ask : nonalways_asks)relation_graph_->set_expanded_atomic(ask, false);
+    // // // ahoahoaho
   }
   else
   {
@@ -83,7 +97,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       for(auto constraint : non_always)relation_graph_->set_expanded_atomic(constraint, false);
       for(auto ask : nonalways_asks)relation_graph_->set_expanded_atomic(ask, false);
     }
-    
+
     if(todo->phase_type == INTERVAL_PHASE)
     {
       todo->prev_map = todo->parent->variable_map;
@@ -803,7 +817,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
   {
     HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   }
-  
+
   for(auto atomic_guard : guards)
   {
     constraint_t g = atomic_guard->constraint;
@@ -856,7 +870,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       }
     }
   }
-  
+
   find_min_time_result_t min_time_for_this_ask;
   if(guard_by_newton.get() != nullptr)
   {
@@ -908,7 +922,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-        if(!min_time_for_this_ask.empty()) 
+        if(!min_time_for_this_ask.empty())
         {
           HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
           add_parameter_constraint(phase, parameter_current, current_range);
@@ -998,7 +1012,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
         min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit, time_bound);
         // TODO: deal with  branching of cases
-        if(!min_time_for_this_ask.empty() && !min_time_for_this_ask.front().time.infinite()) 
+        if(!min_time_for_this_ask.empty() && !min_time_for_this_ask.front().time.infinite())
         {
           HYDLA_ASSERT(min_time_for_this_ask.size() == 1);
           simulator_->introduce_parameter(parameter_upper, upper_range);
@@ -1046,7 +1060,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
       }
     }
   }
-  
+
   return min_time_for_this_ask;
 }
 
@@ -1141,7 +1155,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
                 entry.second = value_modifier->shift_time(-(phase->current_time - phase->parent->parent->current_time), value_t(entry.second) ).get_node();
               }
               cand_it++;
-              
+
             }
           }
         }
@@ -1190,7 +1204,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       {
         candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
       }
-      
+
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
@@ -1205,7 +1219,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         time_result = compare_min_time(time_result, entry.second, entry.first);
         for(auto candidate : entry.second)
         {
-          HYDLA_LOGGER_DEBUG_VAR(candidate.time); 
+          HYDLA_LOGGER_DEBUG_VAR(candidate.time);
         }
       }
       for(auto entry : break_point_list)
@@ -1220,7 +1234,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           HYDLA_LOGGER_DEBUG("#epsilon DC before : ", entry.parameter_constraint);
         }
         time_result = reduce_unsuitable_case(time_result, backend_.get(), phase);
-        
+
         for(auto entry : time_result){
           HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
         }
