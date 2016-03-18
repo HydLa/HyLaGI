@@ -207,7 +207,6 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 
   for(auto constraint : constraint_store)
   {
-    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(constraint));
     auto constraint_it = tell_node_map.find(constraint);
     if(constraint_it == tell_node_map.end())
     {
@@ -370,7 +369,6 @@ void RelationGraph::set_expanded_atomic(constraint_t cons, bool expanded)
   }else throw HYDLA_ERROR("constraint_node not found");
 }
 
-
 void RelationGraph::set_expanded_recursive(constraint_t cons, bool expanded)
 {
   visit_mode = expanded?EXPANDING:UNEXPANDING;
@@ -383,7 +381,10 @@ void RelationGraph::set_entailed(const ask_t &ask, bool entailed)
   if(node_it != ask_node_map.end())
   {
     node_it->second->entailed = entailed;
-    set_expanded_recursive(node_it->second->ask->get_child(), entailed);
+    if(node_it->second->expanded)
+    {
+      set_expanded_recursive(node_it->second->ask->get_child(), entailed);
+    }
   }
   else throw HYDLA_ERROR("AtomicGuardNode for " + get_infix_string(ask) + " is not found");
 }
@@ -412,7 +413,10 @@ bool RelationGraph::entail_if_prev(const ask_t &ask, bool entailed)
   if(node_it->second->prev)
   {
     node_it->second->entailed = entailed;
-    set_expanded_recursive(node_it->second->ask->get_child(), entailed);
+    if(node_it->second->expanded)
+    {
+      set_expanded_recursive(node_it->second->ask->get_child(), entailed);
+    }
     return true;
   }
   return false;
@@ -535,7 +539,7 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
 
 bool RelationGraph::to_be_considered(const AskNode *ask, bool ignore_prev) const
 {
-  return ask->is_active() && !(ignore_prev && ask->prev);
+  return ask->expanded && !(ignore_prev && ask->prev);
 }
 
 ConstraintStore RelationGraph::get_constraints()
@@ -770,10 +774,15 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     if(visit_mode == EXPANDING)
     {
       ask_node_it->second->expanded = true;
+      if(ask_node_it->second->entailed)accept(ask_node_it->second->ask->get_child());
     }
     else if(visit_mode == UNEXPANDING && !in_always)
     {
       ask_node_it->second->expanded = false;
+      if(ask_node_it->second->entailed)
+      {
+        accept(ask_node_it->second->ask->get_child());
+      }
     }
     else throw HYDLA_ERROR("unknown visit_mode");
   }

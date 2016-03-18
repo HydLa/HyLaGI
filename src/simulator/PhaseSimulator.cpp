@@ -689,6 +689,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
         if(!relation_graph_->get_entailed(ask))
         {
+
           if(negative_asks.erase(ask))
           {
             diff_sum.erase(ask->get_child());
