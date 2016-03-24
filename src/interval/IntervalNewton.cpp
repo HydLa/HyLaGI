@@ -151,13 +151,99 @@ double calculate_mid_without_0(itvd current_interval, node_sptr exp, parameter_m
   return INVALID_MID;
 }
 
+
+
+
+
+itvd calculate_interval_newton_with_aa(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
+{
+  bool parted;
+  itvd current_interval, prev_interval, div1, div2, nx, nx2, x2, f_result, d_result,m;
+  itvd result_interval;
+
+  std::cout.precision(17);
+  std::cerr.precision(17);
+
+  while(!candidate_stack.empty())
+  {
+    current_interval = candidate_stack.top();
+    candidate_stack.pop();
+
+    HYDLA_LOGGER_DEBUG("pop new interval: ", current_interval);
+    int i = 0;
+    while(true)
+    {
+      ++i;
+      if(current_interval == itvd(0.,0.))
+      {
+        HYDLA_LOGGER_DEBUG("Empty Interval");
+        break;
+      }
+      prev_interval = current_interval;
+      HYDLA_LOGGER_DEBUG_VAR(current_interval);
+      IntervalTreeVisitor visitor;
+      d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
+      if(in(0., d_result))
+      {
+        double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
+        if(mid_val == INVALID_MID)
+        {
+          throw HYDLA_ERROR("No valid intermediate values are found in interval newton method.");
+        }
+        m = itvd(mid_val);
+      }
+      else
+      {
+        m = itvd(mid(current_interval));
+      }
+      f_result = visitor.get_interval_value(exp, &m, &phase_map_);
+
+      HYDLA_LOGGER_DEBUG_VAR(f_result);
+      HYDLA_LOGGER_DEBUG_VAR(d_result);
+
+      nx = m - division_part1(f_result, d_result, parted);
+      HYDLA_LOGGER_DEBUG_VAR(nx);
+      HYDLA_LOGGER_DEBUG_VAR(prev_interval);
+      current_interval = intersect_interval(prev_interval, nx);
+      
+      if(parted)
+      {
+        if(current_interval != itvd(0., 0.))
+        {
+          HYDLA_LOGGER_DEBUG("push candidate: ", current_interval);
+          candidate_stack.push(current_interval);
+        }
+        nx2 = m - division_part2(f_result, d_result);
+        HYDLA_LOGGER_DEBUG_VAR(nx2);
+        current_interval = intersect_interval(prev_interval, nx2);
+      }
+
+      // stopping criteria
+      if(itvd_equal(prev_interval, current_interval))
+      {
+        HYDLA_LOGGER_DEBUG_VAR(current_interval);
+        HYDLA_LOGGER_DEBUG("Stopped at step ", i);
+        break;
+      }
+    }
+    if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
+    {
+      HYDLA_LOGGER_DEBUG("FIND");
+      HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
+      HYDLA_LOGGER_DEBUG_VAR(current_interval);
+      return current_interval;
+    }
+  }
+  return INVALID_ITV;
+}
+
+
 itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
 {
   itv_stack_t candidate_stack;
   candidate_stack.push(init);
   return calculate_interval_newton(candidate_stack, exp, dexp, phase_map_);
 }
-
 
 
 itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)

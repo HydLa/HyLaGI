@@ -1256,6 +1256,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm);
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
+      if(opts_->numerize_mode)
+      {
+        *state.min_interval = mid(*state.min_interval);
+      }
 
       Parameter parameter("t", -1, ++time_id);
       TimeListElement elem;
