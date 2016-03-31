@@ -39,7 +39,7 @@ checkConsistencyInterval[] :=  (
 checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[(Simplify[tmpCons] //. prevRules) && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-ccIntervalForEach[cond_, pCons_] :=
+ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {
     operator,
@@ -49,19 +49,19 @@ Module[
     ltSol,
     trueCond
   },
-  inputPrint["ccIntervalForEach", cond, pCons];
+  inputPrint["ccIntervalForEach", cond, initRules, pCons];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
-  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0, Infinity, {Power::infy, Infinity::indet}];
+  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs, pCons];
-  (* caused by underConstrained *)
-  If[hasVariable[lhs], Return[pCons] ];
 
   trueCond = False;
 
-  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
+  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals]];
+  simplePrint[eqSol];
+  If[eqSol === True, Return[True] ];
   If[eqSol =!= False,
-    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], eqSol];
+    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
     trueCond = trueCond || eqSol
   ];
   If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
@@ -81,7 +81,7 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
         Assuming[assum, 
@@ -93,7 +93,9 @@ publicMethod[
             {{False}, {LogicalExpand[pCons]}},
             tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
             simplePrint[tRules];
-            tCons = Map[(Join[#, and@@applyList[initCons] ])&, sol[[2]] ] /. tRules;
+            tCons = sol[[2]] /. tRules;
+
+            initRules = makeRulesForVariable[initCons];
             
             simplePrint[tCons];
             
@@ -102,7 +104,7 @@ publicMethod[
               conj = tCons[[i]];
               eachCpTrue = prevCons && pCons;
               For[j = 1, j <= Length[conj], j++,
-                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
               ];
               cpTrue = cpTrue || eachCpTrue
             ];
@@ -249,23 +251,23 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], va
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], Infinity, Heads->True];
-getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], Infinity], Cases[exprs, Derivative[_][_][_], Infinity]];
+getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
+getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], Infinity], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
 getVariablesWithDerivatives[exprs_] := Union[getVariables[expr], getDerivatives[exprs] ];
 
 
 (* 式中に出現するprev値を取得 *)
-getPrevVariables[exprs_] := Cases[exprs, prev[_, _], Infinity];
+getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 (* 式中に出現する記号定数を取得 *)
 
-getParameters[exprs_] := Cases[exprs, p[_, _, _], Infinity];
+getParameters[exprs_] := Cases[exprs, p[_, _, _], {0, Infinity}];
 
 (* 式中に定数名が出現するか否か *)
 
-hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], Infinity] ] > 0;
+hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], {0, Infinity}] ] > 0;
 
-hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], Infinity] ] > 0;
+hasParameterOrPrev[exprs_] := Length[Cases[{exprs}, p[_, _, _] | prev[_, _], {0, Infinity}] ] > 0;
 
 hasVariableOrParameter[exprs_] := hasParameter[exprs] || hasVariable[exprs];
 
@@ -277,13 +279,13 @@ isParameter[exprs_] := Head[exprs] === p;
 isParameterOrPrev[exprs_] := Head[exprs] === p || Head[exprs] === prev;
 
 (* 式が指定されたシンボルを持つか *)
-hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), Infinity ];
+hasSymbol[exprs_, syms_List] := MemberQ[{exprs}, ele_ /; (MemberQ[syms, ele] || (!AtomQ[ele] && hasSymbol[Head[ele], syms]) ), {0, Infinity} ];
 
 (* 式がprev変数そのものか否か *)
 isPrevVariable[exprs_] := Head[exprs] === prev;
 
 (* 式がprev変数を持つか *)
-hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], Infinity]] > 0;
+hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 adjustExprs[andExprs_, judgeFunction_] :=
@@ -353,6 +355,8 @@ addLessEqual[var_, expr_] := addConstraint[var <= expr];
 addLess[var_, expr_] := addConstraint[var <= expr];
 addGreaterEqual[var_, expr_] := addConstraint[var >= expr];
 addGreater[var_, expr_] := addConstraint[var > expr];
+
+makeRulesForVariable[cons_] := Map[(#[[1]] -> #[[2]])&, adjustExprs[applyList[cons], hasVariable]];
 
 publicMethod[
   addPrevEqual,
@@ -705,7 +709,7 @@ Module[
       resultRule = Union[resultRule, rules[[1]] ];
       listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
       listExpr = listExpr //. prevRs;
-      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, Infinity]))], Return[overConstrained] ];
+      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
       listExpr = Select[listExpr, (#=!=True)&];
       tVars = Map[(#[t])&, getVariablesWithDerivatives[listExpr] ];
       simplePrint[listExpr, tVars];
