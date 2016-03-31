@@ -53,13 +53,14 @@ Module[
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
-  simplePrint[lhs, pCons];
+  simplePrint[lhs];
+  (* On the case when the variables are underconstrained *)
+  If[hasVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
 
   trueCond = False;
 
   eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals]];
   simplePrint[eqSol];
-  If[eqSol === True, Return[True] ];
   If[eqSol =!= False,
     eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
     trueCond = trueCond || eqSol
@@ -85,19 +86,19 @@ publicMethod[
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
         Assuming[assum,
-          sol = exDSolve[Simplify[cons], prevRs];
-          simplePrint[sol];
-          prevVars = Map[makePrevVar, vars];
-          debugPrint["sol after exDSolve", sol];
-          If[sol === overConstrained,
+        sol = exDSolve[Simplify[cons], prevRs];
+        simplePrint[sol];
+        prevVars = Map[makePrevVar, vars];
+        debugPrint["sol after exDSolve", sol];
+        If[sol === overConstrained,
+          {{False}, {LogicalExpand[pCons]}},
+          tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+          simplePrint[tRules];
+          If[(initCons /. (tRules /. t -> 0)) === False, 
             {{False}, {LogicalExpand[pCons]}},
-            tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-            simplePrint[tRules];
             tCons = sol[[2]] /. tRules;
-
             initRules = makeRulesForVariable[initCons];
             simplePrint[tCons];
-
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
               conj = tCons[[i]];
@@ -112,7 +113,8 @@ publicMethod[
           ]
         ]
       ]
-   ]
+    ]
+  ]
 ];
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
@@ -346,7 +348,7 @@ addInitConstraint[co_] := Module[
 ];
 
 addPrevLessEqual[var_, expr_] := addPrevConstraint[var <= expr];
-addPrevLess[var_, expr_] := addPrevConstraint[var <= expr];
+addPrevLess[var_, expr_] := addPrevConstraint[var < expr];
 addPrevGreaterEqual[var_, expr_] := addPrevConstraint[var >= expr];
 addPrevGreater[var_, expr_] := addPrevConstraint[var > expr];
 
@@ -718,7 +720,8 @@ Module[
     ]
   ];
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
-  restCond = LogicalExpand[And@@listExpr && applyDSolveResult[resultCons, resultRule]];
+  restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
+  restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];
   restCond = Or2or[restCond];
   restCond = Map[(And2and[#])&, restCond];
   { retCode, restCond, resultRule}
