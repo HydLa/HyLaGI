@@ -84,7 +84,7 @@ publicMethod[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
-        Assuming[assum, 
+        Assuming[assum,
           sol = exDSolve[Simplify[cons], prevRs];
           simplePrint[sol];
           prevVars = Map[makePrevVar, vars];
@@ -96,9 +96,8 @@ publicMethod[
             tCons = sol[[2]] /. tRules;
 
             initRules = makeRulesForVariable[initCons];
-            
             simplePrint[tCons];
-            
+
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
               conj = tCons[[i]];
@@ -135,7 +134,7 @@ publicMethod[
     ];
 
     map = removeUnnecessaryConstraints[map, hasVariable];
-    If[map === True, 
+    If[map === True,
       {{}},
       If[map === False,
         {},
@@ -221,10 +220,10 @@ publicMethod[
     map = removeUnnecessaryConstraints[pCons, hasParameter];
     map = Reduce[map, Reals];
     map = removeUnnecessaryConstraints[map, hasParameter];
-    
+
     If[map === True, Return[{{}}] ];
     If[map === False, Return[{}] ];
-      
+
     map = LogicalExpand[map];
     map = applyListToOr[map];
     map = Map[(applyList[#])&, map];
@@ -232,7 +231,7 @@ publicMethod[
     debugPrint["map after adjustExprs in createParameterMap", map];
     map = Map[(convertExprs[#])&, map];
     map
-  ]  
+  ]
 ];
 
 removeUnnecessaryConstraints[cons_, hasJudge_] :=
@@ -516,7 +515,7 @@ findMinTime::minimizeFailure = "failed to minimize `1`";
 
 publicMethod[
   calculateConsistentTime,
-  cause, cons, lower, pCons, current, 
+  cause, cons, lower, pCons, current,
   Module[
     {
       tRemovedRules,
@@ -545,7 +544,7 @@ publicMethod[
       maxCons,
       ret
     },
-    (* Mathematica cannot solve some minimization problem with "t < Infinity", such 
+    (* Mathematica cannot solve some minimization problem with "t < Infinity", such
     as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
@@ -580,7 +579,7 @@ publicMethod[
   ]
 ];
 
-createParameterMapList[cons_] := 
+createParameterMapList[cons_] :=
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
@@ -854,8 +853,8 @@ publicMethod[
     necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     Reduce[ForAll[parsInCons, necessaryPCons, lower <= border <= upper]] === True
   ]
-];  
-  
+];
+
 
 onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameters, pConstraint];
 

@@ -12,7 +12,7 @@ class PropertyNode;
 
 typedef enum {
   ZERO,
-  NOMAL,
+  NORMAL,
   ACCEPTANCE_STATE,
   ACCEPTANCE_CYCLE
 } PropertyNodeType;

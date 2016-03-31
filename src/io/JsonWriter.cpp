@@ -21,7 +21,7 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name)
   object json_object;
   json_object["variables"] = for_vs(simulator.get_variable_set());
   json_object["parameters"] = for_pm(simulator.get_parameter_map());
-  
+
 
   phase_result_const_sptr_t root = simulator.get_result_root();
   picojson::array children;
@@ -90,7 +90,7 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
     parameter_maps.push_back(for_pm(pm));
   }
   phase_object["parameter_maps"] = value(parameter_maps);
-  
+
   phase_object["children"] = make_children(phase);
   phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
   return value(phase_object);
