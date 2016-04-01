@@ -26,6 +26,7 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name)
   phase_result_const_sptr_t root = simulator.get_result_root();
   picojson::array children;
   json_object["first_phases"] = make_children(root);
+  json_object["name"] = value(name);
 
   value json(json_object);
 
