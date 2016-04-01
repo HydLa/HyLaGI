@@ -16,7 +16,7 @@ using namespace hydla::backend;
 namespace hydla{
 namespace io{
 
-void JsonWriter::write(const simulator_t &simulator, const std::string &name)
+void JsonWriter::write(const simulator_t &simulator, const std::string &name, const std::string &hydla_name)
 {
   object json_object;
   json_object["variables"] = for_vs(simulator.get_variable_set());
@@ -26,7 +26,7 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name)
   phase_result_const_sptr_t root = simulator.get_result_root();
   picojson::array children;
   json_object["first_phases"] = make_children(root);
-  json_object["name"] = value(name);
+  json_object["name"] = value(hydla_name);
 
   value json(json_object);
 
