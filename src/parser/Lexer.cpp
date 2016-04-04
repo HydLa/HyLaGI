@@ -146,7 +146,7 @@ Token Lexer::get_token()
       return DOUBLE_QUOTATION;
   }
   // 2 or more charactors
-  switch(current){
+  switch((unsigned char)current){
     case ':':
       if(get_current_char() == '='){
         next_char();
@@ -261,6 +261,24 @@ Token Lexer::get_token()
         next_char();
         current_token_string = "\\/";
         return LOGICAL_OR;
+      }
+      break;
+    case 0xe2:
+      current = get_current_char();
+      if ((unsigned char)current == 0x88) {
+        next_char();
+        current = get_current_char();
+        if ((unsigned char)current == 0xa7) {
+          // ∧ in utf-8 ... 0xe2, 0x88, 0xa7
+          next_char();
+          current_token_string = "/\\";
+          return LOGICAL_AND;
+        } else if ((unsigned char)current == 0xa8) {
+          // ∨ in utf-8 ... 0xe2, 0x88, 0xa8
+          next_char();
+          current_token_string = "\\/";
+          return LOGICAL_OR;
+        }
       }
       break;
   }
