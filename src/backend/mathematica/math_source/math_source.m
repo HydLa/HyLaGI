@@ -55,7 +55,7 @@ Module[
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs];
   (* On the case when the variables are underconstrained *)
-  If[hasVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
+  If[isVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
 
   trueCond = False;
 
@@ -244,17 +244,17 @@ cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Uneq
 
 (* 式中に変数名が出現するか否か *)
 
-hasVariable[exprs_] := Length[getVariables[exprs] ] > 0;
+hasVariable[exprs_] := Length[getVariablesWithDerivatives[exprs] ] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := MatchQ[exprs, _Symbol] && (StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || StringMatchQ[ToString[exprs], derivativePrefix ~~ WordCharacter__] )|| MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
-getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], Infinity], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
-getVariablesWithDerivatives[exprs_] := Union[getVariables[expr], getDerivatives[exprs] ];
+getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
+getVariablesWithDerivatives[exprs_] := Union[getVariables[exprs], getDerivatives[exprs] ];
 
 
 (* 式中に出現するprev値を取得 *)
@@ -399,37 +399,35 @@ publicMethod[
   name,
   diffCnt,
   Module[
-    {var},
-    var = If[diffCnt > 0, Derivative[diffCnt][name], name];
-    Unprotect[variables, prevVariables, timeVariables, initVariables];
+    {var, timeVar},
+    var = If[diffCnt > 0, derivative[diffCnt, name], name];
+    timeVar = If[diffCnt > 0, Derivative[diffCnt][name], name];
+    Unprotect[variables, prevVariables, timeVariables];
     variables = Union[variables, {var}];
     prevVariables = Union[prevVariables,
       {makePrevVar[var]} ];
-    timeVariables = Union[timeVariables, {var[t] } ];
-    initVariables = Union[initVariables, {var[t]} ];
-    Protect[variables, prevVariables, timeVariables, initVariables];
+    timeVariables = Union[timeVariables, {timeVar[t]} ];
+    Protect[variables, prevVariables, timeVariables];
   ]
 ];
 
 
 setVariables[vars_] := (
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  Unprotect[variables, prevVariables, timeVariables];
   variables = vars;
   prevVariables = Map[makePrevVar, vars];
   timeVariables = Map[(#[t])&, vars];
-  initVariables = Map[(#[0])&, vars];
-  Protect[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables];
 );
 
 
 publicMethod[
   resetVariables,
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  Unprotect[variables, prevVariables, timeVariables];
   variables = {};
   prevVariables = {};
   timeVariables = {};
-  initVariables = {};
-  Protect[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables];
 ];
 
 
