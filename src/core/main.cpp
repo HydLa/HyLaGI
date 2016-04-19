@@ -50,6 +50,7 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
 extern Opts opts;
+extern string input_file_name;
 
 /**
  * エントリポイント
@@ -80,14 +81,16 @@ int hydla_main(int argc, char* argv[])
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   string input;
   if(cmdline_options.count("input-file")) {
-    string filename(cmdline_options.get<string>("input-file"));
-    ifstream in(filename.c_str());
+    input_file_name = cmdline_options.get<string>("input-file");
+    ifstream in(input_file_name.c_str());
     if (!in) {
-      throw runtime_error(string("cannot open \"") + filename + "\"");
+      throw runtime_error(string("cannot open \"") + input_file_name + "\"");
     }
     input = string(std::istreambuf_iterator<char>(in), 
                    std::istreambuf_iterator<char>());
+    input_file_name = utility::extract_file_name(input_file_name);
   } else {
+    input_file_name = "unknown";
     input = string(std::istreambuf_iterator<char>(cin), 
                    std::istreambuf_iterator<char>());
   }

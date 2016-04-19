@@ -1,0 +1,13 @@
+// bouncing particle
+
+INIT <=> x = 0 & x' = 1 & z = 0 & z' = 2 &y = 10 & y' = 0.
+FALL <=> [](y'' = -10).
+XCONST <=> [](x'' = 0).
+ZCONST <=> [](z'' = 0).
+XBOUNCE <=> [](x- = 0 | x- = 5 => x' = -x'-).
+ZBOUNCE <=> [](z- = 0 | z- = 5 => z' = -0.6*z'-).
+BOUNCE <=> [](y- = 0 => y' = -0.9 * y'-).
+
+INIT, FALL << BOUNCE, XCONST << XBOUNCE, ZCONST << ZBOUNCE.
+
+// #hylagi --fdump_in_progress -p 15

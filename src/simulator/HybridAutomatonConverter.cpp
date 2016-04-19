@@ -67,42 +67,39 @@ void HybridAutomatonConverter::HA_translate(phase_result_sptr_t current, Automat
     }
   phase_simulator_->apply_diff(*current);
   HYDLA_LOGGER_DEBUG_VAR(*current);
+  if(current->todo_list.empty())
+  {
+    // The simulation for this case is terminated
+    AutomatonNode* next_node = create_phase_node(current);
+    current_automaton_node->add_edge(next_node);
+    Automaton result_automaton = current_automaton.clone();
+    next_node->remove(); // remove from original Automaton
+    result_automata.push_back(result_automaton);
+  }
   while(!current->todo_list.empty())
-    {
-      phase_result_sptr_t todo = current->todo_list.front();
-      current->todo_list.pop_front();
-      profile_vector_->insert(todo);
-      if(todo->simulation_state == NOT_SIMULATED){
-        phase_list_t result_list = process_one_todo(todo);
-        for(auto result : result_list)
-        {
-          if(result->todo_list.empty())
-          {
-            // The simulation for this case is terminated
-            AutomatonNode* next_node = create_phase_node(result);
-            current_automaton_node->add_edge(next_node);
-            Automaton result_automaton = current_automaton.clone();
-            next_node->remove(); // remove from original Automaton
-            result_automata.push_back(result_automaton);
-          }
-        }
-        if(opts_->dump_in_progress){
-          printer.output_one_phase(todo);
-        }
-      }
-      /* TODO: assertion違反が検出された場合の対応 */
-      AutomatonNode* next_node = transition(current_automaton_node, todo, created_nodes);
-      if(next_node == nullptr)
-      {
-        HYDLA_LOGGER_DEBUG("A loop is detected");
-        HYDLA_LOGGER_DEBUG_VAR(*todo);
-        result_automata.push_back(current_automaton.clone());
-      }
-      else
-      {
-        HA_translate(todo, next_node, created_nodes);
+  {
+    phase_result_sptr_t todo = current->todo_list.front();
+    current->todo_list.pop_front();
+    profile_vector_->insert(todo);
+    if(todo->simulation_state == NOT_SIMULATED){
+      phase_list_t result_list = process_one_todo(todo);
+      if(opts_->dump_in_progress){
+        printer.output_one_phase(todo);
       }
     }
+    /* TODO: assertion違反が検出された場合の対応 */
+    AutomatonNode* next_node = transition(current_automaton_node, todo, created_nodes);
+    if(next_node == nullptr)
+    {
+      HYDLA_LOGGER_DEBUG("A loop is detected");
+      HYDLA_LOGGER_DEBUG_VAR(*todo);
+      result_automata.push_back(current_automaton.clone());
+    }
+    else
+    {
+      HA_translate(todo, next_node, created_nodes);
+    }
+  }
   phase_simulator_->revert_diff(*current);
   current_automaton_node->remove();
 }

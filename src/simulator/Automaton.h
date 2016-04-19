@@ -10,10 +10,10 @@ namespace hydla{
 namespace simulator{
 
 class AutomatonNode;
-typedef hydla::symbolic_expression::node_sptr          node_sptr;
+typedef hydla::symbolic_expression::node_sptr              node_sptr;
 typedef std::vector<AutomatonNode*>            automaton_node_list_t;
 typedef std::pair<AutomatonNode*,node_sptr>         automaton_edge_t;
-typedef std::vector<automaton_edge_t>      automaton_edge_list_t;
+typedef std::vector<automaton_edge_t>          automaton_edge_list_t;
 
 //TODO: fix memory leak (memory leak is caused by never freed AutomatonNode)
 class AutomatonNode
@@ -25,6 +25,8 @@ public:
   phase_result_sptr_t phase;
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
+  int peripheries;
+  bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
 
@@ -34,6 +36,7 @@ public:
   void set_id(int id);
   void set_name(std::string name);
   void set_color(std::string color);
+  void set_peripheries(int num);
   void dump(std::ostream &ost = std::cout);
 };
 
@@ -45,7 +48,9 @@ public:
   AutomatonNode* initial_node = nullptr;
   void dump(std::ostream &ost = std::cout);
   std::list<AutomatonNode *> get_all_nodes();
-  
+  AutomatonNode* exist_node(std::string name);
+  bool exist_edge(AutomatonNode *base, AutomatonNode *end);
+
 /*
   void trace();
   void dump_node_and_edge();
