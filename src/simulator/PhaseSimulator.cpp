@@ -487,7 +487,7 @@ phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t origi
 
 ConstraintStore PhaseSimulator::replace_prev_store(PhaseResult *parent, ConstraintStore orig)
 {
-  PrevReplacer replacer(*parent, *simulator_);
+  PrevReplacer replacer(*parent, *simulator_, backend_.get(), opts_->affine);
   ConstraintStore replaced_store;
   for(auto cons : orig)
   {
@@ -569,7 +569,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
 void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
                                             variable_map_t &vm)
 {
-  PrevReplacer replacer(*phase.parent, *simulator_);
+  PrevReplacer replacer(*phase.parent, *simulator_, backend_.get(), opts_->affine);
   for(auto var_entry : vm)
   {
     ValueRange range = var_entry.second;
@@ -1253,7 +1253,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       StateOfIntervalNewton &state = entry.second;
       if(!state.min_interval)
       {
-        state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm);
+        state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, opts_->affine);
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
       if(opts_->numerize_mode)
@@ -1845,7 +1845,7 @@ itvd PhaseSimulator::calculate_zero_crossing_of_derivative(const constraint_t& t
   // TODO: avoid string comparison
   if(get_infix_string(ddexp) == "0")return itvd(0., 0.);
   itvd init = itvd(0.,100);
-  itvd result_interval = interval::calculate_interval_newton(init, dexp, ddexp, pm);
+  itvd result_interval = interval::calculate_interval_newton(init, dexp, ddexp, pm, opts_->affine);
   return result_interval;
 }
 
@@ -1920,6 +1920,8 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   ConstraintStore new_store = phase->get_parameter_constraint();
   new_store.add_constraint_store(range.create_range_constraint(node_sptr(new se::Parameter(parameter))));
   phase->set_parameter_constraint(new_store);
+
+
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 }
 

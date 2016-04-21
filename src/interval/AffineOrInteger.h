@@ -6,6 +6,7 @@ namespace hydla {
 namespace interval {
 
 typedef kv::affine<double>                    affine_t;
+typedef kv::interval<double>                  itvd;
 
 /**
  * A class to keep integer as long as possible
@@ -22,6 +23,8 @@ class AffineOrInteger
   AffineOrInteger operator*(const AffineOrInteger &rhs);
   AffineOrInteger operator/(const AffineOrInteger &rhs);
   AffineOrInteger operator-();
+
+  itvd to_interval();
 };
 
 std::ostream& operator<<(std::ostream &ost, const AffineOrInteger &val);

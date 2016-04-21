@@ -36,6 +36,12 @@ AffineTreeVisitor::AffineTreeVisitor(parameter_idx_map_t &map, variable_map_t &v
 AffineTreeVisitor::~AffineTreeVisitor()
 {}
 
+void AffineTreeVisitor::set_current_time(itvd itv)
+{
+  ++time_idx;
+  current_time = itv;
+}
+
 AffineOrInteger AffineTreeVisitor::approximate(node_sptr &node)
 {
   differential_count = 0;
@@ -353,6 +359,31 @@ void AffineTreeVisitor::visit(boost::shared_ptr<Differential> node)
   return;
 }
 
+void AffineTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)
+{
+  HYDLA_LOGGER_NODE_VISIT;
+  current_val_.is_integer = false;
+  current_val_.affine_value = affine_t();
+  parameter_t param("t",
+                    -1,
+                    time_idx);
+  parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
+  int idx;
+  if(it == parameter_idx_map_.left.end())
+  {
+    idx = ++affine_t::maxnum();
+    parameter_idx_map_.insert(
+      parameter_idx_t(param, affine_t::maxnum()));
+  }
+  else
+  {
+    idx = it->second;
+  }
+  current_val_.affine_value = affine_t(current_time);
+  HYDLA_LOGGER_NODE_VALUE;
+  return;
+}
+
 void AffineTreeVisitor::invalid_node(symbolic_expression::Node& node)
 {
   throw ApproximateException("invalid node: " + node.get_string());
@@ -405,7 +436,6 @@ DEFINE_INVALID_NODE(Not)
 
 DEFINE_INVALID_NODE(UnsupportedFunction)
 
-DEFINE_INVALID_NODE(SymbolicT)
 DEFINE_INVALID_NODE(ImaginaryUnit)
 DEFINE_INVALID_NODE(Infinity)
 DEFINE_INVALID_NODE(True)

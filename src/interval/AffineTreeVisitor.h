@@ -30,6 +30,8 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
 
   AffineTreeVisitor(parameter_idx_map_t&, variable_map_t&);
 
+  void set_current_time(itvd itv);
+
   AffineOrInteger approximate(node_sptr &node);
   ///calculate x^y
   AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
@@ -122,7 +124,9 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   
 private:
 
-  static affine_t pi, e; 
+  static affine_t pi, e;
+  itvd current_time;
+  int time_idx = 0;
   void invalid_node(symbolic_expression::Node& node);
 
   AffineOrInteger current_val_;
