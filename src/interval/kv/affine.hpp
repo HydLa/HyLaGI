@@ -116,13 +116,23 @@ template <class T> class affine {
 		return r;
 	}
 
-	friend inline interval<T> to_interval(const affine& x) {
+  friend inline interval<T> to_interval(const affine& x) {
 		T t1, t2, t3;
 
 		t1 = rad(x);
 		rop<T>::begin();
 		t2 = rop<T>::sub_down(x.a(0), t1);
 		t3 = rop<T>::add_up(x.a(0), t1);
+		rop<T>::end();
+		return interval<T>(t2, t3);
+	}
+
+  interval<T> get_interval() {
+		T t1, t2, t3;
+		t1 = rad(*this);
+		rop<T>::begin();
+		t2 = rop<T>::sub_down(a(0), t1);
+		t3 = rop<T>::add_up(a(0), t1);
 		rop<T>::end();
 		return interval<T>(t2, t3);
 	}
@@ -1651,7 +1661,7 @@ template <class T> class affine {
 	}
 };
 
-
+/*
 template <class T> inline ub::vector< interval<T> > to_interval(const ub::vector< affine<T> >& x) {
 	int s = x.size();
 	ub::vector< interval<T> > r;
@@ -1662,7 +1672,7 @@ template <class T> inline ub::vector< interval<T> > to_interval(const ub::vector
 
 	return r;
 }
-
+*/
 
 /*
  * epsilon_reduce(x, n, n_limit)

@@ -23,10 +23,10 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
 
   public:
 
-  PrevReplacer(PhaseResult &phase, Simulator& simulator);
+  PrevReplacer(PhaseResult &phase, Simulator& simulator, backend::Backend *b, bool affine);
 
   virtual ~PrevReplacer();
-  
+
   bool replace_value(value_t &val);
   void replace_node(symbolic_expression::node_sptr &exp);
   ConstraintStore get_parameter_constraint()const;
@@ -98,6 +98,9 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   PhaseResult& prev_phase;
   Simulator &simulator;
   bool replaced;
+  backend::Backend* backend;
+  bool affine_mode = false;
+  
 
   symbolic_expression::node_sptr new_child;
 

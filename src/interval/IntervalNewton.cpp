@@ -3,6 +3,7 @@
 #include <utility>
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
+#include "AffineTreeVisitor.h"
 #include "Logger.h"
 #include "HydLaError.h"
 
@@ -151,7 +152,8 @@ double calculate_mid_without_0(itvd current_interval, node_sptr exp, parameter_m
   return INVALID_MID;
 }
 
-itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
+
+itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool use_affine)
 {
   itv_stack_t candidate_stack;
   candidate_stack.push(init);
@@ -159,8 +161,7 @@ itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, paramet
 }
 
 
-
-itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
+itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool use_affine)
 {
   bool parted;
   itvd current_interval, prev_interval, div1, div2, nx, nx2, x2, f_result, d_result,m;
@@ -186,22 +187,49 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
       }
       prev_interval = current_interval;
       HYDLA_LOGGER_DEBUG_VAR(current_interval);
-      IntervalTreeVisitor visitor;
-      d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
-      if(in(0., d_result))
+      if(use_affine)
       {
-        double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
-        if(mid_val == INVALID_MID)
+        //TODO: manage parameter_idx_map appropriately
+        parameter_idx_map_t par_idx_map;
+        variable_map_t var_map;
+        AffineTreeVisitor visitor(par_idx_map, var_map);
+        AffineOrInteger val = visitor.approximate(dexp);
+        visitor.set_current_time(current_interval);
+        d_result = visitor.approximate(dexp).to_interval();
+        if(in(0., d_result))
         {
-          throw HYDLA_ERROR("No valid intermediate values are found in interval newton method.");
+          double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
+          if(mid_val == INVALID_MID)
+          {
+            throw HYDLA_ERROR("No valid intermediate values are found in interval newton method.");
+          }
+          m = itvd(mid_val);
         }
-        m = itvd(mid_val);
+        else
+        {
+          m = itvd(mid(current_interval));
+        }
+        f_result = visitor.approximate(exp).to_interval();
       }
       else
       {
-        m = itvd(mid(current_interval));
+        IntervalTreeVisitor visitor;
+        d_result = visitor.get_interval_value(dexp, &current_interval, &phase_map_);
+        if(in(0., d_result))
+        {
+          double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
+          if(mid_val == INVALID_MID)
+          {
+            throw HYDLA_ERROR("No valid intermediate values are found in interval newton method.");
+          }
+          m = itvd(mid_val);
+        }
+        else
+        {
+          m = itvd(mid(current_interval));
+        }
+        f_result = visitor.get_interval_value(exp, &m, &phase_map_);
       }
-      f_result = visitor.get_interval_value(exp, &m, &phase_map_);
 
       HYDLA_LOGGER_DEBUG_VAR(f_result);
       HYDLA_LOGGER_DEBUG_VAR(d_result);
@@ -231,7 +259,8 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
         break;
       }
     }
-    if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
+    if(in(0., current_interval))throw HYDLA_ERROR("Any correct time cannot be calculated for " + get_infix_string(exp));
+    if(show_existence(current_interval, exp, dexp, phase_map_))
     {
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
@@ -241,6 +270,8 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
   }
   return INVALID_ITV;
 }
+
+
 
 
 std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
@@ -289,13 +320,13 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
 
       HYDLA_LOGGER_DEBUG_VAR(f_result);
       HYDLA_LOGGER_DEBUG_VAR(d_result);
-      
+
 
       nx = m - division_part1(f_result, d_result, parted);
       HYDLA_LOGGER_DEBUG_VAR(nx);
       HYDLA_LOGGER_DEBUG_VAR(prev_interval);
       current_interval = intersect_interval(prev_interval, nx);
-      
+
       if(parted)
       {
         if(current_interval != itvd(0., 0.))
@@ -327,7 +358,6 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
 
   return result_intervals;
 }
-
 
 
 }// namespcae interval

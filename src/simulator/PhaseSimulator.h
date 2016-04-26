@@ -157,7 +157,7 @@ private:
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
-  double                                upper_bound_of_itv_newton = 100;
+  int                                upper_bound_of_itv_newton = 100;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
