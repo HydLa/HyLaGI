@@ -1,0 +1,6 @@
+INIT <=> a = 1 & n = 5 & clock = 0.
+CLOCK_INCREASE <=> [](clock' = 1 & a' = 0 & n' = 0).
+CLOCK <=> [](clock- = 1 & n- > 0 => clock = 0 & 
+      a = a- * n- & n = n- - 1).
+
+INIT, CLOCK_INCREASE << CLOCK.

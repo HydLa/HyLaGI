@@ -52,7 +52,7 @@ checkConsistencyInterval[] :=  (
 checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[tmpCons && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
 );
 
-ccIntervalForEach[cond_, pCons_] :=
+ccIntervalForEach[cond_, initRules_, pCons_] :=
 Module[
   {
     operator,
@@ -62,19 +62,20 @@ Module[
     ltSol,
     trueCond
   },
-  inputPrint["ccIntervalForEach", cond, pCons];
+  inputPrint["ccIntervalForEach", cond, initRules, pCons];
   If[cond === True || cond === False, Return[cond]];
   operator = Head[cond];
-  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0, Infinity, {Power::infy, Infinity::indet}];
-  simplePrint[lhs, pCons];
-  (* caused by underConstrained *)
-  If[hasVariable[lhs], Return[pCons] ];
+  lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
+  simplePrint[lhs];
+  (* On the case when the variables are underconstrained *)
+  If[isVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
 
   trueCond = False;
 
-  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals] ];
+  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals]];
+  simplePrint[eqSol];
   If[eqSol =!= False,
-    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], eqSol];
+    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
     trueCond = trueCond || eqSol
   ];
   If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
@@ -94,29 +95,29 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules},
       If[cons === True,
         {{LogicalExpand[pCons]}, {False}},
-        Assuming[assum /. prevRs, 
-          sol = exDSolve[timeConstrainedSimplify[cons], prevRs];
-          simplePrint[sol];
-          prevVars = Map[makePrevVar, vars];
-          debugPrint["sol after exDSolve", sol];
-          sol = timeConstrainedSimplify[sol //. prevRs];
-          If[sol === overConstrained,
-            {{False}, {toReturnForm[LogicalExpand[pCons]]}},
-            tRules = Map[((Rule[#[[1]] /. t-> t_, #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-            simplePrint[tRules];
-            tCons = sol[[2]] /. tRules /. prevRs;
-            
+        Assuming[assum,
+        sol = exDSolve[Simplify[cons], prevRs];
+        simplePrint[sol];
+        prevVars = Map[makePrevVar, vars];
+        debugPrint["sol after exDSolve", sol];
+        If[sol === overConstrained,
+          {{False}, {LogicalExpand[pCons]}},
+          tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+          simplePrint[tRules];
+          If[(initCons /. (tRules /. t -> 0)) === False, 
+            {{False}, {LogicalExpand[pCons]}},
+            tCons = sol[[2]] /. tRules;
+            initRules = makeRulesForVariable[initCons];
             simplePrint[tCons];
-            
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
               conj = tCons[[i]];
               eachCpTrue = prevCons && pCons;
               For[j = 1, j <= Length[conj], j++,
-                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], eachCpTrue]
+                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
               ];
               cpTrue = cpTrue || eachCpTrue
             ];
@@ -125,7 +126,8 @@ publicMethod[
           ]
         ]
       ]
-   ]
+    ]
+  ]
 ];
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
@@ -164,7 +166,7 @@ publicMethod[
     
 
     map = removeUnnecessaryConstraints[map, hasVariable];
-    If[map === True, 
+    If[map === True,
       {{}},
       If[map === False,
         {},
@@ -251,21 +253,17 @@ publicMethod[
     map = removeUnnecessaryConstraints[pCons, hasParameter];
     map = Reduce[map, pars, Reals];
     map = removeUnnecessaryConstraints[map, hasParameter];
-    
-    If[map === True,
-      {{}},
-      If[map === False,
-        {},
-        map = LogicalExpand[map];
-        map = applyListToOr[map];
-        map = Map[(applyList[#])&, map];
-        map = Map[(adjustExprs[#, isParameter])&, map];
-        debugPrint["map after adjustExprs in createParameterMap", map];
-        map = Map[(convertExprs[#])&, map];
-        map
-      ]
-    ]
-  ]  
+    If[map === True, Return[{{}}] ];
+    If[map === False, Return[{}] ];
+
+    map = LogicalExpand[map];
+    map = applyListToOr[map];
+    map = Map[(applyList[#])&, map];
+    map = Map[(adjustExprs[#, isParameter])&, map];
+    debugPrint["map after adjustExprs in createParameterMap", map];
+    map = Map[(convertExprs[#])&, map];
+    map
+  ]
 ];
 
 removeUnnecessaryConstraints[cons_, hasJudge_] :=
@@ -276,17 +274,17 @@ cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Uneq
 
 (* 式中に変数名が出現するか否か *)
 
-hasVariable[exprs_] := Length[getVariables[exprs] ] > 0;
+hasVariable[exprs_] := Length[getVariablesWithDerivatives[exprs] ] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := MatchQ[exprs, _Symbol] && (StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || StringMatchQ[ToString[exprs], derivativePrefix ~~ WordCharacter__] )|| MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
 getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
-getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}, Heads->True], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
-getVariablesWithDerivatives[exprs_] := Union[getVariables[expr], getDerivatives[exprs] ];
+getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
+getVariablesWithDerivatives[exprs_] := Union[getVariables[exprs], getDerivatives[exprs] ];
 
 
 (* 式中に出現するprev値を取得 *)
@@ -380,7 +378,7 @@ addInitConstraint[co_] := Module[
 ];
 
 addPrevLessEqual[var_, expr_] := addPrevConstraint[var <= expr];
-addPrevLess[var_, expr_] := addPrevConstraint[var <= expr];
+addPrevLess[var_, expr_] := addPrevConstraint[var < expr];
 addPrevGreaterEqual[var_, expr_] := addPrevConstraint[var >= expr];
 addPrevGreater[var_, expr_] := addPrevConstraint[var > expr];
 
@@ -388,6 +386,8 @@ addLessEqual[var_, expr_] := addConstraint[var <= expr];
 addLess[var_, expr_] := addConstraint[var <= expr];
 addGreaterEqual[var_, expr_] := addConstraint[var >= expr];
 addGreater[var_, expr_] := addConstraint[var > expr];
+
+makeRulesForVariable[cons_] := Map[(#[[1]] -> #[[2]])&, adjustExprs[applyList[cons], hasVariable]];
 
 publicMethod[
   addPrevEqual,
@@ -429,37 +429,35 @@ publicMethod[
   name,
   diffCnt,
   Module[
-    {var},
-    var = If[diffCnt > 0, Derivative[diffCnt][name], name];
-    Unprotect[variables, prevVariables, timeVariables, initVariables];
+    {var, timeVar},
+    var = If[diffCnt > 0, derivative[diffCnt, name], name];
+    timeVar = If[diffCnt > 0, Derivative[diffCnt][name], name];
+    Unprotect[variables, prevVariables, timeVariables];
     variables = Union[variables, {var}];
     prevVariables = Union[prevVariables,
       {makePrevVar[var]} ];
-    timeVariables = Union[timeVariables, {var[t] } ];
-    initVariables = Union[initVariables, {var[t]} ];
-    Protect[variables, prevVariables, timeVariables, initVariables];
+    timeVariables = Union[timeVariables, {timeVar[t]} ];
+    Protect[variables, prevVariables, timeVariables];
   ]
 ];
 
 
 setVariables[vars_] := (
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  Unprotect[variables, prevVariables, timeVariables];
   variables = vars;
   prevVariables = Map[makePrevVar, vars];
   timeVariables = Map[(#[t])&, vars];
-  initVariables = Map[(#[0])&, vars];
-  Protect[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables];
 );
 
 
 publicMethod[
   resetVariables,
-  Unprotect[variables, prevVariables, timeVariables, initVariables];
+  Unprotect[variables, prevVariables, timeVariables];
   variables = {};
   prevVariables = {};
   timeVariables = {};
-  initVariables = {};
-  Protect[variables, prevVariables, timeVariables, initVariables];
+  Protect[variables, prevVariables, timeVariables];
 ];
 
 
@@ -576,7 +574,7 @@ publicMethod[
       maxCons,
       ret
     },
-    (* Mathematica cannot solve some minimization problem with "t < Infinity", such 
+    (* Mathematica cannot solve some minimization problem with "t < Infinity", such
     as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
@@ -616,7 +614,7 @@ publicMethod[
   ]
 ];
 
-createParameterMapList[cons_] := 
+createParameterMapList[cons_] :=
 If[cons === False, {}, Map[(convertExprs[adjustExprs[#, isParameter]])&, Map[(applyList[#])&, applyListToOr[LogicalExpand[cons] ] ] ] ];
 
 (* TODO: 場合分けをしていくだけで、併合はしないので最終的に冗長な場合分けが発生する可能性がある。 *)
@@ -766,7 +764,8 @@ Module[
     ]
   ];
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
-  restCond = LogicalExpand[And@@listExpr && applyDSolveResult[resultCons, resultRule]];
+  restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
+  restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];
   restCond = Or2or[restCond];
   restCond = Map[(And2and[#])&, restCond];
   { retCode, restCond, resultRule}
@@ -901,8 +900,8 @@ publicMethod[
     necessaryPCons = And@@Select[applyList[pCons], (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     Reduce[ForAll[parsInCons, necessaryPCons, lower <= border <= upper]] === True
   ]
-];  
-  
+];
+
 
 onBorder[borderExpr_, time_] := onBorder[borderExpr, time, parameters, pConstraint];
 

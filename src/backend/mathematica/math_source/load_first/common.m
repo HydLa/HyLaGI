@@ -15,7 +15,6 @@ $MaxExtraPrecision = 1000;
  * variables: プログラム内に出現する変数のリスト
  * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
  * timeVariables: variables内の変数を，ux[t]のようにしたもの
- * initVariables: variables内の変数を，ux[0]のようにしたもの
  * parameters: 使用する記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか
  * tmpConstraint: 一時的に追加された制約
@@ -31,7 +30,6 @@ $MaxExtraPrecision = 1000;
 variables = {};
 prevVariables = {};
 timeVariables = {};
-initVariables = {};
 parameters = {};
 dList = {};
 profileList = {};
@@ -142,7 +140,8 @@ SetAttributes[publicMethod, HoldAll];
 
 derivativeInit[cnt_, var_] := Derivative[cnt][var][0];
 derivativeTime[cnt_, var_] := Derivative[cnt][var][t];
-derivative[cnt_, var_] := Derivative[cnt][var];
+derivative[0, var_] := var;
+derivative[cnt_, var_] := Derivative[cnt][ToExpression[StringReplacePart[ToString[var], derivativePrefix, {1,1}] ]];
 
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
@@ -185,7 +184,7 @@ Module[
   {ret},
   If[expr === Infinity, Return[inf]];
   (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
-  If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
+  If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], ToExpression[StringDrop[ToString[expr[[1]] ], 1]  ] ] ] ];
   If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
@@ -266,7 +265,7 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 variablePrefix = "u";
-
-
+derivativePrefix = "d";
 timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
 timeConstrainedFullSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+

@@ -40,6 +40,7 @@ Simulator* simulator_;
 Opts opts;
 backend_sptr_t backend_;
 ProgramOptions cmdline_options;
+string input_file_name;
 
 static string get_file_without_ext(const string &path)
 {
@@ -87,7 +88,7 @@ void output_result(Simulator& ss, Opts& opts){
     }
   }
   JsonWriter writer;
-  writer.write(*simulator_, of_name);
+  writer.write(*simulator_, of_name, input_file_name);
 
   if(opts.epsilon_mode >= 0){
     writer.set_epsilon_mode(backend_, true);
@@ -111,7 +112,7 @@ void output_result(Simulator& ss, Opts& opts){
           mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         }
     }
-    writer.write(*simulator_, of_name);
+    writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
 
   if(cmdline_options.get<std::string>("tm") == "s") {

@@ -29,7 +29,7 @@ class JsonWriter{
   typedef simulator::Simulator       simulator_t;
   typedef simulator::ValueRange      value_range_t;
 
-  void write(const simulator_t &simulator, const std::string &name);
+  void write(const simulator_t &simulator, const std::string &name, const std::string &hydla_name);
   void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
   private:
   picojson::value for_phase(const phase_result_const_sptr_t &phase);

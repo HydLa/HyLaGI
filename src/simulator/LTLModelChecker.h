@@ -15,7 +15,7 @@ typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always
 typedef hydla::hierarchy::ModuleSet                                       module_set_t;
 typedef boost::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                         phase_result_sptrs_t;
-typedef std::list<phase_result_sptr_t >                                    phase_list_t;
+typedef std::list<phase_result_sptr_t >                                   phase_list_t;
 typedef hydla::simulator::Value                                                value_t;
 typedef hydla::simulator::ValueRange                                           range_t;
 typedef hydla::simulator::Variable                                          variable_t;
@@ -30,8 +30,17 @@ typedef std::set<module_set_t>                                                  
 
 typedef std::vector<LTLNode*>            ltl_node_list_t;
 typedef std::vector<automaton_node_list_t>   path_list_t;
+typedef std::vector<ltl_node_list_t>     ltl_path_list_t;
 typedef std::pair<LTLNode*,node_sptr>         ltl_edge_t;
 typedef std::vector<ltl_edge_t>          ltl_edge_list_t;
+
+
+typedef struct current_checking_node{
+  LTLNode* node;
+  ltl_node_list_t created_nodes;
+  ltl_path_list_t acceptance_path_list;
+} current_checking_node_t;
+typedef std::vector<current_checking_node_t> current_checking_node_list_t;
 
 
 class LTLModelChecker: public Simulator{
@@ -43,12 +52,23 @@ public:
    */
   virtual phase_result_sptr_t simulate();
 private:
-  void LTLsearch(phase_result_sptr_t current,ltl_node_list_t ltl_current,LTLNode* result_init);
-  ltl_node_list_t transition(ltl_node_list_t current,phase_result_sptr_t phase,consistency_checker_t consistency_checker);
+  void LTLsearch(phase_result_sptr_t current,current_checking_node_list_t checking_list,phase_list_t phase_list);
+  current_checking_node_list_t transition(current_checking_node_list_t checking_list,phase_result_sptr_t phase);
   bool check_including(LTLNode* larger,LTLNode* smaller);
-  LTLNode* detect_acceptance_cycle(LTLNode* new_node,LTLNode* parent_node);
-  LTLNode* detect_loop_in_path(LTLNode* new_node, automaton_node_list_t path);
-  bool check_edge_guard(phase_result_sptr_t phase,node_sptr guard,consistency_checker_t consistency_checker);
+  LTLNode* detect_acceptance_cycle(LTLNode* new_node,ltl_path_list_t acceptance_path_list);
+  LTLNode* detect_loop_in_path(LTLNode* new_node, ltl_node_list_t path);
+  bool check_edge_guard(phase_result_sptr_t phase,node_sptr guard);
+  Automaton current_automaton;
+  std::list<Automaton> result_automata;
+  int id_counter;
+  PropertyNode *property_init;
+  current_checking_node_list_t refresh(phase_list_t phase_list,ConstraintStore par_cons);
+  bool check_including_wP(LTLNode* larger,LTLNode* smaller,ConstraintStore par_cons);
+  LTLNode* detect_acceptance_cycle_wP(LTLNode* new_node,ltl_path_list_t acceptance_path_list,ConstraintStore par_cons);
+  LTLNode* detect_loop_in_path_wP(LTLNode* new_node, ltl_node_list_t path,ConstraintStore par_cons);
+  bool check_edge_guard_wP(phase_result_sptr_t phase,node_sptr guard,ConstraintStore par_cons);
+
+  /* phase_list_t get_path(phase_result_sptr_t phase); */
 
   io::SymbolicTrajPrinter printer;
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
