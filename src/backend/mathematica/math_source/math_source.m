@@ -104,7 +104,7 @@ publicMethod[
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
         If[sol === overConstrained,
-          {{False}, {LogicalExpand[pCons]}},
+          toReturnForm[{{False}, {LogicalExpand[pCons]}}],
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           If[(initCons /. (tRules /. t -> 0)) === False, 
@@ -292,7 +292,7 @@ getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 (* 式中に出現する記号定数を取得 *)
 
-getParameters[exprs_] := Cases[exprs, p[_, _, _], {0, Infinity}];
+getParameters[exprs_] := Union[Cases[exprs, p[_, _, _], {0, Infinity}]];
 
 (* 式中に定数名が出現するか否か *)
 

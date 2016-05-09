@@ -259,8 +259,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
         break;
       }
     }
-    if(in(0., current_interval))throw HYDLA_ERROR("Any correct time cannot be calculated for " + get_infix_string(exp));
-    if(show_existence(current_interval, exp, dexp, phase_map_))
+    if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
     {
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
