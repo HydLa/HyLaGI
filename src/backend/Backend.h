@@ -28,6 +28,13 @@ struct MidpointRadius
   value_t              radius;
 };
 
+struct CalculateTLinearResult
+{
+  node_sptr            exp;
+  MidpointRadius       mid_rad;
+};
+
+
 
 class Backend : public symbolic_expression::DefaultTreeVisitor
 {
@@ -80,7 +87,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    mp: parameter_map_t : send only
    *    mps: std::vector<parameter_map_t> : receive only
    *    r: MidpointRadius: midpoint_radius form (receive only)
-
+   *    ct: CalculateTLinearResult: (receive only)
    *    f: find_min_time_result_t (receive only)
    *    p: parameter_t (send only)
    *    tl: std::vector<simulator::TimeListElement> (send only)
@@ -124,6 +131,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   int receive_parameter_maps(std::vector<parameter_map_t> &pm);
   compare_min_time_result_t receive_compare_min_time_result();
   check_consistency_result_t receive_cc();
+  CalculateTLinearResult receive_ct();
   create_vm_t receive_cv();
   constraint_store_t receive_cs();
   

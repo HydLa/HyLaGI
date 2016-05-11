@@ -505,7 +505,7 @@ publicMethod[
 ];
 
 
-(* Piecewiseの第二要素（第一要素以外を除いた場合）に対し，
+(* Piecewiseの第二要素（第一要素の各場合以外の場合）に対し，
 othersと第一要素中の全条件の否定の論理積を取って条件とし，第一要素の末尾に付加する*)
 
 makeListFromPiecewise[minT_, others_] := Module[

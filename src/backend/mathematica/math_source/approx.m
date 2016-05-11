@@ -71,11 +71,38 @@ publicMethod[
 ];
 
 mid[itv_] := (itv[[1, 1]] + itv[[1, 2]])/2;
+wid[itv_] := (itv[[1, 2]] - itv[[1, 1]]);
 
-(* convert given f[X] to F[X] = f[mid[X]] + ∂f/∂x[*(X-mid[X]) *)
+minimizeWithLinearization::failure = "failed: `1`";
+
+publicMethod[
+  minimizeWithLinearization,
+  f, pm, tMin, tMax,
+  Module[
+    {linearizedF, additionalCons, itvRules, minimizeResult, minTList},
+    {linearizedF, additionalCons, itvRules} = Linearize[f, pm, tMin, tMax];
+    Quiet[minimizeResult = Solve[linearizedF == 0, {t}],
+       {Minimize::wksol, Minimize::infeas}
+    ];
+    minimizeResult = Minimize[{t, linearizedF == 0 && additionalCons}, {t}];
+    simplePrint[minimizeResult];
+    If[Head[minimizeResult] === Minimize,
+      Message[findMinTime::minimizeFailure, minimizeResult],
+      minTList = makeListFromPiecewise[minimizeResult[[1]], pm && additionalCons];
+      minTList = Select[minTList, (#[[2]] =!= False)&];
+      If[Length[minTList] != 1,
+      (* If there is any branching, it's reported to be error *)
+        Message[minimizeWithLinearization::failure, MinimizeResult]
+      ];
+      
+    ];
+    minTList
+  ]
+];
+
 Linearize[f_, pm_, tMin_, tMax_] :=
 Module[
-  {dtf, dxf, pRules, pars, result, midRules, tMid = (tMin + tMax)/2, i, additionalCons, itv, itvPar},
+  {dtf, dxf, pRules, pars, result, midRules, tMid = (tMin + tMax)/2, i, additionalCons, itv, itvPar, resItv},
   pRules = Append[createIntervalRules[LogicalExpand[pm]], t -> Interval[{tMin, tMax}] ];
   pars = Append[getParameters[pm], t];
   simplePrint[pRules, pars];
@@ -93,7 +120,42 @@ Module[
     pRules = Append[pRules, itvPar -> Interval[{itv[[1, 1]], itv[[1, 2]]}]];
     result = result + itvPar * (pars[[i]] - (pars[[i]] /. midRules));
     simplePrint[result];
+    resItv = N[result /. pRules];
+    simplePrint[resItv];
+    simplePrint[wid[resItv] ];
   ];
   {result, additionalCons, pRules}
 ];
-  
+
+
+calculateTLinear[f_, pm_, tMin_Real, tMax_Real] := calculateTLinear[f, pm, toRational[tMin], toRational[tMax]];
+
+publicMethod[
+  calculateTLinear,
+  f, pm, tMin, tMax,
+  Module[
+    {dtf, dxf, pRules, pars, result = 0, midRules, tMid = (tMin + tMax)/2, i, additionalCons, itv, itvPar, resItv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par},
+    pRules = Append[createIntervalRules[LogicalExpand[pm]], t -> Interval[{tMin, tMax}]];
+    pars = getParameters[pm];
+    simplePrint[pRules, pars];
+    midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
+    simplePrint[midRules];
+    frt = D[f, t ] /. pRules;
+    simplePrint[frt];
+    For[i = 1, i <= Length[pars], i++,
+      par = pars[[i]];
+      itv = toRational[N[D[f, pars[[i]] ] / frt /. pRules] ]; (* f∂xi/f∂t *)
+      simplePrint[N[itv] ];
+      iMid += itv * (par /. midRules); (* add f∂xi/f∂t * xim *)
+      iRem += wid[itv];
+      result += -mid[itv] * par;
+      simplePrint[result];
+    ];
+
+
+    iRem = iMid + iRem/2 * Interval[{-1, 1}];
+    simplePrint[N[result + iRem /. pRules]];
+
+    {toReturnForm[result], toReturnForm[midpointRadius[mid[iRem], wid[iRem]/2] ] }
+  ]
+];

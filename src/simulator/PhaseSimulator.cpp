@@ -1274,7 +1274,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       StateOfIntervalNewton &state = entry.second;
       if(!state.min_interval)
       {
-        state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, opts_->affine);
+        state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, false);
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
       if(opts_->numerize_mode)
@@ -1286,15 +1286,18 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       TimeListElement elem;
       if(opts_->affine)
       {
-        hydla::backend::MidpointRadius mr;
+        hydla::backend::CalculateTLinearResult ct;
         value_t lb = state.min_interval->lower();
         value_t ub = state.min_interval->upper();
-        backend_->call("intervalToMidpointRadius", false, 2, "vltvlt", "r", &lb, &ub, &mr);
+
+        backend_->call("calculateTLinear", true, 4, "etmpvltvlt", "ct", &state.exp, &pm, &lb, &ub, &ct);
         ValueRange range;
         range.set_upper_bound(value_t("1"), true);
         range.set_lower_bound(value_t("-1"), true);
-        value_t new_value(mr.midpoint + mr.radius * value_t(parameter));
+        value_t new_value = ct.exp;
+        new_value += value_t(ct.mid_rad.midpoint + ct.mid_rad.radius * value_t(parameter));
         pm_for_each[parameter] = range;
+        HYDLA_LOGGER_DEBUG_VAR(new_value);
         elem = TimeListElement(new_value, entry.first);
       }
       else

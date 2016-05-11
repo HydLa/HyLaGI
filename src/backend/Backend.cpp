@@ -160,8 +160,6 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
-
-        
     
   case 'p':     
   {
@@ -324,6 +322,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     {
       check_consistency_result_t* cc = (check_consistency_result_t *)ret;
       *cc = receive_cc();
+      break;
+    }
+    case 't':
+    {
+      CalculateTLinearResult* ct = (CalculateTLinearResult *)ret;
+      *ct = receive_ct();
       break;
     }
     case 'v':
@@ -894,6 +898,19 @@ ConstraintStore Backend::receive_cs()
     }
   }
   return cs;
+}
+
+
+CalculateTLinearResult Backend::receive_ct()
+{
+  CalculateTLinearResult ct;
+  std::string name;
+  int count;
+  link_->get_function(name, count);
+  HYDLA_ASSERT(count == 2);
+  ct.exp = receive_node();
+  ct.mid_rad = receive_midpoint_radius();
+  return ct;
 }
 
 
