@@ -119,6 +119,7 @@ void ProgramOptions::init_descriptions()
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
+    ("use_shorthand", value<char>()->default_value('n'), "use shorthands for arithmetic expressions (only for parameters)\n")
     ("vars_to_approximate",
      value<std::string>()->default_value(""),
      "variables to approximate (delimited by \",\")");
