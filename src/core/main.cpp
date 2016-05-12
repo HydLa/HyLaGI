@@ -161,11 +161,10 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  if(cmdline_options.get<string>("tm") != "n" || cmdline_options.get<string>("tm") != "n"){
-    std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
-    std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
-    cout << endl;
-  }
+  std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
+  std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
+  cout << endl;
+  
   return simulation_result;
 }
 
