@@ -70,8 +70,10 @@ publicMethod[
   toReturnForm[N[expr]]
 ];
 
-mid[itv_] := (itv[[1, 1]] + itv[[1, 2]])/2;
-wid[itv_] := (itv[[1, 2]] - itv[[1, 1]]);
+mid[itv_Interval] := (itv[[1, 1]] + itv[[1, 2]])/2;
+wid[itv_Interval] := (itv[[1, 2]] - itv[[1, 1]]);
+inf[itv_Interval] := itv[[1,1]];
+sup[itv_Interval] := itv[[1,2]];
 
 minimizeWithLinearization::failure = "failed: `1`";
 
@@ -134,7 +136,7 @@ publicMethod[
   calculateTLinear,
   f, pm, tMin, tMax,
   Module[
-    {dtf, dxf, pRules, pars, result = 0, midRules, tMid = (tMin + tMax)/2, i, additionalCons, itv, itvPar, resItv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par},
+    {pRules, pars, result = 0, midRules, tMid = (tMin + tMax)/2, i, itv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par, remMid, remWid, remItv},
     pRules = Append[createIntervalRules[LogicalExpand[pm]], t -> Interval[{tMin, tMax}]];
     pars = getParameters[pm];
     simplePrint[pRules, pars];
@@ -152,10 +154,15 @@ publicMethod[
       simplePrint[result];
     ];
 
-
     iRem = iMid + iRem/2 * Interval[{-1, 1}];
+    remMid = toRational[N[Interval[mid[iRem] ] ] ];
+    remItv = N[iRem - remMid];
+    simplePrint[remItv];
+    remWid = toRational[Max[Abs[inf[remItv]], Abs[sup[remItv] ] ] ];
+    remMid = mid[remMid];
+    simplePrint[remMid, remWid];
     simplePrint[N[result + iRem /. pRules]];
 
-    {toReturnForm[result], toReturnForm[midpointRadius[mid[iRem], wid[iRem]/2] ] }
+    {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
   ]
 ];

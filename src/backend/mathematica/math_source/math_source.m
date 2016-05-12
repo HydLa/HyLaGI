@@ -16,7 +16,7 @@ publicMethod[
     simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ];
     simplePrint[simplifiedCons];
     If[freeFromInequalities[simplifiedCons],
-      sol = Quiet[Solve[simplifiedCons, vars, Reals], Solve::svars];
+      sol = Quiet[Solve[simplifiedCons, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
       If[FreeQ[sol, ConditionalExpression], solved = True];
     ];
     If[solved,
@@ -153,7 +153,7 @@ publicMethod[
     {ret, map, currentCons, solved = False},
     currentCons = Assuming[assum, timeConstrainedSimplify[cons]] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
-    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], Solve::svars]; If[FreeQ[sol, ConditionalExpression], solved = True] ];
+    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}]; If[FreeQ[sol, ConditionalExpression], solved = True] ];
     If[solved && Length[map] == 1,
       map = And@@Map[(Equal@@#)&, map[[1]]],
       map = Reduce[map, vars, Reals];
@@ -851,19 +851,20 @@ createPrevRules[var_] := Module[
 solveByDSolve[expr_, vars_] :=
 solveByDSolve[expr, vars] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, dCountList, i},
+  {ini = {}, sol, derivatives, i},
   tVars = Map[(#[t])&, vars];
   derivatives = getVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
     ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
   ];
+  tmp = expr;
   sol = Quiet[
     Check[
       DSolve[Union[expr, ini], tVars, t],
           overConstrained,
       {DSolve::overdet, DSolve::bvimp}
     ],
-  {DSolve::overdet, DSolve::bvimp, Solve::svars}
+  {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
   ];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
@@ -939,7 +940,7 @@ publicMethod[
   Module[
   {rules, borderCond, sol, timeList},
     borderCond = Equal@@guard;
-    sol = Solve[borderCond && t > 0 && pCons, {t}];
+    sol = Quiet[Solve[borderCond && t > 0 && pCons, {t}], {PolynomialGCD::lrgexpr}];
     (*TODO: consider case branching*)
     timeList = Map[(#[[1,2]])&, sol];
     timeList = Map[(If[Head[#] === ConditionalExpression, #[[1]], #])&, timeList];
