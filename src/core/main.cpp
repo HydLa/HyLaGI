@@ -180,6 +180,11 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
     return true;
   }
 
+  if(po.count("dump_parse_tree_json")>0) {
+    pt->dump_in_json(cout);
+    return true;
+  }
+
   if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
@@ -209,7 +214,6 @@ bool dump_in_advance(ProgramOptions& po)
     cout << Version::description() << endl;
     return true;
   }
-    
 
   return false;
 }
