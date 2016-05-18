@@ -870,27 +870,6 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
         backend_->call("substituteVM", true, 3, "etmvtvlt", "e", &cons, &related_vm, &phase->current_time, &cons);
 
         value_t lower("0");
-        if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
-        {
-          // exploit derivative of guard conditions
-          vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
-          HYDLA_ASSERT(parameter_map_vector.size() <= 1);
-          parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
-          itvd min_interval = calculate_zero_crossing_of_derivative(cons, pm);
-          HYDLA_LOGGER_DEBUG_VAR(min_interval);
-          if(min_interval == itvd(0.0))
-          {
-            //TODO: validate that there are no answers for this guard
-            guard_time_map[g] = constraint_t(new symbolic_expression::False);
-            other_guards.insert(g);
-            continue;
-          }
-          else if(width(min_interval) > 0)
-          {
-            lower = value_t(min_interval.lower());
-            backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
-          }
-        }
         backend_->call("calculateConsistentTime", true, 2, "etvlt", "e", &cons, &lower, &constraint_for_this_guard);
         other_guards.insert(g);
         guard_time_map[g] = constraint_for_this_guard;
@@ -912,7 +891,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
     HYDLA_ASSERT(parameter_map_vector.size() <= 1);
     parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
-    list<itvd> result_interval_list = calculate_interval_newton_nd(time_guard_by_newton, pm, phase->discrete_guards.count(guard_by_newton) > 0);
+    list<itvd> result_interval_list = calculate_interval_newton_nd(time_guard_by_newton, pm);
     const type_info &guard_type = typeid(*guard_by_newton);
 
     // TODO: integrate process for both equalities and inequalities
@@ -1116,12 +1095,13 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 struct PhaseSimulator::StateOfIntervalNewton{
   interval::itv_stack_t  stack;
   boost::optional<itvd>  min_interval = boost::none;
+  node_sptr guard;
   node_sptr exp;
   node_sptr dexp;
 };
 
 
-PhaseSimulator::StateOfIntervalNewton PhaseSimulator::initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm, bool additional_constraint)
+PhaseSimulator::StateOfIntervalNewton PhaseSimulator::initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm)
 {
   StateOfIntervalNewton state;
   backend_->call("relationToFunction", true, 1, "et", "e", &time_guard, &state.exp);
@@ -1129,17 +1109,7 @@ PhaseSimulator::StateOfIntervalNewton PhaseSimulator::initialize_newton_state(co
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(state.exp));
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(state.dexp));
 
-
-  double start_of_init = 0;
-  if(additional_constraint)
-  {
-    itvd min_interval = calculate_zero_crossing_of_derivative(time_guard, pm);
-    if(width(min_interval) > 0)
-    {
-      start_of_init = min_interval.lower();
-    }
-  }
-  itvd init = itvd(start_of_init,upper_bound_of_itv_newton);
+  itvd init = itvd(0,upper_bound_of_itv_newton);
   HYDLA_LOGGER_DEBUG_VAR(init);
   state.stack.push(init);
   return state;
@@ -1209,28 +1179,12 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
     {
       if(by_newton)
       {
-        StateOfIntervalNewton state = initialize_newton_state(time_guard, pm, phase->discrete_guards.count(g) > 0);
+        StateOfIntervalNewton state = initialize_newton_state(time_guard, pm);
         lower = value_t(state.stack.top().lower());
         newton_guard_state_map[g] = state;
       }
       else
       {
-        if(( opts_->interval ||opts_->numerize_mode || opts_->epsilon_mode > 0) && phase->discrete_guards.count(g) > 0)
-        {
-          // exploit derivative of guard conditions
-          itvd min_interval = calculate_zero_crossing_of_derivative(time_guard, pm);
-          if(min_interval == itvd(0.0))
-          {
-            //TODO: validate that there are no answers for this guard
-            atomic_guard_map[atomic_guard->constraint] = false;
-            continue;
-          }
-          else
-          {
-            lower = value_t(min_interval.lower());
-            backend_->call("transformToRational", false, 1, "vln", "vl", &lower, &lower);
-          }
-        }
         find_min_time_result_t time_list_for_this_guard;
         backend_->call("solveTimeEquation", true, 2, "etvlt", "f", &time_guard, &lower, &time_list_for_this_guard);
         std::list<value_t> symbolic_time_list;
@@ -1274,7 +1228,8 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       StateOfIntervalNewton &state = entry.second;
       if(!state.min_interval)
       {
-        state.min_interval = interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, false);
+        state.min_interval =
+          interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step()  || phase->discrete_guards.count(entry.first));
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
       if(opts_->numerize_mode)
@@ -1855,28 +1810,7 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   }
 }
 
-itvd PhaseSimulator::calculate_zero_crossing_of_derivative(const constraint_t& time_guard, parameter_map_t &pm)
-{
-  node_sptr dexp, ddexp;
-  value_t criteria_val;
-  backend_->call("relationToFunction", true, 1, "et", "vl", &time_guard, &criteria_val);
-  if(criteria_val.infinite())return itvd(0, 0);
-  backend_->call("differentiateWithTime", true, 1, "vlt", "e", &criteria_val, &dexp);
-  backend_->call("differentiateWithTime", true, 1, "et", "e", &dexp, &ddexp);
-  HYDLA_LOGGER_DEBUG_VAR(criteria_val);
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
-  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ddexp));
-  // TODO: avoid string comparison
-  if(get_infix_string(ddexp) == "0")return itvd(0., 0.);
-  itvd init = itvd(0.,100);
-  itvd result_interval = interval::calculate_interval_newton(init, dexp, ddexp, pm, opts_->affine);
-  return result_interval;
-}
-
-
-
-
-list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time_guard, parameter_map_t &pm, bool additional_constraint)
+list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time_guard, parameter_map_t &pm)
 {
   node_sptr exp;
   node_sptr dexp;
@@ -1886,16 +1820,7 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(dexp));
 
 
-  double start_of_init = 0;
-  if(additional_constraint)
-  {
-    itvd min_interval = calculate_zero_crossing_of_derivative(time_guard, pm);
-    if(width(min_interval) > 0)
-    {
-      start_of_init = min_interval.lower();
-    }
-  }
-  itvd init = itvd(start_of_init,upper_bound_of_itv_newton);
+  itvd init = itvd(0,upper_bound_of_itv_newton);
   HYDLA_LOGGER_DEBUG_VAR(init);
   for(auto entry : pm)
   {
