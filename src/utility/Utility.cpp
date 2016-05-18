@@ -49,14 +49,6 @@ bool num_denom_str(string val_str,
   }
 }
 
-string to_string(int n)
-{
-  stringstream sstr;
-  sstr << n;
-  return sstr.str();
-}
-
-
 string replace(string original, const string &substr, const string &dest )
 {
   string::size_type  pos( original.find( substr ) );

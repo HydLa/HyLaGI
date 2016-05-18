@@ -32,8 +32,6 @@ std::string replace(std::string original,
                     const std::string &substr,
                     const std::string &dest);
 
-std::string to_string(int n);
-
 
 /**
  * remove comment from given string
