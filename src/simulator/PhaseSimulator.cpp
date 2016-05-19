@@ -53,7 +53,6 @@ PhaseSimulator::~PhaseSimulator(){}
 
 phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
-  HYDLA_LOGGER_DEBUG("\"ahoahoa\"",*todo);
   timer::Timer phase_timer;
   module_set_container->reset();
   todo->inconsistent_module_sets.clear();
@@ -67,7 +66,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         relation_graph_->set_expanded_recursive(module.second, true);
       }
     todo->diff_sum.add_constraint_store(relation_graph_->get_constraints());
-    // // // ahoahoaho : for auto abstruction
+    // // for auto abstraction
     // AlwaysFinder always_finder;
     // ConstraintStore non_always;
     // always_set_t always_set;
@@ -79,7 +78,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     //   }
     // for(auto constraint : non_always)relation_graph_->set_expanded_atomic(constraint, false);
     // for(auto ask : nonalways_asks)relation_graph_->set_expanded_atomic(ask, false);
-    // // // ahoahoaho
+    // //
   }
   else
   {

@@ -624,7 +624,7 @@ publicMethod[
   time1, time2, pCons1, pCons2,
   Module[
     {
-      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons
+      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons, pRules, intervalLess, intervalGreater, interval
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
     andCond = pCons1 && pCons2;
@@ -637,13 +637,28 @@ publicMethod[
     ];
     If[andCond === False,
       {{False}, {False}, {False}},
-      caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
-      caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
-      caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
-      caseEq = caseEq && otherPCons;
-      caseLe = caseLe && otherPCons;
-      caseGr = caseGr && otherPCons;
-      {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
+      (* First, compare 2 expressions using interval arithmetic *)      
+      pRules = createIntervalRules[andCond];
+      interval = (time1 - time2) /. pRules;
+      intervalLess = interval < 0;
+      If[intervalLess === True,
+        {{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}},
+        intervalGreater = interval > 0;
+        If[intervalGreater === True,
+          {{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}},
+          (* If it isn't determined, use Reduce *)
+          caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+          simplePrint[caseEq];
+          caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+          simplePrint[caseLe];
+          caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+          simplePrint[caseGr];
+          caseEq = caseEq && otherPCons;
+          caseLe = caseLe && otherPCons;
+          caseGr = caseGr && otherPCons;
+          {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
+        ]
+      ]
     ]
   ]
 ];
