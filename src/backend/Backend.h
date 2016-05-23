@@ -81,7 +81,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    p: parameter_t (send only)
    *    v(n, p, z, t): variable_t: variable (Characters after them are the same as 'e') (send only)
    *    vs(n, p, z, t): variable_set_t: variable set
-   *  example: call("Add", "ii", "i", &lhs, &rhs, &res)
+   *  example: call("add", true, 2, "ii", "i", &lhs, &rhs, &res)
    *  Caution: In Mathematica, '_' cannot be used as name of symbols
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
    */
