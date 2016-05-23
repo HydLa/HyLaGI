@@ -104,6 +104,7 @@ void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramDefinition> node)
 // 制約呼び出し
 void ParseTreeJsonDumper::visit(boost::shared_ptr<ConstraintCaller> node)      
 {
+  current_->get<object>()["name"] = value{ node->get_name() };
   dump_node(node);
 }
 
