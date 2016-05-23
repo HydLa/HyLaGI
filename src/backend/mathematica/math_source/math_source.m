@@ -97,7 +97,7 @@ publicMethod[
           If[(initCons /. (tRules /. t -> 0)) === False, 
             {{False}, {LogicalExpand[pCons]}},
             tCons = sol[[2]] /. tRules;
-            initRules = makeRulesForVariable[initCons];
+            initRules = makeRulesForVariable[initCons] /. prevRs;
             simplePrint[tCons];
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
