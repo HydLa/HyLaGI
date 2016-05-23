@@ -6,6 +6,7 @@
 #include "CsvProfilePrinter.h"
 #include "LTLModelChecker.h"
 #include "HybridAutomatonConverter.h"
+#include "TreeInfixPrinter.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
@@ -177,6 +178,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<char>("dump_in_progress") == 'y';
   opts.dump_relation = po.count("dump_relation_graph")>0;
   IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<char>("ignore_warnings") == 'y';
+  IF_SPECIFIED("use_shorthand")TreeInfixPrinter::set_use_shorthand(po.count("use_shorthand") > 0 && po.get<char>("use_shorthand") == 'y');
   IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
   IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';

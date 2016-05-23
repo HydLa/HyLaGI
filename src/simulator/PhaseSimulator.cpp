@@ -650,6 +650,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
   bool expanded;
   PhaseType phase_type = phase->phase_type;
   variable_set_t discrete_variables = get_discrete_variables(diff_sum, phase_type);
+  bool first = true;
 
   do{
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
@@ -657,7 +658,12 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     timer::Timer entailment_timer;
 
     set<ask_t> adjacents;
-    if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
+    if(phase->parent == result_root.get() && first)
+    {
+      adjacents = relation_graph_->get_all_asks();
+      first = false;
+    }
+    else if(phase->phase_type == POINT_PHASE || !phase->in_following_step()){
       for(auto variable : discrete_variables)
       {
         auto each_adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);

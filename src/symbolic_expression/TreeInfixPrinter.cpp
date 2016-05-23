@@ -6,6 +6,8 @@ namespace symbolic_expression{
 
 using namespace std;
 
+bool TreeInfixPrinter::use_shorthand = false;
+
 //valueとって文字列に変換する
 ostream& TreeInfixPrinter::print_infix(const node_sptr& node, ostream& s){
   need_par_ = PAR_NONE;
@@ -210,7 +212,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Float> node){
 
 // 記号定数
 void TreeInfixPrinter::visit(boost::shared_ptr<Parameter> node){
-  (*output_stream_) << "p[" << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "]";
+  if(use_shorthand)
+  {
+    (*output_stream_) << node->get_name() << node->get_differential_count()  << node->get_phase_id();
+  }
+  else
+  {
+    (*output_stream_) << "p[" << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "]";
+  }
 }
 
 // t
@@ -321,6 +330,11 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
   }
   (*output_stream_) << ")";
   // if(node->get_child())print_unary_node(*node, "{", "}");
+}
+
+void TreeInfixPrinter::set_use_shorthand(bool u)
+{
+  use_shorthand = u;
 }
 
 } // namespace symbolic_expression

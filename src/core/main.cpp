@@ -161,11 +161,10 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  if(cmdline_options.get<string>("tm") != "n" || cmdline_options.get<string>("tm") != "n"){
-    std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
-    std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
-    cout << endl;
-  }
+  std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
+  std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
+  cout << endl;
+  
   return simulation_result;
 }
 
@@ -178,6 +177,11 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 
   if(po.count("dump_parse_tree")>0) {
     pt->to_graphviz(cout);
+    return true;
+  }
+
+  if(po.count("dump_parse_tree_json")>0) {
+    pt->dump_in_json(cout);
     return true;
   }
 
@@ -210,7 +214,6 @@ bool dump_in_advance(ProgramOptions& po)
     cout << Version::description() << endl;
     return true;
   }
-    
 
   return false;
 }
