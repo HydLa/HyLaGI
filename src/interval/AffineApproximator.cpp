@@ -7,6 +7,8 @@
 #include "ValueModifier.h"
 #include "VariableFinder.h"
 #include "Variable.h"
+#include "HydLaError.h"
+
 
 using namespace std;
 using namespace boost;
@@ -36,8 +38,6 @@ void AffineApproximator::set_simulator(Simulator* s)
 
 void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
-  assert(0);
-/*
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
   if(!index_map.empty())
   {
@@ -58,11 +58,12 @@ void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formul
       }
     }
   }
-*/
 }
 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)
 {
+  // set rounding mode
+  kv::hwround::roundup();
   value_t ret(affine_value.a(0));
   simulator->backend->call("transformToRational", true, 1, "vln", "vl", &ret, &ret);
   double sum = 0;
@@ -109,34 +110,60 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map, variable_map_t &variable_map)
+void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate,  variable_map_t &variable_map, parameter_map_t &parameter_map)
 {
+  parameter_idx_map.clear();
+  affine_t::maxnum() = 0;
   AffineTreeVisitor visitor(parameter_idx_map, variable_map);
-  AffineOrInteger val = visitor.approximate(node);
-  if(val.is_integer)return value_t(val.integer);
+  std::map<simulator::variable_t, affine_t> affine_map;
+  for(auto var: vars_to_approximate)
+  {
+    simulator::range_t range = variable_map[var];
+    HYDLA_ASSERT(range.unique());
+    HYDLA_LOGGER_DEBUG_VAR(var);
+    HYDLA_LOGGER_DEBUG_VAR(range);
+    node_sptr expr = range.get_unique_value().get_node();
+    AffineOrInteger val = visitor.approximate(expr);
 
-  affine_t affine_value = val.affine_value;
+    if(val.is_integer)
+    {
+      variable_map[var] = value_t(val.integer);
+    }
+    else
+    {
+      affine_map[var] = val.affine_value;
+    }
+  }
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
-/*
-  ub::vector<affine_t> formulas(1);
-  formulas(0) = affine_value;
-  reduce_dummy_variables(formulas, 1);
-  affine_value = formulas(0);  
-  HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
-  HYDLA_LOGGER_DEBUG_VAR(affine_value);
-*/
-  // set rounding mode
-  kv::hwround::roundup();
+  kv::ub::vector<affine_t> formulas(affine_map.size());
+  int i = 0;
+  for(auto element: affine_map)
+  {
+    formulas(i) = element.second;
+    HYDLA_LOGGER_DEBUG_VAR(element.first);
+    HYDLA_LOGGER_DEBUG_VAR(formulas(i).a(0));
+    HYDLA_LOGGER_DEBUG_VAR(formulas(i));
+    ++i;
+  }
+  reduce_dummy_variables(formulas, formulas.size());
 
-  value_t result_value = translate_into_symbolic_value(affine_value, parameter_map);  
-  return result_value;
+  for(auto element: affine_map)
+  {
+    simulator::variable_t var = element.first;
+    affine_t affine = element.second;
+    HYDLA_LOGGER_DEBUG_VAR(var);
+    value_t result_value = translate_into_symbolic_value(affine, parameter_map);
+    variable_map[var] = result_value;
+  }
+
+  return;
 }
 
-void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
-{
-  node_sptr node = time.get_node();
-  time = approximate(node, parameter_map, prev_map);
-}
+// void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
+// {
+//   node_sptr node = time.get_node();
+//   time = approximate(node, parameter_map, prev_map);
+// }
 
 
 }

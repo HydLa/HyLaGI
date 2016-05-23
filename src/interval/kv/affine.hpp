@@ -1617,7 +1617,6 @@ template <class T> class affine {
 
   friend std::ostream& operator<<(std::ostream& s, const affine& x) {
     int i;
-
     s << "[(" << x.a(0) << ")";
     for (i=1; i<x.a.size(); i++) {
       s << "+(" << x.a(i) << ")e" << i;

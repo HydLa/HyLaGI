@@ -117,8 +117,6 @@ private:
 
   kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
 
-  value_t evaluate_affine(const phase_result_sptr_t phase, value_t val);
-
   StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
@@ -143,6 +141,7 @@ private:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
+  variable_set_t vars_to_approximate;
   std::set<std::string> variable_names;
 
   module_set_container_sptr msc_no_init_;

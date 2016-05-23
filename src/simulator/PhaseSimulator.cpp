@@ -565,6 +565,10 @@ void PhaseSimulator::initialize(variable_set_t &v,
   for(auto variable : *variable_set_)
   {
     variable_names.insert(variable.get_name());
+    if(opts_->vars_to_approximate.count(variable.get_string()))
+    {
+      vars_to_approximate.insert(variable);
+    }
   }
 
   FullInformation root_information;
@@ -1238,7 +1242,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
       Parameter parameter("t", -1, ++time_id);
       TimeListElement elem;
-      if(opts_->affine)
+      if(opts_->mean_value)
       {
         hydla::backend::CalculateTLinearResult ct;
         value_t lb = state.min_interval->lower();
@@ -1674,19 +1678,25 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
   }
   else if(opts_->interval && opts_->approximation_step > 0 && (phase->step/2) % opts_->approximation_step == 0)
   {
-    for(auto &entry: vm_to_approximate)
+    if(opts_->affine)
     {
-      if(opts_->vars_to_approximate.count(entry.first.get_string()) == 0 )
-        continue;
-
-      assert(entry.second.unique());
-
-      if(opts_->affine)
+      interval::AffineApproximator* approximator = interval::AffineApproximator::get_instance();
+      vector<parameter_map_t> parameter_maps = phase->get_parameter_maps();
+      assert(parameter_maps.size() == 1);
+      HYDLA_LOGGER_DEBUG_VAR(phase->variable_map);
+      approximator->approximate(vars_to_approximate, phase->variable_map, parameter_maps[0]);
+      backend_->call("resetConstraintForParameter", false, 1, "mp", "", &parameter_maps[0]);
+      phase->set_parameter_constraint(get_current_parameter_constraint());      
+    }
+    else
+    {
+      for(auto &entry: vm_to_approximate)
       {
-        entry.second.set_unique_value(evaluate_affine(phase, entry.second.get_unique_value()));
-      }
-      else
-      {
+        if(vars_to_approximate.count(entry.first) == 0 )
+          continue;
+
+
+        assert(entry.second.unique());
         itvd interval = evaluate_interval(phase, entry.second);
         if(width(interval) > 0)
         {
@@ -1694,9 +1704,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
           Parameter param(entry.first, *phase);
           add_parameter_constraint(phase, param, range);
           entry.second = param.as_value();
-          stringstream sstr;
-          sstr << param.get_name() << "_" <<  param.get_differential_count();
-          phase->profile[sstr.str()] = width(interval);
+          phase->profile[param.get_name() + "_" + to_string(param.get_differential_count())] = width(interval);
         }
       }
     }
@@ -1844,23 +1852,6 @@ itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRan
   return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
 }
 
-value_t PhaseSimulator::evaluate_affine(const phase_result_sptr_t phase, value_t val)
-{
-  HYDLA_LOGGER_DEBUG_VAR(val);
-  VariableReplacer v_replacer(phase->variable_map);
-  v_replacer.replace_value(val);
-  val = value_modifier->apply_function(opts_->fullsimplify?"fullsimplify":"simplify", val);
-  interval::AffineApproximator* approximator = interval::AffineApproximator::get_instance();
-  vector<parameter_map_t> parameter_maps = phase->get_parameter_maps();
-  assert(parameter_maps.size() == 1);
-  node_sptr node = val.get_node();
-  value_t result_val = approximator->approximate(node, parameter_maps[0], phase->variable_map);
-  HYDLA_LOGGER_DEBUG_VAR(result_val);
-  backend_->call("resetConstraintForParameter", false, 1, "mp", "", &parameter_maps[0]);
-  phase->set_parameter_constraint(get_current_parameter_constraint());
-  return result_val;
-}
-
 
 void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange range)
 {
@@ -1875,3 +1866,4 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
 
 }
 }
+

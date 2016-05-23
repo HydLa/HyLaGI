@@ -231,7 +231,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
       }
       if(i >= MAX_STEP)
       {
-        HYDLA_LOGGER_WARN("Maximum step(=" + std::to_string(MAX_STEP) + ") is exceeded.");
+        HYDLA_LOGGER_WARN("Maximum step(=" + std::to_string(MAX_STEP) + ") is exceeded. The result width may be large.");
         break;
       }
     }

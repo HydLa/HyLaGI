@@ -111,6 +111,10 @@ void ProgramOptions::init_descriptions()
      value<char>()->default_value('n'),
      "use affine arithmetic to approximate expressions")
 
+    ("mean_value",
+     value<char>()->default_value('n'),
+     "use mean value form to calculate time of each PP")
+
 
     ("fail_on_stop",value<char>()->default_value('n'),
      "stop all simulation cases when assertion fails")

@@ -34,6 +34,7 @@ publicMethod[
 createIntervalRules[parameterCondition_] := 
 Module[
   {lbs, ubs, parameters, i, condition, parameter, rules = {}, adjustedCond},
+  If[parameterCondition === True || prameterCondition === False, Return[{}]];
   parameters = getParameters[parameterCondition];
   adjustedCond = adjustExprs[LogicalExpand[parameterCondition], isParameter];
   For[i = 1, i <= Length[adjustedCond], i++,

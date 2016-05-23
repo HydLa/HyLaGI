@@ -1,7 +1,7 @@
 // 2015/6/28
 // 2016/1/19 Rewrite
-// Tsutomu WADA
-// The shape of floor is sin.
+// Author: Tsutomu WADA
+// The shape of the floor is a sin wave.
 
 INIT <=> x = 0 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
 FALL <=> [](cont = 1 => y'' = -10).
@@ -21,4 +21,4 @@ BOUNCE <=> []( y- = sin(x-) => cont = 0 &
 
 INIT, CONST, (FALL, CONSTX), [](cont = 1) << BOUNCE.
 
-//#hylagi -p20 --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1
+//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1

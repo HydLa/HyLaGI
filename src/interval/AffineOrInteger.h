@@ -18,6 +18,9 @@ class AffineOrInteger
   int integer;
   bool is_integer;
 
+  AffineOrInteger();
+  AffineOrInteger(int i);
+
   AffineOrInteger operator+(const AffineOrInteger &rhs);
   AffineOrInteger operator-(const AffineOrInteger &rhs);
   AffineOrInteger operator*(const AffineOrInteger &rhs);

@@ -61,8 +61,9 @@ affine_t AffineTreeVisitor::pow(affine_t affine, int exp)
       power_val = power_val * affine;
     }
     affine *= affine;
-    exp /= 2;
+    exp >>= 1;
   }
+  if(is_negative)power_val = 1/power_val;
   return power_val;
 }
 
@@ -73,6 +74,13 @@ AffineOrInteger AffineTreeVisitor::pow(AffineOrInteger x, AffineOrInteger y)
   {
     ret.is_integer = true;
     ret.integer = ::pow(x.integer, y.integer);
+  }
+  else if(y.is_integer)
+  {
+    ret.is_integer = false;
+    HYDLA_LOGGER_DEBUG_VAR(x);
+    HYDLA_LOGGER_DEBUG_VAR(y);
+    ret.affine_value = pow(x.affine_value, y.integer);
   }
   else
   {
@@ -86,13 +94,9 @@ AffineOrInteger AffineTreeVisitor::pow(AffineOrInteger x, AffineOrInteger y)
     double l = itv.lower(), u = itv.upper();
     if(u >= 0 && l >= 0)
     {
-      HYDLA_LOGGER_DEBUG(x_affine);
-      HYDLA_LOGGER_DEBUG(y_affine);
-      HYDLA_LOGGER_DEBUG(x.affine_value);
-      HYDLA_LOGGER_DEBUG(y.affine_value);
-      //ret.affine_value = exp(y_affine * log(x_affine));
-      ret.affine_value = exp(y.affine_value * log(x.affine_value));
-      HYDLA_LOGGER_DEBUG(ret.affine_value);
+      HYDLA_LOGGER_DEBUG_VAR(x_affine);
+      HYDLA_LOGGER_DEBUG_VAR(y_affine);
+      ret.affine_value = exp(y_affine * log(x_affine));
     }
     else
     {
@@ -202,9 +206,14 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Powe
   AffineOrInteger lhs = current_val_;  
   // TODO: 文字列以外で判定する
   std::string rhs_str = get_infix_string(node->get_rhs());
+  HYDLA_LOGGER_DEBUG_VAR(rhs_str);
   if(rhs_str == "1/2")
   {
     current_val_ = sqrt_affine(lhs);
+  }
+  else if(rhs_str == "(-1)/2" || rhs_str == "-1/2")
+  {
+    current_val_ = AffineOrInteger(1)/sqrt_affine(lhs);
   }
   else if(rhs_str == "2" && !lhs.is_integer)
   {
@@ -261,9 +270,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
     current_val_.integer = integer;
     HYDLA_LOGGER_NODE_VALUE;
     return;
-  }catch(const bad_lexical_cast &e){
-    HYDLA_LOGGER_DEBUG("name: ",
-                 typeid(e).name(), "\n what: ", e.what());
+  }catch(const bad_lexical_cast &){
   }
 
   //try approximation as double with upper rounding
