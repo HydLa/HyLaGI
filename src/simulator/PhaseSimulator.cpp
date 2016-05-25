@@ -453,6 +453,8 @@ ConstraintStore PhaseSimulator::get_current_parameter_constraint()
 
 
 bool PhaseSimulator::check_equality(const value_t &lhs, const value_t &rhs){
+  return false; // temporarily invalidate this function
+                // TODO: resume this function with more efficient way
   bool equal;
   backend_->call("exactlyEqual", true, 2, "vlnvln", "b", &lhs, &rhs, &equal);
   return equal;
@@ -1684,7 +1686,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
       vector<parameter_map_t> parameter_maps = phase->get_parameter_maps();
       assert(parameter_maps.size() == 1);
       HYDLA_LOGGER_DEBUG_VAR(phase->variable_map);
-      approximator->approximate(vars_to_approximate, phase->variable_map, parameter_maps[0]);
+      approximator->approximate(vars_to_approximate, phase->variable_map, parameter_maps[0], phase->current_time);
       backend_->call("resetConstraintForParameter", false, 1, "mp", "", &parameter_maps[0]);
       phase->set_parameter_constraint(get_current_parameter_constraint());      
     }

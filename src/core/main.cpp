@@ -22,6 +22,8 @@
 #include "Logger.h"
 #include "SignalHandler.h"
 #include "Utility.h"
+#include "AffineTreeVisitor.h"
+#include "Parser.h"
 
 #include <boost/regex.hpp>
 
@@ -144,6 +146,21 @@ int hydla_main(int argc, char* argv[])
 
     add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
+
+  // {
+  //   Logger::instance().set_log_level(Logger::Debug);
+  //   parser::Parser p(input);
+  //   node_sptr expr = p.arithmetic();
+  //   interval::parameter_idx_map_t map;
+  //   simulator::variable_map_t vm;
+  //   interval::AffineTreeVisitor visitor(map, vm);
+  //   interval::AffineMixedValue affine = visitor.approximate(expr);
+  //   cout << affine << endl;
+  //   cout << affine.to_interval() << endl;
+  //   cout << affine.to_affine() << endl;
+  //   return 0;
+  // }
+  
   
   pt->parse_string(input);
 

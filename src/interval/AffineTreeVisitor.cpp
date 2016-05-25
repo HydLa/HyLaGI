@@ -21,8 +21,8 @@ namespace hydla {
 namespace interval {
 
 /// share constants to take advantage of dependency
-affine_t AffineTreeVisitor::pi = affine_t(kv::constants<kv::interval<double> >::pi());
-affine_t AffineTreeVisitor::e = affine_t(kv::constants<kv::interval<double> >::e());
+itvd AffineTreeVisitor::pi = kv::constants<kv::interval<double> >::pi();
+itvd AffineTreeVisitor::e = kv::constants<kv::interval<double> >::e();
 
 class ApproximateException:public std::runtime_error{
 public:
@@ -42,99 +42,21 @@ void AffineTreeVisitor::set_current_time(itvd itv)
   current_time = itv;
 }
 
-AffineOrInteger AffineTreeVisitor::approximate(node_sptr &node)
+AffineMixedValue AffineTreeVisitor::approximate(node_sptr &node)
 {
   differential_count = 0;
   accept(node);
   return current_val_;
 }
 
-affine_t AffineTreeVisitor::pow(affine_t affine, int exp)
-{
-  bool is_negative = exp < 0;
-  exp = is_negative?-exp:exp;
-  affine_t power_val(1);
-  while(exp != 0)
-  {
-    if(exp & 1)
-    {
-      power_val = power_val * affine;
-    }
-    affine *= affine;
-    exp >>= 1;
-  }
-  if(is_negative)power_val = 1/power_val;
-  return power_val;
-}
-
-AffineOrInteger AffineTreeVisitor::pow(AffineOrInteger x, AffineOrInteger y)
-{
-  AffineOrInteger ret;
-  if(x.is_integer && y.is_integer)
-  {
-    ret.is_integer = true;
-    ret.integer = ::pow(x.integer, y.integer);
-  }
-  else if(y.is_integer)
-  {
-    ret.is_integer = false;
-    HYDLA_LOGGER_DEBUG_VAR(x);
-    HYDLA_LOGGER_DEBUG_VAR(y);
-    ret.affine_value = pow(x.affine_value, y.integer);
-  }
-  else
-  {
-    ret.is_integer = false;
-    affine_t x_affine, y_affine;
-    if(x.is_integer)x_affine = x.integer;
-    else x_affine = x.affine_value;
-    if(y.is_integer)y_affine = y.integer;
-    else y_affine = y.affine_value;
-    kv::interval<double> itv = to_interval(x_affine);
-    double l = itv.lower(), u = itv.upper();
-    if(u >= 0 && l >= 0)
-    {
-      HYDLA_LOGGER_DEBUG_VAR(x_affine);
-      HYDLA_LOGGER_DEBUG_VAR(y_affine);
-      ret.affine_value = exp(y_affine * log(x_affine));
-    }
-    else
-    {
-      if(!y.is_integer)
-      {
-          HYDLA_LOGGER_DEBUG("l: ", l, ", u: ", u);
-          throw ApproximateException("noninteger power function for interval including zero");
-      }
-      if(u >= 0)
-      {
-        // include zero
-        ret.affine_value = pow(x_affine, y.integer);
-        HYDLA_LOGGER_DEBUG_VAR(ret.affine_value);
-      }
-      else
-      {
-        // pure negative interval
-        if(y.integer % 2)
-        {
-          ret.affine_value = -exp(y_affine * log(-x_affine));
-        }
-        else
-        {
-          ret.affine_value = exp(y_affine * log(-x_affine));
-        }
-      }
-    }
-  }
-  return ret;
-}
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
-  AffineOrInteger lhs = current_val_;
+  AffineMixedValue lhs = current_val_;
   accept(node->get_rhs());
-  AffineOrInteger rhs = current_val_;
+  AffineMixedValue rhs = current_val_;
   current_val_ = lhs + rhs;
   HYDLA_LOGGER_NODE_VALUE;
   return;
@@ -145,9 +67,9 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subt
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
-  AffineOrInteger lhs = current_val_;
+  AffineMixedValue lhs = current_val_;
   accept(node->get_rhs());
-  AffineOrInteger rhs = current_val_;
+  AffineMixedValue rhs = current_val_;
   current_val_ = lhs - rhs;
   HYDLA_LOGGER_NODE_VALUE;
   return;
@@ -158,9 +80,9 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Time
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
-  AffineOrInteger lhs = current_val_;
+  AffineMixedValue lhs = current_val_;
   accept(node->get_rhs());
-  AffineOrInteger rhs = current_val_;
+  AffineMixedValue rhs = current_val_;
   current_val_ = lhs * rhs;
   HYDLA_LOGGER_NODE_VALUE;
   return;
@@ -171,60 +93,44 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divi
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
-  AffineOrInteger lhs = current_val_;
+  AffineMixedValue lhs = current_val_;
   accept(node->get_rhs());
-  AffineOrInteger rhs = current_val_;
+  AffineMixedValue rhs = current_val_;
   current_val_ = lhs / rhs;
   HYDLA_LOGGER_NODE_VALUE;
   return;
 }
 
 
-AffineOrInteger AffineTreeVisitor::sqrt_affine(const AffineOrInteger &a)
-{
-  HYDLA_LOGGER_DEBUG_VAR(a);
-  affine_t affine_value;
-  if(a.is_integer)
-  {
-    affine_value = a.integer;
-  }
-  else
-  {
-    affine_value = a.affine_value;
-  }
-  affine_value = sqrt(affine_value);
-  AffineOrInteger result_ai;
-  result_ai.is_integer = false;
-  result_ai.affine_value = affine_value;
-  return result_ai;
-}
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
-  AffineOrInteger lhs = current_val_;  
+  AffineMixedValue lhs = current_val_;  
   // TODO: 文字列以外で判定する
   std::string rhs_str = get_infix_string(node->get_rhs());
   HYDLA_LOGGER_DEBUG_VAR(rhs_str);
   if(rhs_str == "1/2")
   {
-    current_val_ = sqrt_affine(lhs);
+    if(lhs.type == INTEGER)current_val_ = sqrt(itvd(lhs.integer));
+    else if(lhs.type == INTERVAL)current_val_ = AffineMixedValue(sqrt(lhs.interval));
+    else current_val_ = sqrt(lhs.affine_value);
   }
   else if(rhs_str == "(-1)/2" || rhs_str == "-1/2")
   {
-    current_val_ = AffineOrInteger(1)/sqrt_affine(lhs);
+    if(lhs.type == INTEGER)current_val_ = 1/sqrt(itvd(lhs.integer));
+    else if(lhs.type == INTERVAL)current_val_ = 1/sqrt(lhs.interval);
+    else current_val_ = 1/sqrt(lhs.affine_value);
   }
-  else if(rhs_str == "2" && !lhs.is_integer)
+  else if(rhs_str == "2" && lhs.type != AFFINE)
   {
-    current_val_.affine_value = square(lhs.affine_value);
-    current_val_.is_integer = false;
+    current_val_ = square(lhs.affine_value);
   }
   else
   {
     accept(node->get_rhs());
-    AffineOrInteger rhs = current_val_;
-    current_val_ = pow(lhs, rhs);
+    AffineMixedValue rhs = current_val_;
+    current_val_ = lhs ^ rhs;
   }
   HYDLA_LOGGER_NODE_VALUE;
 }
@@ -241,20 +147,21 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nega
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
 {
-  // do nothing
+  HYDLA_LOGGER_NODE_VISIT;
+  accept(node->get_child());
+  HYDLA_LOGGER_NODE_VALUE;
   return;
 }
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
-  current_val_.affine_value = pi;
-  current_val_.is_integer = false;
+  current_val_.interval = pi;
+  current_val_.type = INTERVAL;
 }
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
 {
-  current_val_.affine_value = e;
-  current_val_.is_integer = false;
+  current_val_ = AffineMixedValue(e);
 }
 
 
@@ -266,8 +173,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
   // try translation to int
   try{
     int integer = lexical_cast<int>(number_str);
-    current_val_.is_integer = true;
-    current_val_.integer = integer;
+    current_val_ = AffineMixedValue(integer);
     HYDLA_LOGGER_NODE_VALUE;
     return;
   }catch(const bad_lexical_cast &){
@@ -275,8 +181,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
 
   //try approximation as double with upper rounding
   kv::interval<double> itv = kv::interval<double>(number_str);
-  current_val_.affine_value = affine_t(itv);
-  current_val_.is_integer = false;
+  current_val_ = AffineMixedValue(itv);
   HYDLA_LOGGER_NODE_VALUE;
 }
 
@@ -284,8 +189,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
-  current_val_.affine_value = affine_t(node->get_number());
-  current_val_.is_integer = false;
+  current_val_ = AffineMixedValue(itvd(node->get_number()));
   HYDLA_LOGGER_NODE_VALUE;
 }
 
@@ -298,14 +202,16 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
   {
     if(node->get_arguments_size() != 1)invalid_node(*node);
     accept(node->get_argument(0) );
-    if(current_val_.is_integer)current_val_.affine_value = log(current_val_.integer);
+    if(current_val_.type == INTEGER)current_val_.interval = log(itvd(current_val_.integer));
+    else if(current_val_.type == INTERVAL)current_val_.interval = log(current_val_.interval);
     else current_val_.affine_value = log(current_val_.affine_value);
   }
   if(name == "cos")
   {
     if(node->get_arguments_size() != 1)invalid_node(*node);
     accept(node->get_argument(0) );
-    if(current_val_.is_integer)current_val_.affine_value = cos(current_val_.integer);
+    if(current_val_.type == INTEGER)current_val_.interval = cos(itvd(current_val_.integer));
+    if(current_val_.type == INTERVAL)current_val_.interval = cos(current_val_.interval);
     else current_val_.affine_value = cos(current_val_.affine_value);
   }
   else
@@ -318,8 +224,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
-  current_val_.is_integer = false;
-  current_val_.affine_value = affine_t();
+  current_val_ = affine_t();
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
@@ -369,8 +274,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<Differential> node)
 void AffineTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
-  current_val_.is_integer = false;
-  current_val_.affine_value = affine_t();
+  current_val_ = AffineMixedValue(affine_t());
   parameter_t param("t",
                     -1,
                     time_idx);

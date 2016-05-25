@@ -8,11 +8,14 @@ namespace interval {
 typedef kv::affine<double>                    affine_t;
 typedef kv::interval<double>                  itvd;
 
+
+
 /**
  * A class to keep integer as long as possible
  */
 class AffineOrInteger
 {
+  
   public:
   affine_t affine_value;
   int integer;

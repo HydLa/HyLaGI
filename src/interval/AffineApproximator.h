@@ -29,7 +29,7 @@ class AffineApproximator{
   /**
    * Approximate given variable in given variable map conserving given condition
    */
-  void approximate(const simulator::variable_set_t &vars_to_approximate, variable_map_t& variable_map,  parameter_map_t &parameter_map);
+  void approximate(const simulator::variable_set_t &vars_to_approximate, variable_map_t& variable_map,  parameter_map_t &parameter_map, value_t &time);
 
   /**
    * Approximate time

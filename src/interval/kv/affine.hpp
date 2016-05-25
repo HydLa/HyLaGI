@@ -129,7 +129,7 @@ template <class T> class affine {
     return interval<T>(t2, t3);
   }
 
-  interval<T> get_interval() {
+  interval<T> get_interval() const{
     T t1, t2, t3;
     t1 = rad(*this);
     rop<T>::begin();

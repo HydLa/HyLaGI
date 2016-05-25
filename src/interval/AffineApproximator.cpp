@@ -110,7 +110,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate,  variable_map_t &variable_map, parameter_map_t &parameter_map)
+void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate,  variable_map_t &variable_map, parameter_map_t &parameter_map, value_t &time)
 {
   parameter_idx_map.clear();
   affine_t::maxnum() = 0;
@@ -123,34 +123,64 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     HYDLA_LOGGER_DEBUG_VAR(var);
     HYDLA_LOGGER_DEBUG_VAR(range);
     node_sptr expr = range.get_unique_value().get_node();
-    AffineOrInteger val = visitor.approximate(expr);
+    AffineMixedValue val = visitor.approximate(expr);
 
-    if(val.is_integer)
+    if(val.type == INTEGER)
     {
       variable_map[var] = value_t(val.integer);
+    }
+    else if(val.type == INTERVAL)
+    {
+      affine_map[var] = val.interval;
     }
     else
     {
       affine_map[var] = val.affine_value;
     }
   }
+
+  
+
+
+  bool time_is_affine = false;
+  // approximate time
+  node_sptr time_expr = time.get_node();
+  HYDLA_LOGGER_DEBUG_VAR(time_expr);
+  AffineMixedValue time_val = visitor.approximate(time_expr);
+  if(time_val.type != INTEGER)
+  {
+    time_is_affine = true;
+  }
+
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
-  kv::ub::vector<affine_t> formulas(affine_map.size());
+  kv::ub::vector<affine_t> formulas(affine_map.size() + (time_is_affine?1:0));
   int i = 0;
+  if(time_is_affine)
+  {
+    formulas[0] = time_val.type == INTERVAL?affine_t(time_val.interval):time_val.affine_value;
+    i = 1;
+  }
+  
+
+  std::map<variable_t, int> var_index_map;
+  
   for(auto element: affine_map)
   {
     formulas(i) = element.second;
-    HYDLA_LOGGER_DEBUG_VAR(element.first);
-    HYDLA_LOGGER_DEBUG_VAR(formulas(i).a(0));
-    HYDLA_LOGGER_DEBUG_VAR(formulas(i));
+    var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size());
+  reduce_dummy_variables(formulas, formulas.size() * 2);
+
+  if(time_is_affine)
+  {
+    time = translate_into_symbolic_value(formulas(0), parameter_map);
+  }
 
   for(auto element: affine_map)
   {
     simulator::variable_t var = element.first;
-    affine_t affine = element.second;
+    affine_t affine = formulas[var_index_map[var] ];
     HYDLA_LOGGER_DEBUG_VAR(var);
     value_t result_value = translate_into_symbolic_value(affine, parameter_map);
     variable_map[var] = result_value;
@@ -158,12 +188,6 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
 
   return;
 }
-
-// void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
-// {
-//   node_sptr node = time.get_node();
-//   time = approximate(node, parameter_map, prev_map);
-// }
 
 
 }
