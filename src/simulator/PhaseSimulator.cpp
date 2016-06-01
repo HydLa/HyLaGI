@@ -1363,6 +1363,13 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
 }
     
 
+void PhaseSimulator::remove_redundant_parameters(phase_result_sptr_t phase)
+{
+  ConstraintStore par_cons = phase->get_parameter_constraint();
+  backend_->call("removeRedundantParameters", true, 2, "mvncsn", "cs", &phase->variable_map, &par_cons, &par_cons);
+  phase->set_parameter_constraint(par_cons);
+}
+
 
 void
 PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
@@ -1394,7 +1401,8 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     check_break_points(phase, phase->variable_map);
     if(!aborting)
     {
-      next_todo->set_parameter_constraint(phase->get_parameter_constraint());
+      remove_redundant_parameters(phase);
+next_todo->set_parameter_constraint(phase->get_parameter_constraint());
       next_todo->id = ++phase_sum_;
       next_todo->phase_type = INTERVAL_PHASE;
       next_todo->parent = phase.get();

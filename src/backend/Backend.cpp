@@ -123,6 +123,16 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
+
+  case 'l':
+  {
+    if(args_fmt[++i] != 'p')invalid_fmt(args_fmt, i);
+    std::list<parameter_t>* par_list = (std::list<parameter_t> *)arg;
+    send_parameter_list(*par_list);
+  }
+  break;
+
+    
   case 'm':
     switch(args_fmt[++i])
     {
@@ -529,6 +539,17 @@ int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf,
   }
   return 0;
 }
+
+
+void Backend::send_parameter_list(const list<parameter_t>& par_list)
+{
+  link_->put_function("List", par_list.size());
+  for(auto par : par_list)
+  {
+    link_->put_parameter(par_prefix + par.get_name(), par.get_differential_count(), par.get_phase_id());    
+  }
+}
+
 
 int Backend::send_parameter_map(const parameter_map_t& parameter_map)
 {

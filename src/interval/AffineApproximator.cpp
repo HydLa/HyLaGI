@@ -168,7 +168,7 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size());
+  reduce_dummy_variables(formulas, formulas.size() * 2);
 
   if(time_is_affine)
   {

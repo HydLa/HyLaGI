@@ -84,6 +84,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *    cc: check_consistency_result_t (receive only)
    *    cv: create_vm_t (receive only)
    *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, derivatives are not sent. Characters after them are the same as 'e')
+   *    lp: std::list<parameter_t> : send only
    *    mp: parameter_map_t : send only
    *    mps: std::vector<parameter_map_t> : receive only
    *    r: MidpointRadius: midpoint_radius form (receive only)
@@ -121,6 +122,8 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
 
   int send_variable_map(const variable_map_t& vm, const VariableForm &form, const bool &send_derivative);
   int send_parameter_map(const parameter_map_t& pm);
+
+  void send_parameter_list(const std::list<parameter_t>& par_list);
 
   void send_value(const simulator::value_t& val, const VariableForm &vf);
   void send_time_list(const std::vector<simulator::TimeListElement> &list);

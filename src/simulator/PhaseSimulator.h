@@ -124,6 +124,8 @@ private:
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
 
+  void remove_redundant_parameters(phase_result_sptr_t phase);
+
   void approximate_phase(phase_result_sptr_t &phase, variable_map_t &vm_to_approximate);
 
   void check_break_points(phase_result_sptr_t &phase, variable_map_t &vm);

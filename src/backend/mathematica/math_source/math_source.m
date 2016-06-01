@@ -1015,3 +1015,16 @@ publicMethod[
   (* TODO: implement *)
   toReturnForm[{False}]
 ]
+
+
+publicMethod[
+  removeRedundantParameters,
+  vm, pm,
+  Module[
+    {parsInVM, parsInPM, redundantPars},
+    parsInVM = getParameters[vm];
+    parsInPM = getParameters[pm];
+    redundantPars = Complement[parsInPM, parsInVM];
+    simplePrint[redundantPars];    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
+  ]
+];

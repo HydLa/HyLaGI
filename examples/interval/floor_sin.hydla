@@ -3,7 +3,7 @@
 // Author: Tsutomu WADA
 // The shape of the floor is a sin wave.
 
-INIT <=> x = 0 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
+INIT <=> x = 0 /\ x' = 0 /\ 9.999999 < y < 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
 FALL <=> [](cont = 1 => y'' = -10).
 CONSTX <=> [](cont = 1 => x'' = 0).
 /**
