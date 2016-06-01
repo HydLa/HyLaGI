@@ -39,23 +39,24 @@ void AffineApproximator::set_simulator(Simulator* s)
 void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
-  if(!index_map.empty())
+  for(auto pair : index_map)
   {
-    parameter_idx_map.clear();
-    for(auto pair : index_map)
+    HYDLA_LOGGER_DEBUG_VAR(pair.first);
+    HYDLA_LOGGER_DEBUG_VAR(pair.second);
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.second);
+    if(r_it == parameter_idx_map.right.end())
     {
-      HYDLA_LOGGER_DEBUG_VAR(pair.first);
-      HYDLA_LOGGER_DEBUG_VAR(pair.second);
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.first);
-      if(r_it == parameter_idx_map.right.end())continue;
-      if(pair.second == -1)
-      {
-        parameter_idx_map.right.erase(r_it);
-      }
-      else
-      {
-        parameter_idx_map.right.replace_key(r_it, pair.second);
-      }
+      HYDLA_LOGGER_DEBUG("Not Found");
+      continue;
+    }
+
+    if(pair.second == -1)
+    {
+      parameter_idx_map.right.erase(r_it);
+    }
+    else
+    {
+      parameter_idx_map.right.replace_key(r_it, pair.first);
     }
   }
 }
@@ -71,8 +72,8 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
-    if(parameter_idx_map.right.find(i)
-       == parameter_idx_map.right.end())
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
+    if(r_it == parameter_idx_map.right.end())
     {
       // 新規に追加されるダミー変数は1つにまとめる（この時点では他の変数と関係を持っていないため）
       // TODO: kvライブラリ内のダミー変数も削除する？結果に誤りは生まれないはずだが、インデックスが無駄に増える。
@@ -81,7 +82,6 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
     }
     else
     {
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
       // convert floating point into rational
       value_t val = value_t(affine_value.a(i));
       simulator->backend->call("transformToRational", true, 1, "vln", "vl", &val, &val);
@@ -139,8 +139,6 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     }
   }
 
-  
-
 
   bool time_is_affine = false;
   // approximate time
@@ -170,7 +168,7 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size() * 2);
+  reduce_dummy_variables(formulas, formulas.size());
 
   if(time_is_affine)
   {
