@@ -55,7 +55,7 @@ Module[
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs];
   (* On the case when the variables are underconstrained *)
-  If[isVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
+  If[hasVariable[lhs], Return[True] ];
 
   trueCond = False;
 
