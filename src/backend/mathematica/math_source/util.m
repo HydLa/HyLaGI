@@ -9,7 +9,7 @@ publicMethod[
     {appliedExpr},
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[timeConstrainedFullSimplify[appliedExpr]],
+      toReturnForm[Simplify[appliedExpr]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -25,7 +25,7 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[timeConstrainedFullSimplify[expr /. t -> t - time]]
+  toReturnForm[expr /. t -> t - time]
  (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
