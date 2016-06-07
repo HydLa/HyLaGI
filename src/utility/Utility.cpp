@@ -49,14 +49,6 @@ bool num_denom_str(string val_str,
   }
 }
 
-string to_string(int n)
-{
-  stringstream sstr;
-  sstr << n;
-  return sstr.str();
-}
-
-
 string replace(string original, const string &substr, const string &dest )
 {
   string::size_type  pos( original.find( substr ) );
@@ -105,6 +97,27 @@ string cr_to_lf(std::string str)
     pos = str.find( "\r", pos + 1);
   }
   return str;
+}
+
+string extract_file_name(const string &path)
+{
+  string fn;
+  string::size_type fpos;
+  if((fpos = path.find_last_of("/")) != string::npos){
+    fn = path.substr(fpos+1);
+  }
+  else if((fpos = path.find_last_of("\\")) != string::npos){
+    fn = path.substr(fpos+1);
+  }
+  else{
+    fn = path;
+  }
+
+  if((fpos = fn.find_last_of(".")) != string::npos){
+    fn = fn.substr(0, fpos);
+  }
+
+  return fn;
 }
 
 }

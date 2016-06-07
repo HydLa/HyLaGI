@@ -50,6 +50,7 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
 extern Opts opts;
+extern string input_file_name;
 
 /**
  * エントリポイント
@@ -80,14 +81,16 @@ int hydla_main(int argc, char* argv[])
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   string input;
   if(cmdline_options.count("input-file")) {
-    string filename(cmdline_options.get<string>("input-file"));
-    ifstream in(filename.c_str());
+    input_file_name = cmdline_options.get<string>("input-file");
+    ifstream in(input_file_name.c_str());
     if (!in) {
-      throw runtime_error(string("cannot open \"") + filename + "\"");
+      throw runtime_error(string("cannot open \"") + input_file_name + "\"");
     }
     input = string(std::istreambuf_iterator<char>(in), 
                    std::istreambuf_iterator<char>());
+    input_file_name = utility::extract_file_name(input_file_name);
   } else {
+    input_file_name = "unknown";
     input = string(std::istreambuf_iterator<char>(cin), 
                    std::istreambuf_iterator<char>());
   }
@@ -158,11 +161,10 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  if(cmdline_options.get<string>("tm") != "n" || cmdline_options.get<string>("tm") != "n"){
-    std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
-    std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
-    cout << endl;
-  }
+  std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
+  std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
+  cout << endl;
+  
   return simulation_result;
 }
 
@@ -175,6 +177,11 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 
   if(po.count("dump_parse_tree")>0) {
     pt->to_graphviz(cout);
+    return true;
+  }
+
+  if(po.count("dump_parse_tree_json")>0) {
+    pt->dump_in_json(cout);
     return true;
   }
 
@@ -207,7 +214,6 @@ bool dump_in_advance(ProgramOptions& po)
     cout << Version::description() << endl;
     return true;
   }
-    
 
   return false;
 }

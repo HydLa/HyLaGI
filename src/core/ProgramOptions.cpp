@@ -38,6 +38,7 @@ void ProgramOptions::init_descriptions()
 
     ("parse_only", "only try to parse given program")
     ("dump_parse_tree", "only output parse tree")
+    ("dump_parse_tree_json", "only output parse tree in JSON format")
 
     ("dump_module_set_graph", "only output candidate sets of module sets\n"
      "  in graph representation")
@@ -129,6 +130,7 @@ void ProgramOptions::init_descriptions()
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
+    ("use_shorthand", value<char>()->default_value('n'), "use shorthands for arithmetic expressions (only for parameters)\n")
     ("vars_to_approximate",
      value<std::string>()->default_value(""),
      "variables to approximate (delimited by \",\")")

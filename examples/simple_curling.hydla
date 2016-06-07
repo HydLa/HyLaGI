@@ -5,7 +5,14 @@ CONST <=> [](border' = 0 & sweep' = 0).
 FRICTION <=> []((y' > 0 => y'' = -1/10) & (y' <= 0 => y'' = 0)).
 SWEEPING <=> [](y < 9 & 0 < y' < border => y'' = sweep). 
 
+BOTH_INTERVAL(lb, ub, ls, us)
+{
+  INIT & CONST & lb < border < ub & ls < sweep < us,
+  FRICTION << SWEEPING
+}.
 
+
+/*
 SWEEP_INTERVAL(b, l, u)
 {
   INIT & CONST & border = b & l < sweep  < u, FRICTION <<  SWEEPING
@@ -16,12 +23,7 @@ BORDER_INTERVAL(l, u, s)
   INIT & CONST & l < border < u & sweep = s,
   FRICTION << SWEEPING
 }.
-
-BOTH_INTERVAL(lb, ub, ls, us)
-{
-  INIT & CONST & lb < border < ub & ls < sweep < us,
-  FRICTION << SWEEPING
-}.
+*/
 
 // SWEEP_INTERVAL(1, -1/10, -1/100).
 // BORDER_INTERVAL(0, 1, -1/40).

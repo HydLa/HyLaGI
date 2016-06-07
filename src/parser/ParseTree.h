@@ -108,6 +108,11 @@ public:
   std::ostream& to_graphviz(std::ostream& s) const;
 
   /**
+   * 構文木を JSON 形式で出力する
+   */
+  std::ostream& dump_in_json(std::ostream& s) const;
+
+  /**
    * ノードツリーに対してビジターを適用する
    */
   void dispatch(symbolic_expression::TreeVisitor* visitor)
