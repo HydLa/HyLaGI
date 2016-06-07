@@ -3,6 +3,7 @@ $CharacterEncoding="UTF-8";
 optUseDebugPrint = True;
 timeOutS = Infinity;
 optIgnoreWarnings = True;
+optTimeConstraint = 1;
 SetOptions[$Output, PageWidth->Infinity];
 <<"./load_first/common.m";
 <<"./math_source.m";

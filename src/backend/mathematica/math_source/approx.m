@@ -33,12 +33,12 @@ publicMethod[
 (* create rules to replace parameters with intervals of their ranges *)
 createIntervalRules[parameterCondition_] := 
 Module[
-  {intervalExpr, lbs, ubs, parameters, i, condition, parameter, rules = {} },
-  simplePrint[parameterCondition];
-  parameters = Union[Map[(#[[1]])&, parameterCondition] ];
-  simplePrint[parameters];
-  For[i = 1, i <= Length[parameterCondition], i++,
-    condition = parameterCondition[[i]];
+  {lbs, ubs, parameters, i, condition, parameter, rules = {}, adjustedCond},
+  If[parameterCondition === True || prameterCondition === False, Return[{}]];
+  parameters = getParameters[parameterCondition];
+  adjustedCond = adjustExprs[LogicalExpand[parameterCondition], isParameter];
+  For[i = 1, i <= Length[adjustedCond], i++,
+    condition = adjustedCond[[i]];
     parameter = condition[[1]];
     If[Head[condition] === Less || Head[condition] === LessEqual, ubs[parameter] = condition[[2]] ];
     If[Head[condition] === Greater || Head[condition] === GreaterEqual, lbs[parameter] = condition[[2]] ];
@@ -68,4 +68,75 @@ publicMethod[
   numerize,
   expr,
   toReturnForm[N[expr]]
+];
+
+mid[itv_Interval] := (itv[[1, 1]] + itv[[1, 2]])/2;
+wid[itv_Interval] := (itv[[1, 2]] - itv[[1, 1]]);
+inf[itv_Interval] := itv[[1,1]];
+sup[itv_Interval] := itv[[1,2]];
+
+
+Linearize[f_, pm_, tMin_, tMax_] :=
+Module[
+  {dtf, dxf, pRules, pars, result, midRules, tMid = (tMin + tMax)/2, i, additionalCons, itv, itvPar, resItv},
+  pRules = Append[createIntervalRules[pm], t -> Interval[{tMin, tMax}] ];
+  pars = Append[getParameters[pm], t];
+  simplePrint[pRules, pars];
+  midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
+  simplePrint[midRules];
+  itv = toRational[N[Interval[f /. midRules] ] ];
+  result = midT;
+  additionalCons = pm && tMin <= t <= tMax && itv[[1, 1]] <= midT <= itv[[1, 2]];
+  pRules = Append[pRules, midT -> Interval[{itv[[1, 1]], itv[[1, 2]]}] ];
+  simplePrint[result];
+  For[i = 1, i <= Length[pars], i++,
+    itvPar = If[pars[[i]] === t, itvPt, itvP[pars[[i]][[1]], pars[[i]][[2]], pars[[i]][[3]] ] ];
+    itv = toRational[N[D[f, pars[[i]] ] /. pRules] ];
+    additionalCons = additionalCons && (itv[[1, 1]] <= itvPar <= itv[[1, 2]]);
+    pRules = Append[pRules, itvPar -> Interval[{itv[[1, 1]], itv[[1, 2]]}]];
+    result = result + itvPar * (pars[[i]] - (pars[[i]] /. midRules));
+    simplePrint[result];
+    resItv = N[result /. pRules];
+    simplePrint[resItv];
+    simplePrint[wid[resItv] ];
+  ];
+  {result, additionalCons, pRules}
+];
+
+
+calculateTLinear[f_, pm_, tMin_Real, tMax_Real] := calculateTLinear[f, pm, toRational[tMin], toRational[tMax]];
+
+publicMethod[
+  calculateTLinear,
+  f, pm, tMin, tMax,
+  Module[
+    {pRules, pars, result = 0, midRules, tMid = (tMin + tMax)/2, i, itv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par, remMid, remWid, remItv},
+    pRules = Append[createIntervalRules[pm], t -> Interval[{tMin, tMax}]];
+    pars = getParameters[pm];
+    simplePrint[pRules, pars];
+    midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
+    simplePrint[midRules];
+    frt = D[f, t ] /. pRules;
+    simplePrint[frt];
+    For[i = 1, i <= Length[pars], i++,
+      par = pars[[i]];
+      itv = toRational[N[D[f, pars[[i]] ] / frt /. pRules] ]; (* f∂xi/f∂t *)
+      simplePrint[N[itv] ];
+      iMid += itv * (par /. midRules); (* add f∂xi/f∂t * xim *)
+      iRem += wid[itv];
+      result += -mid[itv] * par;
+      simplePrint[result];
+    ];
+
+    iRem = iMid + iRem/2 * Interval[{-1, 1}];
+    remMid = toRational[N[Interval[mid[iRem] ] ] ];
+    remItv = N[iRem - remMid];
+    simplePrint[remItv];
+    remWid = toRational[Max[Abs[inf[remItv]], Abs[sup[remItv] ] ] ];
+    remMid = mid[remMid];
+    simplePrint[remMid, remWid];
+    simplePrint[N[result + iRem /. pRules]];
+
+    {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
+  ]
 ];

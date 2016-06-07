@@ -32,6 +32,7 @@ struct Opts {
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
+  bool mean_value;
   int approximation_step;
   bool fullsimplify;
   symbolic_expression::node_sptr assertion;

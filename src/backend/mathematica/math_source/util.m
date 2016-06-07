@@ -7,7 +7,6 @@ publicMethod[
   expr, time,
   Module[
     {appliedExpr},
-
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
       toReturnForm[timeConstrainedFullSimplify[appliedExpr]],

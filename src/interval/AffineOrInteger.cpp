@@ -3,6 +3,9 @@
 namespace hydla{
 namespace interval{
 
+AffineOrInteger::AffineOrInteger(){}
+AffineOrInteger::AffineOrInteger(int i):integer(i), is_integer(true){}
+
 std::ostream& operator<<(std::ostream &ost, const AffineOrInteger &val)
 {
   if(val.is_integer)

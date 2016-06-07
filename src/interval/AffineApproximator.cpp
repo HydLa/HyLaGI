@@ -7,6 +7,8 @@
 #include "ValueModifier.h"
 #include "VariableFinder.h"
 #include "Variable.h"
+#include "HydLaError.h"
+
 
 using namespace std;
 using namespace boost;
@@ -36,33 +38,33 @@ void AffineApproximator::set_simulator(Simulator* s)
 
 void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
-  assert(0);
-/*
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
-  if(!index_map.empty())
+  for(auto pair : index_map)
   {
-    parameter_idx_map.clear();
-    for(auto pair : index_map)
+    HYDLA_LOGGER_DEBUG_VAR(pair.first);
+    HYDLA_LOGGER_DEBUG_VAR(pair.second);
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.second);
+    if(r_it == parameter_idx_map.right.end())
     {
-      HYDLA_LOGGER_DEBUG_VAR(pair.first);
-      HYDLA_LOGGER_DEBUG_VAR(pair.second);
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.first);
-      if(r_it == parameter_idx_map.right.end())continue;
-      if(pair.second == -1)
-      {
-        parameter_idx_map.right.erase(r_it);
-      }
-      else
-      {
-        parameter_idx_map.right.replace_key(r_it, pair.second);
-      }
+      HYDLA_LOGGER_DEBUG("Not Found");
+      continue;
+    }
+
+    if(pair.second == -1)
+    {
+      parameter_idx_map.right.erase(r_it);
+    }
+    else
+    {
+      parameter_idx_map.right.replace_key(r_it, pair.first);
     }
   }
-*/
 }
 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)
 {
+  // set rounding mode
+  kv::hwround::roundup();
   value_t ret(affine_value.a(0));
   simulator->backend->call("transformToRational", true, 1, "vln", "vl", &ret, &ret);
   double sum = 0;
@@ -70,8 +72,8 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   for(int i = 1; i < affine_value.a.size(); i++)
   {
     if(affine_value.a(i) == 0)continue;
-    if(parameter_idx_map.right.find(i)
-       == parameter_idx_map.right.end())
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
+    if(r_it == parameter_idx_map.right.end())
     {
       // 新規に追加されるダミー変数は1つにまとめる（この時点では他の変数と関係を持っていないため）
       // TODO: kvライブラリ内のダミー変数も削除する？結果に誤りは生まれないはずだが、インデックスが無駄に増える。
@@ -80,7 +82,6 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
     }
     else
     {
-      parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
       // convert floating point into rational
       value_t val = value_t(affine_value.a(i));
       simulator->backend->call("transformToRational", true, 1, "vln", "vl", &val, &val);
@@ -109,33 +110,81 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-value_t AffineApproximator::approximate(node_sptr& node, parameter_map_t &parameter_map, variable_map_t &variable_map)
+void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate,  variable_map_t &variable_map, parameter_map_t &parameter_map, value_t &time)
 {
+  parameter_idx_map.clear();
+  affine_t::maxnum() = 0;
   AffineTreeVisitor visitor(parameter_idx_map, variable_map);
-  AffineOrInteger val = visitor.approximate(node);
-  if(val.is_integer)return value_t(val.integer);
+  std::map<simulator::variable_t, affine_t> affine_map;
+  for(auto var: vars_to_approximate)
+  {
+    simulator::range_t range = variable_map[var];
+    HYDLA_ASSERT(range.unique());
+    HYDLA_LOGGER_DEBUG_VAR(var);
+    HYDLA_LOGGER_DEBUG_VAR(range);
+    node_sptr expr = range.get_unique_value().get_node();
+    AffineMixedValue val = visitor.approximate(expr);
 
-  affine_t affine_value = val.affine_value;
+    if(val.type == INTEGER)
+    {
+      variable_map[var] = value_t(val.integer);
+    }
+    else if(val.type == INTERVAL)
+    {
+      affine_map[var] = val.interval;
+    }
+    else
+    {
+      affine_map[var] = val.affine_value;
+    }
+  }
+
+
+  bool time_is_affine = false;
+  // approximate time
+  node_sptr time_expr = time.get_node();
+  HYDLA_LOGGER_DEBUG_VAR(time_expr);
+  AffineMixedValue time_val = visitor.approximate(time_expr);
+  if(time_val.type != INTEGER)
+  {
+    time_is_affine = true;
+  }
+
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
-/*
-  ub::vector<affine_t> formulas(1);
-  formulas(0) = affine_value;
-  reduce_dummy_variables(formulas, 1);
-  affine_value = formulas(0);  
-  HYDLA_LOGGER_DEBUG_VAR(affine_t::maxnum());
-  HYDLA_LOGGER_DEBUG_VAR(affine_value);
-*/
-  // set rounding mode
-  kv::hwround::roundup();
+  kv::ub::vector<affine_t> formulas(affine_map.size() + (time_is_affine?1:0));
+  int i = 0;
+  if(time_is_affine)
+  {
+    formulas[0] = time_val.type == INTERVAL?affine_t(time_val.interval):time_val.affine_value;
+    i = 1;
+  }
+  
 
-  value_t result_value = translate_into_symbolic_value(affine_value, parameter_map);  
-  return result_value;
-}
+  std::map<variable_t, int> var_index_map;
+  
+  for(auto element: affine_map)
+  {
+    formulas(i) = element.second;
+    var_index_map[element.first] = i;
+    ++i;
+  }
+  reduce_dummy_variables(formulas, formulas.size() * 2);
 
-void AffineApproximator::approximate_time(value_t& time, const variable_map_t& ip_map, variable_map_t& prev_map, parameter_map_t &parameter_map, node_sptr condition)
-{
-  node_sptr node = time.get_node();
-  time = approximate(node, parameter_map, prev_map);
+  if(time_is_affine)
+  {
+    time = translate_into_symbolic_value(formulas(0), parameter_map);
+  }
+
+  for(auto element: affine_map)
+  {
+    simulator::variable_t var = element.first;
+    affine_t affine = formulas[var_index_map[var] ];
+    HYDLA_LOGGER_DEBUG_VAR(var);
+    value_t result_value = translate_into_symbolic_value(affine, parameter_map);
+    variable_map[var] = result_value;
+  }
+
+  return;
 }
 
 

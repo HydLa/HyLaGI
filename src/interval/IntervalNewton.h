@@ -31,8 +31,8 @@ itvd intersect_interval(itvd x, itvd y);
 
 bool show_existence(itvd x, node_sptr exp, node_sptr dexp);
 
-itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool use_affine = false);
-itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool use_affine = false);
+itvd calculate_interval_newton(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool discard_itv_0);
+itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, bool discard_itv_0);
 
 std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_);
 

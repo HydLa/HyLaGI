@@ -113,18 +113,18 @@ private:
 
   kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard,  parameter_map_t &pm);
   
-  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm, bool additional_constraint);
+  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm);
 
   kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
 
-  value_t evaluate_affine(const phase_result_sptr_t phase, value_t val);
-
-  StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm, bool lower);
+  StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
 
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
+
+  void remove_redundant_parameters(phase_result_sptr_t phase);
 
   void approximate_phase(phase_result_sptr_t &phase, variable_map_t &vm_to_approximate);
 
@@ -143,6 +143,7 @@ private:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
+  variable_set_t vars_to_approximate;
   std::set<std::string> variable_names;
 
   module_set_container_sptr msc_no_init_;
