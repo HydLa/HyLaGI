@@ -36,6 +36,12 @@ void AffineApproximator::set_simulator(Simulator* s)
   simulator = s;
 }
 
+void AffineApproximator::set_dummy_num_per_variable(int num)
+{
+  dummy_num_per_variable = num;
+}
+
+
 void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
 {
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
@@ -168,7 +174,7 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size() * 2);
+  reduce_dummy_variables(formulas, formulas.size() * dummy_num_per_variable);
 
   if(time_is_affine)
   {

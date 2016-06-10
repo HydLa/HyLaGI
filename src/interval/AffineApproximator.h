@@ -25,6 +25,7 @@ class AffineApproximator{
   
   void set_simulator(simulator::Simulator* simulator);
 
+  void set_dummy_num_per_variable(int num);
 
   /**
    * Approximate given variable in given variable map conserving given condition
@@ -56,11 +57,13 @@ private:
   void invalid_node(symbolic_expression::Node& node);
 
   simulator::Simulator* simulator;
+  int dummy_num_per_variable = 1;
 
   static interval::AffineApproximator* affine_translator;
 
 
   parameter_idx_map_t parameter_idx_map;
+
   int epsilon_index;
 };
 

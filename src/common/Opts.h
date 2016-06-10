@@ -34,6 +34,7 @@ struct Opts {
   bool ignore_warnings;
   bool mean_value;
   int approximation_step;
+  int dummy_per_variable;
   bool fullsimplify;
   symbolic_expression::node_sptr assertion;
   int max_phase;
