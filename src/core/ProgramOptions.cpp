@@ -131,6 +131,7 @@ void ProgramOptions::init_descriptions()
     ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
 
     ("approximation_step", value<int>()->default_value(0), "the interval of step to approximate value of variable")
+    ("dummy_per_variable", value<int>()->default_value(1), "the number of dummy parameters per variables in affine arithmetic")
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
