@@ -68,7 +68,7 @@ Module[
   lhs = checkAndIgnore[(cond[[1]] - cond[[2]] ) /. t -> 0 /. initRules, Infinity, {Power::infy, Infinity::indet}];
   simplePrint[lhs];
   (* On the case when the variables are underconstrained *)
-  If[isVariable[lhs], Return[If[MemberQ[{Unequal, Greater, Less}, operator], False, True] ] ];
+  If[hasVariable[lhs], Return[True] ];
 
   trueCond = False;
 
@@ -110,7 +110,7 @@ publicMethod[
           If[(initCons /. (tRules /. t -> 0)) === False, 
             {{False}, {LogicalExpand[pCons]}},
             tCons = sol[[2]] /. tRules;
-            initRules = makeRulesForVariable[initCons];
+            initRules = makeRulesForVariable[initCons] /. prevRs;
             simplePrint[tCons];
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
@@ -636,30 +636,33 @@ publicMethod[
       otherPCons = True,
       necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
       otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
-      necessaryPCons = Reduce[necessaryPCons, Reals]
+      necessaryPCons = Reduce[necessaryPCons, Reals];
     ];
     If[andCond === False,
       {{False}, {False}, {False}},
-      (* First, compare 2 expressions using interval arithmetic *)      
+      (* First, compare 2 expressions using interval arithmetic *)
       pRules = createIntervalRules[andCond];
-      interval = (time1 - time2) /. pRules;
-      intervalLess = interval < 0;
-      If[intervalLess === True,
-        {{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}},
-        intervalGreater = interval > 0;
-        If[intervalGreater === True,
-          {{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}},
-          (* If it isn't determined, use Reduce *)
-          caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
-          simplePrint[caseEq];
-          caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
-          simplePrint[caseLe];
-          caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
-          simplePrint[caseGr];
-          caseEq = caseEq && otherPCons;
-          caseLe = caseLe && otherPCons;
-          caseGr = caseGr && otherPCons;
-          {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
+      If[time1 === Infinity,
+        {{False}, {andCond}, {False}},
+        interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
+        intervalLess = interval < 0;
+        If[intervalLess === True,
+          {{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}},
+          intervalGreater = interval > 0;
+          If[intervalGreater === True,
+            {{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}},
+            (* If it isn't determined, use Reduce *)
+            caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+            simplePrint[caseEq];
+            caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+            simplePrint[caseLe];
+            caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+            simplePrint[caseGr];
+            caseEq = caseEq && otherPCons;
+            caseLe = caseLe && otherPCons;
+            caseGr = caseGr && otherPCons;
+            {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
+          ]
         ]
       ]
     ]
