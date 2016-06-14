@@ -36,7 +36,7 @@ public:
   /**
    * Check whether the constraints related to diff_constraints are consistent or not.
    */
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, bool following_step);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, const asks_t &unknown_asks, bool following_step);
 
   /**
    * Get inconsistent module sets in the last check_consistency

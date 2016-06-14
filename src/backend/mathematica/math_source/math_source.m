@@ -1025,10 +1025,10 @@ publicMethod[
 
 publicMethod[
   removeRedundantParameters,
-  vm, pm,
+  start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    parsInVM = getParameters[vm];
+    parsInVM = Union[getParameters[start], getParameters[end], getParameters[vm] ];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 

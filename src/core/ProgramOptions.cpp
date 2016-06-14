@@ -49,7 +49,13 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("use_fullsimplify", "use FullSimplify")
+    ("simplify",
+     value<int>()->default_value(1),
+     "the level of simplification at each phase\n"
+     "  0 - no simplification\n"
+     "  1 - use \"Simplify\"\n"
+     "  2 or others - use \"FullSimplify\""
+      )
 
     ("tm",
      value<std::string>()->default_value("n"),
@@ -130,7 +136,7 @@ void ProgramOptions::init_descriptions()
     ("interval,i", value<char>()->default_value('n'), "use interval method")
     ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
 
-    ("approximation_step", value<int>()->default_value(0), "the interval of step to approximate value of variable")
+    ("approximation_step", value<int>()->default_value(1), "the interval of step to approximate value of variable")
     ("dummy_per_variable", value<int>()->default_value(1), "the number of dummy parameters per variables in affine arithmetic")
 
     ("dump_in_progress", value<char>()->default_value('n'),

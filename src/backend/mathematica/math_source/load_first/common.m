@@ -170,14 +170,13 @@ publicMethod[name_, args___, definition_] := (
 publicMethod[
   simplify,
   arg,
-  toReturnForm[Simplify[arg]]
+  Switch[optSimplifyLevel,
+    0, toReturnForm[arg],
+    1, toReturnForm[Simplify[arg]],
+    _, toReturnForm[FullSimplify[arg]]
+  ]
 ];
 
-publicMethod[
-  fullSimplify,
-  arg,
-  toReturnForm[FullSimplify[arg]]
-];
 
 toReturnForm[expr_] := 
 Module[
@@ -266,6 +265,11 @@ getReverseRelop[relop_] := Switch[relop,
 
 variablePrefix = "u";
 
-timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
-timeConstrainedFullSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+
+Switch[optSimplifyLevel,
+    0, timeConstrainedSimplify[expr_] := expr;
+    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
+    _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+];
+
 derivativePrefix = "d";

@@ -122,7 +122,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Powe
     else if(lhs.type == INTERVAL)current_val_ = 1/sqrt(lhs.interval);
     else current_val_ = 1/sqrt(lhs.affine_value);
   }
-  else if(rhs_str == "2" && lhs.type != AFFINE)
+  else if(rhs_str == "2" && lhs.type == AFFINE)
   {
     current_val_ = square(lhs.affine_value);
   }
@@ -206,7 +206,15 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
     else if(current_val_.type == INTERVAL)current_val_.interval = log(current_val_.interval);
     else current_val_.affine_value = log(current_val_.affine_value);
   }
-  if(name == "cos")
+  else if(name == "sin")
+  {
+    if(node->get_arguments_size() != 1)invalid_node(*node);
+    accept(node->get_argument(0) );
+    if(current_val_.type == INTEGER)current_val_.interval = sin(itvd(current_val_.integer));
+    if(current_val_.type == INTERVAL)current_val_.interval = sin(current_val_.interval);
+    else current_val_.affine_value = sin(current_val_.affine_value);
+  }
+  else if(name == "cos")
   {
     if(node->get_arguments_size() != 1)invalid_node(*node);
     accept(node->get_argument(0) );

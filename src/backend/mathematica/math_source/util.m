@@ -9,7 +9,7 @@ publicMethod[
     {appliedExpr},
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[Simplify[appliedExpr]],
+      toReturnForm[timeConstrainedSimplify[appliedExpr]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -25,7 +25,7 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[expr /. t -> t - time]
+  toReturnForm[timeConstrainedSimplify[expr /. t -> t - time] ]
  (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
@@ -70,7 +70,7 @@ publicMethod[
       InvalidRelop,
       lhs = exp[[1]];
       rhs = exp[[2]];
-      toReturnForm[timeConstrainedFullSimplify[lhs - rhs] ]
+      toReturnForm[timeConstrainedSimplify[lhs - rhs] ]
     ]
   ]
 ];
@@ -90,6 +90,6 @@ publicMethod[
 publicMethod[
   differentiateWithTime,
   exp,
-  toReturnForm[timeConstrainedFullSimplify[D[exp, t] ] ]
+  toReturnForm[timeConstrainedSimplify[D[exp, t] ] ]
 ];
 

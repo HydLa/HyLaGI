@@ -187,7 +187,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   {
     constraint_t cons = guard;
     backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
-    backend_->call("addAssumption", true, 1, "en", "", &cons);
+    backend_->call("addAssumption", true, 1, "ez", "", &cons);
   }
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
@@ -769,7 +769,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     {
       timer::Timer consistency_timer;
       CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, phase->in_following_step());
+      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, unknown_asks, phase->in_following_step());
       phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
       phase->profile["# of CheckConsistency"]++;
       if(!cc_result.consistent_store.consistent()){
@@ -1368,7 +1368,8 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
 void PhaseSimulator::remove_redundant_parameters(phase_result_sptr_t phase)
 {
   ConstraintStore par_cons = phase->get_parameter_constraint();
-  backend_->call("removeRedundantParameters", true, 2, "mvncsn", "cs", &phase->variable_map, &par_cons, &par_cons);
+  Value end_time = phase->end_time.undefined()?Value("0"):phase->end_time;
+  backend_->call("removeRedundantParameters", true, 4, "vltvltmvncsn", "cs", &phase->current_time, &end_time, &phase->variable_map, &par_cons, &par_cons);
   phase->set_parameter_constraint(par_cons);
 }
 
@@ -1563,11 +1564,7 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
           DCCandidate &candidate = *time_it;
           phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
-          if (opts_->fullsimplify) {
-            backend_->call("fullsimplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
-          } else {
-            backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
-          }
+          backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
           if(candidate.time.undefined() || candidate.time.infinite() )
           {
             phase->simulation_state = TIME_LIMIT;
@@ -1855,7 +1852,7 @@ itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRan
 {
   VariableReplacer v_replacer(phase->variable_map);
   v_replacer.replace_range(range);
-  range = value_modifier->apply_function(opts_->fullsimplify?"fullsimplify":"simplify", range);
+  range = value_modifier->apply_function("simplify", range);
   interval::IntervalTreeVisitor interval_visitor;
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
   assert(parameter_map_vector.size() <= 1);
