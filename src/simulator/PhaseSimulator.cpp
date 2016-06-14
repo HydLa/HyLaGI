@@ -187,7 +187,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   {
     constraint_t cons = guard;
     backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
-    backend_->call("addAssumption", true, 1, "ez", "", &cons);
+    backend_->call("addAssumption", true, 1, "ep", "", &cons);
   }
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
@@ -1618,7 +1618,6 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
 
                 HYDLA_ASSERT(f_result.size() == 1);
                 FindMinTimeCandidate candidate = f_result.front();
-                constraints_t guards_on_border;
                 if(candidate.guard_by_newton.get() != nullptr)
                 {
                   backend_->call("borderIsIncluded", true, 3, "vlnvlnvln", "b", &candidate.time, &candidate.range_by_newton.get_lower_bound().value, &candidate.range_by_newton.get_upper_bound().value, &included_by_newton_guard);
@@ -1631,7 +1630,7 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
                   backend_->call("onBorder", true, 2, "etvlt", "b", &guard.second, &candidate.time, &on_border);
                   if(on_border)
                   {
-                    if(included_by_newton_guard)throw HYDLA_ERROR("Both of 2 guards are on the border: " + get_infix_string(guard.first) +", " + get_infix_string(candidate.guard_by_newton));
+                    //if(included_by_newton_guard)throw HYDLA_ERROR("Both of 2 guards are on the border: " + get_infix_string(guard.first) +", " + get_infix_string(candidate.guard_by_newton));
                     next_todo->discrete_guards.insert(guard.first);
                   }
                 }

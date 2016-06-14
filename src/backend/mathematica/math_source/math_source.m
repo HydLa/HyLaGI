@@ -97,7 +97,7 @@ publicMethod[
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules},
       If[cons === True,
-        {{LogicalExpand[pCons]}, {False}},
+        toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
         sol = exDSolve[Simplify[cons], prevRs];
         simplePrint[sol];
@@ -108,7 +108,7 @@ publicMethod[
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           If[(initCons /. (tRules /. t -> 0)) === False, 
-            {{False}, {LogicalExpand[pCons]}},
+            toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[initCons] /. prevRs;
             simplePrint[tCons];
@@ -940,7 +940,7 @@ publicMethod[
       eq = Equal[borderExpr[[1]], borderExpr[[2]]];
       eq = borderExpr /. t -> time;
       simplePrint[eq];
-      Reduce[ForAll[pars, pCons, eq]] === True
+      Quiet[Reduce[ForAll[pars, pCons, eq]] === True]
     ]
   ]
 ];
