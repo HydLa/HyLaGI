@@ -110,32 +110,22 @@ publicMethod[
   calculateTLinear,
   f, pm, tMin, tMax,
   Module[
-    {pRules, pars, result = 0, midRules, tMid = (tMin + tMax)/2, i, itv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par, remMid, remWid, remItv},
+    {pRules, pars, result = 0, midRules, i, itv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par, remMid, remWid, remItv},
     pRules = Append[createIntervalRules[pm], t -> Interval[{tMin, tMax}]];
     pars = getParameters[pm];
-    simplePrint[pRules, pars];
     midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
-    simplePrint[midRules];
     frt = D[f, t ] /. pRules;
-    simplePrint[frt];
     For[i = 1, i <= Length[pars], i++,
       par = pars[[i]];
       itv = toRational[N[D[f, pars[[i]] ] / frt /. pRules] ]; (* f∂xi/f∂t *)
-      simplePrint[N[itv] ];
-      iMid += itv * (par /. midRules); (* add f∂xi/f∂t * xim *)
       iRem += wid[itv];
       result += -mid[itv] * par;
-      simplePrint[result];
     ];
-
-    iRem = iMid + iRem/2 * Interval[{-1, 1}];
+    iRem = iMid + iRem/2 * Interval[{-1, 1}] - (f /. midRules)/frt;
     remMid = toRational[N[Interval[mid[iRem] ] ] ];
     remItv = N[iRem - remMid];
-    simplePrint[remItv];
     remWid = toRational[Max[Abs[inf[remItv]], Abs[sup[remItv] ] ] ];
     remMid = mid[remMid];
-    simplePrint[remMid, remWid];
-    simplePrint[N[result + iRem /. pRules]];
 
     {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
   ]
