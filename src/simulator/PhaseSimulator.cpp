@@ -1702,8 +1702,6 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
       {
         if(vars_to_approximate.count(entry.first) == 0 )
           continue;
-
-
         assert(entry.second.unique());
         itvd interval = evaluate_interval(phase, entry.second);
         if(width(interval) > 0)
@@ -1712,9 +1710,25 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
           Parameter param(entry.first, *phase);
           add_parameter_constraint(phase, param, range);
           entry.second = param.as_value();
-          phase->profile[param.get_name() + "_" + to_string(param.get_differential_count())] = width(interval);
         }
       }
+      itvd interval = evaluate_interval(phase, phase->current_time);
+      if(width(interval) > 0)
+      {
+        ValueRange range = create_range_from_interval(interval);
+        Parameter param("t", -1, ++time_id);
+        add_parameter_constraint(phase, param, range);
+        phase->current_time = param.as_value();
+      }
+    }
+  }
+  if(opts_->interval)
+  {
+    for(auto &entry: vm_to_approximate)
+    {
+      auto var = entry.first;
+      itvd interval = evaluate_interval(phase, entry.second);
+      phase->profile["width(" + var.get_string() + ")"] = width(interval);
     }
   }
 }

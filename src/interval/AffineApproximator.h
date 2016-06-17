@@ -32,11 +32,6 @@ class AffineApproximator{
    */
   void approximate(const simulator::variable_set_t &vars_to_approximate, variable_map_t& variable_map,  parameter_map_t &parameter_map, value_t &time);
 
-  /**
-   * Approximate time
-   */
-  void approximate_time(value_t &time, const variable_map_t &ip_map, variable_map_t& prev_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
-
   virtual ~AffineApproximator();  
 
 private:

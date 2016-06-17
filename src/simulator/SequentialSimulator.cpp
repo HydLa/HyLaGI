@@ -27,7 +27,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
   {
     dfs(result_root_);
   }
-  catch(const std::runtime_error &se)
+  catch(const std::exception &se)
   {
     error_str += "error ";
     error_str += ": ";
