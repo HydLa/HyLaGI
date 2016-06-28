@@ -194,7 +194,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
   IF_SPECIFIED("mean_value")opts.mean_value = po.count("mean_value") > 0 && po.get<char>("mean_value") == 'y';;
   IF_SPECIFIED("approximation_step")opts.approximation_step = po.get<int>("approximation_step");
-  IF_SPECIFIED("dummy_per_variable")opts.dummy_per_variable = po.get<int>("dummy_per_variable");
+  IF_SPECIFIED("extra_dummy")opts.extra_dummy_num = po.get<int>("extra_dummy_num");
 
   IF_SPECIFIED("vars_to_approximate")
   {

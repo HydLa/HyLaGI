@@ -577,7 +577,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   root_information.negative_asks = relation_graph_->get_all_asks();
   result_root->set_full_information(root_information);
 
-  interval::AffineApproximator::get_instance()->set_dummy_num_per_variable(opts_->dummy_per_variable);
+  interval::AffineApproximator::get_instance()->set_extra_dummy_num(opts_->extra_dummy_num);
 
   max_time = opts_->max_time;
 

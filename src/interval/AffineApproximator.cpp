@@ -36,9 +36,9 @@ void AffineApproximator::set_simulator(Simulator* s)
   simulator = s;
 }
 
-void AffineApproximator::set_dummy_num_per_variable(int num)
+void AffineApproximator::set_extra_dummy_num(int num)
 {
-  dummy_num_per_variable = num;
+  extra_dummy_num = num;
 }
 
 
@@ -166,7 +166,7 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size() + dummy_num_per_variable);
+  reduce_dummy_variables(formulas, formulas.size() + extra_dummy_num);
 
   if(time_is_affine)
   {
