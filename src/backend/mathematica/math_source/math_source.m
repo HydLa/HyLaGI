@@ -8,18 +8,38 @@ checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions,
 );
 
 
+trySolve[cons_, vars_] :=
+  Module[
+    {i, eachCons, sol, solved = False, consToSimplify, equalities = True},
+    consToSimplify = cons;
+    If[Head[consToSimplify] === And,
+      For[i = 1, i <= Length[consToSimplify], i++,
+        eachCons = consToSimplify[[i]];
+        If[Head[eachCons] === Equal && isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
+          equalities = equalities && eachCons;
+          consToSimplify = Drop[consToSimplify, {i}];
+          consToSimplify = consToSimplify /. eachCons[[1]] -> eachCons[[2]];
+          i = 1;
+        ]
+      ]
+    ];
+    If[freeFromInequalities[consToSimplify],
+      sol = Quiet[Solve[consToSimplify, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
+      If[FreeQ[sol, ConditionalExpression], solved = True],
+      sol = consToSimplify
+    ];
+    {sol, equalities, solved}
+  ];
+
 publicMethod[
   checkConsistencyPoint,
   cons, pcons, assum, vars, pars, current,
   Module[
-    {cpTrue, cpFalse, simplifiedCons, sol, solved = False},
+    {cpTrue, cpFalse, simplifiedCons, sol, solved = False, eqs},
     simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ];
-    simplePrint[simplifiedCons];
-    If[freeFromInequalities[simplifiedCons],
-      sol = Quiet[Solve[simplifiedCons, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
-      If[FreeQ[sol, ConditionalExpression], solved = True];
-    ];
-    If[solved,
+    {sol, eqs, solved} = trySolve[simplifiedCons, vars];
+    simplePrint[solved];
+    If[solved === True,
       If[Length[sol] > 0, 
         cpTrue = pcons;
         cpFalse = False,
@@ -27,7 +47,7 @@ publicMethod[
         cpFalse = pcons
       ],
       Quiet[
-        cpTrue = Reduce[Exists[vars, (simplifiedCons /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+        cpTrue = Reduce[Exists[vars, (sol /. t -> current) && pcons], pars, Reals], {Reduce::useq}
       ];
       simplePrint[cpTrue];
       (* remove (Not)Element[] because it seems to be always true *)
@@ -150,10 +170,11 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {ret, map, currentCons, solved = False},
+    {ret, map, currentCons, solved, eqs},
     currentCons = Assuming[assum, timeConstrainedSimplify[cons]] /. t -> current;
     map = removeUnnecessaryConstraints[currentCons, hasVariable];
-    If[freeFromInequalities[map], map = Quiet[Solve[map, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}]; If[FreeQ[sol, ConditionalExpression], solved = True] ];
+
+    {map, eqs, solved} = trySolve[map, vars];
     If[solved && Length[map] == 1,
       map = And@@Map[(Equal@@#)&, map[[1]]],
       map = Reduce[map, vars, Reals];
@@ -163,8 +184,8 @@ publicMethod[
         map = Reduce[map, vars, Reals];
       ];
     ];
-    
 
+    map = map && eqs;
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True,
       {{}},
@@ -1029,8 +1050,10 @@ publicMethod[
   Module[
     {parsInVM, parsInPM, redundantPars},
     parsInVM = Union[getParameters[start], getParameters[end], getParameters[vm] ];
+    simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
-    simplePrint[redundantPars];    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
+    simplePrint[redundantPars];
+    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
   ]
 ];
