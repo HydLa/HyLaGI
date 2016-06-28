@@ -29,10 +29,11 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   public:
 
   AffineTreeVisitor(parameter_idx_map_t&, variable_map_t&);
+  AffineTreeVisitor(variable_map_t&);
 
   void set_current_time(itvd itv);
 
-  AffineMixedValue approximate(node_sptr &node);
+  AffineMixedValue approximate(const node_sptr &node);
   ///calculate x^y
   AffineMixedValue pow(AffineMixedValue x, AffineMixedValue y);
   affine_t pow(affine_t affine, int exp);
@@ -130,9 +131,10 @@ private:
   void invalid_node(symbolic_expression::Node& node);
 
   AffineMixedValue current_val_;
-  parameter_idx_map_t& parameter_idx_map_;
+  parameter_idx_map_t* parameter_idx_map_;
   variable_map_t& variable_map;
   int differential_count;
+  bool pm_external = false;
 };
 
 } //namespace interval

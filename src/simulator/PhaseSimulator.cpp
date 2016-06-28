@@ -142,7 +142,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 
 value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase, ValueRange range)
 {
-  itvd itv = evaluate_interval(phase, range);
+  itvd itv = evaluate_interval(phase, range, false);
   double mid_double = (itv.lower() + itv.upper())/2;
   value_t mid_val(mid_double);
   backend_->call("transformToRational", false, 1, "vln", "vl", &mid_val, &mid_val);
@@ -1405,7 +1405,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     if(!aborting)
     {
       remove_redundant_parameters(phase);
-next_todo->set_parameter_constraint(phase->get_parameter_constraint());
+      next_todo->set_parameter_constraint(phase->get_parameter_constraint());
       next_todo->id = ++phase_sum_;
       next_todo->phase_type = INTERVAL_PHASE;
       next_todo->parent = phase.get();
@@ -1509,7 +1509,7 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
         }
       }
       timer::Timer find_min_time_timer;
-      if(opts_->interval && !max_time.infinite())upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time).upper();
+      if(opts_->interval && !max_time.infinite())upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time, false).upper();
       for(auto ask : asks)
       {
         candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
@@ -1577,7 +1577,7 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
             if(opts_->interval) 
             {
               // verify the time of the next discrete change
-              if(evaluate_interval(phase, value_t(upper_bound_of_itv_newton) - candidate.time).lower() < 0)
+              if(evaluate_interval(phase, value_t(upper_bound_of_itv_newton) - candidate.time, false).lower() < 0)
               {
                 string asks_str = "";
                 for(auto discrete_ask : next_todo->discrete_asks)asks_str += get_infix_string(discrete_ask.first);
@@ -1647,6 +1647,7 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
+//            approximate_phase(next_todo, phase->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
           }
@@ -1675,6 +1676,10 @@ next_todo->set_parameter_constraint(phase->get_parameter_constraint());
 
 void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_t &vm_to_approximate)
 {
+  for(auto entry: vm_to_approximate)
+  {
+    if(!entry.second.unique())return;
+  }
   // approximation
   if(opts_->numerize_mode)
   {
@@ -1691,10 +1696,9 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
       interval::AffineApproximator* approximator = interval::AffineApproximator::get_instance();
       vector<parameter_map_t> parameter_maps = phase->get_parameter_maps();
       assert(parameter_maps.size() == 1);
-      HYDLA_LOGGER_DEBUG_VAR(phase->variable_map);
-      approximator->approximate(vars_to_approximate, phase->variable_map, parameter_maps[0], phase->current_time);
+      approximator->approximate(vars_to_approximate, vm_to_approximate, parameter_maps[0], phase->current_time);
       backend_->call("resetConstraintForParameter", false, 1, "mp", "", &parameter_maps[0]);
-      phase->set_parameter_constraint(get_current_parameter_constraint());      
+      phase->set_parameter_constraint(get_current_parameter_constraint());
     }
     else
     {
@@ -1703,7 +1707,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
         if(vars_to_approximate.count(entry.first) == 0 )
           continue;
         assert(entry.second.unique());
-        itvd interval = evaluate_interval(phase, entry.second);
+        itvd interval = evaluate_interval(phase, entry.second, false);
         if(width(interval) > 0)
         {
           ValueRange range = create_range_from_interval(interval);
@@ -1712,7 +1716,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
           entry.second = param.as_value();
         }
       }
-      itvd interval = evaluate_interval(phase, phase->current_time);
+      itvd interval = evaluate_interval(phase, phase->current_time, false);
       if(width(interval) > 0)
       {
         ValueRange range = create_range_from_interval(interval);
@@ -1727,7 +1731,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
     for(auto &entry: vm_to_approximate)
     {
       auto var = entry.first;
-      itvd interval = evaluate_interval(phase, entry.second);
+      itvd interval = evaluate_interval(phase, entry.second, false);
       phase->profile["width(" + var.get_string() + ")"] = width(interval);
     }
   }
@@ -1861,17 +1865,24 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time
   return result_intervals;
 }
 
-itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range)
+itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range, bool use_affine)
 {
   VariableReplacer v_replacer(phase->variable_map);
   v_replacer.replace_range(range);
   range = value_modifier->apply_function("simplify", range);
-  interval::IntervalTreeVisitor interval_visitor;
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
   assert(parameter_map_vector.size() <= 1);
   parameter_map_t pm = parameter_map_vector.size()==1?parameter_map_vector.front():parameter_map_t();
   HYDLA_ASSERT(range.unique());
-  return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
+  if(!use_affine)
+  {
+    interval::IntervalTreeVisitor interval_visitor;
+    return interval_visitor.get_interval_value(range.get_unique_value().get_node(), nullptr, &pm);
+  }else
+  {
+    interval::AffineTreeVisitor affine_visitor(phase->variable_map);
+    return affine_visitor.approximate(range.get_unique_value().get_node()).to_interval();
+  }
 }
 
 

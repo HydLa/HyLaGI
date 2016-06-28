@@ -115,7 +115,7 @@ private:
   
   std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm);
 
-  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
+  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range, bool use_affine);
 
   StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm);
 

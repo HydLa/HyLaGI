@@ -11,10 +11,12 @@ using namespace hydla::symbolic_expression;
 using namespace boost;
 
 #define HYDLA_LOGGER_NODE_VALUE \
-  HYDLA_LOGGER_DEBUG("node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node), ", current_val: ", current_val_)
+  ;
+//  HYDLA_LOGGER_DEBUG("node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node), ", current_val: ", current_val_)
 
 #define HYDLA_LOGGER_NODE_VISIT \
-  HYDLA_LOGGER_DEBUG("visit node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node))
+  ;
+//  HYDLA_LOGGER_DEBUG("visit node: ", node->get_node_type_name(), ", expr: ", get_infix_string(node))
 
 
 namespace hydla {
@@ -30,11 +32,21 @@ public:
     std::runtime_error("error occurred in approximation: " + msg){}
 };
 
-AffineTreeVisitor::AffineTreeVisitor(parameter_idx_map_t &map, variable_map_t &vm):parameter_idx_map_(map), variable_map(vm)
+AffineTreeVisitor::AffineTreeVisitor(parameter_idx_map_t &map, variable_map_t &vm):parameter_idx_map_(&map), variable_map(vm)
 {}
 
+AffineTreeVisitor::AffineTreeVisitor(variable_map_t &vm): variable_map(vm), pm_external(true)
+{
+  parameter_idx_map_ = new parameter_idx_map_t();
+  pm_external = true;
+}
+
+
+
 AffineTreeVisitor::~AffineTreeVisitor()
-{}
+{
+  if(pm_external)delete parameter_idx_map_;
+}
 
 void AffineTreeVisitor::set_current_time(itvd itv)
 {
@@ -42,13 +54,12 @@ void AffineTreeVisitor::set_current_time(itvd itv)
   current_time = itv;
 }
 
-AffineMixedValue AffineTreeVisitor::approximate(node_sptr &node)
+AffineMixedValue AffineTreeVisitor::approximate(const node_sptr &node)
 {
   differential_count = 0;
   accept(node);
   return current_val_;
 }
-
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
@@ -62,7 +73,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus
   return;
 }
 
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
@@ -74,7 +84,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subt
   HYDLA_LOGGER_NODE_VALUE;
   return;
 }
-
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
 {
@@ -88,7 +97,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Time
   return;
 }
 
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
@@ -101,7 +109,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divi
   return;
 }
 
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
@@ -109,7 +116,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Powe
   AffineMixedValue lhs = current_val_;  
   // TODO: 文字列以外で判定する
   std::string rhs_str = get_infix_string(node->get_rhs());
-  HYDLA_LOGGER_DEBUG_VAR(rhs_str);
   if(rhs_str == "1/2")
   {
     if(lhs.type == INTEGER)current_val_ = sqrt(itvd(lhs.integer));
@@ -144,7 +150,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nega
   return;
 }
 
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
@@ -163,7 +168,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> n
 {
   current_val_ = AffineMixedValue(e);
 }
-
 
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
 {
@@ -185,7 +189,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
   HYDLA_LOGGER_NODE_VALUE;
 }
 
-
 void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
@@ -197,7 +200,6 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
 {
   HYDLA_LOGGER_NODE_VISIT;
   std::string name = node->get_name();
-  HYDLA_LOGGER_DEBUG(name);
   if(name == "log")
   {
     if(node->get_arguments_size() != 1)invalid_node(*node);
@@ -236,12 +238,12 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Para
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
-  parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
+  parameter_idx_map_t::left_iterator it = parameter_idx_map_->left.find(param);
   int idx;
-  if(it == parameter_idx_map_.left.end())
+  if(it == parameter_idx_map_->left.end())
   {
     idx = ++affine_t::maxnum();
-    parameter_idx_map_.insert(
+    parameter_idx_map_->insert(
       parameter_idx_t(param, affine_t::maxnum()));
   }
   else
@@ -286,12 +288,12 @@ void AffineTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)
   parameter_t param("t",
                     -1,
                     time_idx);
-  parameter_idx_map_t::left_iterator it = parameter_idx_map_.left.find(param);
+  parameter_idx_map_t::left_iterator it = parameter_idx_map_->left.find(param);
   int idx;
-  if(it == parameter_idx_map_.left.end())
+  if(it == parameter_idx_map_->left.end())
   {
     idx = ++affine_t::maxnum();
-    parameter_idx_map_.insert(
+    parameter_idx_map_->insert(
       parameter_idx_t(param, affine_t::maxnum()));
   }
   else

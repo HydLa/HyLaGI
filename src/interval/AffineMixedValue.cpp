@@ -228,8 +228,6 @@ AffineMixedValue AffineMixedValue::operator/(const AffineMixedValue &rhs) const
 AffineMixedValue AffineMixedValue::operator^(const
   AffineMixedValue &rhs) const
 {
-  HYDLA_LOGGER_DEBUG_VAR(*this);
-  HYDLA_LOGGER_DEBUG_VAR(rhs);
   AffineMixedValue ret;
   kv::interval<double> itv = to_interval();
   double l = itv.lower(), u = itv.upper();
@@ -274,7 +272,6 @@ AffineMixedValue AffineMixedValue::operator^(const
       }
       else
       {
-        HYDLA_LOGGER_DEBUG("l: ", l, ", u: ", u);
         throw ApproximateException("noninteger power function for interval including zero");
       }
       break;
@@ -295,7 +292,6 @@ AffineMixedValue AffineMixedValue::operator^(const
       }
       else
       {
-        HYDLA_LOGGER_DEBUG("l: ", l, ", u: ", u);
         throw ApproximateException("noninteger power function for interval including zero");
       }
       break;

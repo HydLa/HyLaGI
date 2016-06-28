@@ -1766,10 +1766,9 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 #ifdef EP_REDUCE_REVERSE
   std::partial_sort(pa.begin(), pa.begin()+m-n+s, pa.end(), ep_reduce_cmp<T>);
-  result_map[pa[m-1-j]->index] = j+1; // @hylagi
+
 #else
   std::partial_sort(pa.begin(), pa.begin()+n-s, pa.end(), ep_reduce_cmp<T>);
-  result_map[pa[j]->index] = j+1; // @hylagi
 #endif
 
   r.resize(s);
@@ -1779,8 +1778,10 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
     for (j=0; j<n-s; j++) {
 #ifdef EP_REDUCE_REVERSE
       r(i).a(j+1) = pa[m-1-j]->v(i);
+      result_map[pa[m-1-j]->index] = j+1; // @hylagi
 #else
       r(i).a(j+1) = pa[j]->v(i);
+      result_map[pa[j]->index] = j+1; // @hylagi
 #endif
     }
     tmp = 0.;

@@ -47,9 +47,7 @@ void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formul
   std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
   for(auto pair : index_map)
   {
-    HYDLA_LOGGER_DEBUG_VAR(pair.first);
-    HYDLA_LOGGER_DEBUG_VAR(pair.second);
-    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.second);
+    parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.first);
     if(r_it == parameter_idx_map.right.end())
     {
       HYDLA_LOGGER_DEBUG("Not Found");
@@ -62,7 +60,7 @@ void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formul
     }
     else
     {
-      parameter_idx_map.right.replace_key(r_it, pair.first);
+      parameter_idx_map.right.replace_key(r_it, pair.second);
     }
   }
 }
@@ -112,7 +110,6 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   kv::hwround::roundnear();
 
   kv::interval<double> itv = to_interval(affine_value);
-  HYDLA_LOGGER_DEBUG_VAR(itv);
   return ret;
 }
 
@@ -126,8 +123,6 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
   {
     simulator::range_t range = variable_map[var];
     HYDLA_ASSERT(range.unique());
-    HYDLA_LOGGER_DEBUG_VAR(var);
-    HYDLA_LOGGER_DEBUG_VAR(range);
     node_sptr expr = range.get_unique_value().get_node();
     AffineMixedValue val = visitor.approximate(expr);
 
@@ -145,11 +140,9 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     }
   }
 
-
   bool time_is_affine = false;
   // approximate time
   node_sptr time_expr = time.get_node();
-  HYDLA_LOGGER_DEBUG_VAR(time_expr);
   AffineMixedValue time_val = visitor.approximate(time_expr);
   if(time_val.type != INTEGER)
   {
@@ -164,7 +157,6 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     formulas[0] = time_val.type == INTERVAL?affine_t(time_val.interval):time_val.affine_value;
     i = 1;
   }
-  
 
   std::map<variable_t, int> var_index_map;
   
@@ -174,7 +166,7 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size() * dummy_num_per_variable);
+  reduce_dummy_variables(formulas, formulas.size() + dummy_num_per_variable);
 
   if(time_is_affine)
   {
@@ -185,7 +177,6 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
   {
     simulator::variable_t var = element.first;
     affine_t affine = formulas[var_index_map[var] ];
-    HYDLA_LOGGER_DEBUG_VAR(var);
     value_t result_value = translate_into_symbolic_value(affine, parameter_map);
     variable_map[var] = result_value;
   }
