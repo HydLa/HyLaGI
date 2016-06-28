@@ -238,7 +238,7 @@ publicMethod[
 
 removeUnnecessaryConstraints[cons_, hasJudge_] :=
 (
-cons /. (expr_ /; ( MemberQ[{Equal, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
+cons /. (expr_ /; ( MemberQ[{Equal, Element, NotElement, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
 );
 
 
@@ -482,9 +482,11 @@ makeListFromPiecewise[minT_, others_] := Module[
   {tmpCondition = False, retMinT},
   If[Head[minT] =!= Piecewise, Return[{{minT, others}}] ];
   retMinT = minT[[1]];
-  tmpCondition = Or @@ Map[(#[[2]])&, minT[[1]]];
+
+  tmpCondition = Or @@ Map[(#[[2]] )&, minT[[1]]];
   tmpCondition = Reduce[And[others, Not[tmpCondition]], Reals];
-  retMinT = Map[({#[[1]], Reduce[others && #[[2]], Reals ]})&, retMinT];
+  tmpCondition = removeUnnecessaryConstraints[tmpCondition, hasParameter];
+  retMinT = Map[({#[[1]], removeUnnecessaryConstraints[Reduce[others && #[[2]], Reals ], hasParameter]})&, retMinT];
   If[ tmpCondition === False,
     retMinT,
     Append[retMinT, {minT[[2]], tmpCondition}]
