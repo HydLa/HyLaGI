@@ -214,19 +214,22 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       finder.visit_node(constraint);
       variable_set_t variables;
       variables = finder.get_all_variable_set();
-      for(auto variable : variables)
+      for(auto base_variable : variables)
       {
-        if(!variable_node_map.count(variable))continue;
-
-        ConstraintStore connected_constraints;
-        module_set_t connected_ms;
-        VariableNode *var_node = variable_node_map[variable];
-        variable_set_t vars;
-        collect_node(var_node, connected_constraints, connected_ms, vars);
-        if(connected_constraints.size() > 0)
+        for(int i = 0; i <= base_variable.get_differential_count(); i++)
         {
-          constraints_vector.push_back(connected_constraints);
-          module_set_vector.push_back(connected_ms);
+          Variable variable(base_variable.get_name(), i);
+          if(!variable_node_map.count(variable))continue;
+          ConstraintStore connected_constraints;
+          module_set_t connected_ms;
+          VariableNode *var_node = variable_node_map[variable];
+          variable_set_t vars;
+          collect_node(var_node, connected_constraints, connected_ms, vars);
+          if(connected_constraints.size() > 0)
+          {
+            constraints_vector.push_back(connected_constraints);
+            module_set_vector.push_back(connected_ms);
+          }
         }
       }
     }
