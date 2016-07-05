@@ -8,7 +8,8 @@ $MaxExtraPrecision = 1000;
  * constraint: 現在のフェーズでの制約
  * assumptions: assumptions for the current phase
  * pConstraint: 定数についての制約
- * prevConstraint: constraint for previ variables
+ * prevConstraint: constraint for prevs
+ * resultConstraint: constraint solvedBy checkConsystency
  * prevRules:      rules converted from equalities of left-hand limits
  * currentTime:    symbolic expression of current time 
  * initConstraint: 初期値制約

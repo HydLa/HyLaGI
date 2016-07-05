@@ -10,37 +10,46 @@ checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions,
 
 trySolve[cons_, vars_] :=
   Module[
-    {i, eachCons, sol, solved = False, consToSimplify, equalities = True},
-    consToSimplify = cons;
-    If[Head[consToSimplify] === And,
+    {i, eachCons, sol = True, solved = False, consList, consToSimplify, trivialCons = True, inequalities = True},
+    If[Head[consToSimplify] =!= And,
+      consToSimplify = cons,
+      consList = applyList[cons];
+      consToSimplify = Select[consList, (Head[#] === Equal)&];
+      inequalities = Complement[consList, consToSimplify];
       For[i = 1, i <= Length[consToSimplify], i++,
         eachCons = consToSimplify[[i]];
-        If[Head[eachCons] === Equal && isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
-          equalities = equalities && eachCons;
-          consToSimplify = Drop[consToSimplify, {i}];
-          consToSimplify = consToSimplify /. eachCons[[1]] -> eachCons[[2]];
-          i = 1;
+        If[Head[eachCons] === Equal,
+          (* swap lhs and rhs if rhs is variable *)
+          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[1]] == eachCons[[2]])];
+          If[isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
+            trivialCons = trivialCons && eachCons;
+            consToSimplify = Drop[consToSimplify, {i}];
+            consToSimplify = consToSimplify /. eachCons[[1]] -> eachCons[[2]];
+            i = 1;
+          ]
         ]
       ]
     ];
     If[freeFromInequalities[consToSimplify],
       sol = Quiet[Solve[consToSimplify, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
-      If[FreeQ[sol, ConditionalExpression], solved = True],
-      sol = consToSimplify
+      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
-    {sol, equalities, solved}
+    If[solved =!= True, sol = consToSimplify];
+    simplePrint[sol];
+    {trivialCons && sol && inequalities, solved}
   ];
 
 publicMethod[
   checkConsistencyPoint,
   cons, pcons, assum, vars, pars, current,
   Module[
-    {cpTrue, cpFalse, simplifiedCons, sol, solved = False, eqs},
-    simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ];
-    {sol, eqs, solved} = trySolve[simplifiedCons, vars];
-    simplePrint[solved];
-    If[solved === True,
-      If[Length[sol] > 0, 
+    {cpTrue, cpFalse, simplifiedCons, sol, solved = False},
+    simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ] /. t -> current;
+    simplePrint[simplifiedCons];
+    {sol, solved} = trySolve[simplifiedCons, vars];
+    resultConstraint = sol;
+    If[solved,
+      If[Length[sol] > 0 || sol === True, 
         cpTrue = pcons;
         cpFalse = False,
         cpTrue = False;
@@ -152,7 +161,7 @@ publicMethod[
 
 (* 変数もしくは記号定数とその値に関する式のリストを，表形式に変換 *)
 
-createVariableMap[] := createVariableMap[constraint && pConstraint && (initConstraint /. prevRules), variables, assumptions, parameters, currentTime];
+createVariableMap[] := createVariableMap[resultConstraint && pConstraint, variables, assumptions, parameters, currentTime];
 
 containsAny[expr_, list_List] := 
 Module[
@@ -170,22 +179,16 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {ret, map, currentCons, solved, eqs},
-    currentCons = Assuming[assum, timeConstrainedSimplify[cons]] /. t -> current;
-    map = removeUnnecessaryConstraints[currentCons, hasVariable];
-
-    {map, eqs, solved} = trySolve[map, vars];
-    If[solved && Length[map] == 1,
-      map = And@@Map[(Equal@@#)&, map[[1]]],
+    {ret, map, solved},
+    map = removeUnnecessaryConstraints[cons, hasVariable];
+    {map, solved} = trySolve[map, vars];
+    If[Head[map] === Or,
+      (* try to solve with parameters *)
+      map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
       map = Reduce[map, vars, Reals];
-      If[Head[map] === Or,
-        (* try to solve with parameters *)
-        map = removeUnnecessaryConstraints[currentCons, hasVariableOrParameter];
-        map = Reduce[map, vars, Reals];
-      ];
     ];
 
-    map = map && eqs;
+    simplePrint[map];
     map = removeUnnecessaryConstraints[map, hasVariable];
     If[map === True,
       {{}},
@@ -363,6 +366,7 @@ publicMethod[
   pConstraint = True;
   initConstraint = True;
   assumptions = True;
+  resultConstraint = Null;
 ];
 
 publicMethod[
