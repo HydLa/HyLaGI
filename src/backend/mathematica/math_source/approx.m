@@ -30,13 +30,16 @@ publicMethod[
   ]
 ];
 
-(* create rules to replace parameters with intervals of their ranges *)
+(* create rules to replace parameters with intervals of their ranges 
+   @return created rules (if success) or "failed" (if failed)
+*)
 createIntervalRules[parameterCondition_] := 
 Module[
   {lbs, ubs, parameters, i, condition, parameter, rules = {}, adjustedCond},
   If[parameterCondition === True || prameterCondition === False, Return[{}]];
+  If[Head[parameterCondition] === Or, Return[failed] ];
   parameters = getParameters[parameterCondition];
-  adjustedCond = adjustExprs[LogicalExpand[parameterCondition], isParameter];
+  adjustedCond = adjustExprs[applyList[LogicalExpand[parameterCondition] ], isParameter];
   For[i = 1, i <= Length[adjustedCond], i++,
     condition = adjustedCond[[i]];
     parameter = condition[[1]];
@@ -46,6 +49,7 @@ Module[
   ];
   For[i = 1, i <= Length[parameters], i++,
     parameter = parameters[[i]];
+    If[!NumericQ[lbs[parameter] ] || !NumericQ[ubs[parameter] ], rules = failed; Break[] ];
     rules = Append[rules, parameter -> Interval[{lbs[parameter], ubs[parameter]}]]
   ];
   rules

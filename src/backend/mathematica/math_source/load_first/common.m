@@ -147,7 +147,6 @@ derivative[cnt_, var_] := Derivative[cnt][ToExpression[StringReplacePart[ToStrin
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
    少しでもメッセージを吐く可能性のある関数は，この関数で定義するようにする．
-   definitionにReturnが含まれていると正常に動作しなくなる （Returnの引数がそのまま返ることになる）ので使わないように！
    返り値にはtoReturnFormを常にかけるようにしたいけど，現状だとリストの番号とかまで文字列にすると例外吐かれるので個別対応・・・
 *)
 
@@ -156,8 +155,9 @@ publicMethod[name_, args___, definition_] := (
     inputPrint[ToString[name], args];
     CheckAbort[
       timeFuncStart[];
-      Module[{publicRet},
-        publicRet = definition;
+      Module[{publicRet, returnValue = Null},
+        returnValue = Do[publicRet = definition, {i, 1, 1}]; (* use Do[] to catch result of Return[] *)
+        If[returnValue =!= Null, publicRet = returnValue];
         simplePrint[publicRet];
         timeFuncEnd[name];
         checkMessage;

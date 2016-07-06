@@ -312,7 +312,7 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
   }
   CheckConsistencyResult tmp_result;
 
-  tmp_result = check_consistency_essential(constraints, finder, phase, profile);
+  tmp_result = check_consistency_essential(constraints, finder, phase, profile, following_step);
 
   if(!tmp_result.consistent_store.consistent())
   {
@@ -459,7 +459,7 @@ list<ConstraintStore> ConsistencyChecker::get_inconsistent_constraints()
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder &finder, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder &finder, const PhaseType& phase, profile_t &profile, bool following_step)
 {
   timer::Timer timer;
   // PPでは変数表を全変数について作成する必要があるので，特定変数だけ解くようにするのは難しい．
@@ -473,7 +473,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
   // }
   // backend->set_variable_set(send_vars);
   backend->call("resetConstraintForVariable", false, 0, "", "");
-  add_continuity(finder, phase);
+  if(following_step)add_continuity(finder, phase);
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";

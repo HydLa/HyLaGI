@@ -1,21 +1,13 @@
-(* ポイントフェーズにおける無矛盾性判定 *)
-
-checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime ]
-);
-
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ] /. prevRules) && constraint && (initConstraint /. prevRules) && prevConstraint, pConstraint, assumptions, Union[variables, prevVariables], parameters, currentTime]
-);
-
-
 trySolve[cons_, vars_] :=
   Module[
     {i, eachCons, sol = True, solved = False, consList, consToSimplify, trivialCons = True, inequalities = True},
-    If[Head[consToSimplify] =!= And,
+    If[Head[cons] =!= And,
       consToSimplify = cons,
       consList = applyList[cons];
       consToSimplify = Select[consList, (Head[#] === Equal)&];
       inequalities = Complement[consList, consToSimplify];
+      inequalities = Reduce[inequalities, vars];
+      simplePrint[consToSimplify, inequalities];
       For[i = 1, i <= Length[consToSimplify], i++,
         eachCons = consToSimplify[[i]];
         If[Head[eachCons] === Equal,
@@ -34,14 +26,23 @@ trySolve[cons_, vars_] :=
       sol = Quiet[Solve[consToSimplify, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
       If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
-    If[solved =!= True, sol = consToSimplify];
-    simplePrint[sol];
+    If[solved =!= True, sol = And@@consToSimplify];
+    simplePrint[sol, trivialCons, inequalities];
     {trivialCons && sol && inequalities, solved}
   ];
 
+
+checkConsistencyPoint[] := (
+  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, variables, prevVariables, parameters, currentTime ]
+);
+
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ] /. prevRules) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, variables, prevVariables, parameters, currentTime]
+);
+
+
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, assum, vars, pars, current,
+  cons, pcons, assum, vars, prevs, pars, current,
   Module[
     {cpTrue, cpFalse, simplifiedCons, sol, solved = False},
     simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ] /. t -> current;
@@ -56,7 +57,7 @@ publicMethod[
         cpFalse = pcons
       ],
       Quiet[
-        cpTrue = Reduce[Exists[vars, (sol /. t -> current) && pcons], pars, Reals], {Reduce::useq}
+        cpTrue = Reduce[Exists[Evaluate[Join[vars, prevs] ], (sol /. t -> current) && pcons], pars, Reals], {Reduce::useq}
       ];
       simplePrint[cpTrue];
       (* remove (Not)Element[] because it seems to be always true *)
@@ -179,33 +180,28 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {ret, map, solved},
+    {ret, map},
     map = removeUnnecessaryConstraints[cons, hasVariable];
-    {map, solved} = trySolve[map, vars];
+    simplePrint[map];
     If[Head[map] === Or,
       (* try to solve with parameters *)
       map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
       map = Reduce[map, vars, Reals];
+      map = removeUnnecessaryConstraints[map, hasVariable];
     ];
 
-    simplePrint[map];
-    map = removeUnnecessaryConstraints[map, hasVariable];
-    If[map === True,
-      {{}},
-      If[map === False,
-        {},
-        map = LogicalExpand[map];
-        map = applyListToOr[map];
-        map = Map[(applyList[#])&, map];
-        map = Map[(adjustExprs[#, isVariable])&, map];
-        debugPrint["map after adjustExprs in createVariableMap", map];
-        ret = Map[(convertExprs[#])&, map];
-        ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
-        ret = ruleOutException[ret];
-        simplePrint[ret];
-        ret
-      ]
-    ]
+    If[map === True, Return[{{}}]];
+    If[map === False, Return[{}]];
+    map = LogicalExpand[map];
+    map = applyListToOr[map];
+    map = Map[(applyList[#])&, map];
+    map = Map[(adjustExprs[#, isVariable])&, map];
+    debugPrint["map after adjustExprs in createVariableMap", map];
+    ret = Map[(convertExprs[#])&, map];
+    ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
+    ret = ruleOutException[ret];
+    simplePrint[ret];
+    ret
   ]
 ];
 
@@ -401,7 +397,7 @@ publicMethod[
 
 addInitConstraint[co_] := Module[
   {cons},
-  cons = Assuming[assumptions, timeConstrainedSimplify[And@@co]];
+  cons = Assuming[assumptions, timeConstrainedSimplify[And@@co]] //. prevRules;
   initConstraint = initConstraint && cons;
 ];
 
@@ -661,38 +657,43 @@ publicMethod[
     If[andCond === True,
       necessaryPCons = True;
       otherPCons = True,
-      necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
-      otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
-      necessaryPCons = Reduce[necessaryPCons, Reals];
+      If[Head[andCond] =!= Or,
+        necessaryPCons = andCond; otherPCons = True,
+        necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
+        otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
+        necessaryPCons = Reduce[necessaryPCons, Reals];
+      ]
     ];
     If[andCond === False,
-      {{False}, {False}, {False}},
-      (* First, compare 2 expressions using interval arithmetic *)
-      pRules = createIntervalRules[andCond];
-      If[time1 === Infinity,
-        {{False}, {andCond}, {False}},
-        interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
-        intervalLess = interval < 0;
-        If[intervalLess === True,
-          {{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}},
-          intervalGreater = interval > 0;
-          If[intervalGreater === True,
-            {{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}},
-            (* If it isn't determined, use Reduce *)
-            caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
-            simplePrint[caseEq];
-            caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
-            simplePrint[caseLe];
-            caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
-            simplePrint[caseGr];
-            caseEq = caseEq && otherPCons;
-            caseLe = caseLe && otherPCons;
-            caseGr = caseGr && otherPCons;
-            {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
-          ]
-        ]
-      ]
-    ]
+      Return[{{False}, {False}, {False}}]
+    ];
+    (* First, compare 2 expressions using interval arithmetic *)
+    If[time1 === Infinity,
+      Return[{{False}, {andCond}, {False}}]
+    ];
+    pRules = createIntervalRules[andCond];
+    If[pRules =!= failed,
+      interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
+      intervalLess = interval < 0;
+      If[intervalLess === True,
+        Return[{{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}}]
+      ];
+      intervalGreater = interval > 0;
+      If[intervalGreater === True,
+        Return[{{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}}]
+      ];
+    ];
+    (* If it isn't determined, use Reduce *)
+    caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+    simplePrint[caseEq];
+    caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+    simplePrint[caseLe];
+    caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+    simplePrint[caseGr];
+    caseEq = caseEq && otherPCons;
+    caseLe = caseLe && otherPCons;
+    caseGr = caseGr && otherPCons;
+    {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
   ]
 ];
 

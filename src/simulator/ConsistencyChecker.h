@@ -84,7 +84,7 @@ public:
   std::map<std::string, int> get_differential_map(const variable_set_t &);
 
 private:
-  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile, bool following_step);
 
   CheckEntailmentResult check_entailment_essential(
     CheckConsistencyResult &cc_result,
