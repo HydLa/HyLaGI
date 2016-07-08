@@ -224,6 +224,22 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
     if(current_val_.type == INTERVAL)current_val_.interval = cos(current_val_.interval);
     else current_val_.affine_value = cos(current_val_.affine_value);
   }
+  else if(name == "sinh")
+  {
+    if(node->get_arguments_size() != 1)invalid_node(*node);
+    accept(node->get_argument(0) );
+    if(current_val_.type == INTEGER)current_val_.interval = sinh(itvd(current_val_.integer));
+    if(current_val_.type == INTERVAL)current_val_.interval = sinh(current_val_.interval);
+    else current_val_.affine_value = sinh(current_val_.affine_value);
+  }
+  else if(name == "cosh")
+  {
+    if(node->get_arguments_size() != 1)invalid_node(*node);
+    accept(node->get_argument(0) );
+    if(current_val_.type == INTEGER)current_val_.interval = cosh(itvd(current_val_.integer));
+    if(current_val_.type == INTERVAL)current_val_.interval = cosh(current_val_.interval);
+    else current_val_.affine_value = cosh(current_val_.affine_value);
+  }
   else
   {
     invalid_node(*node);
