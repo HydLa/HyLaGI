@@ -6,12 +6,19 @@
 #include "AffineTreeVisitor.h"
 #include "Logger.h"
 #include "HydLaError.h"
+#include <sstream>
 
 namespace hydla
 {
 namespace interval
 {
 
+std::string get_string(itvd x)
+{
+  std::stringstream stream;
+  stream << x;
+  return stream.str();
+}
 
 const double INVALID_MID = -1;
 
@@ -192,7 +199,8 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
         double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
         if(mid_val == INVALID_MID)
         {
-          throw HYDLA_ERROR("No valid intermediate values are found in interval newton method.");
+          throw HYDLA_ERROR("No valid intermediate values are found in interval newton methods.\n current_interval: "
+                            + get_string(current_interval) + "\n exp: " + get_infix_string(exp));
         }
         m = itvd(mid_val);
       }

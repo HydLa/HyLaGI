@@ -1,19 +1,19 @@
-INIT <=> th = 0.005 & th' = 0 & s = 0 & threshold = 0.01 & [](threshold' = 0).
+INIT <=> angle = 0.005 & angle' = 0 & s = 0 & threshold = 0.01 & [](threshold' = 0).
 
 LAW(m,m2,l,g,iniU) <=>
  [](i = m*l^2/3 & e = i*(m+m2)+m*m2*l^2
- & th''= m*l*(m+m2)*g/e*th - m*l/e*u).
+ & angle''= m*l*(m+m2)*g/e*angle - m*l/e*u).
 
-SR <=> [](th- = threshold & s-=0 => s=1).
-SL <=> [](th- = -threshold & s-=0 => s=2).
-SN <=> []((th- = threshold & s-=1)
- | (th-= -threshold & s-=2) => s=0). 
+SR <=> [](angle- = threshold => s = 1 - s-).
+SL <=> [](angle- = -threshold  => s= 2 - 2 * s-).
+/*SN <=> []((angle- = threshold & s-=1)
+ | (angle-= -threshold & s-=2) => s=0).*/
 SCONST <=> [](s' = 0).
 FORCE(state, force) <=> [](s = state => u = force).
 
 INIT, 
 LAW(1,1,1,10,0),
-SCONST << (SR, SL, SN),
+SCONST << (SR, SL),
 FORCE(1, 15), FORCE(2, -15), FORCE(0, 0).
 
-// #hylagi -p10 --fignore_warnings --finterval --guards_to_interval_newton th-=threshold,th-=-threshold --fdump_in_progress
+// #hylagi -p10 --fignore_warnings --finterval --guards_to_interval_newton angle-=threshold,angle-=-threshold --fdump_in_progress --fstep_by_step
