@@ -142,6 +142,19 @@ AutomatonNode* HybridAutomatonConverter::detect_loop(AutomatonNode* new_node, HA
 bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNode* smaller){
   bool include_ret;
 
+  //comparison of guards
+  if(larger->phase->get_all_positive_asks() != smaller->phase->get_all_positive_asks() ||
+    larger->phase->get_all_negative_asks() != smaller->phase->get_all_negative_asks())
+  {
+    return false;
+  }
+
+
+  if(larger->phase->unadopted_ms.compare(smaller->phase->unadopted_ms) != 0)
+  {
+    return false;
+  }
+
   
   //phase typeの比較
   if(larger->phase->phase_type != smaller->phase->phase_type){
@@ -154,7 +167,8 @@ bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNo
     return false;
   }
 
-
+  HYDLA_LOGGER_DEBUG_VAR(*larger->phase);
+  HYDLA_LOGGER_DEBUG_VAR(*smaller->phase);
   VariableReplacer replacer(&larger->phase->variable_map);
   replacer.replace_variable_map(&larger->phase->variable_map);
   replacer.replace_variable_map(&smaller->phase->variable_map);
