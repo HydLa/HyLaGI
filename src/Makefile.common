@@ -10,9 +10,15 @@ RM	 := rm #@RM@
 LN       := ln #@LN@
 
 LIBS += -lpthread
-LIBS_STATIC += -lboost_thread-mt -lboost_regex
 
 UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+LIBS_STATIC += -lboost_thread-mt -lboost_regex-mt
+else
+LIBS_STATIC += -lboost_thread-mt -lboost_regex
+endif
+
 ifeq ($(UNAME),Linux)
 INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
@@ -48,6 +54,8 @@ $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
 	ranlib $@
+else ifeq ($(UNAME),Darwin)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC)
 else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
 endif

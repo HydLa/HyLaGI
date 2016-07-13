@@ -32,8 +32,6 @@ std::string replace(std::string original,
                     const std::string &substr,
                     const std::string &dest);
 
-std::string to_string(int n);
-
 
 /**
  * remove comment from given string
@@ -42,6 +40,8 @@ std::string to_string(int n);
 std::string remove_comment(std::string &src);
 
 std::string cr_to_lf(std::string str);
+
+std::string extract_file_name(const std::string &str);
 
 }  //  namespace utility
 }  //  namespace hydla

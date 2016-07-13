@@ -6,6 +6,7 @@
 #include "CsvProfilePrinter.h"
 #include "LTLModelChecker.h"
 #include "HybridAutomatonConverter.h"
+#include "TreeInfixPrinter.h"
 #include "MathematicaLink.h"
 #include "Backend.h"
 #include "JsonWriter.h"
@@ -40,6 +41,7 @@ Simulator* simulator_;
 Opts opts;
 backend_sptr_t backend_;
 ProgramOptions cmdline_options;
+string input_file_name;
 
 static string get_file_without_ext(const string &path)
 {
@@ -87,7 +89,7 @@ void output_result(Simulator& ss, Opts& opts){
     }
   }
   JsonWriter writer;
-  writer.write(*simulator_, of_name);
+  writer.write(*simulator_, of_name, input_file_name);
 
   if(opts.epsilon_mode >= 0){
     writer.set_epsilon_mode(backend_, true);
@@ -111,7 +113,7 @@ void output_result(Simulator& ss, Opts& opts){
             mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
           }
     }
-    writer.write(*simulator_, of_name);
+    writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
 
   if(cmdline_options.get<std::string>("tm") == "s") {
@@ -176,6 +178,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("dump_in_progress") opts.dump_in_progress = po.count("dump_in_progress")>0 && po.get<char>("dump_in_progress") == 'y';
   opts.dump_relation = po.count("dump_relation_graph")>0;
   IF_SPECIFIED("ignore_warnings")opts.ignore_warnings = po.count("ignore_warnings")>0 && po.get<char>("ignore_warnings") == 'y';
+  IF_SPECIFIED("use_shorthand")TreeInfixPrinter::set_use_shorthand(po.count("use_shorthand") > 0 && po.get<char>("use_shorthand") == 'y');
   IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
   IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';

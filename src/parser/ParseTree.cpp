@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "ParseTreeSemanticAnalyzer.h"
 #include "ParseTreeGraphvizDumper.h"
+#include "ParseTreeJsonDumper.h"
 #include "DefinitionContainer.h"
 
 #include "Parser.h"
@@ -73,6 +74,16 @@ std::ostream& ParseTree::to_graphviz(std::ostream& s) const
 {
   ParseTreeGraphvizDumper dumper;
   if(node_tree_)
+    dumper.dump(s, node_tree_);
+  else
+    s << "ParseTree is empty." << std::endl;
+  return s;
+}
+
+std::ostream& ParseTree::dump_in_json(std::ostream& s) const
+{
+  ParseTreeJsonDumper dumper;
+  if (node_tree_)
     dumper.dump(s, node_tree_);
   else
     s << "ParseTree is empty." << std::endl;

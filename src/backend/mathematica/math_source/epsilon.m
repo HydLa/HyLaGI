@@ -1,3 +1,39 @@
+(* ガード条件を満たしているか判定する *)
+publicMethod[checkEdgeGuard, guard, relatedVm, relatedPm,
+             Module[{ret,i,tmp,newCondition},
+                    tmp = guard;
+                    newCondition = relatedPm;
+                    For[i=1, i<=Length[relatedVm], i++,
+                        debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
+                        If[relatedVm[[i]][[0]] === Equal,
+                           tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];,
+                           newCondition = And[newCondition, relatedVm[[i]]];
+                           ];
+                        ];
+                    debugPrint["#check edge guard : checking guard : ", tmp];
+                    debugPrint["#check edge guard : conditions : ", newCondition];
+                    ret = Quiet[FullSimplify[tmp,newCondition]];
+                    debugPrint["#check edge guard : ret : ",ret];
+                    TrueQ[ret]
+                    ]
+             ];
+
+publicMethod[checkEdgeGuardWt, guard, relatedVm, relatedPm, startTime, endTime,
+             Module[{ret,i,tmp,newCondition},
+                    tmp = guard;
+                    For[i=1, i<=Length[relatedVm], i++,
+                        debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
+                        tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];
+                        ];
+                    debugPrint["#check edge guard : checking guard : ", tmp];
+                    newCondition = And[relatedPm, t > startTime && t <= endTime];
+                    debugPrint["#check edge guard : conditions : ", newCondition];
+                    ret = Quiet[FullSimplify[tmp,newCondition]];
+                    debugPrint["#check edge guard : ret : ",ret];
+                    TrueQ[ret]
+                    ]
+             ];
+
 (* phaseの包含を判定する *)
 publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
              Module[{ret,i,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr = True,listLarge,listSmall},

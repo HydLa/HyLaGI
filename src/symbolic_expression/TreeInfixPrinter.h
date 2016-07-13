@@ -30,7 +30,16 @@ class TreeInfixPrinter:
    */
   std::string get_infix_string(const node_sptr &);
 
+
+  /**
+   * 数式の出力に略記法を用いるかどうかを設定する。
+   * 現状だとパラメータのみ。p[x, 0, 1]をx01のようにする。
+   */
+  static void set_use_shorthand(bool);
+
   private:
+
+  static bool use_shorthand;
   
   needParenthesis need_par_;
   std::ostream *output_stream_;

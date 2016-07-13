@@ -1,0 +1,26 @@
+// Pushing two balls, Lee: Fig.15-16
+// Diameter of balls is 1.
+
+INIT <=> x1 = 0 & x2 = 1+eps & x1' = 0 & x2' = 0.
+
+TIMER <=> tt = 0 & [](tt' = 1).
+S <=> [](s1 = x2 - x1 - 1 & s2 = x2 - x1 - 1 + eps & s1' = s1' & s2' = s2').
+
+FORCE(x) <=> [](tt- < 1 => x'' = 0) 
+  & [](1 <= tt- < 3.5 => x'' = 1)
+  & [](tt- >= 3.5 => x'' = 0).
+
+CONSTV(x) <=> [](x'' = 0).
+
+// COLLISION(xa, xb) <=> [](xa- = xb- - 1 => xa' = xb'- & xb' = xa'-).
+COLLISION <=> [](s1- = 0 => x1' = x2'- & x2' = x1'-).
+/*
+   s1 = xb - xa - 1.
+   s2 = xb - xa - 1 + eps.
+*/
+EPS <=> 0.001 = eps  & [](eps' = 0).
+INIT.  
+S.
+EPS.
+TIMER.
+(FORCE(x1), CONSTV(x2)) << COLLISION.

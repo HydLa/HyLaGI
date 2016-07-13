@@ -117,9 +117,9 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
         variable_t var(entry.first, i);
         send_init_equation(var, fmt);
       }
-      Value zero_value("0");
-      variable_t var(entry.first, entry.second + 1);
-      backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
+//      Value zero_value("0");
+      //    variable_t var(entry.first, entry.second + 1);
+//      backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
     }
   }
 

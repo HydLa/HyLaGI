@@ -16,15 +16,17 @@ using namespace hydla::backend;
 namespace hydla{
 namespace io{
 
-void JsonWriter::write(const simulator_t &simulator, const std::string &name)
+void JsonWriter::write(const simulator_t &simulator, const std::string &name, const std::string &hydla_name)
 {
   object json_object;
   json_object["variables"] = for_vs(simulator.get_variable_set());
   json_object["parameters"] = for_pm(simulator.get_parameter_map());
 
+
   phase_result_const_sptr_t root = simulator.get_result_root();
   picojson::array children;
   json_object["first_phases"] = make_children(root);
+  json_object["name"] = value(hydla_name);
 
   value json(json_object);
 
@@ -80,8 +82,16 @@ value JsonWriter::for_phase(const phase_result_const_sptr_t &phase)
   phase_object["variable_map"] = for_vm(phase->variable_map);
   std::vector<parameter_map_t> pms = phase->get_parameter_maps();
   //TODO: deal with multiple parameter_maps
-  if(pms.size() == 0)phase_object["parameter_map"] = for_pm(parameter_map_t());
+  if(pms.size() == 0)phase_object["parameter_map"] = for_pm(parameter_map_t()); // parameter_map is obsolete, only for HIDE
   else phase_object["parameter_map"] = for_pm(pms[0]);
+
+  picojson::array parameter_maps;
+  for(auto pm : pms)
+  {
+    parameter_maps.push_back(for_pm(pm));
+  }
+  phase_object["parameter_maps"] = value(parameter_maps);
+
   phase_object["children"] = make_children(phase);
   phase_object["simulation_state"] = value(get_string_for_cause(phase->simulation_state));
   return value(phase_object);
