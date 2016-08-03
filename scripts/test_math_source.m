@@ -1,4 +1,4 @@
-SetDirectory["./src/backend/mathematica/math_source/"];
+SetDirectory["../src/backend/mathematica/math_source/"];
 $CharacterEncoding="UTF-8";
 optUseDebugPrint = True;
 timeOutS = Infinity;
