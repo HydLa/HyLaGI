@@ -149,10 +149,11 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Subtract> node){
 void TreeInfixPrinter::visit(boost::shared_ptr<Times> node){
   if(need_par_>=PAR_N_P_S_T_D_P){
     (*output_stream_) << "(";
-     print_binary_node(*node, "*", PAR_N_P_S, PAR_N_P_S);
+     print_binary_node(*node, "*", PAR_P_S, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
-     print_binary_node(*node, "*", PAR_N_P_S, PAR_N_P_S);
+     needParenthesis pre = need_par_ >= PAR_N ? PAR_N_P_S:PAR_P_S;
+     print_binary_node(*node, "*", pre, PAR_N_P_S);
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Divide> node){
@@ -161,7 +162,8 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Divide> node){
      print_binary_node(*node, "/", PAR_P_S, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
-     print_binary_node(*node, "/", PAR_N_P_S, PAR_N_P_S);
+    needParenthesis pre = need_par_ >= PAR_N ? PAR_N_P_S:PAR_P_S;
+    print_binary_node(*node, "/", pre, PAR_N_P_S);
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Power> node){
