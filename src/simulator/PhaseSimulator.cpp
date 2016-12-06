@@ -1262,7 +1262,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
           if (opts_->fullsimplify) {
-            backend_->call("fullsimplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
+            backend_->call("fullSimplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
           } else {
             backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
           }
