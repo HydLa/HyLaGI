@@ -200,8 +200,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   VariableFinder finder;
   ConstraintStore constraint_store;
-  module_set_t module_set;
-
 
   asks_t temporarily_invalidated_asks;
   // remove constraints which are children of unknown_asks temporarily
@@ -213,7 +211,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
       temporarily_invalidated_asks.insert(ask);
     }
   }
-  relation_graph.get_related_constraints(guard, constraint_store, module_set);
+  relation_graph.get_related_constraints(guard, constraint_store);
   for(auto ask : temporarily_invalidated_asks)
   {
     relation_graph.set_entailed(ask, true);
@@ -297,8 +295,8 @@ void ConsistencyChecker::clear_inconsistent_constraints()
 }
 
 void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constraints,
-                                           module_set_t &module_set,
-                                           CheckConsistencyResult &result,
+                                                   RelationGraph &relation_graph,
+CheckConsistencyResult &result,
                                            const PhaseType& phase,
                                            profile_t &profile,
                                            bool following_step)
@@ -317,7 +315,7 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
   if(!tmp_result.consistent_store.consistent())
   {
     result.consistent_store.set_consistency(false);
-    inconsistent_module_sets.push_back(module_set);
+    HYDLA_LOGGER_DEBUG(""); inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
     inconsistent_constraints.push_back(constraints);
   }
   else
@@ -397,7 +395,6 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
-  vector<module_set_t> related_modules_list;
 
   // remove constraints which are children of unknown_asks temporarily
   asks_t temporarily_invalidated_asks;
@@ -411,14 +408,14 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     }
   }
 
-  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(auto ask : relation_graph.get_active_asks())HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
     HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
                        "]: ", related_constraints_list[i]);
-    check_consistency_foreach(related_constraints_list[i], related_modules_list[i], result, phase, profile, following_step);
+    check_consistency_foreach(related_constraints_list[i], relation_graph, result, phase, profile, following_step);
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 

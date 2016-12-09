@@ -26,7 +26,7 @@ trySolve[cons_, vars_] :=
     simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
       sol = Quiet[Solve[consToSolve, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
-      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
+      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     simplePrint[consToSolve];
     If[solved =!= True, sol = And@@consToSolve];
@@ -251,7 +251,7 @@ productWithGlobalParameterConstraint[cons_] := productWithGlobalParameterConstra
 publicMethod[
   productWithGlobalParameterConstraint,
   map, pCons,
-  {toReturnForm[LogicalExpand[map && pCons] ]}
+  {toReturnForm[LogicalExpand[Reduce[map && pCons] ] ]}
 ];
 
 
@@ -657,7 +657,7 @@ publicMethod[
       andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons, pRules, intervalLess, intervalGreater, interval
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
-    andCond = pCons1 && pCons2;
+    andCond = Reduce[pCons1 && pCons2];
     If[andCond === True,
       necessaryPCons = True;
       otherPCons = True,

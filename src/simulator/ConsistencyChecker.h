@@ -95,7 +95,7 @@ private:
   
   void add_continuity(VariableFinder&, const PhaseType &phase, const constraint_t &constraint_for_default_continuity = constraint_t());
 
-  void check_consistency_foreach(const ConstraintStore& constraint_store, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
+  void check_consistency_foreach(const ConstraintStore& constraint_store, RelationGraph &relation_graph, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(const Variable &var);

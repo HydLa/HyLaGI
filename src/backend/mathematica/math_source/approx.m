@@ -119,9 +119,14 @@ publicMethod[
     pars = getParameters[pm];
     midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
     frt = D[f, t ] /. pRules;
+    simplePrint[N[frt] ];
+    simplePrint[N[midRules] ];
+    simplePrint[N[f /. midRules] ];
     For[i = 1, i <= Length[pars], i++,
       par = pars[[i]];
       itv = toRational[N[D[f, pars[[i]] ] / frt /. pRules] ]; (* f∂xi/f∂t *)
+      simplePrint[par]
+      simplePrint[N[D[f, pars[[i]] ] /. pRules]];
       iRem += wid[itv];
       result += -mid[itv] * par;
     ];
@@ -130,6 +135,9 @@ publicMethod[
     remItv = N[iRem - remMid];
     remWid = toRational[Max[Abs[inf[remItv]], Abs[sup[remItv] ] ] ];
     remMid = mid[remMid];
+    simplePrint[N[result]];
+    simplePrint[N[iRem]];
+    simplePrint[N[midpointRadius[remMid, remWid]]];
 
     {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
   ]

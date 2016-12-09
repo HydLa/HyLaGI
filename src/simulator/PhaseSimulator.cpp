@@ -1246,7 +1246,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
       Parameter parameter("t", -1, ++time_id);
       TimeListElement elem;
-      if(opts_->mean_value)
+      if(opts_->affine)
       {
         hydla::backend::CalculateTLinearResult ct;
         value_t lb = state.min_interval->lower();
@@ -1656,6 +1656,8 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           //prepare new PhaseResult
           phase.reset(new PhaseResult(*phase));
           phase->id = ++phase_sum_;
+          HYDLA_LOGGER_DEBUG_VAR(phase->id);
+          HYDLA_LOGGER_DEBUG_VAR(phase->get_parameter_constraint());
           phase->parent->children.push_back(phase);
           phase->parent->todo_list.push_back(phase);
           phase->todo_list.clear();
@@ -1730,6 +1732,8 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
   {
     for(auto &entry: vm_to_approximate)
     {
+      if(vars_to_approximate.count(entry.first) == 0 )
+        continue;
       auto var = entry.first;
       itvd interval = evaluate_interval(phase, entry.second, false);
       phase->profile["width(" + var.get_string() + ")"] = width(interval);

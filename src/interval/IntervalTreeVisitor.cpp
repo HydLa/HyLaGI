@@ -25,6 +25,7 @@ itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, par
 {
   time_interval = t;
   parameter_map = map;
+  HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
   accept(node);
   if(current_value.is_integer)
     return itvd(current_value.integer);
@@ -98,8 +99,15 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   {
     current_value.interval_value = sqrt(base);
   }
+  else if(get_infix_string(node->get_rhs()) == "-1/2")
+  {
+    HYDLA_LOGGER_DEBUG_VAR(base);
+    current_value.interval_value = 1/sqrt(base);
+  }
   else
+  {
     current_value.interval_value = pow(base, rhs.interval_value);
+  }
 
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("Power : ", current_value.interval_value);
@@ -236,6 +244,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
   }
   else if(name == "log")
   {
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
     if(node->get_arguments_size() != 1)
     {
       invalid_node(*node);

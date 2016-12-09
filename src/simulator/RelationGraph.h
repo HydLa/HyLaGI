@@ -45,7 +45,7 @@ struct EdgeToConstraint
 struct ConstraintNode{
   module_t module; /// module which the constraint belongs to
   bool collected;
-  bool module_adopted; /// whether the module is in ms
+  bool module_adopted; /// whether the module is in current module sets
   bool expanded;
   bool always;
   AskNode* parent;
@@ -57,8 +57,8 @@ struct ConstraintNode{
 };
   
 struct TellNode: public ConstraintNode{
-  constraint_t constraint;
-  TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), constraint(cons)
+  constraint_t tell;
+  TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), tell(cons)
     {}
   virtual ~TellNode(){}
   std::string get_name() const;
@@ -179,20 +179,17 @@ public:
 
   
   /**
-   * Get constraints and modules related to given variable
+   * Get constraints related to given variable
    * @parameter list of connectedconstraints for output
    * @parameter modules for output
    */
-  void get_related_constraints(const Variable &variable, ConstraintStore &constraints,
-                               module_set_t &modules);
+  void get_related_constraints(const Variable &variable, ConstraintStore &constraints);
 
   /**
    * Get constraints and modules related to given constraint
    * @parameter constraints for output
-   * @parameter modules for output
    */
-  void get_related_constraints(constraint_t constraint, ConstraintStore &constraints,
-                               module_set_t &modules);
+  void get_related_constraints(constraint_t constraint, ConstraintStore &constraints);
 
 
 
@@ -216,6 +213,9 @@ public:
    * Get variables related to constraint
    */
   variable_set_t get_related_variables(constraint_t constraint);
+
+  /// Get modules related to constraint_store
+  module_set_t get_related_modules(const ConstraintStore &constraint_store);
 
   /// Entail the guard if it is prev_guard
   /// @return true if the guard is prev_guard
@@ -274,8 +274,12 @@ private:
   void check_connected_components();
 
   asks_t set_entailed(AtomicGuardNode *node, bool entailed, bool if_prev = false);
-  void collect_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
-  void collect_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
+
+  void collect_node(TellNode* node, ConstraintStore *constraints, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  void collect_node(VariableNode* node, ConstraintStore *constraint, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  void collect_node(AskNode* node, ConstraintStore *constraints, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  
+  
   void initialize_node_collected();
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings

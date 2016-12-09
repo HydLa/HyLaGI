@@ -32,7 +32,6 @@ struct Opts {
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
-  bool mean_value;
   int approximation_step;
   int extra_dummy_num;
   int simplify;
