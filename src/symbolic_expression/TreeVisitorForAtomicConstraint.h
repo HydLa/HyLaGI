@@ -6,7 +6,7 @@ namespace hydla {
 namespace symbolic_expression {
 
 /**
- * 原子制約に対して
+ * 原子制約に対してのTreeVisitor
  */
 class TreeVisitorForAtomicConstraint: public DefaultTreeVisitor {
 public:

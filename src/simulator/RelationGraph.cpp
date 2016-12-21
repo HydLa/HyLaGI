@@ -466,7 +466,7 @@ asks_t RelationGraph::get_adjacent_asks2var_and_derivatives(const Variable &var,
 list<AtomicConstraint *> RelationGraph::get_atomic_guards(const constraint_t &guard)const
 {
   auto node_it = guard_node_map.find(guard);
-  if(node_it == guard_node_map.end())throw HYDLA_ERROR("unknown guard");
+  if(node_it == guard_node_map.end())throw HYDLA_ERROR("unknown guard:" +  get_infix_string(guard));
   return node_it->second->get_atomic_guards();
 }
 
@@ -729,8 +729,9 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   if(visit_mode == ADDING)
   {
     if(in_always)always_list.add_constraint(ask);
+    constraint_t guard = ask->get_guard();
     VariableFinder finder;
-    finder.visit_node(ask->get_guard());
+    finder.visit_node(guard);
     variable_set_t variables;
 
     AskNode* ask_node;
@@ -738,9 +739,10 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     visit_mode = ADDING_ASK;
     atomic_guard_list.clear();
 
-    accept(ask->get_lhs());
-    visit_mode = ADDING;
+    accept(guard);
+
     ask_node = new AskNode(ask, current_module, current_guard_node);
+    guard_node_map[guard]  = current_guard_node;
     current_guard_node->asks.push_back(ask_node);
     ask_node->atomic_guard_list = atomic_guard_list;
 
@@ -764,6 +766,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     parent_ask = ask_node;
     ConstraintStore prev_always_list = always_list;
     always_list.clear();
+    visit_mode = ADDING;
     accept(ask->get_rhs());
     ask_node->always_children = always_list;
     always_list = prev_always_list;
