@@ -9,7 +9,7 @@ namespace hydla {
       /**
        * 構文木を JSON 形式で出力する
        */
-      std::ostream& dump_debug(std::ostream& s) const;
+      void dump_debug();
 
     };
   }

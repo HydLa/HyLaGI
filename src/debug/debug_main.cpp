@@ -1,11 +1,12 @@
 #include "debug_main.h"
 
+#include<iostream>
 
 using namespace hydla::debug;
+using namespace std;
 
-std::ostream& Debug::dump_debug(std::ostream& s) const
+void Debug::dump_debug()
 {
-  s << "ParseTree is empty." << std::endl;
-  return s;
+  cout << "debug.";
 }
 
