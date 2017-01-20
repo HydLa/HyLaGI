@@ -26,6 +26,10 @@
 
 #include <boost/regex.hpp>
 
+// debug
+#include "debug_main.h"
+
+
 // namespace
 using namespace boost;
 using namespace hydla;
@@ -34,6 +38,7 @@ using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parse_tree;
+using namespace hydla::debug;
 using namespace hydla::hierarchy;
 using namespace std;
 
@@ -474,7 +479,7 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
   }
 
   if(po.count("debug_constraint")>0) {
-    pt->dump_in_json(cout);
+    pt->dump_debug();
     return true;
   }
 
