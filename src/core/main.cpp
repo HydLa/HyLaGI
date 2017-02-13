@@ -445,6 +445,14 @@ int hydla_main(int argc, char* argv[])
     cout << "successfully parsed" << endl;
     return 0;
   }
+
+if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
+  {
+    cout << "debug!!!" << endl;
+    Debug db;
+    Debug::dump_debug(&db);
+    return 0;
+  }
   
   if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
     return 0;
@@ -479,8 +487,8 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
   }
 
   if(po.count("debug_constraint")>0) {
-    this->dump_debug();
-    cout << "hoge";
+    //dump_debug(cout);
+    //cout << "hoge";
     return true;
   }
 

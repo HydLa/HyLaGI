@@ -8,9 +8,16 @@ using namespace std;
 namespace hydla{
   namespace debug{
     Debug::Debug(){}
-void Debug::dump_debug()
+
+void Debug::dump_debug(Debug *db)
 {
-  cout << "debug.";
+  db -> debug_call();
+}
+
+void Debug::debug_call()
+{
+  cout << "debug." << std::endl;
+  //return cout;
 }
   }
 }
