@@ -450,7 +450,7 @@ int hydla_main(int argc, char* argv[])
   {
     cout << "debug!!!" << endl;
     Debug db;
-    Debug::dump_debug(&db, input);
+    Debug::dump_debug(&db, input, pt);
     return 0;
   }
   
