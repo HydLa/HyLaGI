@@ -1094,7 +1094,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   {
     std::string d_str = link_->get_string();
     int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
-    std::string variable_name = remove_prefix(link_->get_symbol(), var_prefix);
+    std::string variable_name = link_->get_symbol();
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for(int i = 0; i < variable_differential_count; i++)
     {

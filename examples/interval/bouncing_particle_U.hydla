@@ -2,7 +2,7 @@
  *  bouncing particle in f(x) = (1/2) * x^2
  */
 
-INIT <=> 0.49 <= x <= 0.5 & y = 10 & x' = 0 & y' = 0 & [](k = 1).
+INIT <=> 0.49999 <= x <= 0.5 & y = 10 & x' = 0 & y' = 0 & [](k = 1).
 
 
 A <=> [](cont = 1 => x'' = 0 & y'' = -98/10).
@@ -27,4 +27,4 @@ BOUNCE <=> [](y- = (1/2) * (x-)^2 => cont = 0 &
 
 INIT, SC, A, CONT << BOUNCE.
 
-// #hylagi -p 10 --finterval --fnd --fdump_in_progress --approximation_step 1 --guards_to_interval_newton y-=1/2*x-^2
+// #hylagi -p 10 --finterval --fnd --fdump_in_progress --approximation_step 1 --guards_to_interval_newton y-=1/2*x-^2 --fstep_by_step --vars_to_approximate x,y,x',y'

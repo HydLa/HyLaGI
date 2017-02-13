@@ -99,7 +99,7 @@ struct VariableNode{
 
 
 /**
- * Graph to represent relations of constraints and variables
+ * Bipartite graph to represent relations of constraints and variables
  */
 class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
 

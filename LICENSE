@@ -1,4 +1,4 @@
-HyLaGI uses Mathlink and boost C++ libraries.
+HyLaGI uses Mathlink, boost C++ libraries and kv library.
 
 ================================================================================
 
@@ -144,3 +144,10 @@ international resellers.
 This Agreement may only be modified in writing, with the signature of
 an authorized officer of WRI.
 
+================================================================================
+
+kv - a C++ Library for Verified Numerical Computation
+
+Copyright (c) 2017 Masahide Kashiwagi
+Released under the MIT license
+http://opensource.org/licenses/mit-license.php

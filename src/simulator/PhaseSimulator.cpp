@@ -1730,6 +1730,7 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
   }
   if(opts_->interval)
   {
+    double sum_width = 0;
     for(auto &entry: vm_to_approximate)
     {
       if(vars_to_approximate.count(entry.first) == 0 )
@@ -1737,7 +1738,9 @@ void PhaseSimulator::approximate_phase(phase_result_sptr_t& phase, variable_map_
       auto var = entry.first;
       itvd interval = evaluate_interval(phase, entry.second, false);
       phase->profile["width(" + var.get_string() + ")"] = width(interval);
+      sum_width += width(interval);
     }
+    phase->profile["Sum of width"] = sum_width;
   }
 }
 

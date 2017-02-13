@@ -288,7 +288,7 @@ void SymbolicTrajPrinter::output_result_node(const phase_result_const_sptr_t &no
         break;
 
       case simulator::NOT_UNIQUE_IN_INTERVAL:
-        ostream << "# some values of variables are not unique in IP\n" ;
+        ostream << "# some variables are not unique in IP\n" ;
         break;
 
       case simulator::NOT_SIMULATED:
