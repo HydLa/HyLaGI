@@ -5,11 +5,11 @@
 namespace hydla { 
   namespace debug {
     class Debug{
-      
+     Debug(); 
       /**
        * 構文木を JSON 形式で出力する
        */
-      void dump_debug();
+      public:  void dump_debug();
 
     };
   }

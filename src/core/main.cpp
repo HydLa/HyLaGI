@@ -479,7 +479,7 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
   }
 
   if(po.count("debug_constraint")>0) {
-    //hydla::debug::Debug::dump_debug();
+    this->dump_debug();
     cout << "hoge";
     return true;
   }
