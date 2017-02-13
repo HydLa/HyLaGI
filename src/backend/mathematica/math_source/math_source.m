@@ -129,7 +129,7 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit},
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
@@ -141,10 +141,11 @@ publicMethod[
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
-          If[(initCons /. (tRules /. t -> 0)) === False, 
+          substitutedInit = initCons /. prevRs;
+          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
-            initRules = makeRulesForVariable[initCons] /. prevRs;
+            initRules = makeRulesForVariable[substitutedInit];
             simplePrint[tCons];
             cpTrue = False;
             For[i = 1, i <= Length[tCons], i++,
@@ -185,7 +186,11 @@ publicMethod[
   cons, vars, assum, pars, current,
   Module[
     {ret, map},
-    map = removeUnnecessaryConstraints[cons, hasVariable];
+
+    If[map === True, Return[{{}}]];
+    If[map === False, Return[{}]];    
+
+    map = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
     simplePrint[map];
     If[Head[map] === Or,
       (* try to solve with parameters *)
@@ -194,8 +199,6 @@ publicMethod[
       map = removeUnnecessaryConstraints[map, hasVariable];
     ];
 
-    If[map === True, Return[{{}}]];
-    If[map === False, Return[{}]];
     map = LogicalExpand[map];
     map = applyListToOr[map];
     map = Map[(applyList[#])&, map];
