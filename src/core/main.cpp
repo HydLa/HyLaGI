@@ -446,11 +446,11 @@ int hydla_main(int argc, char* argv[])
     return 0;
   }
 
-if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
+  if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
   {
     cout << "debug!!!" << endl;
     Debug db;
-    Debug::dump_debug(&db);
+    Debug::dump_debug(&db, input);
     return 0;
   }
   

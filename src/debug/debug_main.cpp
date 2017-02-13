@@ -9,15 +9,16 @@ namespace hydla{
   namespace debug{
     Debug::Debug(){}
 
-void Debug::dump_debug(Debug *db)
-{
-  db -> debug_call();
-}
+    void Debug::dump_debug(Debug *db, std::string string)
+    {
+      cout << string << std::endl;
+      db -> debug_call();
+    }
 
-void Debug::debug_call()
-{
-  cout << "debug." << std::endl;
-  //return cout;
-}
+    void Debug::debug_call()
+    {
+      cout << "debug." << std::endl;
+      //return cout;
+    }
   }
 }
