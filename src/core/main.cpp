@@ -450,7 +450,10 @@ int hydla_main(int argc, char* argv[])
   {
     cout << "debug!!!" << endl;
     Debug db;
-    Debug::dump_debug(&db, input, pt);
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    //msc->dump_priority_data_for_graphviz(cout);
+    Debug::dump_debug(&db, input, pt, msc);
     return 0;
   }
   
