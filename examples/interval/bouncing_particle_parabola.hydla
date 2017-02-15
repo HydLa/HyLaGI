@@ -10,4 +10,4 @@ BOUNCE <=> [](y- = (x-)^2 => cont = 0
 
 INIT, A, CONT << BOUNCE.
 
-//#hylagi --finterval --fstep_by_step --vars_to_approximate x,x',y,y' --approximation_step 1 --guards_to_interval_newton y-=x-^2
+//#hylagi --finterval --fstep_by_step --vars_to_approximate x,x',y,y' --approximation_step 1 --guards_to_interval_newton y-=x-^2 --faffine -p 13
