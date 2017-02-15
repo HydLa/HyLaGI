@@ -7,13 +7,11 @@ trySolve[cons_, vars_] :=
       consToSolve = Select[consList, (Head[#] === Equal)&];
       inequalities = Complement[consList, consToSolve];
       inequalities = Reduce[inequalities, vars];
-      simplePrint[consToSolve, inequalities];
       For[i = 1, i <= Length[consToSolve], i++,
         eachCons = consToSolve[[i]];
         If[Head[eachCons] === Equal,
           (* swap lhs and rhs if rhs is variable *)
           If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[1]] == eachCons[[2]])];
-          simplePrint[i, eachCons, consToSolve];
           If[isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
             trivialCons = trivialCons && eachCons;
             consToSolve = Drop[consToSolve, {i}];
@@ -23,14 +21,11 @@ trySolve[cons_, vars_] :=
         ]
       ]
     ];
-    simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
       sol = Quiet[Solve[consToSolve, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
       If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
-    simplePrint[consToSolve];
     If[solved =!= True, sol = And@@consToSolve];
-    simplePrint[sol, trivialCons, inequalities];
     {trivialCons && sol && inequalities, solved}
   ];
 
@@ -181,34 +176,68 @@ Module[
 
 freeFromInequalities[expr_] := FreeQ[expr, Less] && FreeQ[expr, LessEqual] && FreeQ[expr, Greater] && FreeQ[expr, GreaterEqual] && FreeQ[expr, Unequal];
 
+(* 
+   consList: list of atomic constraints
+   vars: set of variables
+   return: {resultList, succeeded}
+           resultList: list of constraints that contain at least one constraint for each variable
+                       (the meaning is equal to cons)
+           succeeded: True if it succeeded in transformation, otherwise False
+ *)
+tryToTransformConstraints[consList_, vars_] :=
+Module[
+  {i, processedVars = {}, newVars, resultCons = True, listToProcess = consList, tmpCons},
+  For[i = 1, i <= Length[listToProcess], ++i, 
+    newVars = Complement[getVariablesWithDerivatives[listToProcess[[i]] ], processedVars];
+    If[Length[newVars] == 1,
+      processedVars = Append[processedVars, newVars[[1]] ];
+      tmpCons = Reduce[listToProcess[[i]], newVars[[1]], Reals];
+      If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
+      resultCons = resultCons && tmpCons;
+      listToProcess = Drop[listToProcess, {i}];
+      i = 0;
+    ];
+    If[Length[newVars] == 0,
+      resultCons = resultCons && listToProcess[[i]];
+      listToProcess = Drop[listToProcess, {i}];
+      --i;
+    ];
+  ];
+  succeeded = If[Length[listToProcess] =!= 0, False, True];
+  {resultCons, succeeded}
+];
+
 publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {ret, map},
+    {map, tmpCons, succeded = false},
 
-    If[map === True, Return[{{}}]];
-    If[map === False, Return[{}]];    
+    If[cons === True, Return[{{}}]];
+    If[cons === False, Return[{}]];    
 
-    map = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
-    simplePrint[map];
-    If[Head[map] === Or,
+    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
+    If[Head[tmpCons] =!= LogicalOr,
+      {tmpCons, succeeded} = tryToTransformConstraints[applyList[tmpCons], vars]
+    ];
+    simplePrint[tmpCons, succeeded];
+    If[!succeeded,
       (* try to solve with parameters *)
-      map = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      map = Reduce[map, vars, Reals];
-      map = removeUnnecessaryConstraints[map, hasVariable];
+      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
+      tmpCons = Reduce[tmpCons, vars, Reals];
+      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
+      tmpCons = LogicalExpand[tmpCons];
     ];
 
-    map = LogicalExpand[map];
-    map = applyListToOr[map];
-    map = Map[(applyList[#])&, map];
-    map = Map[(adjustExprs[#, isVariable])&, map];
-    debugPrint["map after adjustExprs in createVariableMap", map];
-    ret = Map[(convertExprs[#])&, map];
-    ret = Map[(Cases[#, Except[{p[___], _, _}] ])&, ret];
-    ret = ruleOutException[ret];
-    simplePrint[ret];
-    ret
+    tmpCons = applyListToOr[tmpCons];
+    tmpCons = Map[(applyList[#])&, tmpCons];
+    tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
+    debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
+    map = Map[(convertExprs[#])&, tmpCons];
+    map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
+    map = ruleOutException[map];
+    simplePrint[map];
+    map
   ]
 ];
 
@@ -676,7 +705,7 @@ publicMethod[
     ];
     (* First, compare 2 expressions using interval arithmetic *)
     If[time1 === Infinity,
-      Return[{{False}, {andCond}, {False}}]
+      Return[{{False}, {toReturnForm[LogicalExpand[andCond] ]}, {False}}]
     ];
     pRules = createIntervalRules[andCond];
     If[pRules =!= failed,
