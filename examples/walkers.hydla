@@ -46,10 +46,10 @@ ANGLE, HUMAN_RADIUS,
       | i in {1..|X|} },
 
 { (TIMER(T[i]),CONST(S[i])) << TURN_LEFT(X[i],Y[i],V[i],S[i],T[i], 1, X[j], Y[j]) << $TRUE
-        | i in {1..|X|}, j in {1..|X|}, i =!= j}.
+        | i in {1..|X|}, j in {1..|X|}, i != j}.
 
 { (TIMER(T[i]),CONST(S[i])) << TURN_RIGHT(X[i],Y[i],V[i],S[i],T[i], 1, X[j], Y[j]) << $TRUE
-        | i in {1..|X|}, j in {1..|X|}, i =!= j },
+        | i in {1..|X|}, j in {1..|X|}, i != j },
 
 { (CONST(V[i]),CONST(V[j])) << COLLISION(X[i],Y[i],V[i],X[j],Y[j],V[j])
         | i in {1..|X|-1}, j in {i+1..|X|} }, 
