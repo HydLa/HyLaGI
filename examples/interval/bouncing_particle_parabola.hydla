@@ -1,0 +1,13 @@
+INIT <=> x = 2 & y = 10 & 0 <= x' <= 0.00001 & y' = 0.
+
+A <=> [](cont = 1 => x'' = 0 & y'' = -9).
+
+CONT <=> [](cont = 1).
+
+BOUNCE <=> [](y- = (x-)^2 => cont = 0
+        & x' = x'- - (4*(2*x- * x'- - (y'-))*x-)/(4*(x-)^2 + 1)
+        & y' = y'- + (2*(2*x- * x'- - (y'-)))/(4*(x-)^2 + 1)).
+
+INIT, A, CONT << BOUNCE.
+
+//#hylagi --finterval --fstep_by_step --vars_to_approximate x,x',y,y' --approximation_step 1 --guards_to_interval_newton y-=x-^2
