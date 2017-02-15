@@ -344,7 +344,8 @@ isVariable[exprs_] := MatchQ[exprs, _Symbol] && (StringMatchQ[ToString[exprs], v
 getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
 getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
 getVariablesWithDerivatives[exprs_] := Union[getVariables[exprs], getDerivatives[exprs] ];
-getTimeVariablesWithDerivatives[exprs_] := Union[Map[(#[t])&, getVariables[exprs]], getDerivatives[exprs] ];
+getTimeVariablesWithDerivatives[exprs_] := Union[getTimeVariables[exprs], getDerivatives[exprs] ];
+getTimeVariables[exprs_] := Map[(#[t])&, getVariables[exprs]];
 
 (* 式中に出現するprev値を取得 *)
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
@@ -812,42 +813,50 @@ exDSolve::multi = "Solution of `1` is not unique.";
 exDSolve[expr_, prevRs_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
-  inputPrint["exDSolve", expr];
+  inputPrint["exDSolve", expr, prevRs];
   listExpr = applyList[expr];
   sol = {};
   resultCons = Select[listExpr, (Head[#] =!= Equal)&];
   listExpr = Complement[listExpr, resultCons];
   (* add constraint "t > 0" to exclude past case *)
-  tVars = Map[(#[t])&, getTimeVariablesWithDerivatives[listExpr] ];
   resultCons = And@@resultCons && t > 0;
-  resultRule = {};
-  While[True,
-    searchResult = searchExprsAndVars[listExpr];
-    simplePrint[searchResult];
-    If[searchResult === unExpandable,
-      Break[],
-      rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
-      simplePrint[rules];
-      If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
-      (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
-      If[Head[rules] === DSolve,
-        resultCons = resultCons && And@@searchResult[[1]];
-        listExpr = Complement[listExpr, searchResult[[1]] ];
-        unsolvable = True;
-        Continue[]
-      ];
-      resultRule = Union[resultRule, rules[[1]] ];
-      listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-      listExpr = listExpr //. prevRs;
-      If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
-      listExpr = Select[listExpr, (#=!=True)&];
-      tVars = Map[(#[t])&, getTimeVariablesWithDerivatives[listExpr] ];
-      simplePrint[listExpr, tVars];
-
-      resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
-      If[resultCons === False, Return[overConstrained] ];
+  simplePrint[listExpr];
+  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
+  If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
+    resultRule = resultRule[[1]] /. prevRs;
+    listExpr = {},
+    (* resultRule may equal overconstrained for the constraint such as x'[t] == 0 && x[t] == 0 && x[0] == 0,
+       therefore we have to check furthermore. *)
+    tVars = getTimeVariables[listExpr];
+    resultRule = {};
+    While[True,
+      searchResult = searchExprsAndVars[listExpr];
+      simplePrint[searchResult];
+      If[searchResult === unExpandable,
+        Break[],
+        rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+        simplePrint[rules];
+        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
+        (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+        If[Head[rules] === DSolve,
+          resultCons = resultCons && And@@searchResult[[1]];
+          listExpr = Complement[listExpr, searchResult[[1]] ];
+          unsolvable = True;
+          Continue[]
+        ];
+        resultRule = Union[resultRule, rules[[1]] ];
+        listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+        listExpr = listExpr //. prevRs;
+        If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
+        listExpr = Select[listExpr, (#=!=True)&];
+        tVars = getTimeVariables[listExpr];
+        simplePrint[listExpr, tVars];
+        resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
+        If[resultCons === False, Return[overConstrained] ];
+      ]
     ]
   ];
+  simplePrint[resultRule, resultCons, prevRs];
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
   restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
   restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];

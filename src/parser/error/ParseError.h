@@ -227,6 +227,17 @@ public:
   {}
 };
 
+/**
+ * リストの添え字に無効なインデックスを指定した時に発生する例外
+ */
+class InvalidIndex : public ParseError {
+public:
+  InvalidIndex(const symbolic_expression::node_sptr& own, int line = -1) :
+    ParseError("Invalid index is detected", own, line)
+  {}
+};
+
+
 class InvalidParameter : public ParseError {
 public:
   InvalidParameter(int line = -1) :
