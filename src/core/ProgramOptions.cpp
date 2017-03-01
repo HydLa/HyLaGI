@@ -130,7 +130,7 @@ void ProgramOptions::init_descriptions()
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
     ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
-
+    ("eager_approximation",  value<char>()->default_value('n'), "approximate values in advance of each Point Phase")
     ("approximation_step", value<int>()->default_value(1), "the interval of step to approximate value of variable")
     ("extra_dummy_num", value<int>()->default_value(0), "the number of extra dummy parameters in affine arithmetic.")
 

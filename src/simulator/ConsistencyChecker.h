@@ -92,7 +92,10 @@ private:
     const PhaseType &phase,
     profile_t &profile
     );
-  
+
+  /**
+   * @todo refactor
+   */
   void add_continuity(VariableFinder&, const PhaseType &phase, const constraint_t &constraint_for_default_continuity = constraint_t());
 
   void check_consistency_foreach(const ConstraintStore& constraint_store, RelationGraph &relation_graph, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);

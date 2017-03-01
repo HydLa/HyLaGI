@@ -183,6 +183,9 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
       else ++it;
     }
   }
+  
+
+  
   for(auto guard : todo->discrete_guards)
   {
     constraint_t cons = guard;
@@ -196,7 +199,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   backend_->call("addParameterConstraint", true, 1, "csn", "", &todo->additional_parameter_constraint);
   backend_->call("addAssumption", true, 1, todo->phase_type == INTERVAL_PHASE?"cst":"csn", "", &todo->additional_constraint_store);
 
-  relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE);
+  relation_graph_->set_ignore_prev(todo->phase_type == POINT_PHASE && todo->parent != result_root.get());
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
@@ -453,8 +456,7 @@ ConstraintStore PhaseSimulator::get_current_parameter_constraint()
 
 
 bool PhaseSimulator::check_equality(const value_t &lhs, const value_t &rhs){
-  return false; // temporarily invalidate this function
-                // TODO: resume this function with more efficient way
+  // TODO: resume this function with more efficient way
   bool equal;
   backend_->call("exactlyEqual", true, 2, "vlnvln", "b", &lhs, &rhs, &equal);
   return equal;
@@ -1235,8 +1237,14 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       StateOfIntervalNewton &state = entry.second;
       if(!state.min_interval)
       {
+        for(auto guard : phase->discrete_guards)
+        {
+          HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
+        }
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first));
+        HYDLA_LOGGER_DEBUG_VAR(phase->discrete_guards.count(entry.first));
         state.min_interval =
-          interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step()  || phase->discrete_guards.count(entry.first));
+          interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
       if(opts_->numerize_mode)
@@ -1647,7 +1655,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
-//            approximate_phase(next_todo, phase->prev_map);
+            if(opts_->eager_approximation) approximate_phase(next_todo, phase->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
           }

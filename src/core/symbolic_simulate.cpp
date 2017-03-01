@@ -191,6 +191,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("numerize_without_validation")opts.numerize_mode =  po.count("numerize_without_validation") > 0 && po.get<char>("numerize_without_validation") == 'y';
+  IF_SPECIFIED("eager_approximation")opts.eager_approximation =  po.count("eager_approximation") > 0 && po.get<char>("eager_approximation") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
   IF_SPECIFIED("approximation_step")opts.approximation_step = po.get<int>("approximation_step");
   IF_SPECIFIED("extra_dummy")opts.extra_dummy_num = po.get<int>("extra_dummy_num");

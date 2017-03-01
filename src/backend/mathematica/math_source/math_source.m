@@ -22,7 +22,7 @@ trySolve[cons_, vars_] :=
       ]
     ];
     If[freeFromInequalities[consToSolve],
-      sol = Quiet[Solve[consToSolve, vars, Reals], {Solve::svars, PolynomialGCD::lrgexp}];
+      sol = Quiet[Solve[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp}];
       If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     If[solved =!= True, sol = And@@consToSolve];
@@ -31,23 +31,24 @@ trySolve[cons_, vars_] :=
 
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && initConstraint && prevConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime ]
+  checkConsistencyPoint[constraint && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[(Assuming[assumptions, Simplify[tmpCons] ]) && constraint && initConstraint && prevConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[tmpCons && constraint  && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime]
 );
-
 
 publicMethod[
   checkConsistencyPoint,
-  cons, pcons, assum, prevRs, vars, prevs, pars, current,
+  cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, simplifiedCons, sol, solved = False},
-    simplifiedCons = Assuming[assum, timeConstrainedSimplify[cons] ] /. t -> current;
-    simplePrint[simplifiedCons];
-    {sol, solved} = trySolve[simplifiedCons, vars];
-    resultConstraint = sol //. prevRs;
-    simplePrint[resultConstraint, solved];
+    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False},
+    initRules = Map[(Rule@@#)&, applyList[init] ];
+    debugPrint["assum: ", assum];
+    initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
+    (*initSubsituted = Assuming[assum, timeConstrainedSimplify[cons /. t->current /. initRules] ]; *)
+    {sol, solved} = trySolve[initSubsituted, vars];
+    resultConstraint = Assuming[assum, timeConstrainedSimplify[sol //. prevRs] ];
+    simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
         cpTrue = pcons;
@@ -191,7 +192,13 @@ Module[
     newVars = Complement[getVariablesWithDerivatives[listToProcess[[i]] ], processedVars];
     If[Length[newVars] == 1,
       processedVars = Append[processedVars, newVars[[1]] ];
-      tmpCons = Reduce[listToProcess[[i]], newVars[[1]], Reals];
+      simplePrint[listToProcess[[i]], newVars[[1]] ];
+      tmpCons = If[listToProcess[[i]] =!= newVars[[1]],
+        newVars[[1]] == Solve[listToProcess[[i]], newVars[[1]]][[1, 1, 2]],
+        listToProcess[[i]]
+      ];
+      If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
+      simplePrint[tmpCons];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
       resultCons = resultCons && tmpCons;
       listToProcess = Drop[listToProcess, {i}];
@@ -295,7 +302,7 @@ publicMethod[
 publicMethod[
   exactlyEqual,
   lhs, rhs,
-  Simplify[lhs == rhs] === True
+  TimeConstrained[Simplify[lhs] === Simplify[rhs], 1, False]
 ];
 
 createParameterMaps[] := createParameterMaps[pConstraint, parameters];

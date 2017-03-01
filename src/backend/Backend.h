@@ -65,13 +65,11 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *  @param name name of function
    *  @param trace If true, the trace will be logged
    *  @param arg_cnt count of arguments of function
-   *  @param args_fmt  format for following arguments
-   *  @param ret_fmt format for following return-values (after args)
+   *  @param args_fmt  format for the following arguments
+   *  @param ret_fmt format for the following return-values (after args)
    *  @return 0 for success, otherwise non-zero value
    *
-   *  format is like below
-
-
+   *  
    *    b: bool: boolean value
    *    cp: compare_min_time_result_t (receive only)
    *    db: double

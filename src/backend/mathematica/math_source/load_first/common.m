@@ -36,6 +36,8 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
+optTimeConstraint = 1;
+optSimplifyLevel = 1;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,

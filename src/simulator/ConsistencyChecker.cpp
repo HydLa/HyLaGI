@@ -90,6 +90,8 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
   map<string, int> vm;
   variable_set_t variable_set;
 
+
+  // get variables assumed to be continuous
   if(phase == POINT_PHASE)
   {
     if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
@@ -102,8 +104,8 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     variable_set = finder.get_all_variable_set();
   }
 
+  // create a map that projects variables to orders of those derivatives
   auto dm = get_differential_map(variable_set);
-  
   if(phase == INTERVAL_PHASE && constraint_for_default_continuity.get())
   {
     // assuming default continuity for variables in constraints
@@ -112,14 +114,10 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-      //if(dm.count(entry.first)) continue;
       for(int i = 0; i <= entry.second;i++){
         variable_t var(entry.first, i);
         send_init_equation(var, fmt);
       }
-//      Value zero_value("0");
-      //    variable_t var(entry.first, entry.second + 1);
-//      backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
     }
   }
 
