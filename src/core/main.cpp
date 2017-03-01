@@ -391,6 +391,8 @@ int hydla_main(int argc, char* argv[])
 		  macro.apply(input, 0u);
 	  }
 
+	  input = std::regex_replace(input, std::regex("[^#]"), "$&", std::regex_constants::format_no_copy);
+
 	  if (debugPrint)
 	  {
 		  std::cout << "===================================\n";
