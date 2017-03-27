@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "Timer.h"
 #include <stdarg.h>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
@@ -389,6 +390,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 
 int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
+  timer::Timer call_timer;
   link_->trace = trace;
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
@@ -414,7 +416,7 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
     va_end(args);
     throw;
   }
-
+  HYDLA_LOGGER_DEBUG_VAR(call_timer.get_elapsed_us());
   return 0;
 }
 

@@ -698,7 +698,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     {
       unknown_asks.insert(adjacent);
     }
-    for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end();)
+    for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end() && !expanded;)
     {
       const auto ask = *ask_it;
 
@@ -767,25 +767,26 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     }
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     // loop until no branching occurs
-    while(true)
-    {
-      timer::Timer consistency_timer;
-      CheckConsistencyResult cc_result;
-      cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, unknown_asks, phase->in_following_step());
-      phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
-      phase->profile["# of CheckConsistency"]++;
-      if(!cc_result.consistent_store.consistent()){
-        return false;
-      }else if (cc_result.inconsistent_store.consistent()){
-        push_branch_states(phase, cc_result);
-      }
-      else
-      {
-        break;
-      }
-    }
     discrete_variables = get_discrete_variables(local_diff_sum, phase_type);
   }while(expanded);
+  
+  while(true)
+  {
+    timer::Timer consistency_timer;
+    CheckConsistencyResult cc_result;
+    cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, unknown_asks, phase->in_following_step());
+    phase->profile["CheckConsistency"] += consistency_timer.get_elapsed_us();
+    phase->profile["# of CheckConsistency"]++;
+    if(!cc_result.consistent_store.consistent()){
+      return false;
+    }else if (cc_result.inconsistent_store.consistent()){
+      push_branch_states(phase, cc_result);
+    }
+    else
+    {
+      break;
+    }
+  }
 
   if(!unknown_asks.empty()){
     phase_result_sptr_t branch_state_false = clone_branch_state(phase);

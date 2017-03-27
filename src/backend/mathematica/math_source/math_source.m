@@ -22,7 +22,7 @@ trySolve[cons_, vars_] :=
       ]
     ];
     If[freeFromInequalities[consToSolve],
-      sol = Quiet[Solve[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp}];
+      sol = Quiet[Solve[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
       If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     If[solved =!= True, sol = And@@consToSolve];
@@ -47,7 +47,7 @@ publicMethod[
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     (*initSubsituted = Assuming[assum, timeConstrainedSimplify[cons /. t->current /. initRules] ]; *)
     {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = Assuming[assum, timeConstrainedSimplify[sol //. prevRs] ];
+    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
@@ -193,10 +193,10 @@ Module[
     If[Length[newVars] == 1,
       processedVars = Append[processedVars, newVars[[1]] ];
       simplePrint[listToProcess[[i]], newVars[[1]] ];
-      tmpCons = If[listToProcess[[i]] =!= newVars[[1]],
+      tmpCons = Quiet[Check[If[listToProcess[[i]] =!= newVars[[1]],
         newVars[[1]] == Solve[listToProcess[[i]], newVars[[1]]][[1, 1, 2]],
         listToProcess[[i]]
-      ];
+      ], listToProcess[[i]] ] ];
       If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
       simplePrint[tmpCons];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
@@ -225,7 +225,7 @@ publicMethod[
 
     tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
     If[Head[tmpCons] =!= LogicalOr,
-      {tmpCons, succeeded} = tryToTransformConstraints[applyList[tmpCons], vars]
+      {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
     ];
     simplePrint[tmpCons, succeeded];
     If[!succeeded,
