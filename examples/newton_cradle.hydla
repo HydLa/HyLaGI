@@ -1,0 +1,15 @@
+INIT <=> x1 = -0.5 & x2 = 1+e &  x3 = 2 + 2*e & x4 = 3+3*e & x5 = 4+4*e & x1' = 1 & x2' = x3' = x4' = x5' = 0.
+CONST(x) <=> [](x'' = 0).
+COLLISION(xa, xb) <=> [](xa- = xb- - 1 => xa' = xb'- & xb' = xa'-).
+EPSILON <=> 0 < e < 0.2  & [](e' = 0).
+LEFT_WALL <=> [](x1- = -1 => x1' = -x1'-).
+RIGHT_WALL <=> [](x5- = 5 => x5' = -x5'-).
+
+INIT.
+EPSILON.
+(CONST(x1),CONST(x2),CONST(x3),CONST(x4),CONST(x5))
+<< (COLLISION(x1, x2), COLLISION(x2, x3) ,
+COLLISION(x3, x4),
+COLLISION(x4, x5), LEFT_WALL, RIGHT_WALL).
+
+// #hylagi -p10

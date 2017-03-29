@@ -2,10 +2,12 @@
 
 TIMER <=> [](s'=0) & [](timer'=1).
 SWITCH <=> [](timer- = 1 => timer = 0 & s = 1-s-).
-INIT <=> 0 < vc < 5 & il = 0 & s = 0 & timer=0 & [](L = 1 & RL = 1 & VS = 1 & RC = 1 & R0 = 1 & C=1) .
-STATE1 <=> [](s = 0 => il' = -RL/L*il + VS/L & vc'=-vc/(C*(RC+R0))).
-STATE2 <=> [](s = 1 => il' = -(RL+RC*R0/(RC+R0))*il -R0/(L*(RC+R0))*vc + VS/L & vc' = R0/(C*(RC+R0))*il - 1/(C*(RC+R0))*vc).
+INIT <=> 0 < vc < 5 & il = 0 & s = 0 & timer=0 & [](l = 1 & rl = 1 & vs = 1 & rc = 1 & r0 = 1 & c=1) .
+STATE1 <=> [](s = 0 => il' = -rl/l*il + vs/l & vc'=-vc/(c*(rc+r0))).
+STATE2 <=> [](s = 1 => il' = -(rl+rc*r0/(rc+r0))*il -r0/(l*(rc+r0))*vc + vs/l & vc' = r0/(c*(rc+r0))*il - 1/(c*(rc+r0))*vc).
 
 // ASSERT(vc > 1).
 
 INIT, TIMER << SWITCH, STATE1, STATE2.
+
+// #hylagi -p8

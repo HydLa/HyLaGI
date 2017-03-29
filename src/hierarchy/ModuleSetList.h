@@ -41,6 +41,8 @@ public:
    */ 
   std::string get_name() const;
 
+  virtual void remove_included_ms_by_current_ms();
+
   /**
    * 集合の集合のダンプ
    */

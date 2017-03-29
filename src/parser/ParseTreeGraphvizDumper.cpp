@@ -99,7 +99,7 @@ void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<BinaryNode> node)
 }
 
 
-void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<ArbitraryNode> node)
+void ParseTreeGraphvizDumper::dump_node(boost::shared_ptr<VariadicNode> node)
 {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_string()));
@@ -355,6 +355,12 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Float> node)
 }
 
 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ImaginaryUnit> node)
+{
+  dump_node(node);
+}
+
+
 void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Infinity> node)
 {
   dump_node(node);
@@ -374,6 +380,109 @@ void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SymbolicT> node)
 {
   dump_node(node);
 }
+
+// ExpressionList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionList> node)
+{
+  dump_node(node);
+}
+
+// ConditionalExpressionList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConditionalExpressionList> node)
+{
+  dump_node(node);
+}
+
+// ProgramList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramList> node)
+{
+  dump_node(node);
+}
+
+// ConditionalProgramList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ConditionalProgramList> node)
+{
+  dump_node(node);
+}
+
+// EachElement
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<EachElement> node)
+{
+  dump_node(node);
+}
+
+// DifferentVariable
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<DifferentVariable> node)
+{
+  dump_node(node);
+}
+
+// ExpressionListElement 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListElement> node)
+{
+  dump_node(node);
+}
+
+// ExpressionListCaller
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListCaller> node)
+{
+  dump_node(node);
+}
+
+// ProgramListElement 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListElement> node)
+{
+  dump_node(node);
+}
+
+// ExpressionListDefinition
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ExpressionListDefinition> node)
+{
+  dump_node(node);
+}
+
+// ProgramListDefinition
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListDefinition> node)
+{
+  dump_node(node);
+}
+
+// ProgramListCaller 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<ProgramListCaller> node)
+{
+  dump_node(node);
+}
+
+// Union 
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Union> node)
+{
+  dump_node(node);
+}
+
+// Intersection
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Intersection> node)
+{
+  dump_node(node);
+}
+
+// Range
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<Range> node)
+{
+  dump_node(node);
+}
+
+// SizeOfList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SizeOfList> node)
+{
+  dump_node(node);
+}
+
+// SumOfList
+void ParseTreeGraphvizDumper::visit(boost::shared_ptr<SumOfList> node)
+{
+  dump_node(node);
+}
+
 
 
 } //namespace parser

@@ -3,6 +3,16 @@
 namespace hydla{
   namespace parser{
 
+Lexer::Lexer():line(0),column(0){}
+Lexer::Lexer(std::string file, std::istream& stream):line(0),column(0)
+{
+  file_info.push_back(file_info_t(file,0));
+  std::string tmp;
+  while(std::getline(stream,tmp)){
+    strs.push_back(tmp);
+  }
+}
+
 Lexer::Lexer(std::istream& stream):line(0),column(0)
 {
   std::string tmp;
@@ -15,16 +25,27 @@ Lexer::Lexer(std::string str):line(0),column(0)
 {
   strs.push_back(str);
 }
+Lexer::Lexer(std::string file, std::vector<std::string> strings):strs(strings),line(0),column(0)
+{
+  file_info.push_back(file_info_t(file,0));
+}
 
 Lexer::Lexer(std::vector<std::string> strings):strs(strings),line(0),column(0){}
 Lexer::~Lexer(){}
 
+void Lexer::add_file(std::string file, std::istream& stream)
+{
+  file_info.push_back(file_info_t(file,strs.size()));
+  std::string tmp;
+  while(std::getline(stream,tmp)){
+    strs.push_back(tmp);
+  }
+}
+
 Token Lexer::identifier()
 {
   std::string identifier;
-  bool not_alpha = false;
   do{
-    if(!not_alpha && (get_current_char() == '_' || is_digit(get_current_char()))) not_alpha = true;
     identifier += get_current_char();
   }while(next_char() && (
           is_digit(get_current_char())
@@ -33,8 +54,9 @@ Token Lexer::identifier()
          )
        );
   current_token_string = identifier;
-  if(not_alpha) return IDENTIFIER;
-  return ALPHABET;
+  if('A' <= current_token_string[0] && current_token_string[0] <= 'Z') 
+    return UPPER_IDENTIFIER;
+  return LOWER_IDENTIFIER;
 }
 
 Token Lexer::number()
@@ -184,18 +206,6 @@ Token Lexer::get_token()
         current_token_string = "=>";
         return IMPLIES;
       }
-      if(get_current_char() == '!'){
-        int now_line = line;
-        int now_column = column;
-        next_char();
-        if(get_current_char() == '='){
-          current_token_string = "=!=";
-          next_char();
-          return DIFFERENT_VARIABLE;
-        }
-        line = now_line;
-        column = now_column;
-      }
       return EQUAL;
     case '[':
       if(get_current_char() == ']'){
@@ -212,17 +222,19 @@ Token Lexer::get_token()
         return LOGICAL_AND;
       }
       if(current == '*'){
+        next_char();
+        skip_space();
         while(true){
-          do{
+          if(get_current_char()=='*'){
+            next_char();
+            if(get_current_char()=='/'){
+              next_char();
+              return get_token();
+            }
+          }else{
             next_char();
             skip_space();
-          }while(get_current_char()!='*');
-          next_char();
-          if(get_current_char()=='/'){
-            next_char();
-            return get_token();
           }
-          skip_space();
         }
       }
       if(current == '/'){

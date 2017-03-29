@@ -47,15 +47,18 @@ class Value
    */
   Value(double num);
   
-  /**
-   * 未定義値かどうか
-   */
   virtual bool undefined() const;
+  
+  virtual bool infinite() const;
+
+  virtual bool isZero() const;
 
   /**
    * 文字列表現を取得する
    */
   virtual std::string get_string() const;
+
+  virtual Value get_numerized_value()const;
 
   /**
    * Nodeの形式にしたものを取得する
@@ -82,6 +85,10 @@ class Value
 
   /// negative
   Value operator-();
+
+  
+  Value& operator^=(const Value &rhs);
+  Value operator^(const Value &rhs);
   
   /**
    * データをダンプする

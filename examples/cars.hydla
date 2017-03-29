@@ -1,36 +1,38 @@
 /*
-INIT(x,x0,v0,t) <=> x=x0 & x'=v0 & t=0.
+INIT(x,x0,v0,timer) <=> x=x0 & x'=v0 & timer=0.
 ACC(xl,xf) <=> [](xf'- < 30 & xl- - xf- >= 10 => xf''=3).
 BRK(xl,xf) <=> [](xf'- > 0 & xl- - xf- <= 3 => xf''=-5).
 CONST(x) <=> [](x''=0).
 */
 
 /*
-INIT(x0,1000,20,t0),CONST(x0).
-INIT(x1,980,20,t1),( CONST(x1) )<<( ACC(x0,x1,t1), BRK(x0,x1,t1) ).
+INIT(x0,1000,20,timer0),CONST(x0).
+INIT(x1,980,20,timer1),( CONST(x1) )<<( ACC(x0,x1,timer1), BRK(x0,x1,timer1) ).
 */
 
-INIT(x,x0,v0,t) <=> x=x0 & x'=v0 & t=0.
-SW_ACC(xl,xf,t) <=> [](xf'- < 30 & xl- - xf- >= 10 => t'=1 & xf'' = xf'').
-SW_BRK(xl,xf,t) <=> [](xf'- > 0 & xl- - xf- <= 3 => t'=-1 & xf'' = xf'').
-ACC(xl,xf,t) <=> [](t- >= 1 => xf''=3).
-BRK(xl,xf,t) <=> [](t- <= -1 => xf''=-5).
+INIT(x,x0,v0,timer) <=> x=x0 & x'=v0 & timer=0.
+SW_ACC(xl,xf,timer) <=> [](xf'- < 30 & xl- - xf- >= 10 => timer'=1 & xf'' = xf'').
+SW_BRK(xl,xf,timer) <=> [](xf'- > 0 & xl- - xf- <= 3 => timer'=-1 & xf'' = xf'').
+ACC(xl,xf,timer) <=> [](timer- >= 1 => xf''=3).
+BRK(xl,xf,timer) <=> [](timer- <= -1 => xf''=-5).
 CONST(x) <=> [](x''=0).
-TIMER_OFF(t) <=>[](t=0).
+TIMER_OFF(timer) <=>[](timer=0).
 
 /*
-INIT(x0,1000,20,t0),CONST(x0),TIMER_OFF(t0).
-INIT(x1,980,20,t1),( CONST(x1), TIMER_OFF(t1) ) << ( SW_ACC(x0,x1,t1), SW_BRK(x0,x1,t1) ) << ( ACC(x0,x1,t1), BRK(x0,x1,t1) ).
-INIT(x2,960,20,t2),( CONST(x2), TIMER_OFF(t2) ) << ( SW_ACC(x1,x2,t2), SW_BRK(x1,x2,t2) ) << ( ACC(x1,x2,t2), BRK(x1,x2,t2) ).
+INIT(x0,1000,20,timer0),CONST(x0),TIMER_OFF(timer0).
+INIT(x1,980,20,timer1),( CONST(x1), TIMER_OFF(timer1) ) << ( SW_ACC(x0,x1,timer1), SW_BRK(x0,x1,timer1) ) << ( ACC(x0,x1,timer1), BRK(x0,x1,timer1) ).
+INIT(x2,960,20,timer2),( CONST(x2), TIMER_OFF(timer2) ) << ( SW_ACC(x1,x2,timer2), SW_BRK(x1,x2,timer2) ) << ( ACC(x1,x2,timer2), BRK(x1,x2,timer2) ).
 */
 
 
-x := x0..x2.
-t := t0..t2.
+X := {x0..x2}.
+T := {timer0..timer2}.
 
-{ INIT(x[i],1000-20*i,20+i/|x|,t[i]) | i in 1..|x| }.
-CONST(x[1]), TIMER_OFF(t[1]).
-{ ( CONST(x[i]), TIMER_OFF(t[i]) )
-	<< ( SW_ACC(x[i-1],x[i],t[i]), SW_BRK(x[i-1],x[i],t[i] ) )
-	<< ( ACC(x[i-1],x[i],t[i]), BRK(x[i-1],x[i],t[i] ) )
-	| i in 2..|x| }.
+{ INIT(X[i],1000-20*i,20+i/|X|,T[i]) | i in {1..|X|} }.
+CONST(X[1]), TIMER_OFF(T[1]).
+{ ( CONST(X[i]), TIMER_OFF(T[i]) )
+	<< ( SW_ACC(X[i-1],X[i],T[i]), SW_BRK(X[i-1],X[i],T[i]) )
+	<< ( ACC(X[i-1],X[i],T[i]), BRK(X[i-1],X[i],T[i]) )
+	| i in {2..|X|} }.
+
+//#hylagi -p8

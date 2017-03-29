@@ -78,6 +78,11 @@ void ModuleSetList::add_weak(ModuleSetList& weak_module_set_list)
   maximal_module_set_ = *full_module_set_set_.rbegin();
 }
 
+void ModuleSetList::remove_included_ms_by_current_ms()
+{
+  ms_to_visit_.clear();
+}
+
 std::ostream& ModuleSetList::dump(std::ostream& s) const
 {
   dump_node_names(s);

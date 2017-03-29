@@ -2,6 +2,8 @@
 
 #include <string>
 #include <istream>
+#include <vector>
+#include <stack>
 
 #include "boost/shared_ptr.hpp"
 #include "Node.h"
@@ -12,30 +14,39 @@ namespace hydla{
   namespace parser{
 
   typedef hydla::symbolic_expression::node_sptr node_sptr;
-  typedef std::set<std::string> list_t;
-  typedef std::pair<std::string, std::pair<std::string, std::string> > condition_t;
   typedef std::pair<position_t, std::string> error_info_t;
 
 class Parser{
 public:
 
-  enum ListType{
-    EXPRESSION,
-    PROGRAM,
-    ALL
-  };
-  
+  #define IS_DEFINED_AS(name, size, defs, ret) \
+    for(auto D : defs){ \
+      if(name == D->get_name() && size == D->bound_variable_size()){ \
+        ret = D; \
+        break; \
+      } \
+    } \
+
+  Parser();
   Parser(std::string);
+  Parser(std::vector<std::string>);
   Parser(std::istream&);
+  Parser(std::string, std::vector<std::string>);
+  Parser(std::string, std::istream&);
   ~Parser();
 
-  node_sptr parse(node_sptr& assertion_node, DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> &constraint_definition, DefinitionContainer<hydla::symbolic_expression::ProgramDefinition> &program_definition);
-  
-  bool is_COMMA(Token);
-  bool is_WEAKER(Token);
-  bool is_LOGICAL_OR(Token);
-  bool is_LOGICAL_AND(Token);
-  bool is_COMPARE(Token);
+  void add_file(std::string s, std::istream& i)
+  {
+    lexer.add_file(s,i);
+  }
+
+  node_sptr parse(
+      node_sptr& assertion_node, 
+      DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ExpressionListDefinition>&,
+      DefinitionContainer<hydla::symbolic_expression::ProgramListDefinition>&
+  );
 
   node_sptr hydla_program();
   node_sptr statements();
@@ -62,7 +73,6 @@ public:
   node_sptr guard_term();
   node_sptr logical_not();
   node_sptr comparison();
-  node_sptr command();
   node_sptr expression();
   node_sptr arithmetic();
   node_sptr arith_term();
@@ -75,56 +85,76 @@ public:
   node_sptr system_variable();
   boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> unsupported_function();
   boost::shared_ptr<hydla::symbolic_expression::Function> function();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> variable(std::map<std::string, std::string>);
+  boost::shared_ptr<hydla::symbolic_expression::Variable> variable();
   node_sptr parameter();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> bound_variable();
-  std::string constraint_name();
-  std::string program_name();
   std::vector<node_sptr> actual_args();
   std::vector<std::string> formal_args();
   node_sptr assertion();
   node_sptr tautology();
-  std::string identifier();
+  node_sptr constant();
+  std::string variable_name();
+  std::string function_name();
+  std::string definition_name();
   node_sptr number();
   
-  void error_occurred(position_t position, std::string error_message){ error_info.push_back(error_info_t(position,error_message)); }
-  void error_occurred(error_info_t info){ error_info.push_back(info); }
-
-  bool parse_ended();
-
-  // list functions
-  bool list_definition();
-  list_t expression_list(std::string,std::map<std::string, std::string>);
-  list_t program_list(std::string,std::map<std::string, std::string>);
-  list_t list(ListType,std::string,std::map<std::string, std::string>);
-  list_t list_term(ListType,std::string,std::map<std::string, std::string>);
-  list_t list_factor(ListType,std::string,std::map<std::string, std::string>);
-
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_factor(std::map<std::string, std::string>);
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_term(std::map<std::string, std::string>);
-  boost::shared_ptr<hydla::symbolic_expression::Number> non_variable_expression(std::map<std::string, std::string>);
+  node_sptr expression_list_element();
+  node_sptr program_list_element();
+  node_sptr conditional_program_list();
+  node_sptr program_list();
+  node_sptr program_list_term();
+  node_sptr program_list_factor();
+  boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller> program_list_caller();
+  boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> program_list_callee();
+  node_sptr nameless_list();
+  node_sptr conditional_expression_list();
+  node_sptr expression_list();
+  node_sptr expression_list_term();
+  node_sptr expression_list_factor();
+  boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller> expression_list_caller();
+  boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> expression_list_callee();
+  node_sptr list_condition();
+  node_sptr size_of_list();
+  node_sptr sum_of_list();
   
-  list_t list_conditions(std::map<std::string, std::string>, std::string);
-  std::string replace_string_by_bound_variables(std::map<std::string, std::string>, std::string);
-  list_t list_check(std::string list_name);
-  void set_list(std::map<std::string, list_t> e_list, std::map<std::string,list_t> p_list){
-    expression_list_map = e_list; 
-    program_list_map = p_list;
+  void error_occurred(position_t position, std::string error_message){
+    error_tmp.push_back(error_info_t(position,error_message));
   }
+
+  void error_occurred(error_info_t info){ error_tmp.push_back(info); }
+
+  std::ostream& dump_error(std::ostream& s) const{
+    for(auto e : error_info){
+      s << e.first.first << " " << e.first.second << " " << e.second;
+    }
+    return s;
+  }
+  
+  void list_type_check();
+  bool parse_ended();
+  node_sptr is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
 
 private:
   Lexer lexer;
 
-  std::vector<error_info_t> error_info;
+  bool second_parse = false;
+  bool in_conditional_program_list_ = false;
 
-  // map which save appeared variable list
-  std::map<std::string, list_t> expression_list_map;
-  std::map<std::string, list_t> program_list_map;
+  std::stack<std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> > > local_program_caller_;
+
+  std::vector<error_info_t> error_info;
+  std::vector<error_info_t> error_tmp;
 
   node_sptr parsed_program;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > program_definitions;
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > constraint_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > expression_list_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > program_list_definitions;
   node_sptr assertion_node;
+
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition> > tmp_program_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition> > tmp_constraint_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition> > tmp_expression_list_definitions;
+  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > tmp_program_list_definitions;
 };
 
 }// namespace parser

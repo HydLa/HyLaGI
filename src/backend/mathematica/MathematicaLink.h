@@ -21,19 +21,28 @@ namespace mathematica{
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta);
+  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string &simplify_time, const int simplify_level);
 
   virtual ~MathematicaLink() ;
 
   /**
-   * 次のリターンパケットの直前までtextpktなどを受信する
+   * receive packets until next return packet received
    */
   bool receive_to_return_packet();
-  
+
+  /**
+   * finalize the link
+   */
   void clean();
 
+  /**
+   * reset the state of the link(to be able to send and receive new packet)
+   */
+  void reset();
+  
+
   /** 
-   * 指定されたタイプのパケットが返ってくるまでスキップする
+   *   skip packets until given packet is returned
    */ 
   void skip_pkt_until(int pkt_name);
 
@@ -66,12 +75,10 @@ public:
     MLPutInteger(i);
   } 
 
-  void put_float(double num)
+  void put_double(double num)
   {
     MLPutDouble(num);
   }
-
-  void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg);
 
   void put_parameter(const std::string& name, int diff_count, int id);
   
@@ -82,6 +89,8 @@ public:
   std::string get_string();
   
   int get_integer();
+
+  double get_double();
 
   int get_arg_count();
   
@@ -115,6 +124,8 @@ public:
   void intCase();
   void funcCase();
 
+  
+
   inline std::string backend_name(){return "Mathematica";}
 
 private:
@@ -127,7 +138,7 @@ private:
   int MLGetInteger(int *i)                {return ::MLGetInteger(link_, i);}
 
   int MLPutDouble(double d)               {return ::MLPutDouble(link_, d);}
-
+  int MLGetDouble(double *d)               {return ::MLGetDouble(link_, d);}
   int MLPutSymbol(const char *s)          {return ::MLPutSymbol(link_, s);}
   int MLGetSymbol(const char **s)         {return ::MLGetSymbol(link_, s);}
   void MLReleaseSymbol(const char *s)     {return ::MLReleaseSymbol(link_, s);}
@@ -160,11 +171,7 @@ private:
 
   bool on_next_;
 
-
-  static const std::string prev_prefix;
   static const std::string par_prefix;
-  static const std::string var_prefix;
-
 };
 
 }

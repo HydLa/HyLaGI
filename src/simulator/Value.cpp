@@ -2,6 +2,8 @@
 #include "Parameter.h"
 #include <sstream>
 #include "Utility.h"
+#include "ValueNumerizer.h"
+#include "Logger.h"
 
 using namespace hydla::simulator;
 using namespace hydla::utility;
@@ -55,6 +57,17 @@ Value Value::operator/(const Value& rhs){
   return ret /= rhs;
 }
 
+Value& Value::operator^=(const Value& rhs){
+  set_node(symbolic_expression::node_sptr(new Power(get_node(), rhs.get_node())));
+  return *this;
+}
+
+Value Value::operator^(const Value& rhs){
+  Value ret(*this);
+  return ret ^= rhs;
+}
+
+
 Value Value::operator-()
 {
   Value ret(*this);
@@ -66,6 +79,18 @@ bool Value::undefined() const
 {
   return (node_ == NULL);
 }
+
+bool Value::infinite() const
+{
+  return (typeid(*node_) == typeid(Infinity));
+}
+
+bool Value::isZero() const
+{
+  // TODO: avoid string comparison
+  return get_infix_string(node_) == "0";
+}
+
 
 Value::Value(){}
 
@@ -109,6 +134,13 @@ Value::node_sptr Value::get_node() const
 {
   if(node_==NULL)assert(0);
   return node_;
+}
+
+Value Value::get_numerized_value()const
+{
+  Value value = *this;
+  ValueNumerizer().numerize(value);
+  return value;
 }
 
 void Value::set_node(const symbolic_expression::node_sptr &n)

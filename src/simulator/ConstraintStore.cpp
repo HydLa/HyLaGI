@@ -11,6 +11,11 @@ ConstraintStore::ConstraintStore():is_consistent(true)
 {
 }
 
+ConstraintStore::ConstraintStore(constraint_t cons):is_consistent(true)
+{
+  insert(cons);
+}
+
 void ConstraintStore::add_constraint(const constraint_t &constraint)
 {
   insert(constraint);
@@ -25,6 +30,7 @@ bool ConstraintStore::consistent() const
 {
   return is_consistent;
 }
+
 // return if this constraint store is always true
 bool ConstraintStore::valid() const
 {
@@ -38,10 +44,15 @@ void ConstraintStore::set_consistency(bool cons)
 
 std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store)
 {
+  bool first = true;
+  ost << "{";
   for(auto constraint : store)
   {
-    ost << symbolic_expression::get_infix_string(constraint) << endl;
+    if(!first)ost << ", ";
+    ost << symbolic_expression::get_infix_string(constraint);
+    first = false;
   }
+  ost << "}";
   return ost;
 }
 

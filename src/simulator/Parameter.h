@@ -8,6 +8,7 @@ namespace hydla {
 namespace simulator {
 
 class PhaseResult;
+class Value;
 
 class Parameter{
   public:
@@ -20,6 +21,8 @@ class Parameter{
    * create Parameter from string (like parameter[x, 0, 1]")
    */
   Parameter(const std::string &variable_str);
+
+  Value as_value()const ;
   
   inline std::string get_name()const {return variable_name_;}
   inline int get_differential_count()const {return differential_count_;}

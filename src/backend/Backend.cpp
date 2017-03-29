@@ -1,8 +1,9 @@
 #include "Backend.h"
+#include "Timer.h"
 #include <stdarg.h>
-#include "InterfaceError.h"
 #include <sstream>
 #include <boost/lexical_cast.hpp>
+#include "HydLaError.h"
 
 using namespace std;
 
@@ -14,14 +15,15 @@ using namespace symbolic_expression;
 
 const std::string Backend::var_prefix = "u";
 // use different prefix to distinct variables and constants
-const std::string par_prefix = "p";
+const std::string Backend::par_prefix = "p";
+const std::string Backend::prev_prefix = "prev";
 
 // check equivalence ignoring whether upper or lower case
 static bool equal_ignoring_case(std::string lhs, std::string rhs)
 {
   const char *l = lhs.c_str(), *r = rhs.c_str();
   int d;
-  while(*l != '\0' && *r != '\0'){
+  while(*l != '\0' || *r != '\0'){
     d = (tolower(*l++) - tolower(*r++));
     if ( d != 0)
     {
@@ -45,7 +47,12 @@ void Backend::invalid_fmt(const char* fmt, int idx)
 {
   std::stringstream sstr;
   sstr << "invalid format \"" << fmt << "\" at " << idx;
-  throw InterfaceError(sstr.str().c_str());
+  throw HYDLA_ERROR(sstr.str().c_str());
+}
+
+void Backend::reset()
+{
+  link_->reset();
 }
 
 int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
@@ -67,22 +74,11 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
-  case 'd':
-    if(args_fmt[++i] != 'c')
-    {
-      invalid_fmt(args_fmt, i);
-    }
-    else
-    {
-      dc_causes_t* dc_causes = (dc_causes_t *)arg;
-      send_dc_causes(*dc_causes);
-    }
-    break;
 
   case 'e':
   {
     symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr *)arg;
-    variable_form_t form;
+    VariableForm form;
     if(!get_form(args_fmt[++i], form))
     {
       invalid_fmt(args_fmt, i);
@@ -93,26 +89,33 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
   }
   break;
-    
+  
+  case 'd':
+  {
+    if(args_fmt[++i] == 'b')
+    {
+      double *db = (double*)arg;
+      link_->put_double(*db);
+      break;
+    }
+    else invalid_fmt(args_fmt, i);
+  }
+  break;
 
   case 'c':
     switch(args_fmt[++i])
     {
     case 's':
     {
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(args_fmt[++i], form))
       {
         invalid_fmt(args_fmt, i);
       }
       else
       {
-        constraint_store_t *cs = (constraint_store_t *)arg;
-        link_->put_converted_function("List", cs->size());
-        for(auto constraint : *cs)
-        {
-          send_node(constraint, form);
-        }
+        ConstraintStore *cs = (ConstraintStore *)arg;
+        send_cs(*cs, form);
       }
     }
     break;
@@ -121,6 +124,16 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
+
+  case 'l':
+  {
+    if(args_fmt[++i] != 'p')invalid_fmt(args_fmt, i);
+    std::list<parameter_t>* par_list = (std::list<parameter_t> *)arg;
+    send_parameter_list(*par_list);
+  }
+  break;
+
+    
   case 'm':
     switch(args_fmt[++i])
     {
@@ -138,7 +151,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       {
         form_char = args_fmt[i];
       }
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(form_char, form))
       {
         invalid_fmt(args_fmt, i);
@@ -158,6 +171,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
+    
   case 'p':     
   {
     parameter_t* par = (parameter_t *)arg;
@@ -165,29 +179,59 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
+  case 't':
+  {
+    if(args_fmt[++i] != 'l')invalid_fmt(args_fmt, i);
+    else{
+      vector<TimeListElement> *time_list = (vector<TimeListElement> *)arg;
+      send_time_list(*time_list);
+    }
+    break;
+  }
+
+  
+
   case 'v':
   {
-    if(args_fmt[++i] == 'l')
+    switch(args_fmt[++i])
+    {
+    case 'l':
     {
       value_t *val = (value_t *)arg;
-      variable_form_t vf;
+      VariableForm vf;
       if(!get_form(args_fmt[++i], vf))
       {
         invalid_fmt(args_fmt, i);
         break;
       }
       send_value(*val, vf);
+      break;
     }
-    else
+    case 's':
     {
+      VariableForm vf;
+      if(!get_form(args_fmt[++i], vf))
+      {
+        invalid_fmt(args_fmt, i);
+      }else{
+        variable_set_t *vs = (variable_set_t *)arg;
+        link_->put_converted_function("List", vs->size());
+        for(auto var : *vs){
+          send_variable(var.get_name(), var.get_differential_count(), vf);
+        }
+      }
+      break;
+    }
+    default:
       variable_t *var = (variable_t*)arg;
-      variable_form_t vf;
+      VariableForm vf;
       if(!get_form(args_fmt[i], vf))
       {
         invalid_fmt(args_fmt, i);
         break;
       }
       send_variable(var->get_name(), var->get_differential_count(), vf);
+      break;
     }
   }
   break;
@@ -218,18 +262,21 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   }
   break;
 
+  case 'd':
+  {
+    if(ret_fmt[++i] == 'b')
+    {
+      double *db = (double*)ret;
+      *db = link_->get_double();
+      break;
+    }
+    else invalid_fmt(ret_fmt, i);
+  }
+
   case 'e':
   {
     symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr*)ret;
-    variable_form_t form;
-    if(!get_form(ret_fmt[++i], form))
-    {
-      invalid_fmt(ret_fmt, i);
-    }
-    else
-    {
-      *node = receive_node();
-    }
+    *node = receive_node();
   }
   break;
   
@@ -240,6 +287,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     break;
   }
 
+  
+  case 'f':
+  {
+    find_min_time_result_t *f = (find_min_time_result_t *)ret;
+    *f = receive_find_min_time_result();
+    break;
+  }
+
                    
   case 'm':
     switch(ret_fmt[++i])
@@ -247,7 +302,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 'v':
     {
       variable_map_t* vm = (variable_map_t*)ret;
-      variable_form_t form;
+      VariableForm form;
       if(!get_form(ret_fmt[++i], form))
       {
         invalid_fmt(ret_fmt, i);
@@ -258,8 +313,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
     case 'p':
     {
-      parameter_map_t* pm = (parameter_map_t*)ret;
-      receive_parameter_map(*pm);
+      if(ret_fmt[++i] == 's')
+      {
+        std::vector<parameter_map_t>* pm = (std::vector<parameter_map_t>*)ret;
+        receive_parameter_maps(*pm);
+      }
+      else invalid_fmt(ret_fmt, i);
       break;
     }
     default:
@@ -276,6 +335,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
       *cc = receive_cc();
       break;
     }
+    case 't':
+    {
+      CalculateTLinearResult* ct = (CalculateTLinearResult *)ret;
+      *ct = receive_ct();
+      break;
+    }
     case 'v':
     {
       // for cv
@@ -286,8 +351,8 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     case 'p':
     {
       // for cp
-      pp_time_result_t* cp = (pp_time_result_t*)ret;
-      *cp = receive_cp();
+      compare_min_time_result_t* cp = (compare_min_time_result_t*)ret;
+      *cp = receive_compare_min_time_result();
       break;
     }
     case 's':
@@ -302,6 +367,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
       break;
     }
     break;
+
 
   case 'v':
   {
@@ -322,86 +388,95 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   return i - idx;
 }
 
-int Backend::call(const char* name, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
+int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
-  HYDLA_LOGGER_DEBUG("%%name: ",  name, 
-                   ", arg_cnt: ", arg_cnt,
-                   ", args_fmt: ", args_fmt,
-                   ", ret_fmt: ", ret_fmt);
+  timer::Timer call_timer;
+  link_->trace = trace;
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
   va_list args;
   va_start(args, ret_fmt);
-  for(int i = 0; args_fmt[i] != '\0'; i++)
+  try
   {
-    void* arg = va_arg(args, void *);
-    i += read_args_fmt(args_fmt, i, arg);
-  }
-  HYDLA_LOGGER_DEBUG("start receive");
-  link_->pre_receive();
-  HYDLA_LOGGER_DEBUG("input: \n", link_->get_input_print());
-  HYDLA_LOGGER_DEBUG("trace: \n", link_->get_debug_print());
-  for(int i = 0; ret_fmt[i] != '\0'; i++)
+    for(int i = 0; args_fmt[i] != '\0'; i++)
+    {
+      void* arg = va_arg(args, void *);
+      i += read_args_fmt(args_fmt, i, arg);
+    }
+    link_->pre_receive();
+    for(int i = 0; ret_fmt[i] != '\0'; i++)
+    {
+      void* ret = va_arg(args, void *);
+      i += read_ret_fmt(ret_fmt, i, ret);
+    }
+    link_->post_receive();
+    va_end(args);
+  }catch(...)
   {
-    void* ret = va_arg(args, void *);
-    i += read_ret_fmt(ret_fmt, i, ret);
+    va_end(args);
+    throw;
   }
-  link_->post_receive();
-
-  // TODO: 例外投げた場合もva_endを呼び出すように
-  va_end(args);
+  HYDLA_LOGGER_DEBUG_VAR(call_timer.get_elapsed_us());
   return 0;
 }
 
-bool Backend::get_form(const char &form_c, variable_form_t &form)
+bool Backend::get_form(const char &form_c, VariableForm &form)
 {
   switch(form_c)
   {
   case 'p':
-    form = Link::VF_PREV;
+    form = VF_PREV;
     return true;
   case 'c':
-    form = Link::VF_IGNORE_PREV;
+    form = VF_IGNORE_PREV;
     return true;
   case 'n':
-    form = Link::VF_NONE;
+    form = VF_NONE;
     return true;
   case 'z':
-    form = Link::VF_ZERO;
+    form = VF_ZERO;
     return true;
   case 't':
-    form = Link::VF_TIME;
+    form = VF_TIME;
     return true;
   default:
     return false;
   }
 }
 
-int Backend::send_node(const symbolic_expression::node_sptr& node, const variable_form_t &form)
+void Backend::send_time_list(const vector<TimeListElement>& time_list)
 {
-  HYDLA_LOGGER_DEBUG("%%node: ", get_infix_string(node));
+  link_->put_function("List", time_list.size());
+  for(auto elem : time_list)
+  {
+    link_->put_function("List", 2);
+    send_value(elem.time, VF_NONE);
+    send_cs(elem.parameter_constraint, VF_NONE);
+  }
+}
+  
+
+int Backend::send_node(const symbolic_expression::node_sptr& node, const VariableForm &form)
+{
   differential_count_ = 0;
   in_prev_ = false;
-  apply_not_ = false;
   variable_arg_ = form;
   accept(node);
   return 0;
 }
 
-void Backend::send_dc_causes(dc_causes_t &dc_causes)
+
+void Backend::send_cs(const ConstraintStore& cs, const VariableForm& vf)
 {
-  link_->put_converted_function("List", dc_causes.size());
-  for(int i = 0; i < dc_causes.size(); i++)
+  link_->put_converted_function("And", cs.size());
+  for(auto constraint : cs)
   {
-    HYDLA_LOGGER_DEBUG(dc_causes[i].id, ": ", dc_causes[i].node);
-    dc_cause_t &cause = dc_causes[i];
-    link_->put_converted_function("causeAndID", 2);
-    send_node(cause.node, Link::VF_TIME);
-    link_->put_integer(cause.id);
+    send_node(constraint, vf);
   }
 }
 
-int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& vf, const bool &send_derivative)
+
+int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf, const bool &send_derivative)
 {
   int size_to_sent = 0;
   for(variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
@@ -467,6 +542,17 @@ int Backend::send_variable_map(const variable_map_t& vm, const variable_form_t& 
   return 0;
 }
 
+
+void Backend::send_parameter_list(const list<parameter_t>& par_list)
+{
+  link_->put_function("List", par_list.size());
+  for(auto par : par_list)
+  {
+    link_->put_parameter(par_prefix + par.get_name(), par.get_differential_count(), par.get_phase_id());    
+  }
+}
+
+
 int Backend::send_parameter_map(const parameter_map_t& parameter_map)
 {
   parameter_map_t::const_iterator it = parameter_map.begin();
@@ -481,7 +567,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
     }
   }
   
-  link_->put_converted_function("List", size);
+  link_->put_converted_function("And", size);
   it = parameter_map.begin();
   for(; it!=parameter_map.end(); ++it)
   {
@@ -490,7 +576,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
       const parameter_t& param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-      send_value(value, Link::VF_PREV);
+      send_value(value, VF_PREV);
     }else{
       for(uint i=0; i < it->second.get_lower_cnt();i++)
       {
@@ -506,7 +592,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
           link_->put_converted_function("GreaterEqual", 2);
         }
         link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-        send_value(value, Link::VF_PREV);
+        send_value(value, VF_PREV);
       }
       for(uint i=0; i < it->second.get_upper_cnt();i++)
       {
@@ -522,7 +608,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
           link_->put_converted_function("LessEqual", 2);
         }
         link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
-        send_value(value, Link::VF_PREV);
+        send_value(value, VF_PREV);
       }
     }
   }
@@ -531,7 +617,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
 
 void Backend::visit(boost::shared_ptr<Ask> node)                   
 {
-  throw InterfaceError("ask node cannot be sent to backend");
+  throw HYDLA_ERROR("ask node cannot be sent to backend");
 }
 
 void Backend::visit(boost::shared_ptr<Tell> node)
@@ -540,52 +626,36 @@ void Backend::visit(boost::shared_ptr<Tell> node)
 }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)                \
 {                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
-  link_->put_converted_function(#FUNC_NAME, 2);                                  \
+  link_->put_converted_function(#FUNC_NAME, 2);                         \
   accept(node->get_lhs());                                              \
   accept(node->get_rhs());                                              \
 }
 
-#define DEFINE_VISIT_BINARY_NOT(NODE_NAME, FUNC_NAME, NOT_NAME)        \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
-  if(!apply_not_)                                                        \
-    link_->put_converted_function(#FUNC_NAME, 2);                       \
-  else                                                                  \
-    link_->put_converted_function(#NOT_NAME, 2);                        \
-  accept(node->get_lhs());                                                \
-  accept(node->get_rhs());                                              \
-}
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)          \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  {                                                       \
+    link_->put_converted_function(#FUNC_NAME, 1);         \
+    accept(node->get_child());                            \
+  }
 
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)         \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  {                                                       \
+    link_->put_symbol(#FUNC_NAME);                        \
+  }
 
-#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                        \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
-  link_->put_converted_function(#FUNC_NAME, 1);                                  \
-  accept(node->get_child());                                            \
-}
-
-#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                       \
-void Backend::visit(boost::shared_ptr<NODE_NAME> node)        \
-{                                                                       \
-  HYDLA_LOGGER_DEBUG("put:" #NODE_NAME);                                 \
-  link_->put_symbol(#FUNC_NAME);                                       \
-}
-
-DEFINE_VISIT_BINARY_NOT(Equal, Equal, Unequal)
-DEFINE_VISIT_BINARY_NOT(UnEqual, Unequal, Equal)
-DEFINE_VISIT_BINARY_NOT(Less, Less, GreaterEqual)
-DEFINE_VISIT_BINARY_NOT(LessEqual, LessEqual, Greater)
-DEFINE_VISIT_BINARY_NOT(Greater, Greater, LessEqual)
-DEFINE_VISIT_BINARY_NOT(GreaterEqual, GreaterEqual, Less)
+DEFINE_VISIT_BINARY(Equal, Equal)
+DEFINE_VISIT_BINARY(UnEqual, Unequal)
+DEFINE_VISIT_BINARY(Less, Less)
+DEFINE_VISIT_BINARY(LessEqual, LessEqual)
+DEFINE_VISIT_BINARY(Greater, Greater)
+DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
 
 /// 論理演算子
-DEFINE_VISIT_BINARY_NOT(LogicalAnd, And, Or)
-DEFINE_VISIT_BINARY_NOT(LogicalOr, Or, And)
+DEFINE_VISIT_BINARY(LogicalAnd, And)
+DEFINE_VISIT_BINARY(LogicalOr, Or)
 
 /// 算術二項演算子
 DEFINE_VISIT_BINARY(Plus, Plus)
@@ -623,9 +693,8 @@ void Backend::visit(boost::shared_ptr<Previous> node)
 /// 否定
 void Backend::visit(boost::shared_ptr<Not> node)              
 {
-  apply_not_ = !apply_not_;
+  link_->put_function("Not", 1);
   accept(node->get_child());
-  apply_not_ = !apply_not_;
 }
 
 /// 関数
@@ -634,10 +703,10 @@ void Backend::visit(boost::shared_ptr<Function> node)
   string name;
   int arg_cnt = node->get_arguments_size();
   bool converted;
-  name = link_->convert_function(node->get_string(), true, converted);
+  name = link_->convert_function(node->get_name(), true, converted);
   if(!converted)
   {
-    throw InterfaceError(node->get_string() + " is not suppported in " + link_->backend_name());
+    throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
   }
   link_->put_function(name, arg_cnt);
   for(int i=0; i < arg_cnt;i++){
@@ -647,7 +716,7 @@ void Backend::visit(boost::shared_ptr<Function> node)
 
 void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)              
 {
-  link_->put_function(node->get_string().c_str(), 1);
+  link_->put_function(node->get_name().c_str(), 1);
   link_->put_function("Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
   for(int i=0; i<node->get_arguments_size();i++){
     accept(node->get_argument(i));
@@ -660,26 +729,13 @@ DEFINE_VISIT_FACTOR(Infinity, Infinity)
 DEFINE_VISIT_FACTOR(Pi, Pi)
 /// 自然対数の底
 DEFINE_VISIT_FACTOR(E, E)
+DEFINE_VISIT_FACTOR(ImaginaryUnit, I)
 
 // 変数
 void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
 {
   // 変数の送信
-  variable_form_t va;
-  if(variable_arg_== Link::VF_NONE && in_prev_)
-  {
-    va = Link::VF_PREV;
-  }
-  else{
-    if(variable_arg_ == Link::VF_IGNORE_PREV)
-    {
-      va = Link::VF_NONE;
-    }
-    else
-    {
-      va = variable_arg_;
-    }
-  }
+  VariableForm va = adapt_variable_form(variable_arg_, in_prev_);
 
   send_variable(node->get_name(), differential_count_, va);
 }
@@ -693,7 +749,7 @@ void Backend::visit(boost::shared_ptr<Number> node)
 }
 
 void Backend::visit(boost::shared_ptr<Float> node)              {
-  link_->put_float(node->get_number());
+  link_->put_double(node->get_number());
 }  
 
 
@@ -710,23 +766,50 @@ void Backend::visit(boost::shared_ptr<SymbolicT> node)
 }
 
 
-int Backend::send_value(const value_t &val, const variable_form_t& var)
+void Backend::visit(boost::shared_ptr<Range> node)
+{
+  link_->put_converted_function("Interval", 1);
+  link_->put_converted_function("List", 2);
+  accept(node->get_lhs());
+  accept(node->get_rhs());
+}
+
+
+void Backend::send_value(const value_t &val, const VariableForm& var)
 {
   send_node(val.get_node(), var);
-  return 0;
 }
 
-int Backend::send_variable(const variable_t &var, const variable_form_t &variable_arg)
+void Backend::send_variable(const variable_t &var, const VariableForm &variable_arg)
 {
-  return send_variable(var.get_name(), var.get_differential_count(), variable_arg);
+  send_variable(var.get_name(), var.get_differential_count(), variable_arg);
 }
 
 
-int Backend::send_variable(const std::string& name, int diff_count, const variable_form_t &variable_arg)
+void Backend::send_variable(const std::string& name, int diff_count, const VariableForm &variable_arg)
 {
-  std::string prefix = (variable_arg == Link::VF_PREV)?par_prefix:var_prefix;
-  link_->put_variable(prefix + name, diff_count, variable_arg);
-  return 0;
+  if(variable_arg == VF_PREV){
+    link_->put_function(prev_prefix.c_str(), 2);
+    link_->put_symbol(par_prefix + name);
+    link_->put_integer(diff_count);
+  }else{
+    switch(variable_arg)
+    {
+    case VF_ZERO:
+      link_->put_function("derivativeInit", 2);
+      break;
+    case VF_TIME:
+      link_->put_function("derivativeTime", 2);
+      break;
+    case VF_NONE:
+      link_->put_function("derivative", 2);
+      break;
+    default:
+      throw HYDLA_ERROR("Invalid VariableForm");
+    }
+    link_->put_integer(diff_count);
+    link_->put_symbol(var_prefix + name);
+  }
 }
 
 
@@ -740,21 +823,79 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::False> node){link_->p
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop){
   switch(relop){
-    case 0://Equal
+  case 0://Equal
     range.set_unique_value(val);
     break;
-    case 1://Less
-    range.set_upper_bound(val, false);
+  case 1://Less
+    range.add_upper_bound(val, false);
     break;
-    case 2://Greater
-    range.set_lower_bound(val, false);
+  case 2://Greater
+    range.add_lower_bound(val, false);
     break;
-    case 3://LessEqual
-    range.set_upper_bound(val, true);
+  case 3://LessEqual
+    range.add_upper_bound(val, true);
     break;
-    case 4://GreaterEqual
-    range.set_lower_bound(val, true);
+  case 4://GreaterEqual
+    range.add_lower_bound(val, true);
     break;
+  }
+}
+
+Backend::VariableForm Backend::adapt_variable_form(VariableForm form, bool in_prev)
+{
+  if(form == VF_NONE && in_prev)
+  {
+    return VF_PREV;
+  }
+  else{
+    if(form == VF_IGNORE_PREV)
+    {
+      return VF_NONE;
+    }
+    else
+    {
+      return form;
+    }
+  }
+}
+
+void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
+{
+
+  boost::shared_ptr<symbolic_expression::ExpressionList> el = boost::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs());
+  if(el && el->has_nameless_contents())
+  {
+    // send this element as a variable
+    if(variable_arg_ == VF_PREV){
+      link_->put_function(prev_prefix.c_str(), 2);
+      link_->put_function("namelessVariable", 2);
+      link_->put_symbol(el->get_list_name());
+      accept(node->get_rhs());
+      link_->put_integer(differential_count_);
+    }else{
+      switch(variable_arg_)
+      {
+      case VF_ZERO:
+        link_->put_function("derivativeInit", 2);
+        break;
+      case VF_TIME:
+        link_->put_function("derivativeTime", 2);
+        break;
+      case VF_NONE:
+        link_->put_function("derivative", 2);
+        break;
+      default:
+        throw HYDLA_ERROR("Invalid VariableForm");
+      }
+      link_->put_integer(differential_count_);
+      link_->put_function("namelessVariable", 2);
+      link_->put_symbol(el->get_list_name());
+      accept(node->get_rhs());
+    }
+  }
+  else
+  {
+    throw HYDLA_ERROR("ExpressionList has an invalid form");
   }
 }
 
@@ -769,7 +910,6 @@ ConstraintStore Backend::receive_cs()
     symbolic_expression::node_sptr constraint;
   
     constraint = receive_node();
-    // TODO: avoid string comparison
     string constraint_string = get_infix_string(constraint);
     if(constraint_string == "False")
     {
@@ -781,6 +921,19 @@ ConstraintStore Backend::receive_cs()
     }
   }
   return cs;
+}
+
+
+CalculateTLinearResult Backend::receive_ct()
+{
+  CalculateTLinearResult ct;
+  std::string name;
+  int count;
+  link_->get_function(name, count);
+  HYDLA_ASSERT(count == 2);
+  ct.exp = receive_node();
+  ct.mid_rad = receive_midpoint_radius();
+  return ct;
 }
 
 
@@ -798,61 +951,47 @@ create_vm_t Backend::receive_cv()
   return ret;
 }
 
-pp_time_result_t Backend::receive_cp()
+compare_min_time_result_t Backend::receive_compare_min_time_result()
 {
   std::string name;
-  int next_time_size; 
-  link_->get_function(name, next_time_size);
-  pp_time_result_t result;
-  for(int time_it = 0; time_it < next_time_size; time_it++){
-    DCCandidate candidate;
+  int list_size; 
+  link_->get_function(name, list_size);
+  compare_min_time_result_t result;
+  result.less_cons = receive_cs();
+  result.greater_cons = receive_cs();
+  result.equal_cons = receive_cs();
+  return result;
+}
+
+
+
+find_min_time_result_t Backend::receive_find_min_time_result()
+{
+  std::string name;
+  int find_min_time_size; 
+  // List
+  link_->get_function(name, find_min_time_size);
+  find_min_time_result_t result;
+  for(int time_it = 0; time_it < find_min_time_size; time_it++){
+    FindMinTimeCandidate candidate;
     int dummy_buf;
     // List
     link_->get_function(name, dummy_buf);
-    
-    // for minimum
-    // dcInfo
-    link_->get_function(name, dummy_buf);
-    candidate.minimum.time = receive_value();
-    int min_size;
-    // ids
-    link_->get_function(name, min_size);
-    for(int min_it = 0; min_it < min_size; min_it++)
-    {
-      candidate.minimum.ids.push_back(link_->get_integer()); 
-    }
-    candidate.minimum.on_time = (bool)link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(candidate.minimum.on_time);
+    candidate.time = receive_value();
+    candidate.on_time = (bool)link_->get_integer();
 
-    // for nonminimum
-    int nonmin_size;
-    link_->get_function(name, nonmin_size);
-    for(int nonmin_it = 0; nonmin_it < nonmin_size; nonmin_it++)
-    {
-      DCInformation dc_info;
-      //dcInfo
-      link_->get_function(name, dummy_buf);
-      dc_info.time = receive_value();
-      int id_size;
-      link_->get_function(name, id_size);
-      for(int id_it = 0; id_it < id_size; id_it++)
-      {
-        dc_info.ids.push_back(link_->get_integer());
-      }
-      dc_info.on_time = (bool)link_->get_integer();
-
-      candidate.non_minimums.push_back(dc_info);
-    }
     // 条件を受け取る
-    receive_parameter_map(candidate.parameter_map);
+    candidate.parameter_constraint = receive_cs();
+    candidate.guard_indices.push_back(link_->get_integer());
     result.push_back(candidate);
   }
   return result;
 }
 
+
 std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {
-  if(original.length() <= prefix.length())throw InterfaceError("invalid name: " + original);
+  if(original.length() <= prefix.length())throw HYDLA_ERROR("invalid name: " + original);
   return original.substr(prefix.length());
 }
 
@@ -870,7 +1009,6 @@ check_consistency_result_t Backend::receive_cc()
 
 symbolic_expression::node_sptr Backend::receive_function()
 {
-// TODO: UnsupportedFunctionを含む関数は，バックエンドを切り替えられないので各Valueごとにそのことを示すフラグを持たせた方が良いかも
   int arg_count;
   symbolic_expression::node_sptr ret;
   std::string symbol;
@@ -881,7 +1019,7 @@ symbolic_expression::node_sptr Backend::receive_function()
     ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2")))); 
     ret = symbolic_expression::node_sptr(new symbolic_expression::Power(receive_node(), ret));
   }
-  else if(equal_ignoring_case(symbol, "par")){
+  else if(equal_ignoring_case(symbol, "p")){
     std::string name;
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str;
@@ -958,7 +1096,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   {
     std::string d_str = link_->get_string();
     int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
-    std::string variable_name = remove_prefix(link_->get_symbol(), var_prefix);
+    std::string variable_name = link_->get_symbol();
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for(int i = 0; i < variable_differential_count; i++)
     {
@@ -967,8 +1105,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else{
     // その他の関数
-    boost::shared_ptr<symbolic_expression::ArbitraryNode> f;
-    HYDLA_LOGGER_DEBUG_VAR(symbol);
+    boost::shared_ptr<symbolic_expression::VariadicNode> f;
     if(converted)
     {
       // 対応している関数
@@ -990,14 +1127,12 @@ symbolic_expression::node_sptr Backend::receive_function()
 value_t Backend::receive_value()
 {
   value_t val(receive_node());
-  HYDLA_LOGGER_DEBUG_VAR(val);
   return val;
 }
 
 symbolic_expression::node_sptr Backend::receive_node(){
   symbolic_expression::node_sptr ret;
   Link::DataType type = link_->get_type();
-  HYDLA_LOGGER_DEBUG_VAR(type);
   switch(type){
   case Link::DT_STR: // 文字列
     {
@@ -1007,13 +1142,21 @@ symbolic_expression::node_sptr Backend::receive_node(){
     }
   case Link::DT_SYM: // シンボル（記号）
     {
+
       std::string symbol = link_->get_symbol();
-      if(symbol=="t")
+      if(symbol=="undefined")
+      {
+        //do nothing
+        return ret;
+      }
+      else if(symbol=="t")
         ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
       else if(symbol=="Pi")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
       else if(symbol=="E")
         ret = symbolic_expression::node_sptr(new symbolic_expression::E());
+      else if(symbol=="I")
+        ret = symbolic_expression::node_sptr(new symbolic_expression::ImaginaryUnit());
       else if(symbol=="inf")
         ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
       else if(symbol=="True")
@@ -1039,6 +1182,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
     default:
       break;
   }
+
   if(ret == NULL){
     invalid_ret();
   }
@@ -1048,7 +1192,7 @@ symbolic_expression::node_sptr Backend::receive_node(){
 
 void Backend::invalid_ret()
 {
-  throw InterfaceError("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
+  throw HYDLA_ERROR("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
 }
 
 void Backend::receive_bool(bool &b)
@@ -1058,7 +1202,7 @@ void Backend::receive_bool(bool &b)
   else
   {
     if(s_name == "False")b = false;
-    else throw InterfaceError("invalid return value");
+    else throw HYDLA_ERROR("invalid return value");
   }
 }
 
@@ -1074,15 +1218,11 @@ int Backend::receive_map(variable_map_t& map)
     link_->get_function(f_name, size); //List
     link_->get_function(f_name, size); //List
     std::string variable_name = link_->get_symbol();
-    HYDLA_LOGGER_DEBUG_VAR(variable_name);
     int d_cnt = link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(d_cnt);
     // 関係演算子のコード
     int rel = link_->get_integer();
-    HYDLA_LOGGER_DEBUG_VAR(rel);
 
     symbolic_value = value_t(receive_node());
-    HYDLA_LOGGER_DEBUG("%% received: ", symbolic_value);
 
     // TODO:次の一行消す
     if(variable_name == "t")continue;
@@ -1091,7 +1231,7 @@ int Backend::receive_map(variable_map_t& map)
     value_range_t tmp_range = map[variable];
     set_range(symbolic_value, tmp_range, rel);
     if(symbolic_value.undefined()){
-      throw InterfaceError("invalid value");
+      throw HYDLA_ERROR("invalid value");
     }
     map[variable] = tmp_range;  
   }
@@ -1100,38 +1240,47 @@ int Backend::receive_map(variable_map_t& map)
 
 
 
-int Backend::receive_parameter_map(parameter_map_t& map)
+
+int Backend::receive_parameter_maps(vector<parameter_map_t>& maps)
 {
+
   string func_name;
-  int condition_size; link_->get_function(func_name, condition_size);
-  HYDLA_LOGGER_DEBUG("func_name: ", func_name, "\ncondition_size: ", condition_size);
-  for(int cond_it = 0; cond_it < condition_size; cond_it++){
-    string str_buf;
-    int int_buf;
-    link_->get_function(str_buf, int_buf); // List
-    link_->get_function(str_buf, int_buf); // parameter
-    if(str_buf == "p")
-    {
-      std::string name = remove_prefix(link_->get_symbol(), par_prefix);
-      int differential_count = link_->get_integer();
-      int id = link_->get_integer();
-      parameter_t tmp_param(name, differential_count, id);
-      value_range_t tmp_range = map[tmp_param];
-      int relop_code = link_->get_integer();
-      value_t tmp_value = value_t(receive_node());
-      set_range(tmp_value, tmp_range, relop_code);
-      map[tmp_param] = tmp_range;
-    }
-    else
-    {
-      //ignore
-      for(int i = 0; i < int_buf; i++)
+  int map_size;
+  link_->get_function(func_name, map_size);
+  for(int map_it = 0; map_it < map_size; map_it++)
+  {
+    parameter_map_t map;
+    int condition_size;
+    link_->get_function(func_name, condition_size);
+    for(int cond_it = 0; cond_it < condition_size; cond_it++){
+      string str_buf;
+      int int_buf;
+      link_->get_function(str_buf, int_buf); // List
+      link_->get_function(str_buf, int_buf); // parameter
+      if(str_buf == "p")
       {
-        link_->get_next();
+        std::string name = remove_prefix(link_->get_symbol(), par_prefix);
+        int differential_count = link_->get_integer();
+        int id = link_->get_integer();
+        parameter_t tmp_param(name, differential_count, id);
+        value_range_t tmp_range = map[tmp_param];
+        int relop_code = link_->get_integer();
+        value_t tmp_value = value_t(receive_node());
+        set_range(tmp_value, tmp_range, relop_code);
+        map[tmp_param] = tmp_range;
       }
-      link_->get_integer();
-      receive_node();
+      else
+      {
+        //ignore
+        for(int i = 0; i < int_buf; i++)
+        {
+          link_->get_next();
+        }
+        link_->get_integer();
+        receive_node();
+      }
     }
+    maps.push_back(map);
   }
   return 0;
 }
@@ -1142,10 +1291,9 @@ MidpointRadius Backend::receive_midpoint_radius()
   string func_name;
   int size;
   link_->get_function(func_name, size);
-  HYDLA_LOGGER_DEBUG("func_name: ", func_name, "\nsize: ", size);
   if(func_name != "midpointRadius" || size != 2)
   {
-    throw InterfaceError("invalid as midpoint_radius");
+    throw HYDLA_ERROR("invalid as midpoint_radius");
   }
   mr.midpoint = receive_value();
   mr.radius = receive_value();

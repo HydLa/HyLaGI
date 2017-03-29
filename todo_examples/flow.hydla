@@ -1,5 +1,5 @@
-//フロー制御モデル
-//スロースタート＋輻輳回避
+// model of a flow control
+// slow start & congestion avoidance
 
 INIT<=>W=0/\Wd=0/\Wdd=1/\Tw=0/\2<to<4.
 CONS<=>[](Wdd=Wd'/\Wd=W').

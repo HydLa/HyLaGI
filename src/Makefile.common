@@ -9,14 +9,21 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lboost_system -lncurses -lboost_thread-mt -lpthread
+LIBS += -lpthread
 
 UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+LIBS_STATIC += -lboost_thread-mt -lboost_regex-mt
+else
+LIBS_STATIC += -lboost_thread-mt -lboost_regex
+endif
+
 ifeq ($(UNAME),Linux)
 INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++11
+CXX_OPT  += -Wall -std=c++11 -O
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 endif
 ifeq ($(UNAME),Darwin)
@@ -27,7 +34,7 @@ CXX_OPT  += -Wall -std=c++11 -framework Foundation
 endif
 
 ARFLAGS  := cru
-CXXFLAGS := $(INCLUDES) $(DEFINES) $(CXX_OPT)
+CXXFLAGS += $(INCLUDES) $(DEFINES) $(CXX_OPT)
 
 SRC_DIR  += .
 SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
@@ -47,8 +54,10 @@ $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
 	ranlib $@
+else ifeq ($(UNAME),Darwin)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC)
 else
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
 endif
 
 #$(DEP_OBJECTS):
@@ -68,3 +77,6 @@ endif
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
 	$(SED) 's,\($(notdir $*)\.o\) *:,$(dir $@)\1 $@: $(MAKE_INC) ,' >$@.tmp
 	$(MV) $@.tmp $@
+
+check-syntax:
+	$(CXX) -o nul $(CXXFLAGS) -S ${CHK_SOURCES}

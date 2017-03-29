@@ -3,16 +3,16 @@
 #include "Simulator.h"
 #include "TimeOutError.h"
 #include "Utility.h"
+#include "LinkError.h"
 
 namespace hydla{
 namespace backend{
 namespace mathematica{
 
-const std::string MathematicaLink::prev_prefix = "prev";
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, int timeout, int precision, int time_delta) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level) : env_(0), link_(0)
 {
 
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
@@ -32,6 +32,7 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
 
+
   // 警告無視
   MLPutFunction("Set", 2);
   MLPutSymbol("optIgnoreWarnings"); 
@@ -39,50 +40,19 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
+
   
-  // タイムアウト時間
-  MLPutFunction("Set",2);
-  MLPutSymbol("timeOutS"); 
-  if(timeout > 0){
-    MLPutInteger(timeout);
-  }else{
-    MLPutSymbol("Infinity");
-  }
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optTimeConstraint");
+  MLPutFunction("ToExpression", 1);
+  MLPutString(simplify_time.c_str());
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
 
-
-  // 近似精度
-  MLPutFunction("Set",2);
-  MLPutSymbol("approxPrecision"); 
-  if(precision > 0)
-  {
-    MLPutFunction("Power", 2);
-    MLPutInteger(10);
-    MLPutInteger(-precision);
-  }
-  else
-  {
-    MLPutInteger(0);
-  }
-  MLEndPacket();
-  skip_pkt_until(RETURNPKT);
-  MLNewPacket();
-
-  // 最小タイムステップ 
-  MLPutFunction("Set",2);
-  MLPutSymbol("timeDelta"); 
-  if(time_delta > 0)
-  {
-    MLPutFunction("Power", 2);
-    MLPutInteger(10);
-    MLPutInteger(-time_delta);
-  }
-  else
-  {
-    MLPutInteger(0);
-  }
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optSimplifyLevel");
+  MLPutInteger(simplify_level);
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
@@ -107,10 +77,11 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   function_map_.insert(f_value_t("Acosh", "ArcCosh"));
   function_map_.insert(f_value_t("tan", "Tan"));
   function_map_.insert(f_value_t("tanh", "Tanh"));
-  function_map_.insert(f_value_t("Atan", "Arctan"));
+  function_map_.insert(f_value_t("Atan", "ArcTan"));
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
+  on_next_ = false;
 }
 
 MathematicaLink::~MathematicaLink()
@@ -118,6 +89,9 @@ MathematicaLink::~MathematicaLink()
   clean();
 }
 
+void MathematicaLink::reset()
+{
+}
 
 void MathematicaLink::clean()
 {
@@ -168,8 +142,9 @@ bool MathematicaLink::receive_to_return_packet(){
       str = utility::replace(str, "\\011", "\t");
       if(input_print_.empty()){
         input_print_ = str;
-        HYDLA_LOGGER_DEBUG_VAR(input_print_);
+        if(trace)HYDLA_LOGGER_DEBUG("input: \n", str);
       }else{
+        if(trace)HYDLA_LOGGER_DEBUG("trace: ", str);
         debug_print_ += str + "\n";
       }
       break;
@@ -186,8 +161,20 @@ bool MathematicaLink::receive_to_return_packet(){
     case ILLEGALPKT:
       throw LinkError("math", "receive illegalpkt", 0);
       break;
+    case MENUPKT:
+      // should be in interrupt dialog
+      MLNewPacket();
+      put_string("a");
+
+      //skip a text packet and an empty list
+      MLNextPacket();
+      MLNewPacket();
+      MLNextPacket();
+      MLNewPacket();
+      throw LinkError("math", "receive menu packet (Did you interrupt?)", 0);
+      break;
     default:
-      throw LinkError("math", "receive unknownpkt", 0);
+      throw LinkError("math", "receive unknownpkt", pkt);
       break;
     }
     if(at_end)break;
@@ -209,41 +196,7 @@ void MathematicaLink::_check(){
     std::cout << "not illegal:" << pkt << std::endl;
     switch(pkt){
     case RETURNPKT:
-      std::cout << "returnpkt" << std::endl;
-      switch(MLGetType()){ // 現行オブジェクトの型を得る
-      case MLTKSTR: // 文字列
-        strCase();
-        break;
-      case MLTKSYM: // シンボル（記号）
-        symCase();
-        break;
-      case MLTKINT: // 整数
-        intCase();
-        break;
-      case MLTKOLDINT: // 古いバージョンのMathlinkライブラリの整数
-        std::cout << "oldint" << std::endl;
-        break;
-      case MLTKERR: // エラー
-        std::cout << "err" << std::endl;
-        break;
-      case MLTKFUNC: // 合成関数
-        funcCase();
-        break;
-      case MLTKREAL: // 近似実数
-        std::cout << "real" << std::endl;
-        break;
-      case MLTKOLDREAL:
-        std::cout << "oldreal" << std::endl;
-        break;
-      case MLTKOLDSTR:
-        std::cout <<"oldstr" << std::endl;
-        break;
-      case MLTKOLDSYM:
-        std::cout << "oldsym" << std::endl;
-        break;
-      default:
-        std::cout <<"unknown_token" << std::endl;
-      }
+      check();
       break;
 
     case MESSAGEPKT: // Mathematica メッセージ識別子（symbol::string）
@@ -345,7 +298,12 @@ void MathematicaLink::funcCase(){
     break;
   case MLTKSYM: // シンボル（記号）
     std::cout << "#funcCase:case MLTKSYM" << std::endl;
-    std::cout << "#funcname:" << get_symbol() << std::endl;
+    {
+      const char* s;
+      MLGetSymbol(&s);
+      std::cout << "#funcname:" << s << std::endl;
+      MLReleaseString(s);
+    }
     break;
   default:
     ;
@@ -398,7 +356,6 @@ void MathematicaLink::pre_receive()
   get_next();
   int ret_code = get_integer();
   if(ret_code == 0) {
-
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
   if(ret_code == -1) {
@@ -411,7 +368,6 @@ void MathematicaLink::get_function(std::string &name, int &cnt)
 {
   cnt = get_arg_count();
   name = get_symbol();
-  HYDLA_LOGGER_DEBUG("cnt: ", cnt, ", name: ", name);
 }
 
 std::string MathematicaLink::get_symbol()
@@ -461,6 +417,20 @@ int MathematicaLink::get_integer()
   return i;
 }
 
+double MathematicaLink::get_double()
+{
+  double d;
+  if(!on_next_)
+  {
+    get_next();
+  }
+  if(!MLGetDouble(&d)) {
+    throw LinkError("math", "get_double", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
+  }
+  on_next_ = false;
+  return d;
+}
+
 int MathematicaLink::get_arg_count()
 {
   int c;
@@ -474,40 +444,6 @@ int MathematicaLink::get_arg_count()
   on_next_ = false;
   return c;
 }
-
-
-void MathematicaLink::put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg)
-{
-  if(variable_arg == VF_PREV){
-    put_function(prev_prefix.c_str(), 2);
-    put_symbol(name);
-    put_integer(diff_count);
-  }else{
-    std::string derivative_str;
-    derivative_str = convert_function("derivative", true);
-    if(variable_arg == VF_NONE)
-    {
-      put_function(derivative_str.c_str(), 2);
-      put_integer(diff_count);
-      put_symbol(name);
-    }
-    else
-    {
-      put_function(derivative_str.c_str(), 3);
-      put_integer(diff_count);
-      put_symbol(name);
-      if(variable_arg == VF_TIME)
-      {
-        put_symbol("t");
-      }
-      else
-      {
-        put_integer(0);
-      }
-    }
-  }
-}
-  
 
 void MathematicaLink::post_receive()
 {
@@ -545,7 +481,6 @@ MathematicaLink::DataType MathematicaLink::get_type(){
 MathematicaLink::DataType MathematicaLink::get_next(){
   int tk_type = MLGetNext();
   on_next_ = false;
-  HYDLA_LOGGER_DEBUG("token: ", get_token_name(tk_type));
   switch(tk_type)
   {
   case MLTKFUNC:

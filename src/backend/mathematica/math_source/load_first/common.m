@@ -6,15 +6,16 @@ $MaxExtraPrecision = 1000;
 (*
  * global variables
  * constraint: 現在のフェーズでの制約
+ * assumptions: assumptions for the current phase
  * pConstraint: 定数についての制約
- * prevIneqs: constraints of inequalities of left-hand limits
+ * prevConstraint: constraint for prevs
+ * resultConstraint: constraint solvedBy checkConsystency
  * prevRules:      rules converted from equalities of left-hand limits
+ * currentTime:    symbolic expression of current time 
  * initConstraint: 初期値制約
  * variables: プログラム内に出現する変数のリスト
- * timeDelta: 1ステップで進む最低時刻
  * prevVariables: variables内の変数をux=>prev[x, 0]のようにしたもの
  * timeVariables: variables内の変数を，ux[t]のようにしたもの
- * initVariables: variables内の変数を，ux[0]のようにしたもの
  * parameters: 使用する記号定数のリスト
  * isTemporary：制約の追加を一時的なものとするか
  * tmpConstraint: 一時的に追加された制約
@@ -23,24 +24,24 @@ $MaxExtraPrecision = 1000;
  * profileList: プロファイリング結果のリスト
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
- * timeOutS: タイムアウトまでの時間．秒単位．
  * opt...: 各種オプションのON/OFF．
- * approxPrecision: 近似精度．
  *)
 
 
 variables = {};
 prevVariables = {};
 timeVariables = {};
-initVariables = {};
 parameters = {};
 dList = {};
 profileList = {};
 createMapList = {};
+assumptions = True;
+optTimeConstraint = 1;
+optSimplifyLevel = 1;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
-  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
+  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[Reduce::ztest], HoldForm[Minimize::ztest], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
   checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
 ];
 
@@ -107,11 +108,10 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 SetAttributes[symbolToString, HoldAll];
 
 SetAttributes[prev, Constant];
-SetAttributes[parameter, Constant];
+SetAttributes[p, Constant];
 
 SetAttributes[prev, NHoldAll];
-SetAttributes[parameter, NHoldAll];
-
+SetAttributes[p, NHoldAll];
 
 If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
@@ -125,7 +125,7 @@ If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返
 
 profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 
-(*
+oin(*
  * 関数呼び出しを再現するための文字列出力を行う
  *)
 
@@ -141,30 +141,29 @@ SetAttributes[publicMethod, HoldAll];
 
 (* MathLinkでDerivativeの送信がややこしいのでこっちで変換する *)
 
-derivative[cnt_, var_] := Derivative[cnt][var];
-derivative[cnt_, var_, suc_] := Derivative[cnt][var][suc];
+derivativeInit[cnt_, var_] := Derivative[cnt][var][0];
+derivativeTime[cnt_, var_] := Derivative[cnt][var][t];
+derivative[0, var_] := var;
+derivative[cnt_, var_] := Derivative[cnt][ToExpression[StringReplacePart[ToString[var], derivativePrefix, {1,1}] ]];
 
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
    少しでもメッセージを吐く可能性のある関数は，この関数で定義するようにする．
-   defineにReturnが含まれていると正常に動作しなくなる （Returnの引数がそのまま返ることになる）ので使わないように！
+   返り値にはtoReturnFormを常にかけるようにしたいけど，現状だとリストの番号とかまで文字列にすると例外吐かれるので個別対応・・・
 *)
 
-publicMethod[name_, args___, define_] := (
+publicMethod[name_, args___, definition_] := (
   name[Sequence@@Map[(Pattern[#, Blank[]])&, {args}]] := (
     inputPrint[ToString[name], args];
     CheckAbort[
-      TimeConstrained[
-        timeFuncStart[];
-        Module[{publicRet},
-          publicRet = define;
-          simplePrint[publicRet];
-          timeFuncEnd[name];
-          checkMessage;
-          {1, publicRet}
-        ],
-        Evaluate[timeOutS],
-        {-1}
+      timeFuncStart[];
+      Module[{publicRet, returnValue = Null},
+        returnValue = Do[publicRet = definition, {i, 1, 1}]; (* use Do[] to catch result of Return[] *)
+        If[returnValue =!= Null, publicRet = returnValue];
+        simplePrint[publicRet];
+        timeFuncEnd[name];
+        checkMessage;
+        {1, publicRet}
       ],
       simplePrint[$MessageList];{0}
     ]
@@ -174,9 +173,12 @@ publicMethod[name_, args___, define_] := (
 publicMethod[
   simplify,
   arg,
-  toReturnForm[Simplify[arg]]
+  Switch[optSimplifyLevel,
+    0, toReturnForm[arg],
+    1, toReturnForm[Simplify[arg]],
+    _, toReturnForm[FullSimplify[arg]]
+  ]
 ];
-
 
 
 toReturnForm[expr_] := 
@@ -184,16 +186,18 @@ Module[
   {ret},
   If[expr === Infinity, Return[inf]];
   (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
-  If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], expr[[1]] ] ] ];
-  If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
+  If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], ToExpression[StringDrop[ToString[expr[[1]] ], 1]  ] ] ] ];
+  If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]],  ToExpression[StringDrop[ToString[expr[[1]] ], 1] ] ] ] ];
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p, Return[expr] ];
-  (* return Root[] as string. because it's difficult to handle *)
-  If[Head[expr] === Root, Return[ToString[expr] ] ];
+   
+  ret = ToRadicals[expr];
 
-  ret = Map[toReturnForm, expr];
-  ret = Replace[ret, (x_ :> ToString[InputForm[x]] /; Head[x] === Root )];
+  (* return Root[] as string. because it's difficult to handle as formulas in C++*)
+  If[Head[ret] === Root, Return[ToString[ret] ] ];
+
+  ret = Map[toReturnForm, ret];
   ret = Replace[ret, (x_Rational :> Rational[replaceIntegerToString[Numerator[x] ], replaceIntegerToString[Denominator[x] ] ] )];
   ret = Replace[ret, (x_Integer :> replaceIntegerToString[x])];
   ret
@@ -202,6 +206,17 @@ Module[
 toRational[float_] := SetPrecision[float, Infinity];
 
 replaceIntegerToString[num_] := (If[num < 0, minus[IntegerString[num]], IntegerString[num] ]);
+
+removeDash[var_] := Module[
+   {ret},
+   If[Head[var] === p || Head[var] === prev, Return[var]];
+   ret = var /. x_[t] -> x;
+   If[MatchQ[Head[ret], Derivative[_]],
+     ret /. Derivative[d_][x_] -> {x, d},
+     {ret, 0}
+   ]
+];
+
 
 (* リストを整形する *)
 (* TODO:複素数の要素に対しても，任意精度への対応 （文字列への変換とか）を行う *)
@@ -212,6 +227,7 @@ convertExprs[list_] := Map[({removeDash[ #[[1]] ], getExprCode[#], toReturnForm[
 (* 変数とその値に関する式のリストを、変数表的形式に変換 *)
 getExprCode[expr_] := Switch[Head[expr],
   Equal, 0,
+  Rule, 0,
   Less, 1,
   Greater, 2,
   LessEqual, 3,
@@ -220,13 +236,13 @@ getExprCode[expr_] := Switch[Head[expr],
 
 
 (* AndではなくListでくくる *)
-
 applyList[reduceSol_] :=
   If[reduceSol === True, {}, If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]]];
 
 (* OrではなくListでくくる *)
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+
 
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
@@ -237,6 +253,9 @@ And2and[reduceSol_] :=
 Or2or[reduceSol_] :=
   If[Head[reduceSol] === Or, or @@ reduceSol, or[reduceSol]];
 
+checkAndIgnore[expr_, failExpr_, messages_] := 
+Quiet[Check[expr, failExpr, messages], messages];
+SetAttributes[checkAndIgnore, HoldAll];
 
 (* （不）等式の右辺と左辺を入れ替える際に，関係演算子の向きも反転させる．Notとは違う *)
 
@@ -248,3 +267,12 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 variablePrefix = "u";
+
+
+Switch[optSimplifyLevel,
+    0, timeConstrainedSimplify[expr_] := expr;
+    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
+    _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+];
+
+derivativePrefix = "d";

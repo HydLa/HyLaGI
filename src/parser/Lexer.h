@@ -11,8 +11,8 @@ namespace hydla{
   namespace parser{
 
 enum Token{
-  ALPHABET,            //  [a-z, A-Z]+
-  IDENTIFIER,          //  [a-z, A-Z, "_"] [a-z, A-Z, "_", 0-9]*
+  LOWER_IDENTIFIER,    //  [a-z, "_"] [a-z, A-Z, "_", 0-9]*
+  UPPER_IDENTIFIER,    //  [A-Z] [a-z, A-Z, "_", 0-9]*
   NUMBER,              //  ([0-9]*) [. [0-9]* ]?
   INTEGER,             //  ([0-9]*)
   DEFINITION,          //  ":="
@@ -40,7 +40,6 @@ enum Token{
   POWER,               //  "^" | "**"
   EQUAL,               //  "="
   NOT_EQUAL,           //  "!="
-  DIFFERENT_VARIABLE,  //  "=!="
   NOT,                 //  "!"
   LESS,                //  "<"
   LESS_EQUAL,          //  "<="
@@ -62,18 +61,51 @@ typedef std::pair<int,int> position_t;
 
 class Lexer{
 public:
+  Lexer();
   Lexer(std::string);
   Lexer(std::istream&);
   Lexer(std::vector<std::string>);
+  Lexer(std::string,std::vector<std::string>);
+  Lexer(std::string,std::istream&);
   ~Lexer();
   Token get_token();
+
+  std::string get_error_position(position_t ep)
+  {
+    std::string ret;
+    file_info_t info;
+    for(auto file : file_info)
+    {
+      if(ep.first >= file.second)
+      {
+        info = file;
+      }
+      else break;
+    }
+    ret += info.first + " : " + "line " + std::to_string(ep.first-info.second+1) + "\n";
+    ret += "  ";
+    ret += get_string(ep.first) + "\n";
+    ret += "  ";
+    for(int i = 0; i < ep.second; i++) ret += " ";
+    ret += "~\n";
+    return ret;
+  }
  
+  void add_file(std::string, std::istream&);
   std::string get_string(int line){ return strs[line]; }
   std::string get_current_token_string(){ return current_token_string; }
   position_t get_current_position(){ return position_t(line,column); }
   void set_current_position(position_t p){ line = p.first; column = p.second; }
+  std::ostream& dump(std::ostream& s) const{
+    s << strs[line] << std::endl;
+    for(int i = 0; i < column; i++) s << " ";
+    s << "~";
+    return s;
+  }
 
 private:
+
+  typedef std::pair<std::string,int> file_info_t;
 
   Token identifier();
   Token number();
@@ -91,9 +123,8 @@ private:
 
   // all strings of input file.
   std::vector<std::string> strs;
-
-  // previous Token
-  Token previous_token;
+  // input file infomations
+  std::vector<file_info_t> file_info;
   // current token string
   std::string current_token_string;
   // line number that Lexer is reading now

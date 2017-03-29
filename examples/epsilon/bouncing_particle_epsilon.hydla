@@ -1,0 +1,11 @@
+// bouncing particle with epsilon
+
+
+INIT <=> y = 10 + eps & y' = 0.
+EPS <=> eps > 0 & [](eps' = 0).
+FALL <=> [](y'' = -10).
+BOUNCE <=> [](y- = 0 => y' = -4/5 * y'-).
+
+INIT, FALL << BOUNCE, EPS.
+
+// #hylagi -p 10 --dump_in_progress n --epsilon 1

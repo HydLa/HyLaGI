@@ -93,6 +93,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Parameter> node)               
 // t
 void DefaultTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)                {}
 
+void DefaultTreeVisitor::visit(boost::shared_ptr<ImaginaryUnit> node)                {}
+
 // Print
 void DefaultTreeVisitor::visit(boost::shared_ptr<Print> node)              {}
 void DefaultTreeVisitor::visit(boost::shared_ptr<PrintPP> node)              {}
@@ -106,6 +108,40 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<SVtimer> node)              {}
 
 void DefaultTreeVisitor::visit(boost::shared_ptr<Infinity> node)              {}
 
+// ExpressionList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionList> node)  {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}
+// ConditionalExpressionList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ConditionalExpressionList> node)   {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i)); accept(node->get_expression());}}
+// ProgramList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramList> node)  {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));}}
+// ConditionalProgramList
+void DefaultTreeVisitor::visit(boost::shared_ptr<ConditionalProgramList> node)    {for(int i=0;i<node->get_arguments_size();i++){accept(node->get_argument(i));} accept(node->get_program());}
+// EachElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<EachElement> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// DifferentVariable
+void DefaultTreeVisitor::visit(boost::shared_ptr<DifferentVariable> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// ExpressionListElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListElement> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// ExpressionListCaller
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListCaller> node)    {accept(node->get_child());}
+// ExpressionListDefinition
+void DefaultTreeVisitor::visit(boost::shared_ptr<ExpressionListDefinition> node)    {accept(node->get_child());}
+// ProgramListElement
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListElement> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// ProgramListCaller
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListCaller> node)    {accept(node->get_child());}
+// ProgramListDefinition
+void DefaultTreeVisitor::visit(boost::shared_ptr<ProgramListDefinition> node)    {accept(node->get_child());}
+// Range
+void DefaultTreeVisitor::visit(boost::shared_ptr<Range> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// Union 
+void DefaultTreeVisitor::visit(boost::shared_ptr<Union> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// Intersection 
+void DefaultTreeVisitor::visit(boost::shared_ptr<Intersection> node)    {accept(node->get_lhs()); accept(node->get_rhs());}
+// SizeOfList 
+void DefaultTreeVisitor::visit(boost::shared_ptr<SizeOfList> node)    {accept(node->get_child());}
+// SumOfList
+void DefaultTreeVisitor::visit(boost::shared_ptr<SumOfList> node)    {accept(node->get_child());}
 
 } //namespace symbolic_expression
 } //namespace hydla

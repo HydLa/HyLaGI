@@ -6,9 +6,6 @@
 #include "IncrementalModuleSet.h"
 #include "ModuleSetGraph.h"
 
-#include "AskDisjunctionSplitter.h"
-#include "AskDisjunctionFormatter.h"
-#include "InitNodeRemover.h"
 #include "ModuleSetContainerCreator.h"
 
 namespace hydla{
@@ -27,8 +24,6 @@ public:
       hierarchy::ModuleSetContainerCreator<MSCC> mcc;
       {
         parse_tree_sptr pt_original(boost::make_shared<parse_tree_t>(*parse_tree));
-        AskDisjunctionFormatter().format(pt_original.get());
-        AskDisjunctionSplitter().split(pt_original.get());
         msc_original = mcc.create(pt_original);
       }
     }
@@ -36,4 +31,3 @@ public:
 
 }
 }
-

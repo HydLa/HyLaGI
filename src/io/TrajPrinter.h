@@ -38,7 +38,7 @@ public:
   /**
    * 特定の1フェーズを出力する関数
    */
-  virtual void output_one_phase(const phase_result_const_sptr_t&) const = 0;
+  virtual void output_one_phase(const phase_result_const_sptr_t&, const std::string& prefix = "") const = 0;
 };
 
 }// output

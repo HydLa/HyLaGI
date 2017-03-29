@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2013 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef KRAW_APPROX_HPP
 #define KRAW_APPROX_HPP
 
-// 近似解を元にしたKrawczyk法
-// 事前に軽くNewton法で精度改善を試みることも出来る。
+// Krawczyk method using approximate solution
+// Newton iteration can be applied in advance.
 
 #include <limits>
 #include <boost/numeric/ublas/vector.hpp>
@@ -19,9 +19,10 @@
 #include <kv/matrix-inversion.hpp>
 #include <kv/make-candidate.hpp>
 
-namespace ub = boost::numeric::ublas;
 
 namespace kv {
+
+namespace ub = boost::numeric::ublas;
 
 template <class T, class F>
 bool
@@ -39,15 +40,15 @@ krawczyk_approx(F f, const ub::vector<T>& c, ub::vector< interval<T> >& result, 
 
 	C = c;
 
-	for (i=0; i<newton_max; i++) {
-		// newton法をかける
-		// fが単なるTを受け付けない場合も考え、
-		// fにはintervalを食わせる。
+	// Newton iteration
+	// use interval<T> for argument of f
+	// preparing for the case that f can not accept T.
 
+	for (i=0; i<newton_max; i++) {
 		try {
 			autodif< interval<T> >::split(f(autodif< interval<T> >::init(C)), fc, fdc);
 		}
-		catch (std::range_error& e) {
+		catch (std::domain_error& e) {
 			return false;
 		}
 		r = invert(mid(fdc), R);
@@ -62,7 +63,7 @@ krawczyk_approx(F f, const ub::vector<T>& c, ub::vector< interval<T> >& result, 
 	try {
 		autodif< interval<T> >::split(f(autodif< interval<T> >::init(C)), fc, fdc);
 	}
-	catch (std::range_error& e) {
+	catch (std::domain_error& e) {
 		return false;
 	}
 	r = invert(mid(fdc), R);
@@ -92,7 +93,7 @@ krawczyk_approx(F f, const ub::vector<T>& c, ub::vector< interval<T> >& result, 
 	try {
 		autodif< interval<T> >::split(f(autodif< interval<T> >::init(I)), fi, fdi);
 	}
-	catch (std::range_error& e) {
+	catch (std::domain_error& e) {
 		return false;
 	}
 

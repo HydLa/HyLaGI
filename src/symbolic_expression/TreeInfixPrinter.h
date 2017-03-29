@@ -15,6 +15,7 @@ class TreeInfixPrinter:
   public:
   typedef enum{
     PAR_NONE,
+    PAR_P_S,        /// parentheses are needed for plus and subtract
     PAR_N,          /// parentheses are needed for negative
     PAR_N_P_S,      /// needed for negative, plus and subtract
     PAR_N_P_S_T_D_P, /// needed for negative, plus, subtract, times, divide, power
@@ -29,7 +30,16 @@ class TreeInfixPrinter:
    */
   std::string get_infix_string(const node_sptr &);
 
+
+  /**
+   * 数式の出力に略記法を用いるかどうかを設定する。
+   * 現状だとパラメータのみ。p[x, 0, 1]をx01のようにする。
+   */
+  static void set_use_shorthand(bool);
+
   private:
+
+  static bool use_shorthand;
   
   needParenthesis need_par_;
   std::ostream *output_stream_;
@@ -126,6 +136,8 @@ class TreeInfixPrinter:
 
   // t
   virtual void visit(boost::shared_ptr<SymbolicT> node);
+  virtual void
+  visit(boost::shared_ptr<ImaginaryUnit> node);
 
   // 無限大
   virtual void visit(boost::shared_ptr<Infinity> node);
@@ -147,6 +159,19 @@ class TreeInfixPrinter:
   // False
   virtual void visit(boost::shared_ptr<False> node);
 
+  // ExpresssionListElement
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node);
+  // List 
+  /*
+  virtual void visit(boost::shared_ptr<ExpressionList> node);
+  virtual void visit(boost::shared_ptr<ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<ProgramList> node);
+  virtual void visit(boost::shared_ptr<ProgramListCaller> node);
+  virtual void visit(boost::shared_ptr<ProgramListElement> node);
+  virtual void visit(boost::shared_ptr<Range> node);
+  virtual void visit(boost::shared_ptr<Union> node);
+  virtual void visit(boost::shared_ptr<Intersection> node);
+  */
 };
 
 } // namespace symbolic_expression

@@ -1,120 +1,58 @@
 #include "Timer.h"
 #include <iostream>
 #include <sstream>
-
-
-#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
+#include <iomanip>
 
 namespace hydla{
-  namespace timer{
+namespace timer{
 
-    struct timezone 
-    {
-      long  tz_minuteswest; /* minutes W of Greenwich */
-      int  tz_dsttime;     /* type of dst correction */
-    };
+using namespace std;
 
-     
-    int gettimeofday(timeval *tv, struct timezone *tz)
-    {
-      FILETIME ft;
-      unsigned __int64 tmpres = 0;
-      static int tzflag;
-     
-      if (NULL != tv)
-      {
-        GetSystemTimeAsFileTime(&ft);
-     
-        tmpres |= ft.dwHighDateTime;
-        tmpres <<= 32;
-        tmpres |= ft.dwLowDateTime;
-     
-        /*converting file time to unix epoch*/
-        tmpres -= DELTA_EPOCH_IN_MICROSECS; 
-        tmpres /= 10;  /*convert into microseconds*/
-        tv->tv_sec = (long)(tmpres / 1000000UL);
-        tv->tv_usec = (long)(tmpres % 1000000UL);
-      }
-     
-      if (NULL != tz)
-      {
-        if (!tzflag)
-        {
-          _tzset();
-          tzflag++;
-        }
-        
-        _get_timezone(&tz->tz_minuteswest);
-        tz->tz_minuteswest /= 60;
-        _get_daylight(& tz->tz_dsttime);
-      }
-      return 0;
-    }
+Timer::Timer(){
+  restart();
+}
 
+Timer::~Timer(){}
 
-  }  //  namespace timer
-}  //  namespace hydla
+void Timer::restart() {
+  start_point_ = chrono::steady_clock::now();
+}
 
-#endif
+string Timer::get_time_string() const
+{
+  double time_double;
+  time_double = get_elapsed_us() / 1000000.0;
+  stringstream sstr;
+  sstr << fixed;
+  sstr << setprecision(6) << time_double << " s" ;
+  return sstr.str();
+}
 
-namespace hydla{
-  namespace timer{
-    
-    Timer::Timer(){
-      reset();
-    }
-    
-    Timer::~Timer(){}
+chrono::nanoseconds Timer::get_time() const{
+  auto end_point = chrono::steady_clock::now();
+  return chrono::duration_cast<chrono::nanoseconds>(end_point-start_point_);
+}
 
-    void Timer::restart() {
-      gettimeofday(&start_point_,NULL);
-    }
-    
-    void Timer::reset(){
-      restart();
-      elapsed_time_ = 0;
-    }
+unsigned long int Timer::get_elapsed_h() const{
+  return chrono::duration_cast<chrono::hours>(get_time()).count();
+}
+unsigned long int Timer::get_elapsed_m() const{
+  return chrono::duration_cast<chrono::minutes>(get_time()).count();
+}
+unsigned long int Timer::get_elapsed_s() const{
+  return chrono::duration_cast<chrono::seconds>(get_time()).count();
+}
+unsigned long int Timer::get_elapsed_ms() const{
+  return chrono::duration_cast<chrono::milliseconds>(get_time()).count();
+}
+unsigned long int Timer::get_elapsed_us() const{
+  return chrono::duration_cast<chrono::microseconds>(get_time()).count();
+}
+unsigned long int Timer::get_elapsed_ns() const{
+  return get_time().count();
+}
 
-    void Timer::count_time(){
-      elapsed_time_ += get_time();
-    }
-
-    std::string Timer::get_time_string() const{
-      std::stringstream sstr;
-      sstr << std::fixed;
-      sstr << std::setprecision(TIMER_PLACES) << elapsed_time_;
-      return sstr.str();
-    }
-
-    elapsed_time_t Timer::get_time(){
-      timeval temp;
-      gettimeofday(&temp,NULL);
-      return ( (temp.tv_sec - start_point_.tv_sec) + (temp.tv_usec - start_point_.tv_usec)*0.000001 );
-    }
-    
-    unsigned int Timer::get_elapsed_us(){
-        timeval temp;
-        gettimeofday(&temp,NULL);
-        return ( (temp.tv_sec - start_point_.tv_sec)*1000000 + (temp.tv_usec - start_point_.tv_usec));
-    }
-    
-    void Timer::elapsed(){
-      std::cout << std::fixed;
-      std::cout << std::setprecision(TIMER_PLACES) << get_time() << " s" << std::endl;
-      std::cout << std::resetiosflags(std::ios_base::floatfield);
-    }
-
-    void Timer::elapsed(std::string str){
-      std::cout << str << " : ";
-      elapsed();
-    }
-    
-    bool Timer::is_zero(){
-      if(elapsed_time_ == 0) return true;
-      else return false;
-    }
-
-  }
+}
 }
 
 

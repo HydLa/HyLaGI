@@ -1,0 +1,32 @@
+/* A program for a hot-air balloon that repeats rising and falling */
+
+// The initial condition of the balloon and the timer
+// h: height of the balloon
+// timer: timer variable to repeat rising and falling
+INIT <=> h = 10 /\ h' = 0 /\ timer = 0.
+
+// parameters
+// duration: duration of falling
+// riseT: duration of rising
+PARAM<=> 1 < fallT < 4 /\ 1 < riseT < 3 
+                      /\ [](riseT' = 0 /\ fallT' = 0). 
+
+// increasing of timer 
+TIMER <=> [](timer' = 1). 
+
+// rising of the balloon
+RISE <=> [](timer- < riseT =>h'' = 1).
+
+// falling of the balloon
+FALL <=> [](timer- >= riseT => h'' = -2).
+
+// reset the timer to repeat rising and falling
+RESET <=> [](timer- >= riseT + fallT => timer=0).
+
+// assertion for bounded model checking
+ASSERT(h > 0).
+
+// constraint hierarchies
+INIT, PARAM, FALL, RISE, TIMER<<RESET.
+
+//#hylagi -p 8 --fnd

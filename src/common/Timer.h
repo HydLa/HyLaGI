@@ -1,35 +1,10 @@
 #pragma once
-
 #include <string>
-
-#include <iomanip>
-
-#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
-
-#include < time.h >
-#include <windows.h>
-  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
-  
-#else
-
-#include <sys/time.h> /// Linux用？
-
-#endif
-
-#define TIMER_PLACES 6
+#include <chrono>
 
 namespace hydla{
   namespace timer{
     
-    typedef double elapsed_time_t;
-
-#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS) 
-    struct timeval {
-      long tv_sec;
-      long tv_usec;
-    };
-#endif
-
     class Timer
     {
     public:
@@ -43,17 +18,7 @@ namespace hydla{
       /**
        * 呼ばれた時点での経過時刻を得る
        */
-      elapsed_time_t get_time();
-
-      /**
-       * elapsed_time_の値に経過時間を加算する
-       */
-      void count_time();
-
-      /**
-       * メンバ変数を全て初期化する
-       */
-      void reset();
+      std::chrono::nanoseconds get_time() const;
 
       /**
        * 計測した時間を文字列で返す
@@ -61,28 +26,20 @@ namespace hydla{
       std::string get_time_string() const;
       
       /**
-       * 経過時刻をマイクロ秒で返す
+       * 経過時刻を対応する単位で返す
        */ 
-      unsigned int get_elapsed_us();
+      unsigned long int get_elapsed_h() const;
+      unsigned long int get_elapsed_m() const;
+      unsigned long int get_elapsed_s() const;
+      unsigned long int get_elapsed_ms() const;
+      unsigned long int get_elapsed_us() const;
+      unsigned long int get_elapsed_ns() const;
 
-      /**
-       * 呼ばれた時点でのタイマー初期化からの経過時刻を
-       * 表示する
-       */
-      void elapsed();
-      void elapsed(std::string str);
-
-      /**
-       * 計測時間の値が0ならtrueを返す
-       */
-      bool is_zero();
-      
     private:
       /**
        * 測定開始時の値
        */
-      struct timeval start_point_;
-      elapsed_time_t elapsed_time_;
+       std::chrono::time_point<std::chrono::steady_clock> start_point_;
 
     };
   }  //  namespace timer

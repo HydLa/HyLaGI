@@ -1,4 +1,3 @@
-
 (*
  apply specified value for expression
  *)
@@ -8,10 +7,9 @@ publicMethod[
   expr, time,
   Module[
     {appliedExpr},
-
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[Simplify[appliedExpr]],
+      toReturnForm[timeConstrainedSimplify[appliedExpr]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -27,7 +25,8 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[Simplify[expr /. t -> t - time]]
+  toReturnForm[LogicalExpand[timeConstrainedSimplify[expr /. t -> t - time] ] ]
+ (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
 publicMethod[
@@ -51,3 +50,46 @@ publicMethod[
   expr,
   toReturnForm[Rationalize[N[expr], approxPrecision] ]
 ];
+
+publicMethod[
+  getSizeOfConstraint,
+  ByteCount[constraint && initConstraint && prevConstraint && pConstraint]
+];
+
+
+(* translate given relational expression in the form of f(V) = 0 *)
+publicMethod[
+  relationToFunction,
+  exp,
+  Module[
+    {
+      rhs,
+      lhs
+      },
+    If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
+      InvalidRelop,
+      lhs = exp[[1]];
+      rhs = exp[[2]];
+      toReturnForm[timeConstrainedSimplify[lhs - rhs] ]
+    ]
+  ]
+];
+
+publicMethod[
+  substituteVM,
+  expr,
+  variableMap,
+  currentTime,
+  Module[
+    {tRemovedRules},
+    tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, variableMap];
+    toReturnForm[((expr /. x_[t] /; isVariable[x] -> x) /. t -> t + currentTime) //. tRemovedRules]
+  ]
+];
+
+publicMethod[
+  differentiateWithTime,
+  exp,
+  toReturnForm[timeConstrainedSimplify[D[exp, t] ] ]
+];
+
