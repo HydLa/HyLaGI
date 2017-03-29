@@ -1,0 +1,13 @@
+/* A bouncing partcile in a quadrangle */
+
+INIT <=> x = 0 & y  = 0 & 0.99 < x' < 1.01 & y' = 2.
+CONST <=> [](x'' = 0 & y''  = 0).
+EDGE(a, b) <=> []( y- = tan(a) * x- - b
+ => x' =  (-sin(a)^2 + cos(a)^2) * x'- + (2 * sin(a) * cos(a)) * y'- & 
+  y' = (2  * sin(a) * cos(a)) * x'- + (sin(a)^2 + -cos(a)^2) * y'-).
+  
+INIT,  CONST
+  <<
+ (EDGE(Pi/3, 2), EDGE(Pi/4, -2), EDGE(-Pi/6,3), EDGE(-Pi/4, -4)).
+
+// #hylagi -p 10 --fnd

@@ -1,5 +1,5 @@
 // bouncing particle with air drag
-// @1300 時間がかかるけど，時刻5までのシミュレーションは確認
+// @1300 can be simulated up to five time units
 
 INIT <=> ht=10&v=0&[](ht'=v).
 FALL <=> [](v'=-10-3/10*v).

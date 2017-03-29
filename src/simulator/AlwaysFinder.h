@@ -1,49 +1,37 @@
 #pragma once
 
 #include "Node.h"
-#include "DefaultTreeVisitor.h"
+#include "TreeVisitorForAtomicConstraint.h"
 #include "PhaseResult.h"
 
 namespace hydla {
 namespace simulator {
 
-/**
- * 制約を調べ，変数の出現を取得するクラス．
- */
-class AlwaysFinder : public symbolic_expression::DefaultTreeVisitor {
+class AlwaysFinder : public symbolic_expression::TreeVisitorForAtomicConstraint {
 public:
 
-  AlwaysFinder(){}
+  AlwaysFinder();
 
-  virtual ~AlwaysFinder(){}
+  virtual ~AlwaysFinder();
   
   /** 
-   * 制約を調べ，変数の出現を取得する
-   * @param node 調べる対象となる制約
-   * @param include_guard ガード条件を対象とするかどうか
+   * find all always included by this node
    */
-  void find_always(symbolic_expression::node_sptr node, ConstraintStore& always_set)
-  {
-    always_set_ = &always_set;
-    accept(node);
-  }
+  void find_always(symbolic_expression::node_sptr node, always_set_t* always_set, ConstraintStore* non_al, asks_t* pos, asks_t *nonal_asks);
 
-
-  // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
-  {
-    // do nothing
-  }
-  
+  using TreeVisitorForAtomicConstraint::visit; // suppress warnings
+  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
   // Always
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Always> node)
-  {
-    always_set_->add_constraint(node);
-  }
+  virtual void visit(boost::shared_ptr<symbolic_expression::Always> node);
+
+  virtual void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node);
 
 private:
 
-  ConstraintStore *always_set_;
+  always_set_t *always_set;
+  ConstraintStore *non_always;
+  asks_t           *positive_asks;
+  asks_t           *nonalways_asks;
 };
 
 } //namespace simulator

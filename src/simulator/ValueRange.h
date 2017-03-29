@@ -8,6 +8,8 @@
 namespace hydla {
 namespace simulator {
 
+class ConstraintStore;
+
 class ValueRange {
 public:
   typedef unsigned int uint;
@@ -18,7 +20,6 @@ public:
     Bound():include_bound(false){}
     Bound(const value_t& val, bool in):value(val), include_bound(in){}
   }bound_t;
-  
 
 
   ValueRange(const value_t &lower, bool low_include,
@@ -70,6 +71,9 @@ public:
   const bound_t& get_upper_bound(const uint& idx) const
     {assert(idx<upper_.size()); return upper_[idx];}
 
+
+  ConstraintStore create_range_constraint(symbolic_expression::node_sptr to_be_compared);
+
   void set_upper_bound(const value_t& val, const bool& include)
   {
     upper_.clear();
@@ -97,6 +101,8 @@ public:
       upper_.push_back(bound_t(val, include));
     }
   }
+
+  ValueRange get_numerized_range()const;
   
   std::ostream& dump(std::ostream& s) const  
   {

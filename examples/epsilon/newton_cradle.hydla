@@ -1,0 +1,13 @@
+// TODO example
+// #hylagi -p10 -e1
+
+INIT(m,m0,x,x0,xv) <=> m=m0&x=x0&x'=xv&[](m'=0).
+CONS(x) <=> [](x''=0).
+COL(x1,m1,x2,m2) <=>[]((x1- - x2-)^2 = (1-eps)^2 =>
+        x1'= ((m1- - m2-) * x1'- + 2 * m2- * x2'- )/(m1- + m2-)
+    &   x2'= ((m2- - m1-) * x2'- + 2 * m1- * x1'- )/(m1- + m2-)).
+COL_WALL(z) <=> [](z- = 0 | z- = 6 => z' = -z'-).
+EPS <=> 0 < eps < 0.1 & [](eps'=0).
+
+EPS,INIT(m1,1,x1,1/2,1),INIT(m2,1,x2,2,0),INIT(m3,1,x3,3,0),INIT(m4,1,x4,4,0),INIT(m5,1,x5,5,0),
+(CONS(x1),CONS(x2),CONS(x3),CONS(x4),CONS(x5))<<(COL_WALL(x1),COL_WALL(x2),COL_WALL(x3),COL_WALL(x4),COL_WALL(x5),COL(x1,m1,x2,m2),COL(x1,m1,x3,m3),COL(x1,m1,x4,m4),COL(x1,m1,x5,m5),COL(x2,m2,x3,m3),COL(x2,m2,x4,m4),COL(x2,m2,x5,m5),COL(x3,m3,x4,m4),COL(x3,m3,x5,m5),COL(x4,m4,x5,m5)).

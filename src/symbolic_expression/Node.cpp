@@ -6,11 +6,13 @@
 #include "BaseNodeVisitor.h"
 #include "TreeInfixPrinter.h"
 #include "Logger.h"
+#include "Parameter.h"
 
 using namespace std;
 using namespace boost;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
+
 
 namespace hydla { 
 namespace symbolic_expression {
@@ -247,6 +249,10 @@ bool False::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n);
 }
+bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
+{
+  return typeid(*this) == typeid(n);
+}
 
 //Print
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
@@ -293,14 +299,107 @@ bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
           name_ == static_cast<const Parameter*>(&n)->name_;          
 }
 
+std::ostream& ProgramListCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "program_list_call<" 
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+
+std::ostream& ExpressionListCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "expression_list_call<" 
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+
+std::ostream& ConstraintCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "ConstraintCall<" 
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
+
+std::ostream& ProgramCaller::dump(std::ostream& s) const 
+{
+  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator end = actual_args_.end();
+
+  s << "ProgramCall<" 
+    << name_
+    << "(";
+
+  if(it!=end) s << **(it++);
+  while(it!=end) {
+    s << "," << **(it++);
+  }
+
+  s << ")>";
+  if(child_) {
+    s <<  "["
+      << *child_
+      << "]";
+  }
+
+  return s;
+}
 std::ostream& Caller::dump(std::ostream& s) const 
 {
   actual_args_t::const_iterator it  = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
   s << "call<" 
-    << get_id()
-    << ","
     << name_
     << "(";
 
@@ -325,9 +424,7 @@ std::ostream& Definition::dump(std::ostream& s) const
   bound_variables_t::const_iterator end = bound_variables_.end();
 
   s << name_
-    << "<"
-    << get_id()
-    << ">(";
+    << "(";
 
   if(it!=end) s << *(it++);
   while(it!=end) {
@@ -338,9 +435,60 @@ std::ostream& Definition::dump(std::ostream& s) const
   return s;
 }
 
+node_sptr Range::clone(){
+  node_type_sptr n(new Range(get_lhs()->clone(),get_rhs()->clone()));
+  n->set_header(get_header());
+  return n;
+}
+
+node_sptr ExpressionList::clone(){
+  node_type_sptr n(new ExpressionList(list_name_));
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  n->set_nameless_expression_arguments(nameless_expression);
+  return n;
+}
+
+void ExpressionList::set_nameless_expression_arguments(node_sptr expression)
+{
+  nameless_expression = expression;
+}
+
+void ExpressionList::set_nameless_arguments(int list_size)
+{
+  arguments_.clear();
+  nameless_contents_size = list_size;
+}
+
+node_sptr ConditionalExpressionList::clone(){
+  node_type_sptr n(new ConditionalExpressionList(list_name_));
+  n->set_expression(expression_);
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+node_sptr ProgramList::clone(){
+  node_type_sptr n(new ProgramList(list_name_));
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
+
+node_sptr ConditionalProgramList::clone(){
+  node_type_sptr n(new ConditionalProgramList(list_name_));
+  n->set_program(program_);
+  for(unsigned int i=0;i<arguments_.size();i++){
+    n->add_argument(arguments_[i]->clone());
+  }
+  return n;
+}
 
 node_sptr Function::clone(){
-  node_type_sptr n(new Function(string_));
+  node_type_sptr n(new Function(name_));
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
@@ -349,7 +497,7 @@ node_sptr Function::clone(){
 
 
 node_sptr UnsupportedFunction::clone(){
-  node_type_sptr n(new UnsupportedFunction(string_));
+  node_type_sptr n(new UnsupportedFunction(name_));
   for(unsigned int i=0;i<arguments_.size();i++){
     n->add_argument(arguments_[i]->clone());
   }
@@ -357,42 +505,79 @@ node_sptr UnsupportedFunction::clone(){
 }
 
 
-void ArbitraryNode::accept(node_sptr own, 
+void VariadicNode::accept(node_sptr own, 
                    BaseNodeVisitor* visitor) 
 {
   assert(this == own.get()); 
-  visitor->visit(boost::dynamic_pointer_cast<ArbitraryNode>(own));
+  visitor->visit(boost::dynamic_pointer_cast<VariadicNode>(own));
 }
 
-
-std::ostream& ArbitraryNode::dump(std::ostream& s) const 
+std::ostream& Range::dump(std::ostream& s) const
 {
   Node::dump(s);
-  s << "[" << get_string() << "]";
+  s << "[" << get_header() << "]";
+  s << "[" << *get_lhs() << "," << *get_rhs() << "]";
+  return s;
+}
+
+std::ostream& ConditionalProgramList::dump(std::ostream& s) const
+{
+  Node::dump(s);
+  s << "[" << *get_program() << "]";
   s << "[";
-  for(unsigned int i=0;i<arguments_.size();i++){
-     s << *arguments_[i] << ",";
-  }
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
+  s << "]";
+  return s;
+}
+
+std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
+{
+  Node::dump(s);
+  s << "[" << *get_expression() << "]";
+  s << "[";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
+  s << "]";
+  return s;
+}
+
+std::ostream& VariadicNode::dump(std::ostream& s) const 
+{
+  Node::dump(s);
+  s << "[" << get_name() << "]";
+  s << "[";
+  if(arguments_.size() > 0)s << *arguments_[0];
+  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
 
 
-void ArbitraryNode::add_argument(node_sptr node){
+void VariadicNode::add_argument(node_sptr node){
   arguments_.push_back(node);
 }
 
 
-void ArbitraryNode::set_argument(node_sptr node, int i){
+void VariadicNode::set_argument(node_sptr node, int i){
   arguments_[i] = node;
 }
 
+void VariadicNode::add_argument(Node *node){
+  arguments_.push_back(node_sptr(node));
+}
 
-int ArbitraryNode::get_arguments_size(){
+
+void VariadicNode::set_argument(Node *node, int i){
+  arguments_[i].reset(node);
+}
+
+
+int VariadicNode::get_arguments_size(){
   return arguments_.size();
 }
 
-node_sptr ArbitraryNode::get_argument(int i){
+node_sptr VariadicNode::get_argument(int i){
   return arguments_[i];
 }
 
@@ -409,6 +594,54 @@ node_sptr Caller::clone()
   return n;
 }
 
+node_sptr ProgramCaller::clone()
+{
+  boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ConstraintCaller::clone()
+{
+  boost::shared_ptr<ConstraintCaller> n(new ConstraintCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ExpressionListCaller::clone()
+{
+  boost::shared_ptr<ExpressionListCaller> n(new ExpressionListCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
+node_sptr ProgramListCaller::clone()
+{
+  boost::shared_ptr<ProgramListCaller> n(new ProgramListCaller());
+  n->name_ = name_;
+
+  n->actual_args_.resize(actual_args_.size());
+  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
+  
+  if(child_) n->child_ = child_->clone();
+  
+  return n;
+}
 node_sptr Definition::clone()
 {
   boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
@@ -419,6 +652,11 @@ node_sptr Definition::clone()
   n->child_ = child_->clone();
 
   return n;
+}
+
+Parameter::Parameter(const simulator::Parameter &p):
+  Parameter(p.get_name(), p.get_differential_count(), p.get_phase_id())
+{
 }
 
 /**
@@ -452,6 +690,8 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 //呼び出し
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListCaller)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListCaller)
 
  //制約式
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
@@ -506,6 +746,26 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
 //自然対数の底
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
 
+//Lists
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalExpressionList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramList)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConditionalProgramList)
+
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SizeOfList);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(SumOfList);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListDefinition);
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListDefinition);
+
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Range)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Union)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(Intersection)
+//ListCondition
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(EachElement)
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(DifferentVariable)
+
 //任意の文字列
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Function)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnsupportedFunction)
@@ -539,5 +799,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(False)
+
+DEFINE_TREE_VISITOR_ACCEPT_FUNC(ImaginaryUnit)
 } //namespace symbolic_expression
 } //namespace hydla

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <boost/iostreams/filtering_stream.hpp>
 
 namespace hydla {
@@ -132,8 +133,12 @@ private:
 /**
  * ログレベルwarnでのログの出力
  */
-#define HYDLA_LOGGER_WARN(...)                                  \
+
+#define HYDLA_LOGGER_WARN_INTERNAL(...)                                    \
   HYDLA_LOGGER_LOG_WRITE_MACRO(Warn, warn_write, (__VA_ARGS__))
+
+#define HYDLA_LOGGER_WARN(...)                                  \
+  HYDLA_LOGGER_WARN_INTERNAL("WARNING: ", __VA_ARGS__)
 
 /**
  * ログレベルerrorでのログの出力

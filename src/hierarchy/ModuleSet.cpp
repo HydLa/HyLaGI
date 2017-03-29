@@ -121,6 +121,12 @@ int ModuleSet::erase(const ModuleSet& ms)
   return sum;
 }	
 
+
+ModuleSet::module_list_const_iterator ModuleSet::erase(const module_list_const_iterator &it)
+{
+  return module_list_.erase(it);
+}	
+
 bool ModuleSet::including(const ModuleSet& ms) const
 {
   for(auto m : ms)

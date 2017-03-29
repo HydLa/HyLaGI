@@ -1,39 +1,43 @@
 #include "TreeInfixPrinter.h"
+#include <iomanip>
 
 namespace hydla {
 namespace symbolic_expression{
 
+using namespace std;
+
+bool TreeInfixPrinter::use_shorthand = false;
 
 //valueとって文字列に変換する
-std::ostream& TreeInfixPrinter::print_infix(const node_sptr& node, std::ostream& s){
+ostream& TreeInfixPrinter::print_infix(const node_sptr& node, ostream& s){
   need_par_ = PAR_NONE;
   output_stream_ = &s;
   accept(node);
   return s;
 }
 
-std::string TreeInfixPrinter::get_infix_string(const hydla::symbolic_expression::node_sptr &node){
+string TreeInfixPrinter::get_infix_string(const hydla::symbolic_expression::node_sptr &node){
   need_par_ = PAR_NONE;
-  std::stringstream sstr;
+  stringstream sstr;
   output_stream_ = &sstr;
   accept(node);
   return sstr.str();
 }
 
-void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const std::string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
+void TreeInfixPrinter::print_binary_node(const BinaryNode &node, const string &symbol, const needParenthesis &pre_par, const needParenthesis &post_par){
   need_par_ = pre_par;
   accept(node.get_lhs());
   (*output_stream_) << symbol;
   need_par_ = post_par;
   accept(node.get_rhs());
 }
-void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const std::string &pre, const std::string &post){
+void TreeInfixPrinter::print_unary_node(const UnaryNode &node, const string &pre, const string &post){
   (*output_stream_) << pre;
   accept(node.get_child());
   (*output_stream_) << post;
 }
 
-void TreeInfixPrinter::print_factor_node(const FactorNode &node, const std::string &pre, const std::string &post){
+void TreeInfixPrinter::print_factor_node(const FactorNode &node, const string &pre, const string &post){
   (*output_stream_) << pre;
   (*output_stream_) << post;
 }
@@ -76,10 +80,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<NAME> node){\
 }
 
 //単項演算子 "+"
-DEFINE_INFIX_VISIT_UNARY(Positive, "", "'")
+DEFINE_INFIX_VISIT_UNARY(Positive, "+", "")
 
 //微分
-DEFINE_INFIX_VISIT_UNARY(Differential, "", "'")
+DEFINE_INFIX_VISIT_UNARY(Differential, "", "\'")
 //左極限
 DEFINE_INFIX_VISIT_UNARY(Previous, "", "-")
 //否定
@@ -114,10 +118,18 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Parallel> node){
   print_binary_node(*node, ",");
 }
 
+//式リスト要素
+void TreeInfixPrinter::visit(boost::shared_ptr<ExpressionListElement> node){
+  boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(node->get_lhs());
+  if(el) (*output_stream_) << el->get_name();
+  (*output_stream_) << "[";
+  accept(node->get_rhs());
+  (*output_stream_) << "]";
+}
 
 // 算術二項演算子
 void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){
-  if(need_par_>=PAR_N_P_S){
+  if(need_par_>=PAR_N_P_S || need_par_ == PAR_P_S){
     (*output_stream_) << "(";
      print_binary_node(*node, "+", PAR_NONE, PAR_N);
     (*output_stream_) << ")";
@@ -126,7 +138,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Plus> node){
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Subtract> node){
-  if(need_par_>=PAR_N_P_S){
+  if(need_par_>=PAR_N_P_S || need_par_ == PAR_P_S){
     (*output_stream_) << "(";
      print_binary_node(*node, "-", PAR_NONE, PAR_N_P_S);
     (*output_stream_) << ")";
@@ -137,19 +149,21 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Subtract> node){
 void TreeInfixPrinter::visit(boost::shared_ptr<Times> node){
   if(need_par_>=PAR_N_P_S_T_D_P){
     (*output_stream_) << "(";
-     print_binary_node(*node, "*", PAR_N_P_S, PAR_N_P_S);
+     print_binary_node(*node, "*", PAR_P_S, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
-     print_binary_node(*node, "*", PAR_N_P_S, PAR_N_P_S);
+     needParenthesis pre = need_par_ >= PAR_N ? PAR_N_P_S:PAR_P_S;
+     print_binary_node(*node, "*", pre, PAR_N_P_S);
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Divide> node){
   if(need_par_>=PAR_N_P_S_T_D_P){
     (*output_stream_) << "(";
-     print_binary_node(*node, "/", PAR_N_P_S, PAR_N_P_S);
+     print_binary_node(*node, "/", PAR_P_S, PAR_N_P_S);
     (*output_stream_) << ")";
   }else{
-     print_binary_node(*node, "/", PAR_N_P_S, PAR_N_P_S);
+    needParenthesis pre = need_par_ >= PAR_N ? PAR_N_P_S:PAR_P_S;
+    print_binary_node(*node, "/", pre, PAR_N_P_S);
   }
 }
 void TreeInfixPrinter::visit(boost::shared_ptr<Power> node){
@@ -185,13 +199,29 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Number> node){
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<Float> node){
-  (*output_stream_) << node->get_number();
+  double number = node->get_number();
+  if(number >= 0 || need_par_ < PAR_N)
+  {
+    (*output_stream_) << setprecision(16) << number;
+  }
+  else{
+    (*output_stream_) << "(";
+    (*output_stream_) << setprecision(16) << number;
+    (*output_stream_) << ")";
+  }
 }
 
 
 // 記号定数
 void TreeInfixPrinter::visit(boost::shared_ptr<Parameter> node){
-  (*output_stream_) << "p[" << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "]";
+  if(use_shorthand)
+  {
+    (*output_stream_) << node->get_name() << node->get_differential_count()  << node->get_phase_id();
+  }
+  else
+  {
+    (*output_stream_) << "p[" << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "]";
+  }
 }
 
 // t
@@ -199,10 +229,14 @@ void TreeInfixPrinter::visit(boost::shared_ptr<SymbolicT> node){
   (*output_stream_) << "t";
 }
 
+void TreeInfixPrinter::visit(boost::shared_ptr<ImaginaryUnit> node){
+  (*output_stream_) << "I";
+}
+
 
 //関数
 void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
-  (*output_stream_) << node->get_string() << "[";
+  (*output_stream_) << node->get_name() << "[";
   int i=0;
   while(true){
     accept(node->get_argument(i));
@@ -213,9 +247,10 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Function> node){
 }
 
 void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
-  (*output_stream_) << "\"" << node->get_string() << "\"" << "[";
+  (*output_stream_) << "\"" << node->get_name() << "\"[";
   int i=0;
   while(true){
+    
     accept(node->get_argument(i));
     if(++i >= node->get_arguments_size())break;
     (*output_stream_) << ",";
@@ -223,25 +258,18 @@ void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node){
   (*output_stream_) << "]";
 }
 
-
-// 自然対数の底
 void TreeInfixPrinter::visit(boost::shared_ptr<E> node){
   (*output_stream_) << "E";
 }
 
-
-// 円周率
 void TreeInfixPrinter::visit(boost::shared_ptr<Pi> node){
   (*output_stream_) << "Pi";
 }
 
-// 円周率
 void TreeInfixPrinter::visit(boost::shared_ptr<Infinity> node){
-  (*output_stream_) << "inf";
+  (*output_stream_) << "Infinity";
 }
 
-
-// 制約定義
 void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintDefinition> node){
   (*output_stream_) << node->get_name() << "(";
   Definition::bound_variables_iterator it = node->bound_variable_begin();
@@ -286,8 +314,8 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ConstraintCaller> node){
       (*output_stream_) << ", ";
     }
   }
-  (*output_stream_) << ") ";
-  if(node->get_child()) print_unary_node(*node, "{", "}");
+  (*output_stream_) << ")";
+  // if(node->get_child()) print_unary_node(*node, "{", "}");
 }
 
 // プログラム呼び出し
@@ -303,7 +331,12 @@ void TreeInfixPrinter::visit(boost::shared_ptr<ProgramCaller> node){
     }
   }
   (*output_stream_) << ")";
-  if(node->get_child())print_unary_node(*node, "{", "}");
+  // if(node->get_child())print_unary_node(*node, "{", "}");
+}
+
+void TreeInfixPrinter::set_use_shorthand(bool u)
+{
+  use_shorthand = u;
 }
 
 } // namespace symbolic_expression

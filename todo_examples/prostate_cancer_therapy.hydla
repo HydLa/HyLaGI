@@ -1,0 +1,55 @@
+/*
+ Intermittent Androgen Suppression (IAS) for prostate cancer
+ Paper: Towards Personalized Prostate Cancer Therapy Using Delta Reachability Analysis @ HSCC 2015 (Bing Liu et al.)
+ x: population of hormone sensitive cells (HSCs)
+ y: population of castration resistant cells (CRCs)
+ z: serum androgen concentration
+ v: serum prostate-specific antigen (PSA)
+*/
+
+
+/*
+// initial values and constants
+INIT <=> mode = 1 /\ z0 = 12.
+CONSTANTS <=> [](ax = 0.0204 /\ ay = 0.0242 /\ bx = 0.0201 /\ by = 0.0168 /\ k1 = 10 /\ k2 = 1 /\ k3 = 10 /\ k4 = 2 /\ m1 = 0.00005 /\ x0 = 12 /\ tau = 12.5 /\ lamdax = 0.01 /\ ux = 0.05 /\ uz = 0.02 /\ d = 1 /\ r0 = 5 /\ r1 = 10).
+
+// plant
+PLANT <=> [](
+      x' = (ax*(1/(1+e^(-(z-k1) * k2))) - bx*(1/(1+e^(-(z-k3)*k4))) - m1*(1-z/z0) - lamdax) * x + ux /\
+      y' = m1 * (1-z/z0) * x + (ay * (1-d * (z/z0)) - by)* y /\
+      v' = ax*(1/(1+e^(-(z-k1) * k2))) - bx*(1/(1+e^(-(z-k3)*k4))) * x + ux + m1*(1- z/z0) * x + (ay*(1-d*(z/z0))-by) * y).
+
+
+
+// controller
+MODE1 <=> [](mode = 1 => z' = -z/tau + uz).
+MODE_CONST <=> [](mode' = 0).
+JUMP12 <=> [](mode- = 1 /\ x + y <= r0 /\ x' + y' < 0 \/ w >= tmax => mode = 2).
+JUMP21 <=> [](mode- = 2 /\ x + y >= r1 /\ x' + y' > 0 => mode = 1).
+MODE2 <=> [](mode = 2 => z' = (z0 -z)/tau + uz).
+
+PLANT, MODE1, MODE2, MODE_CONST << (JUMP12, JUMP21), CONSTANTS. 
+*/
+
+
+
+
+// initial values
+INIT <=> mode = 1 /\ z = 12 /\ x = 30 /\ v = 30 /\ y = 0.1 /\ w = 0.
+
+// plant
+PLANT <=> [](
+      x' = (0.0204*(1/(1+E^(-(z-10) * 1))) - 0.0201*(1/(1+E^(-(z-10)*2))) - 0.00005*(1-z/12) - 0.01) * x + 0.05 /\
+      y' = 0.00005 * (1-z/12) * x + (0.0242 * (1-1 * (z/12)) - 0.0168)* y /\
+      v' = 0.0204*(1/(1+E^(-(z-10) * 1))) - 0.0201*(1/(1+E^(-(z-10)*2))) * x + 0.05 + 0.00005*(1- z/12) * x + (0.0242*(1-1*(z/12))-0.0168) * y).
+
+
+
+// controller
+MODE1 <=> [](mode = 1 => z' = -z/12.5 + 0.02).
+MODE_CONST <=> [](mode' = 0 /\ w' = 1).
+JUMP12 <=> [](mode- = 1 /\ x + y <= 5 /\ x' + y' < 0 \/ w- >= tmax => mode = 2 /\ w = 0).
+JUMP21 <=> [](mode- = 2 /\ x + y >= 10 /\ x' + y' > 0 => mode = 1 /\ w = 0).
+MODE2 <=> [](mode = 2 => z' = (12 -z)/12.5 + 0.02).
+
+INIT, PLANT, MODE1, MODE2, MODE_CONST << (JUMP12, JUMP21). 

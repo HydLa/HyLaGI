@@ -1,230 +1,161 @@
+
 #include <iostream>
 
 #include "Backend.h"
 #include "EpsilonMode.h"
+#include "ValueModifier.h"
+
+using namespace std;
+
+using namespace hydla::backend;
+
+
+using namespace boost;
+
+using namespace hydla::hierarchy;
+using namespace hydla::simulator;
+using namespace hydla::symbolic_expression;
+using namespace hydla::logger;
 
 using namespace hydla::symbolic_expression;
 using namespace hydla::backend;
-// #define _DEBUG_CUT_HIGH_ORDER
-// #define _DEBUG_REDUCE_UNSUIT
 
-variable_map_t hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase)
+void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase, int diff_cnt)
 {
-  variable_map_t vm_ret;
-  bool have_eps = false;
-#ifdef _DEBUG_CUT_HIGH_ORDER
-  std::cout << "Cut High Order Epsilon Start;" << std::endl;
-  if(phase->phase_type==0)
-    std::cout << "PointPhase " << phase->id << std::endl;
-  if(phase->phase_type==1)
-    std::cout << "IntervalPhase " << phase->id << std::endl;
-#endif
-  for(parameter_map_t::iterator p_it = phase->parameter_map.begin(); p_it != phase->parameter_map.end(); p_it++)
+  Parameter par("eps", 0, 1);
+  value_t time_ret;
+  backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &phase->current_time, &par, &diff_cnt, &time_ret);
+  phase->current_time = time_ret;
+  for(auto var_entry : phase->variable_map)
   {
-#ifdef _DEBUG_CUT_HIGH_ORDER
-    std::cout << p_it->first << "\t: " << p_it->second << std::endl;
-#endif
-    std::string parameter_name = p_it->first.get_name();
-    int parameter_differential_count = p_it->first.get_differential_count();
-    if(parameter_name=="eps" && parameter_differential_count==0)
+    Variable var = var_entry.first;
+    range_t range = var_entry.second;
+    if(range.undefined())
     {
-#ifdef _DEBUG_CUT_HIGH_ORDER
-      std::cout << "parameter eps Find!!"  << std::endl;
-#endif
-      int differential_times = 1; // のこす次数
-      have_eps = true;
-      value_t time_ret;
-      backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &phase->current_time, &p_it->first, &differential_times, &time_ret);
-      phase->current_time = time_ret;
-     for(variable_map_t::iterator v_it = phase->variable_map.begin();v_it!=phase->variable_map.end();v_it++)
+      continue;
+    }
+    else if(range.unique())
+    {
+      value_t value_ret;
+      simulator::value_t val = range.get_unique_value();
+      backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &value_ret);
+      phase->variable_map[var] = value_ret;
+    }
+    else
+    {
+      for(uint i = 0; i < range.get_lower_cnt(); i++)
       {
-        if(v_it->second.undefined())
-        {
-          vm_ret[v_it->first] = v_it->second;
-        }
-        else if(v_it->second.unique())
-        {
-          simulator::value_t ret;
-          simulator::value_t val = v_it->second.get_unique_value();
-          range_t& range = vm_ret[v_it->first];
-#ifdef _DEBUG_CUT_HIGH_ORDER
-          std::cout << v_it->first << "\t: (" << val;
-#endif
-          backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
-#ifdef _DEBUG_CUT_HIGH_ORDER
-          std::cout << " -> " << ret << ")" << std::endl;
-#endif
-          range.set_unique_value(ret);
-          // vm_ret[eps_v_it->first] = eps_ret;
-        }
-        else
-        {
-          range_t range = v_it->second;
-          for(uint i = 0; i < range.get_lower_cnt(); i++)
-          {
-            ValueRange::bound_t bd = v_it->second.get_lower_bound(i);
-            value_t val = bd.value;
-            value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
-            range.set_lower_bound(ret, bd.include_bound);
-          }
-          for(uint i = 0; i < range.get_upper_cnt(); i++)
-          {
-            ValueRange::bound_t bd = v_it->second.get_upper_bound(i);
-            value_t val = bd.value;
-            value_t ret;
-            backend_->call("cutHighOrderVariable", 3, "vlnpi", "vl", &val, &p_it->first, &differential_times, &ret);
-            range.set_upper_bound(ret, bd.include_bound);
-          }
-          vm_ret[v_it->first] = range;
-        }
+        ValueRange::bound_t bd = range.get_lower_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        range.set_lower_bound(ret, bd.include_bound);
       }
+      for(uint i = 0; i < range.get_upper_cnt(); i++)
+      {
+        ValueRange::bound_t bd = range.get_upper_bound(i);
+        value_t val = bd.value;
+        value_t ret;
+        backend_->call("cutHighOrderVariable", true, 3, "vlnpi", "vl", &val, &par, &diff_cnt, &ret);
+        range.set_upper_bound(ret, bd.include_bound);
+      }
+      phase->variable_map[var] = range;
     }
   }
-#ifdef _DEBUG_CUT_HIGH_ORDER
-  std::cout << "Cut High Order Epsilon End;" << std::endl;
-#endif
-  if(have_eps)
-    return vm_ret;
-  else
-    return phase->variable_map;
 }
 
-pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t time_result, Backend* backend_, phase_result_sptr_t& phase)
+
+pp_time_result_t hydla::simulator::reduce_unsuitable_case(pp_time_result_t original_result, Backend* backend_, phase_result_sptr_t& phase)
 {
-#ifdef _DEBUG_REDUCE_UNSUIT
-  std::cout << "Remove UnSuitable Cases Start;" << std::endl;
-  if(phase->phase_type==0)
-    std::cout << "PointPhase " << phase->id << std::endl;
-  else
-    std::cout << "IntervalPhase " << phase->id << std::endl;
-  std::cout << "Next Phase Case Count\t: " << time_result.size() << std::endl;
-#endif
-  unsigned int time_it;
-  pp_time_result_t eps_time_result;
-  for(time_it=0;time_it < time_result.size();time_it++)
-  {
-#ifdef _DEBUG_REDUCE_UNSUIT
-    std::cout << "Case \t: " << (time_it + 1) << std::endl;
-#endif
-    DCCandidate &candidate = time_result[time_it];
-    bool isNG = false;
-    for(parameter_map_t::iterator p_it = candidate.parameter_map.begin(); p_it != candidate.parameter_map.end(); p_it++)
-    {
-      std::string parameter_name = p_it->first.get_name();
-      int parameter_differential_count = p_it->first.get_differential_count();
-      if(parameter_name=="eps" && parameter_differential_count==0)
-      {
-#ifdef _DEBUG_REDUCE_UNSUIT
-        std::cout << p_it->first << "\t: " << p_it->second << "\t->\t";
-#endif
-        symbolic_expression::node_sptr val;
-        bool Ret;
-        if(p_it->second.unique())
-        {
-          val = p_it->second.get_unique_value().get_node();
-          val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique_value().get_node()));
-          backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-          isNG = isNG || Ret;
-        }
-        else
-        {
-          if(p_it->second.get_lower_cnt())
-          {
-            val = p_it->second.get_lower_bound(0).value.get_node();
-            backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-            isNG = isNG || Ret;
-          }
-          if(p_it->second.get_upper_cnt())
-          {
-            val = symbolic_expression::node_sptr(new Number("-1"));
-            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
-            backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-            isNG = isNG || Ret;
-          }
-        }
-#ifdef _DEBUG_REDUCE_UNSUIT
-        if(isNG)
-        {
-          std::cout<<"NG range"<<std::endl;
-        }
-        else
-        {
-          std::cout<<"OK"<<std::endl;
-        }
-#endif
-      }
-#ifdef _DEBUG_REDUCE_UNSUIT
-      else
-      {
-        std::cout << p_it->first << "\t: " << p_it->second << std::endl;
-      }
-#endif
-    }
-    if(!isNG){
-      eps_time_result.push_back(candidate);
+  pp_time_result_t ret;
+  bool unsuitable;
+  for(auto original_candidate : original_result){
+    HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
+    unsuitable = false;
+    HYDLA_LOGGER_DEBUG_VAR(original_candidate.parameter_constraint);
+    backend_->call("unsuitableCase", true, 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
+    if(!unsuitable){
+      ret.push_back(original_candidate);
     }
   }
-#ifdef _DEBUG_REDUCE_UNSUIT
-  std::cout << "######### remove NG Case & all "<< time_result.size() << " -> " << eps_time_result.size() << std::endl;
-#endif
-  if(time_result.size() != eps_time_result.size())
-  {
-    time_result.clear();
-    for(time_it=0;time_it < eps_time_result.size();time_it++)
-    {
-      DCCandidate &eps_candidate = eps_time_result[time_it];
-      time_result.push_back(eps_candidate);
-#ifdef _DEBUG_REDUCE_UNSUIT
-      std::cout << "NewCase\t: " << (time_it + 1) << std::endl;
-      bool isNG = false;
-      for(parameter_map_t::iterator p_it = eps_candidate.parameter_map.begin(); p_it != eps_candidate.parameter_map.end(); p_it++)
-      {
-        std::string parameter_name = p_it->first.get_name();
-        int parameter_differential_count = p_it->first.get_differential_count();
-        if(parameter_name=="eps" && parameter_differential_count==0)
-        {
-          std::cout << p_it->first << "\t: " << p_it->second << "\t->\t";
-          symbolic_expression::node_sptr val;
-          bool Ret;
-          if(p_it->second.unique())
-          {
-            val = p_it->second.get_unique_value().get_node();
-            val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_unique_value().get_node()));
-            backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-            isNG = isNG || Ret;
-          }
-          else
-          {
-            if(p_it->second.get_lower_cnt())
-            {
-              val = p_it->second.get_lower_bound(0).value.get_node();
-              backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-              isNG = isNG || Ret;
-            }
-            if(p_it->second.get_upper_cnt())
-            {
-              val = symbolic_expression::node_sptr(new Number("-1"));
-              val = symbolic_expression::node_sptr(new Times(val, p_it->second.get_upper_bound(0).value.get_node()));
-              backend_->call("isOverZero", 1, "en", "b", &val, &Ret);
-              isNG = isNG || Ret;
-            }
-          }
-          if(isNG)
-          {
-            std::cout<<"NG range"<<std::endl;
-          }
-          else
-          {
-            std::cout<<"OK"<<std::endl;
-          }
-        }
-      }
-#endif
+  return ret;
+}
+
+
+
+find_min_time_result_t hydla::simulator::reduce_unsuitable_case( find_min_time_result_t original_result, Backend* backend_, phase_result_sptr_t& phase)
+{
+  find_min_time_result_t ret;
+  bool unsuitable;
+  for(auto original_candidate : original_result){
+    HYDLA_LOGGER_DEBUG("#epsilon checking time",original_candidate.time);
+    unsuitable = false;
+    HYDLA_LOGGER_DEBUG_VAR(original_candidate.parameter_constraint);
+    backend_->call("unsuitableCase", true, 1, "csn", "b", &original_candidate.parameter_constraint, &unsuitable);
+    if(!unsuitable){
+      ret.push_back(original_candidate);
     }
   }
-#ifdef _DEBUG_REDUCE_UNSUIT
-  std::cout << "Remove UnSuitable Cases End;" << std::endl;
-#endif
-  return time_result;
+  return ret;
+}
+
+
+find_min_time_result_t hydla::simulator::calculate_tmp_result(phase_result_sptr_t& phase, value_t time_limit, symbolic_expression::node_sptr trigger, Backend* backend, variable_map_t vm)
+{
+  bool iszero = false;
+  bool same_id = false;
+
+  find_min_time_result_t find_result, ret;
+
+  HYDLA_LOGGER_DEBUG("come calculate tmp result");
+
+  backend->call("findMinTime", true, 3, "etmvtvlt", "f", &trigger, &vm, &time_limit, &find_result);
+  for(auto find_candidate : find_result)
+  {
+    value_t time = find_candidate.time;
+    backend->call("isZero", true, 1, "vln", "b", &time, &iszero);
+
+    //前回の離散変化条件のidとの比較
+    for(auto entry: phase->parent->parent->discrete_asks)
+    {
+      if(trigger == entry.first)
+      {
+        same_id = true;
+        break;
+      }
+    }
+    //時刻をずらす場合
+    if(iszero && same_id){
+      //時刻ずらし
+      find_min_time_result_t tmp_time_result;
+
+      node_sptr tmp_val;
+      tmp_val = node_sptr(new Number("-1"));
+      tmp_val = node_sptr(new Times(tmp_val, find_candidate.time.get_node()));
+
+      variable_map_t shifted_vm;
+      ValueModifier modifier(*backend);
+      shifted_vm = modifier.apply_function("exprTimeshift", tmp_val, vm);
+
+      backend->call("resetConstraintForVariable", true, 0, "", "");
+      backend->call("addConstraint", true, 1, "mv0t", "", &shifted_vm);
+      value_t eps_time_limit = time_limit;
+      eps_time_limit -= find_candidate.time;
+      //二回目
+      tmp_time_result = calculate_tmp_result(phase,eps_time_limit,trigger,backend,shifted_vm);
+
+      for(auto &tmp_candidate : tmp_time_result)
+      {
+        tmp_candidate.time = find_candidate.time + tmp_candidate.time;
+        ret.push_back(tmp_candidate);
+      }
+    }
+    else
+    {
+      ret.push_back(find_candidate);
+    }
+  }
+  HYDLA_LOGGER_DEBUG("exit calculate tmp result");
+
+  return ret;
 }

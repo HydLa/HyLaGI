@@ -30,7 +30,7 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
 
     std::string prev_node_time;
 
-    if(now_node->phase==IntervalPhase){
+    if(now_node->phase==INTERVAL_PHASE){
       variable_map_t vm = now_node->variable_map;
       if(out_tmp.str().empty()){
         prev_node_time = "0";
@@ -38,7 +38,7 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
         out_tmp << "{";
       }else{
         phase_result_sptr_t tmp = now_node->parent;
-        while(tmp->phase!=IntervalPhase) tmp = tmp->parent;
+        while(tmp->phase!=INTERVAL_PHASE) tmp = tmp->parent;
         prev_node_time = tmp->end_time.get_string();
         out_tmp << ",";
       }
@@ -55,7 +55,7 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
       out_tmp << now_node->end_time;
       out_tmp << "} ";
       //        prev_node_time = now_node->end_time.get_string();
-      if(now_node->cause_for_termination == simulator::ASSERTION)
+      if(now_node->simulation_state == simulator::ASSERTION)
         out_tmp << ", PlotStyle -> Dashed";
       out_tmp << "]"; //Plot
     }

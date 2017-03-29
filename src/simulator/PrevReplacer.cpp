@@ -2,6 +2,7 @@
 #include "VariableReplacer.h"
 #include "Logger.h"
 #include "Backend.h"
+#include "HydLaError.h"
 
 using namespace std;
 using namespace hydla::symbolic_expression;
@@ -9,7 +10,7 @@ using namespace hydla::symbolic_expression;
 namespace hydla {
 namespace simulator {
 
-PrevReplacer::PrevReplacer(parameter_map_t& map, PhaseResult &phase, Simulator &simulator, bool approx):parameter_map(map), prev_phase(phase), simulator(simulator), approx(approx)
+PrevReplacer::PrevReplacer(PhaseResult &phase, Simulator &simulator, backend::Backend *b, bool affine): prev_phase(phase), simulator(simulator), backend(b), affine_mode(affine)
 {}
 
 PrevReplacer::~PrevReplacer()
@@ -64,35 +65,44 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
     }
     else
     {
-      new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
       parameter_t param(v_name, diff_cnt, prev_phase.id);
-
-      if(!parameter_map.count(param))
+      if(affine_mode)
       {
-        if(approx)
+        //replace with affine form
+        if(range.get_upper_cnt() != 1 || range.get_lower_cnt() != 1)
         {
-          hydla::backend::MidpointRadius mr;
-          value_t lb = range.get_lower_bound().value;
-          value_t ub = range.get_upper_bound().value;
-          simulator.backend->call("intervalToMidpointRadius", 2, "vltvlt", "r", &lb, &ub, &mr);
-          HYDLA_LOGGER_DEBUG("");
-          range.set_upper_bound(value_t("1"), range.get_upper_bound().include_bound);
-          range.set_lower_bound(value_t("-1"), range.get_lower_bound().include_bound);
-          value_t new_value(mr.midpoint + mr.radius * value_t(new_child));
-          prev_phase.variable_map[variable] = new_value;
-          new_child = new_value.get_node();
+          HYDLA_LOGGER_ERROR("invalid range for affine arithmetic mode, " + range.get_string());
         }
-        else
-        {
-          prev_phase.variable_map[variable] = value_t(new_child);
-        }
+        hydla::backend::MidpointRadius mr;
+        value_t lb = range.get_lower_bound(0).value;
+        value_t ub = range.get_upper_bound(0).value;
+        backend->call("intervalToMidpointRadius", false, 2, "vltvlt", "r", &lb, &ub, &mr);
+        range.set_upper_bound(value_t("1"), true);
+        range.set_lower_bound(value_t("-1"), true);
+        value_t new_value(mr.midpoint + mr.radius * value_t(param));
+        new_child = new_value.get_node();
+      }
+      else
+      {
+        new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
+      }
+
+      if(!simulator.get_parameter_map().count(param))
+      {
+        prev_phase.variable_map[variable] = value_t(new_child);
 
         simulator.introduce_parameter(variable, prev_phase, range);
-        parameter_map[param] = range;
-        prev_phase.parameter_map[param] = parameter_map[param];
+        ConstraintStore par_cons = range.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
+        prev_phase.add_parameter_constraint(par_cons);
+        parameter_constraint.add_constraint_store(par_cons);
       }
     }
   }
+}
+
+ConstraintStore PrevReplacer::get_parameter_constraint()const
+{
+  return parameter_constraint;
 }
 
 void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)

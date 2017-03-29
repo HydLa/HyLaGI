@@ -108,18 +108,54 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
 
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+
   // Parameter
   virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
   // SymbolicT
   virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
   // Infinity
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+  // ProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+  // EachElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+  // ExpressionListElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  // ExpressionListCaller
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  // ExpressionListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+  // ProgramListCaller
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  // ProgramListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+  // ProgramListElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+  // Union 
+  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+  // Intersection 
+  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+  // Range 
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+  // SizeOfList 
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
+  // SumOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
 
 private:
   void dump_node(boost::shared_ptr<symbolic_expression::FactorNode> node);
   void dump_node(boost::shared_ptr<symbolic_expression::UnaryNode> node);
   void dump_node(boost::shared_ptr<symbolic_expression::BinaryNode> node);
-  void dump_node(boost::shared_ptr<symbolic_expression::ArbitraryNode> node);
+  void dump_node(boost::shared_ptr<symbolic_expression::VariadicNode> node);
 
   typedef int         node_id_t;
   typedef std::string graph_node_info_t;

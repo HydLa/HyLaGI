@@ -1,0 +1,10 @@
+// #hylagi -p10 -e1
+
+INIT   <=> x = eps & y = 4/5 & x' = 4 & y' = -1.
+RUN    <=> [](x'' = 0 & y'' = 0).
+EPS <=> 0 <  eps < 1/10  & [](eps'=0).
+BOUNCE <=> []((x-)^2 + (y-)^2 = 1 =>
+                x' = x'- - (x- * x'- + y- * y'-) * 2 * (x-) &
+                y' = y'- - (x- * x'- + y- * y'-) * 2 * (y-)).
+
+INIT, EPS, RUN << BOUNCE.

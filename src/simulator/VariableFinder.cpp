@@ -13,14 +13,12 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node, bool include_guard)
+void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node)
 {
-  include_guard_ = include_guard;
   in_prev_ = false;
   differential_count_ = 0;
   accept(node);
 }
-
 
 void VariableFinder::clear(){
   variables_.clear();
@@ -71,6 +69,17 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const
 }
 
 
+bool VariableFinder::include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const
+{
+  VariableFinder tmp_finder;
+  tmp_finder.visit_node(constraint);
+  for(auto found_var : variables_)
+  {
+    if(tmp_finder.include_variable(found_var))return true;
+  }
+  return false;
+}
+
 bool VariableFinder::include_variables_prev(std::set<std::string> variables) const
 {
   for(auto found_var : prev_variables_)
@@ -100,10 +109,7 @@ variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variabl
 // Ask制約
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
-  if(include_guard_)
-  {
-    accept(node->get_guard());
-  }
+  accept(node->get_guard());
   accept(node->get_child());
 }
 
@@ -111,12 +117,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 // 時刻
 void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
-  Variable time_var("t", 0);
-  if(in_prev_){
-    prev_variables_.insert(time_var);
-  }else{
-    variables_.insert(time_var);
-  }
+  variables_.insert(Variable("t", 0));  //Since t is always continuous, it can be regarded as previous value (for simplicity of simulation)
 }
 
 // 変数
@@ -125,11 +126,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variabl
   if(in_prev_){
     prev_variables_.insert(Variable(node->get_name(), differential_count_));
   }else{
-    // デフォルトの連続性を考えて、微分値が含まれる制約はもとの変数値も含むものとする
-    // TODO:連続性の解決はここでやらず、他のところでやるべきかも
-    for(int i=0; i <= differential_count_; i++){
-      variables_.insert(Variable(node->get_name(), i));
-    }
+    variables_.insert(Variable(node->get_name(), differential_count_));
   }
 }
 

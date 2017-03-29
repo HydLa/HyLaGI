@@ -2,6 +2,8 @@
 #include "CsvProfilePrinter.h"
 #include "PhaseResult.h"
 
+#include <iomanip>
+
 using namespace std;
 
 namespace hydla{
@@ -10,12 +12,13 @@ namespace io{
 
 void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
 {
-  if(result.size() > 0){
+  if(!result.empty()){
     output_stream_ << "Simulation Time, ";
-    std::set<std::string> label_set;
-    for(unsigned int i = 0; i < result.size(); i++){
-      simulator::SimulationTodo& todo = *result[i];
-      if(todo.phase_type == simulator::PointPhase)
+    set<string> label_set;
+    // collect necessary labels
+    for(auto phase : result)
+    {
+      if(phase->phase_type == simulator::POINT_PHASE)
       {
         output_stream_ << "P";
       }
@@ -23,21 +26,64 @@ void CsvProfilePrinter::print_profile(const entire_profile_t& result) const
       {
         output_stream_ << "I";
       }
-      output_stream_ << "P " << todo.id << ", ";
-      for(profile_t::const_iterator it = todo.profile.begin(); it != todo.profile.end(); it++){
-        label_set.insert(it->first);
-        //フェーズによってシミュレーションしないモジュール集合などもあるため，必要なラベルをすべて列挙しておく．
+      output_stream_ << "P " << phase->id << ", ";
+      for(auto entry : phase->profile){
+        label_set.insert(entry.first);
       }
     }
+
     output_stream_ << "Sum";
     output_stream_ << "\n";
-    for(std::set<std::string>::const_iterator it = label_set.begin(); it != label_set.end(); it++){
-      output_stream_ << *it << ", ";
+    for(auto label : label_set)
+    {
+      output_stream_ << label << ", ";
       double sum = 0;
-      for(unsigned int i = 0; i < result.size(); i++){
-        simulator::SimulationTodo& todo = *result[i];
-        output_stream_ << todo.profile[*it] << ", ";
-        sum += todo.profile[*it];
+      for(auto phase : result){
+        output_stream_ << phase->profile[label] << ", ";
+        sum += phase->profile[label];
+      }
+      output_stream_ << sum << "\n";
+    }
+  }
+
+
+  /// profile for each step
+  if(!result.empty()){
+    output_stream_ << "\n";
+    output_stream_ << "Simulation Time, ";
+    set<string> label_set;
+    // collect necessary labels
+    int step_num = 0;
+    for(auto phase : result)
+    {
+      if(phase->phase_type == simulator::POINT_PHASE)
+      {
+        output_stream_ << "STEP" << ++step_num << ",";
+      }
+      for(auto entry : phase->profile){
+        label_set.insert(entry.first);
+      }
+    }
+
+    output_stream_ << "Sum";
+    output_stream_ << "\n";
+    for(auto label : label_set)
+    {
+      output_stream_ << label << ", ";
+      double sum = 0;
+      double step_sum = 0;
+      for(auto phase : result){
+        double number = phase->profile[label];
+        if(phase->phase_type == simulator::POINT_PHASE)
+        {
+          step_sum = number;
+        }
+        else
+        {
+          step_sum += number;
+          output_stream_ << step_sum << ", ";
+        }
+        sum += number;
       }
       output_stream_ << sum << "\n";
     }

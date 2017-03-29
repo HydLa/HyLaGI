@@ -11,47 +11,37 @@ class Node;
 typedef boost::shared_ptr<Node> node_sptr;
 }
 
-typedef enum{
-  DFS,
-  BFS
-}SearchMethod;
-
 struct Opts {
+  enum EOutputMode { None, Omit, Output, };
   std::string mathlink;
+  std::string simplify_time;
   bool debug_mode;
-  std::string max_time;
-  bool approx;
-  bool cheby;
-  bool epsilon_mode;
+  symbolic_expression::node_sptr max_time;
+  int epsilon_mode;
+  bool interval;
+  bool affine;
+  bool step_by_step;
+  bool numerize_mode;
+  bool ltl_model_check_mode;
+
   bool nd_mode;
   bool static_generation_of_module_sets;
-  bool interactive_mode;
-  bool use_unsat_core;
   bool ha_convert_mode;
   bool ha_simulator_mode;
   bool dump_relation;
-  bool profile_mode;
-  bool parallel_mode;
-  int parallel_number;
-  bool reuse;
   bool dump_in_progress;
   bool stop_at_failure;
   bool ignore_warnings;
-  std::string output_interval;
-  int output_precision;
-  std::string solver;
+  bool eager_approximation;
+  int approximation_step;
+  int extra_dummy_num;
+  int simplify;
   symbolic_expression::node_sptr assertion;
-  std::set<std::string> output_variables;
-  int optimization_level;
-  std::string analysis_mode;
-  std::string analysis_file;
-  int timeout;
-  int timeout_phase;
-  int timeout_case;
-  int timeout_calc;
-  int max_loop_count;
   int max_phase;
-  SearchMethod search_method;
+  EOutputMode output_mode;
+  std::set<std::string> output_vars;
+  std::set<std::string> vars_to_approximate;
+  std::set<std::string> guards_to_interval_newton;
 };
 
 }

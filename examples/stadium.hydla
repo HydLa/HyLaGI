@@ -11,3 +11,4 @@ WALL3 <=> [](y- = 1 => y' = -y'-).
 WALL4 <=> [](y- =-1 => y' = -y'-).
 
 INIT, (RUNX, RUNY)<<(WALL1,WALL2,WALL3,WALL4).
+// #hylagi -p8

@@ -3,7 +3,7 @@
 #include <boost/bimap.hpp>
 
 #include "TreeVisitor.h"
-#include "AffineOrInteger.h"
+#include "AffineMixedValue.h"
 #include "Parameter.h"
 #include "PhaseResult.h"
 
@@ -29,12 +29,15 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   public:
 
   AffineTreeVisitor(parameter_idx_map_t&, variable_map_t&);
+  AffineTreeVisitor(variable_map_t&);
 
-  AffineOrInteger approximate(node_sptr &node);
+  void set_current_time(itvd itv);
+
+  AffineMixedValue approximate(const node_sptr &node);
   ///calculate x^y
-  AffineOrInteger pow(AffineOrInteger x, AffineOrInteger y);
+  AffineMixedValue pow(AffineMixedValue x, AffineMixedValue y);
   affine_t pow(affine_t affine, int exp);
-  AffineOrInteger sqrt_affine(const AffineOrInteger &a);
+  AffineMixedValue sqrt_affine(const AffineMixedValue &a);
   
   virtual ~AffineTreeVisitor();  
 
@@ -89,6 +92,7 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
   
   virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
@@ -101,16 +105,36 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
   
 private:
 
-  static affine_t pi, e; 
+  static itvd pi, e;
+  itvd current_time;
+  int time_idx = 0;
   void invalid_node(symbolic_expression::Node& node);
 
-  AffineOrInteger current_val_;
-  parameter_idx_map_t& parameter_idx_map_;
+  AffineMixedValue current_val_;
+  parameter_idx_map_t* parameter_idx_map_;
   variable_map_t& variable_map;
   int differential_count;
+  bool pm_external = false;
 };
 
 } //namespace interval

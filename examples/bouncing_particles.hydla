@@ -1,8 +1,10 @@
 // many bouncing particles
+Y := {y0..y9}.
 
 INIT(y, y0) <=> y = y0 & y' = 0.
 FALL(y) <=> [](y'' = -10).
 BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
-y := y0..y9.
-{ INIT(y[i],i+1), FALL(y[i]) << BOUNCE(y[i]) | i in 1..|y| }.
+{ INIT(Y[i],i+1), FALL(Y[i]) << BOUNCE(Y[i]) | i in {1..|Y|} }.
+
+//#hylagi -p 6

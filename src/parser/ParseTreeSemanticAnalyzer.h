@@ -6,6 +6,7 @@
 #include "TreeVisitor.h"
 #include "DefinitionContainer.h"
 #include "ParseTree.h"
+#include "ListExpander.h"
 
 namespace hydla { 
 namespace parser {
@@ -17,8 +18,10 @@ public:
   typedef symbolic_expression::node_sptr                 node_sptr;
 
   ParseTreeSemanticAnalyzer(
-    DefinitionContainer<symbolic_expression::ConstraintDefinition>& constraint_definition,
-    DefinitionContainer<symbolic_expression::ProgramDefinition>&    program_definition,
+    DefinitionContainer<symbolic_expression::ConstraintDefinition>&,
+    DefinitionContainer<symbolic_expression::ProgramDefinition>&,
+    DefinitionContainer<symbolic_expression::ExpressionListDefinition>&,
+    DefinitionContainer<symbolic_expression::ProgramListDefinition>&,
     parse_tree::ParseTree* parse_tree);
   
   virtual ~ParseTreeSemanticAnalyzer();
@@ -27,6 +30,8 @@ public:
    * 解析および制約呼び出しの展開をおこなう
    */
   void analyze(symbolic_expression::node_sptr& n);
+
+private:
 
   // 定義
   virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
@@ -111,9 +116,11 @@ public:
   //Parameter
   virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node){assert(0);}
   //Infinity
-  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node){assert(0);}
+  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
   //SymbolicT
   virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
+
+  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   //SystemVariable
   virtual void visit(boost::shared_ptr<symbolic_expression::SVtimer> node);
@@ -123,9 +130,58 @@ public:
  
   //False
   virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
-  
 
-private:
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+
+  // ProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+
+  // EachElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+
+  // ExpressionListElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+
+  // ExpressionListCaller
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+
+  // ExpressionListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+
+  // ProgramListDefinition
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+
+  // ProgramListCaller
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+
+  // ProgramListElement
+  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+
+  // SizeOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
+
+  // SumOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+
+  // Range
+  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+
+  // Union
+  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+
+  // Intersection 
+  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+
   typedef parser::DefinitionContainer<
     symbolic_expression::Definition>::definition_map_key_t referenced_definition_t;
 
@@ -159,7 +215,12 @@ private:
 
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
-   
+
+  std::set<boost::shared_ptr<symbolic_expression::ConstraintDefinition> > unused_constraint_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ProgramDefinition> >  unused_program_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  unused_expression_list_definition;
+  std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  unused_program_list_definition;
+
   /**
    * 新しい子ノード
    * accept後、これに値が入っている場合はノードの値を交換する
@@ -177,6 +238,24 @@ private:
    */
   DefinitionContainer<symbolic_expression::ProgramDefinition>&    
     program_definition_;
+
+  /**
+   * 式リスト定義の情報
+   */
+  DefinitionContainer<symbolic_expression::ExpressionListDefinition>& 
+    expression_list_definition_;
+
+  /**
+   * プログラムリスト定義の情報
+   */
+  DefinitionContainer<symbolic_expression::ProgramListDefinition>& 
+    program_list_definition_;
+
+  std::stack<std::map<node_sptr, node_sptr> > local_variables_in_list_;
+
+  
+
+  ListExpander list_expander_;
 
   parse_tree::ParseTree* parse_tree_;
   
@@ -230,5 +309,5 @@ private:
 };
 
 } //namespace parser
-} //namespace hydla
+} //namespace ydla
 

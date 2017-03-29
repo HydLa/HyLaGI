@@ -1,0 +1,20 @@
+INITe <=> e>0 & e<1/1000000.
+INIT(x,y,x0,y0,xv,yv) <=> x=x0 & y=y0 & x'=xv & y'=yv.
+CONSe <=> [](e'=0).
+CONS(x,y) <=> [](x'' = 0 & y''=0).
+COLLISION(x0,y0,x,y)
+  <=> [](
+        (x0- - x-)^2 + (y0- - y-)^2 = 4
+        => x0'=1/4 *
+        ((x--x0-)*( x'-*(x--x0-) + y'-*(y--y0-) ) -
+        (y--y0-)*( -x0'-*(y--y0-) + y0'-*(x--x0-)))
+        & y0'=1/4 *
+        ((y--y0-)*( x'-*(x--x0-) + y'-*(y--y0-) ) +
+        (x--x0-)*( -x0'-*(y--y0-) + y0'-*(x--x0-))
+        )).
+INITe,CONSe ,
+INIT(x0,y0,0,e,1,0), INIT(x1,y1,5,1+1/10,0,0), INIT(x2,y2,5,-1-1/10,0,0) ,
+( CONS(x0,y0), CONS(x1,y1), CONS(x2,y2) ) <<
+( COLLISION(x0,y0,x1,y1), COLLISION(x0,y0,x2,y2) ) .
+
+

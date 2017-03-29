@@ -3,13 +3,13 @@
  (-1)
   |
 1 |
-  V  1      4      
-  ◎---->①---->②---->(-1)
-  | \    |     ┐
-2 |  \ 4 | 2  /
-  |   \  |   / 1
-  V    ┘ V  /
-  ③---->④
+  V  1   4      
+  0----1-----2------>(-1)
+  | \   |    A
+2 |  \ 4| 2 /
+  |   \ |  / 1
+  V    VV /
+  3---->4
      3
 */
 
@@ -19,8 +19,6 @@ TIMER <=> timer = -1 & [](timer' = 1).
 
 EDGE(from, to, distance) <=> [](next- = from & rest- = 0 => now = next- & next = to & rest = distance).
 
-TRUE <=> [](1=1).
-
 ASSERT(timer < 5 | now = 2).
 
 GRAPH{
@@ -28,7 +26,10 @@ EDGE(0,1,1),EDGE(0,3,2),EDGE(0,4,4),
 EDGE(1,2,4),EDGE(1,4,2),
 EDGE(3,4,3),
 EDGE(4,2,1),
-EDGE(2,-1,0)
+EDGE(2,-1,-1)
 }.
 
-INIT, CONST, GRAPH << TRUE, TIMER.
+INIT, CONST, GRAPH << $TRUE, TIMER.
+
+
+//#hylagi --fnd

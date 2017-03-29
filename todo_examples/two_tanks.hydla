@@ -1,0 +1,16 @@
+/**
+ * An example from Rigorous Modeling of Hybrid Systems Using Interval Arithmetic Constraints
+ * Timothy, J, Hickey et al
+ * 
+ * Description of the model:
+ * There are two water tanks.
+ * There is a flow of water into the higher tank, and a horizontal pipe from the
+ * bottom of the higer tank to some point in the side of the lower tank.
+ * There is an outflow pipe at the bottom of the lower tank.
+ */
+
+INIT <=> f1 = 0.75 /\ f2 = 0.375.
+CONSTANT <=> [](k1 = 3/4 /\ k2 = 1 /\ k3 = 1/3 /\ k4 = 1).
+FLOW <=> []((f2 > k3 => f1' = k1 - k2 * (f1 - f2 + k3) ^ (1/2) /\ f2' = k2*(f1 - f2 + k3) ^ (1/2) - k4 * f2^(1/2) ) /\ (f2 <= k3 => f1' = k1 - k2 * f1 ^ (1/2) /\ f2' = k2 * f1 ^ (1/2) - k4 * f2 ^ (1/2))).
+
+INIT, CONSTANT, FLOW.

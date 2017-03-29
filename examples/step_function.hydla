@@ -1,9 +1,7 @@
-// -*- coding: utf-8 -*-
-// ステップ関数
+// step function
 
-INIT   <=> f=0 & t=0.
-TIMER  <=> [](t'=1).
+INIT   <=> f=0.
 FLAT   <=> [](f'=0).
 CHANGE <=> [](t = 5 => f=1).
 
-INIT, TIMER, FLAT << CHANGE.
+INIT, FLAT << CHANGE.

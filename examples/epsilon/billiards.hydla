@@ -1,0 +1,28 @@
+// TODO example
+// #hylagi -p10 -e1
+
+INIT(x,y,cx,cy,dcx,dcy) <=>
+    x=cx & y=cy &
+    x'=dcx & y'=dcy.
+
+MOVE(x,y)<=>[](x''=0) & [](y''=0).
+
+COLL(xa,ya,xb,yb) <=> [](((xa--xb-)^2+(ya--yb-)^2=4)=>
+        xa'=(xa'-*(yb--ya-)^2+(yb'--ya'-)*(xb--xa-)*(yb--ya-)+xb'-*(xb--xa-)^2)/4 &
+        ya'=(ya'-*(xb--xa-)^2+(xb'--xa'-)*(yb--ya-)*(xb--xa-)+yb'-*(yb--ya-)^2)/4 &
+        xb'=(xb'-*(ya--yb-)^2+(ya'--yb'-)*(xa--xb-)*(ya--yb-)+xa'-*(xa--xb-)^2)/4 &
+        yb'=(yb'-*(xa--xb-)^2+(xa'--xb'-)*(ya--yb-)*(xa--xb-)+ya'-*(ya--yb-)^2)/4 ).
+
+EPS <=> 0<eps & [](eps'=0).
+
+INITS{
+    INIT(x1,y1,eps,0,0,10),
+    INIT(x2,y2,0,3,0,0),
+    INIT(x3,y3,0,6,0,0),
+    INIT(x4,y4,0,9,0,0)
+}.
+MOVES{MOVE(x1,y1),MOVE(x2,y2),MOVE(x3,y3),MOVE(x4,y4)}.
+COLLS{COLL(x1,y1,x2,y2),COLL(x1,y1,x3,y3),COLL(x1,y1,x4,y4),
+        COLL(x2,y2,x3,y3),COLL(x2,y2,x4,y4),COLL(x3,y3,x4,y4)}.
+
+INITS,MOVES<<COLLS,EPS.

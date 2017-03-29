@@ -25,6 +25,7 @@ public:
     n->accept(n, this);
   }
 
+
   // 制約定義
   virtual void visit(boost::shared_ptr<ConstraintDefinition> node) = 0;
   
@@ -112,6 +113,8 @@ public:
   // 数字
   virtual void visit(boost::shared_ptr<Number> node) = 0;
 
+  virtual void visit(boost::shared_ptr<ImaginaryUnit> node) = 0;
+
   // 浮動小数点数
   virtual void visit(boost::shared_ptr<Float> node) = 0;
   
@@ -129,6 +132,57 @@ public:
 
   // False
   virtual void visit(boost::shared_ptr<False> node) = 0;
+
+  // ExpressionList
+  virtual void visit(boost::shared_ptr<ExpressionList> node) = 0;
+
+  // ConditionalExpressionList
+  virtual void visit(boost::shared_ptr<ConditionalExpressionList> node) = 0;
+
+  // ProgramList
+  virtual void visit(boost::shared_ptr<ProgramList> node) = 0;
+
+  // ConditionalProgramList
+  virtual void visit(boost::shared_ptr<ConditionalProgramList> node) = 0;
+
+  // EachElement
+  virtual void visit(boost::shared_ptr<EachElement> node) = 0;
+
+  // DifferentVariable
+  virtual void visit(boost::shared_ptr<DifferentVariable> node) = 0;
+
+  // ExpressionListElement
+  virtual void visit(boost::shared_ptr<ExpressionListElement> node) = 0;
+
+  // ExpressionListCaller
+  virtual void visit(boost::shared_ptr<ExpressionListCaller> node) = 0;
+
+  // ExpressionListDefinition
+  virtual void visit(boost::shared_ptr<ExpressionListDefinition> node) = 0;
+  
+  // ProgramListCaller
+  virtual void visit(boost::shared_ptr<ProgramListCaller> node) = 0;
+
+  // ProgramListDefinition
+  virtual void visit(boost::shared_ptr<ProgramListDefinition> node) = 0;
+
+  // ProgramListElement
+  virtual void visit(boost::shared_ptr<ProgramListElement> node) = 0;
+
+  // SumOfList 
+  virtual void visit(boost::shared_ptr<SumOfList> node) = 0;
+
+  // SizeOfList 
+  virtual void visit(boost::shared_ptr<SizeOfList> node) = 0;
+
+  // Range
+  virtual void visit(boost::shared_ptr<Range> node) = 0;
+
+  // Union
+  virtual void visit(boost::shared_ptr<Union> node) = 0;
+
+  // Intersection 
+  virtual void visit(boost::shared_ptr<Intersection> node) = 0;
 
 };
 

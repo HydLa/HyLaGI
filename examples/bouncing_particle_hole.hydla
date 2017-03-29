@@ -1,0 +1,13 @@
+// bouncing particle with a hole
+
+INIT <=> y = 10 /\ y' = 0 /\ x = 0 /\ 1 <= x' <= 5.
+FALL <=> [](y'' = -10).
+XCONST <=> [](x'' = 0).
+XBOUNCE <=> []((x- = 7 \/ x- = 10) /\ y- < 0 => x' = -x'-). 
+BOUNCE <=> [](y- = -7 \/ (x- <= 7 \/ x- >= 10) /\ y- = 0 => y' = -(4/5) * y'-).
+
+//ASSERT(!(x >= 10 /\ y >= 0)).
+
+INIT, FALL << BOUNCE, XCONST << XBOUNCE.
+
+//#hylagi -p 10 --fnd

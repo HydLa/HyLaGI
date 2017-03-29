@@ -23,7 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 HyLaGI uses Mathlink, boost C++ libraries and kv library.
 
 ================================================================================
@@ -62,7 +61,7 @@ Mathlink License Agreement
 Pursuant to this Limited License Agreement ("Agreement") Wolfram
 Research, Inc. ("WRI") grants you ("Licensee"), free of charge, a
 nonexclusive, perpetual license to use, copy, and distribute MathLink
-("the Program") for the purpose of enhancing the Mathematicaﾂｮ
+("the Program") for the purpose of enhancing the Mathematica®
 interoperability of certain Licensee products and services ("Licensee
 Work"), provided that such use or distribution does not violate the
 terms of this Agreement.
@@ -145,11 +144,11 @@ control.
 
 9. Notice to Government End Users 
 The Program is a "Commercial Item," as
-that term is defined at 48 C.F.R. ﾃつｧ2.101, consisting of "Commercial
+that term is defined at 48 C.F.R. Â§2.101, consisting of "Commercial
 Computer Software" and "Commercial Computer Software Documentation,"
-as such terms are used in 48 C.F.R. ﾃつｧ12.212 or 48
-C.F.R. ﾃつｧ227.7202, as applicable. Consistent with 48 C.F.R. ﾃつｧ12.212
-or 48 C.F.R. ﾃつｧﾃつｧ227.7202-1 through 227.7202-4, as applicable, the
+as such terms are used in 48 C.F.R. Â§12.212 or 48
+C.F.R. Â§227.7202, as applicable. Consistent with 48 C.F.R. Â§12.212
+or 48 C.F.R. Â§Â§227.7202-1 through 227.7202-4, as applicable, the
 Commercial Computer Software and Commercial Computer Software
 Documentation are being licensed to U.S. Government end users (A) only
 as Commercial Items and (B) with only those rights as are granted to

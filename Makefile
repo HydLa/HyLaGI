@@ -3,21 +3,21 @@ UNAME := $(shell uname)
 .PHONY : all
 all: $(src_directory)
 ifeq ($(UNAME),Linux)
-	@mkdir bin -p && cd src && make
+	@mkdir bin -p && cd src && $(MAKE)
 endif
 ifeq ($(UNAME),Darwin)
-	@mkdir -p bin && cd src && make
+	@mkdir -p bin && cd src && $(MAKE)
 endif
-##	@cd $(src_directory) make
+##	@cd $(src_directory) $(MAKE)
 
 # execute unit test
 .PHONY : check
 check: $(src_directory)
-	cd unit_tests && make && ./unit_test
+	cd unit_tests && $(MAKE) && ./unit_test
 
 .PHONY : clean
 clean:
-	@cd $(src_directory) && make clean
+	@cd $(src_directory) && $(MAKE) clean
 
 # generate documentation
 .PHONY : doc

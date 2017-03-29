@@ -13,16 +13,6 @@ class Link
   virtual ~Link(){}
 
   /// Type of Datas(used for receive)
-
-  enum VariableForm
-  {
-    VF_NONE,
-    VF_IGNORE_PREV,
-    VF_PREV,
-    VF_TIME,
-    VF_ZERO
-  };
-
   enum DataType
   {
     DT_FUNC,
@@ -32,23 +22,23 @@ class Link
     DT_NONE
   };
 
-  typedef VariableForm        variable_form_t;
+  virtual void reset(){}
 
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str){put_symbol(str.c_str());}
   virtual void put_integer(int value) = 0;
-  virtual void put_float(double value) = 0;
+  virtual void put_double(double value) = 0;
   virtual void put_number(const char *value) = 0;
   virtual void put_string(const char *value) = 0;
   virtual void put_string(const std::string &str){put_string(str.c_str());}
   void put_number(const std::string &val){put_number(val.c_str());}
   virtual void put_function(const char *name, int arg_cnt) = 0;
   void put_function(const std::string &name, int arg_cnt){put_function(name.c_str(), arg_cnt);}
-  virtual void put_variable(const std::string &name, int diff_count, const variable_form_t &variable_arg) = 0;
   virtual void put_parameter(const std::string& name, int diff_count, int id) = 0;
 
   virtual int get_integer() = 0;
   virtual void get_function(std::string& name, int& arg_cnt) = 0;
+  virtual double get_double() = 0;
   virtual DataType get_type() = 0;
   virtual std::string get_symbol() = 0;
   virtual std::string get_string() = 0;
@@ -100,6 +90,8 @@ class Link
   virtual std::string get_input_print() = 0;
   virtual std::string get_debug_print() = 0;
   virtual void check() = 0;
+
+  bool trace = true;
   protected:
   typedef boost::bimaps::bimap<std::string, std::string > function_map_t;
   function_map_t function_map_;

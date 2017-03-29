@@ -10,7 +10,7 @@ namespace hydla {
   }
 
   std::string Version::version()  {
-    return "0.9.0";
+    return "0.9.5";
   }
   
   std::string Version::revision() {
@@ -18,12 +18,12 @@ namespace hydla {
   }
   
   std::string Version::copyright() {
-    return "Copyright (C) 2008-2014 uedalab HydLa project";
+    return "Copyright (C) 2008-2017 UEDA Lab. HydLa project";
   }
   
   std::string Version::description() {
     std::stringstream s;
-    s << "Hyrose v" << version() << "\n\n" 
+    s << "HyLaGI v" << version() << "\n\n"
       //      << " (r" << revision() << ")\n\n" 
       << copyright();
 

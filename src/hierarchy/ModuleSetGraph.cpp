@@ -24,11 +24,6 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 
   // parallel(X, Y) = X ∪ Y ∪ {x ∪ y | x∈X, y∈Y}
 
-  module_set_set_t::iterator p_it = 
-    parallel_module_set_graph.full_module_set_set_.begin();
-  module_set_set_t::iterator p_end = 
-    parallel_module_set_graph.full_module_set_set_.end();
-
   // X
   module_set_set_t new_module_set_list(full_module_set_set_);
     
@@ -47,7 +42,7 @@ void  ModuleSetGraph::add_parallel(ModuleSetGraph& parallel_module_set_graph)
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_graph)
@@ -67,7 +62,7 @@ void  ModuleSetGraph::add_required_parallel(ModuleSetGraph& parallel_module_set_
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
@@ -86,7 +81,7 @@ void  ModuleSetGraph::add_weak(ModuleSetGraph& weak_module_set_graph)
 
   full_module_set_set_.swap(new_module_set_list);
   maximal_module_set_ = *full_module_set_set_.rbegin();
-  build_edges();
+  // build_edges();
 }
 
 namespace {

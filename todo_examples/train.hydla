@@ -25,7 +25,7 @@ INIT, CONST << BRAKE, ACCEL, DECEL, SENSOR(x1-d, s1).
 //DIST <=> 500 <= d <= 1500 & [](d' = 0).
 /*
 
-// “dŽÔ‚Ì“®‚«‚Í‚±‚¤‘‚¯‚é‚ÆŠð‚µ‚¢H
+// Is below description better?
 
 INIT <=> x = 0 & x' = 0 & brake = 0 & 10 <= vlim <= 50 & [](vlim' = 0).
 CONST <=> [](brake' = 0).
