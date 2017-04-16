@@ -21,6 +21,7 @@ trySolve[cons_, vars_] :=
         ]
       ]
     ];
+    simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
       sol = Quiet[Solve[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
       If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
