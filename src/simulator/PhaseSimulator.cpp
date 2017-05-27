@@ -824,9 +824,9 @@ ValueRange PhaseSimulator::create_range_from_interval(itvd itv)
   return ValueRange(lower, upper);
 }
 
-find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase, std::map<std::string, kv::interval<double>>& atomic_guard_min_time_interval_map)
+find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase)
 {
-  if(opts_->step_by_step)return find_min_time_step_by_step(guard, original_vm, time_limit, phase, entailed, atomic_guard_min_time_interval_map);
+  if(opts_->step_by_step)return find_min_time_step_by_step(guard, original_vm, time_limit, phase, entailed);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   list<Parameter> parameters;
@@ -1126,7 +1126,7 @@ PhaseSimulator::StateOfIntervalNewton PhaseSimulator::initialize_newton_state(co
 }
 
 
-find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed, std::map<std::string, kv::interval<double>>& atomic_guard_min_time_interval_map)
+find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed)
 {
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
@@ -1242,21 +1242,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         {
           HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
         }
-        const std::string atomic_guard_str = get_infix_string(entry.first);
-        HYDLA_LOGGER_DEBUG_VAR(atomic_guard_str);
+        HYDLA_LOGGER_DEBUG_VAR(get_infix_string(entry.first));
         HYDLA_LOGGER_DEBUG_VAR(phase->discrete_guards.count(entry.first));
-        if (atomic_guard_min_time_interval_map.find(atomic_guard_str) == atomic_guard_min_time_interval_map.end())
-        {
-          state.min_interval =
-            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
-          atomic_guard_min_time_interval_map[atomic_guard_str] = state.min_interval.value();
-        }
-        else
-        {
-          HYDLA_LOGGER_DEBUG("using precomputed min time");
-          state.min_interval = atomic_guard_min_time_interval_map[atomic_guard_str];
-          continue;
-        }
+        state.min_interval =
+          interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
       if(opts_->numerize_mode)
@@ -1528,18 +1517,17 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           asks.insert(entry.first);
         }
       }
-      std::map<std::string, kv::interval<double>> atomic_guard_min_time_interval_map;
       timer::Timer find_min_time_timer;
       if(opts_->interval && !max_time.infinite())upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time, false).upper();
       for(auto ask : asks)
       {
-        candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase, atomic_guard_min_time_interval_map);
+        candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase);
       }
 
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
-        entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase, atomic_guard_min_time_interval_map);
+        entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase);
       }
       phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
       pp_time_result_t time_result;
