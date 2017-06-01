@@ -3,7 +3,7 @@
 // Author: Tsutomu WADA
 // The shape of the floor is a sin wave.
 
-INIT <=> x = 0 /\ x' = 0 /\ 9.999999 < y < 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
+INIT <=> x = 0 & x' = 0 & y = 10 & y' = 0 & e = 1 & [](e' = 0).
 FALL <=> [](cont = 1 => y'' = -10).
 CONSTX <=> [](cont = 1 => x'' = 0).
 /**
@@ -12,11 +12,11 @@ CONSTX <=> [](cont = 1 => x'' = 0).
 *  new x' = (-k * sin^2 + cos^2) * x' + (k+1) * sin * cos      * y'
 *  new y' = (k+1) * sin * cos    * x' + (sin^2 + (-k) * cos^2) * y'
 */
-CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) /\
+CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) &
              c = 1      /(1 + cos(x-)^2)^(1/2)).
 BOUNCE <=> []( y- = sin(x-) => cont = 0 &
         x' = ((-e) * s^2 + c^2) * x'- + ((e+1) * s * c) * y'-
-        /\
+        &
         y' = ((e+1) * s * c) * x'- + (s^2 + (-e) * c^2) * y'-).
 
 INIT, CONST, (FALL, CONSTX), [](cont = 1) << BOUNCE.
