@@ -1222,19 +1222,15 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
   ConstraintStore current_parameter_constraint  = phase->get_parameter_constraint();
   find_min_time_result_t min_time_for_this_ask;
-  int loopCount = 0;
 
-  //std::map<std::string, HistoryData> current_atomic_guard_history_data = atomic_guard_min_time_interval_map;
-
-  //Atomic guard index -> Interval newton initial value index
   std::map<int, int> current_atomic_guard_index_history_stack_index;
-  for (auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
+  for(auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
   {
     const int index = std::distance(newton_guard_state_map.begin(), it);
     const auto& entry = *it;
 
     const std::string atomic_guard_str = get_infix_string(entry.first);
-    if (atomic_guard_min_time_interval_map.find(atomic_guard_str) != atomic_guard_min_time_interval_map.end())
+    if(atomic_guard_min_time_interval_map.find(atomic_guard_str) != atomic_guard_min_time_interval_map.end())
     {
       current_atomic_guard_index_history_stack_index[index] = 0;
     }
@@ -1242,9 +1238,6 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
   while(true)
   {
-    HYDLA_LOGGER_DEBUG("BREAK1====================================================");
-    HYDLA_LOGGER_DEBUG_VAR(++loopCount);
-    HYDLA_LOGGER_DEBUG("BREAK1 loopCount:", std::to_string(loopCount));
     vector<TimeListElement > time_list;
     parameter_map_t pm_for_each = pm;
     map<constraint_t, Parameter> guard_parameter_map;
@@ -1254,143 +1247,63 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       TimeListElement elem(entry.second.front(), entry.first);
       time_list.push_back(elem);
     }
-    //for(auto &entry : newton_guard_state_map)
-    for (auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
+
+    for(auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
     {
       const int atomic_guard_index = std::distance(newton_guard_state_map.begin(), it);
       auto& entry = *it;
       bool needUpdate = true;
       StateOfIntervalNewton &state = entry.second;
       const std::string atomic_guard_str = get_infix_string(entry.first);
-      HYDLA_LOGGER_DEBUG("BREAK Guard Adress:", std::to_string(reinterpret_cast<unsigned long long>(entry.first.get())), "  Guard Value:", atomic_guard_str);
 
       optional<IntervalNewtonResult> new_data_opt;
 
       if(!state.min_interval)
       {
         const bool generate_new_data = current_atomic_guard_index_history_stack_index.find(atomic_guard_index) == current_atomic_guard_index_history_stack_index.end();
-        if (!generate_new_data)
+        if(!generate_new_data)
         {
           const int stack_index = current_atomic_guard_index_history_stack_index[atomic_guard_index];
 
           auto& stack_states = atomic_guard_min_time_interval_map[atomic_guard_str].results;
-          if (stack_states.size() == stack_index)
+          if(stack_states.size() == stack_index)
           {
-            HYDLA_LOGGER_DEBUG("BREAK1 interval newton PROGRESS");
             IntervalNewtonResult new_data;
             new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
-
-            {
-              HYDLA_LOGGER_DEBUG("BREAK2 Before Interval Newton");
-              interval::itv_stack_t printState = state.stack;
-              int stackCount = static_cast<int>(state.stack.size());
-              while (!printState.empty())
-              {
-                --stackCount;
-                const itvd v = printState.top();
-                printState.pop();
-
-                HYDLA_LOGGER_DEBUG("BREAK2", v);
-              }
-            }
 
             state.min_interval =
               interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
 
-            {
-              HYDLA_LOGGER_DEBUG("BREAK2 After Interval Newton");
-              interval::itv_stack_t printState = state.stack;
-              int stackCount = static_cast<int>(state.stack.size());
-              while (!printState.empty())
-              {
-                --stackCount;
-                const itvd v = printState.top();
-                printState.pop();
-
-                HYDLA_LOGGER_DEBUG("BREAK2", v);
-              }
-            }
-
             new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
             new_data.next_stack = state.stack;
-
-            HYDLA_LOGGER_DEBUG("BREAK2 Calculated interval : ", state.min_interval.value());
 
             new_data_opt = new_data;
           }
           else
           {
-            HYDLA_LOGGER_DEBUG("BREAK1 interval newton USE PRECOMPUTED VALUE");
-
             state.stack = stack_states[stack_index].next_stack;
-
-            //state.min_interval = optional<kv::interval<double>>(*stack_states[stack_index].min_interval);
             state.min_interval = *stack_states[stack_index].min_interval;
-
-            HYDLA_LOGGER_DEBUG("BREAK2 Got interval : ", state.min_interval.value());
           }
         }
         else
         {
-          HYDLA_LOGGER_DEBUG("BREAK1 interval newton CALUCULATE NEW VALUE");
-
-          for (auto guard : phase->discrete_guards)
+          for(auto guard : phase->discrete_guards)
           {
             HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
           }
-          HYDLA_LOGGER_DEBUG("1234567890");
           HYDLA_LOGGER_DEBUG_VAR(atomic_guard_str);
           HYDLA_LOGGER_DEBUG_VAR(phase->discrete_guards.count(entry.first));
-          if (atomic_guard_min_time_interval_map.find(atomic_guard_str) == atomic_guard_min_time_interval_map.end(), true)
-          {
-            {
-              HYDLA_LOGGER_DEBUG("BREAK2 Before Interval Newton");
-              interval::itv_stack_t printState = state.stack;
-              int stackCount = static_cast<int>(state.stack.size());
-              while (!printState.empty())
-              {
-                --stackCount;
-                const itvd v = printState.top();
-                printState.pop();
 
-                HYDLA_LOGGER_DEBUG("BREAK2", v);
-              }
-            }
+          IntervalNewtonResult new_data;
+          new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
 
-            IntervalNewtonResult new_data;
-            new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
+          state.min_interval =
+            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
 
-            state.min_interval =
-              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
-            //atomic_guard_min_time_interval_map[atomic_guard_str].min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
-            new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
-            new_data.next_stack = state.stack;
+          new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
+          new_data.next_stack = state.stack;
 
-            HYDLA_LOGGER_DEBUG("BREAK2 Calculated interval : ", state.min_interval.value());
-
-            new_data_opt = new_data;
-
-            {
-              HYDLA_LOGGER_DEBUG("BREAK2 After Interval Newton");
-              interval::itv_stack_t printState = state.stack;
-              int stackCount = static_cast<int>(state.stack.size());
-              while (!printState.empty())
-              {
-                --stackCount;
-                const itvd v = printState.top();
-                printState.pop();
-
-                HYDLA_LOGGER_DEBUG("BREAK2", v);
-              }
-            }
-          }
-          /*else
-          {
-            HYDLA_LOGGER_DEBUG("using precomputed min time");
-            state.min_interval = *atomic_guard_min_time_interval_map[atomic_guard_str].min_interval;
-            //needUpdate = false;
-            //continue;
-          }*/
+          new_data_opt = new_data;
         }
       }
       if(*state.min_interval == interval::INVALID_ITV)continue;
@@ -1399,7 +1312,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         *state.min_interval = mid(*state.min_interval);
       }
 
-      if (new_data_opt)
+      if(new_data_opt)
       {
         Parameter parameter("t", -1, ++time_id);
         TimeListElement elem;
@@ -1407,7 +1320,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         value_t new_value_for_save = value_t(parameter);
         bool isAffine = false;
 
-        if (opts_->affine)
+        if(opts_->affine)
         {
           hydla::backend::CalculateTLinearResult ct;
           value_t lb = state.min_interval->lower();
@@ -1434,31 +1347,17 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         guard_parameter_map.insert(make_pair(entry.first, parameter));
         time_list.push_back(elem);
 
-        //atomic_guard_min_time_interval_map[atomic_guard_str].time_id = time_id;
-        //atomic_guard_min_time_interval_map[atomic_guard_str].elem = elem;
-
         auto& new_data = new_data_opt.value();
 
         new_data.time_id = time_id;
-        //new_data.time_list_element_time = elem.time;
         new_data.time_list_element_time = new_value_for_save;
         new_data.isAffine = isAffine;
 
         atomic_guard_min_time_interval_map[atomic_guard_str].results.push_back(new_data);
-        if (current_atomic_guard_index_history_stack_index.find(atomic_guard_index) == current_atomic_guard_index_history_stack_index.end())
+        if(current_atomic_guard_index_history_stack_index.find(atomic_guard_index) == current_atomic_guard_index_history_stack_index.end())
         {
-          HYDLA_LOGGER_DEBUG("BREAK set new history stack index:");
           current_atomic_guard_index_history_stack_index[atomic_guard_index] = 0;
         }
-
-        std::string cons_str;
-        for (auto& cons : elem.parameter_constraint)
-        {
-          cons_str += get_infix_string(cons) + ", ";
-        }
-
-        HYDLA_LOGGER_DEBUG("BREAK time_id:", std::to_string(time_id));
-        HYDLA_LOGGER_DEBUG("BREAK elem.time:", elem.time.get_string(), "  elem.guard:", get_infix_string(elem.guard), "  elem.constraint:", cons_str);
       }
       else
       {
@@ -1468,10 +1367,9 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         Parameter parameter("t", -1, stack_states[stack_index].time_id);
         TimeListElement elem;
 
-        //elem = TimeListElement(value_t(parameter), entry.first);
         elem = TimeListElement(stack_states[stack_index].time_list_element_time, entry.first);
 
-        if (stack_states[stack_index].isAffine)
+        if(stack_states[stack_index].isAffine)
         {
           ValueRange range;
           range.set_upper_bound(value_t("1"), true);
@@ -1483,25 +1381,13 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
           ValueRange range = create_range_from_interval(*state.min_interval);
           pm_for_each[parameter] = range;
         }
-        /*if (pm_for_each.find(parameter) == pm_for_each.end())
-        {
-          
-        }*/
 
         guard_parameter_map.insert(make_pair(entry.first, parameter));
         time_list.push_back(elem);
-
-        //Parameter parameter("t", -1, atomic_guard_min_time_interval_map[atomic_guard_str].time_id);
-        //guard_parameter_map.insert(make_pair(entry.first, parameter));
-        //time_list.push_back(atomic_guard_min_time_interval_map[atomic_guard_str].elem);
       }
     }
 
-    for (const auto& parameter_range : pm_for_each)
-    {
-      HYDLA_LOGGER_DEBUG("BREAK parameter:", parameter_range.first.to_string(), " -> ", parameter_range.second.get_string());
-    }
-    if (time_list.empty()) { HYDLA_LOGGER_DEBUG("BREAK"); break; }
+    if(time_list.empty())break;
     find_min_time_result_t minimum_candidates;
     backend_->call("resetConstraintForParameter", false, 1, "mp", "", &pm_for_each);
     backend_->call("getMinimum", true, 1, "tl", "f", &time_list, &minimum_candidates);
@@ -1513,34 +1399,20 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       candidate.guard_indices.sort(greater<int>());
       for(int index : candidate.guard_indices)
       {
-        HYDLA_LOGGER_DEBUG("BREAK1 candidate.guard:", get_infix_string(time_list[index].guard));
         guard_list.push_back(time_list[index].guard);
         constraint_t guard = (time_list.begin() + index)->guard;
         auto newton_it = newton_guard_state_map.find(guard);
-        if (newton_it != newton_guard_state_map.end())
+        if(newton_it != newton_guard_state_map.end())
         {
-          const auto current_min_interval = newton_it->second.min_interval.value();
-          HYDLA_LOGGER_DEBUG("BREAK1 min interval:", current_min_interval);
           newton_it->second.min_interval = boost::none;
 
           const int atomic_guard_index = std::distance(newton_guard_state_map.begin(), newton_it);
-          //auto& entry = *newton_it;
-          //StateOfIntervalNewton &state = entry.second;
-          //const std::string atomic_guard_str = get_infix_string(entry.first);
           ++current_atomic_guard_index_history_stack_index[atomic_guard_index];
-
-          /*const std::string atomic_guard_str = get_infix_string(time_list[index].guard);
-          if (atomic_guard_min_time_interval_map.find(atomic_guard_str) != atomic_guard_min_time_interval_map.end())
-          {
-            atomic_guard_min_time_interval_map.erase(atomic_guard_str);
-          }*/
         }
         else symbolic_guard_times_map[guard].pop_front();
       }
       bool on_time;
       bool satisfied = checkAndUpdateGuards(atomic_guard_map, guard, guard_list, on_time, entailed);
-      ;
-      HYDLA_LOGGER_DEBUG("BREAK1 satisfied? :", satisfied ? "true" : "false");
       if(satisfied)
       {
         FindMinTimeCandidate new_candidate;
@@ -1556,103 +1428,17 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
           Parameter new_param = guard_it->second;
 
           const auto& simulator_parameter_map = simulator_->get_parameter_map();
-          if (simulator_parameter_map.find(new_param) == simulator_parameter_map.end())
+          if(simulator_parameter_map.find(new_param) == simulator_parameter_map.end())
           {
             simulator_->introduce_parameter(new_param, pm_for_each[new_param]);
           }
         }
         backend_->call("productWithNegatedConstraint", true, 2, "csncsn", "cs", &current_parameter_constraint, &candidate.parameter_constraint, &current_parameter_constraint);
         HYDLA_LOGGER_DEBUG_VAR(current_parameter_constraint.consistent());
-
-        if (!current_parameter_constraint.consistent())
-        {
-          //HYDLA_LOGGER_DEBUG("BREAK Finish loopCount:", std::to_string(loopCount));
-          HYDLA_LOGGER_DEBUG("BREAK Finish:");
-
-          HYDLA_LOGGER_DEBUG("BREAK newton_guard_state_map:");
-
-          for (auto &entry : newton_guard_state_map)
-          {
-            StateOfIntervalNewton &state = entry.second;
-            const std::string atomic_guard_str = get_infix_string(entry.first);
-
-            HYDLA_LOGGER_DEBUG("BREAK atomic_guard_str: ", atomic_guard_str);
-
-            if (state.min_interval)
-            {
-              HYDLA_LOGGER_DEBUG("BREAK state.min_interval: ", state.min_interval.value());
-            }
-            else
-            {
-              HYDLA_LOGGER_DEBUG("BREAK state.min_interval is not exist");
-            }
-          }
-
-          for (auto &current_param : current_parameter_constraint)
-          {
-            //HYDLA_LOGGER_DEBUG("BREAK current_parameter_constraint: ", get_infix_string(current_param));
-          }
-
-          for (auto &cand_param : candidate.parameter_constraint)
-          {
-            //HYDLA_LOGGER_DEBUG("BREAK candidate.parameter_constraint: ", get_infix_string(cand_param));
-          }
-
-          HYDLA_LOGGER_DEBUG("BREAK");
-          break;
-        }
-      }
-      else
-      {
-        //HYDLA_LOGGER_DEBUG("BREAK loopCount:", std::to_string(loopCount));
-
-        HYDLA_LOGGER_DEBUG("BREAK newton_guard_state_map:");
-
-        for (auto &entry : newton_guard_state_map)
-        {
-          StateOfIntervalNewton &state = entry.second;
-          const std::string atomic_guard_str = get_infix_string(entry.first);
-
-          HYDLA_LOGGER_DEBUG("BREAK atomic_guard_str: ", atomic_guard_str);
-
-          if (state.min_interval)
-          {
-            HYDLA_LOGGER_DEBUG("BREAK state.min_interval: ", state.min_interval.value());
-          }
-          else
-          {
-            HYDLA_LOGGER_DEBUG("BREAK state.min_interval is not exist");
-          }
-        }
-
-        for (auto &current_param : current_parameter_constraint)
-        {
-          //HYDLA_LOGGER_DEBUG("BREAK current_parameter_constraint: ", get_infix_string(current_param));
-        }
-
-        for (auto &cand_param : candidate.parameter_constraint)
-        {
-          //HYDLA_LOGGER_DEBUG("BREAK candidate.parameter_constraint: ", get_infix_string(cand_param));
-        }
+        if(!current_parameter_constraint.consistent())break;
       }
     }
-    if (!current_parameter_constraint.consistent())
-    {
-      HYDLA_LOGGER_DEBUG("BREAK");
-      break;
-    }
-  }
-  //HYDLA_LOGGER_DEBUG_VAR(candidate.time);
-  HYDLA_LOGGER_DEBUG("BREAK Print min_time_for_this_ask");
-  for (const auto& element : min_time_for_this_ask)
-  {
-    std::string guards_str;
-    for (const auto& guard : element.discrete_guards)
-    {
-      guards_str += get_infix_string(guard) + ", ";
-    }
-    HYDLA_LOGGER_DEBUG("BREAK Guards:", guards_str);
-    HYDLA_LOGGER_DEBUG("BREAK Time:", element.time.get_string());
+    if(!current_parameter_constraint.consistent())break;
   }
   return min_time_for_this_ask;
 }
@@ -1849,23 +1635,18 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           asks.insert(entry.first);
         }
       }
-      HYDLA_LOGGER_DEBUG("BREAK current phase:", phase_sum_);
       std::map<std::string, HistoryData> atomic_guard_min_time_interval_map;
       timer::Timer find_min_time_timer;
       if(opts_->interval && !max_time.infinite())upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time, false).upper();
 
-      HYDLA_LOGGER_DEBUG("BREAK3 asks.size: ", asks.size());
       for(auto ask : asks)
       {
-        HYDLA_LOGGER_DEBUG("BREAK3 call find_min_time for: ", get_infix_string(ask->get_guard()));
         candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase, atomic_guard_min_time_interval_map);
       }
 
-      HYDLA_LOGGER_DEBUG("BREAK3 break_point_list.size: ", break_point_list.size());
       for(auto &entry : break_point_list)
       {
         auto break_point = entry.first;
-        HYDLA_LOGGER_DEBUG("BREAK3 call find_min_time for: ", get_infix_string(break_point.condition));
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase, atomic_guard_min_time_interval_map);
       }
       phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
