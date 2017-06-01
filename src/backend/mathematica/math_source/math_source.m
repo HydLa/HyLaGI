@@ -1057,11 +1057,13 @@ trueAtInitialTime[guard_, initialTime_] := trueAtInitialTime[guard, initialTime,
 publicMethod[
   trueAtInitialTime,
   guard, initialTime, pars, pCons, 
-  Quiet[Reduce[(guard /. t -> initialTime) && pCons, pars, Reals] =!= False]
+  (* Quiet[Reduce[(guard /. t -> initialTime) && pCons, pars, Reals] =!= False] *)
+  Quiet[Reduce[((guard /. t -> initialTime) /. createIntervalRules[pCons]), pars, Reals] =!= False]
 ]
 
 getMinimum[timeList_] := getMinimum[timeList, pConstraint, parameters]; 
 
+(*
 publicMethod[
   getMinimum,
   timeList,
@@ -1072,6 +1074,48 @@ publicMethod[
     minimum = timeList[[1, 1]];
     minimumIndex = 0;
     (* TODO: deal with case branching *)
+    For[i = 2, i <= Length[timeList], i++,
+      debugPrint["BREAK1 reduce: ", Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals]];
+      If[Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals] === False,
+        minimum = timeList[[i, 1]];
+        minimumIndex = i - 1;
+      ];
+    ];
+    debugPrint["BREAK1 minimumIndex: ", minimumIndex];
+    {{toReturnForm[minimum], 1, {toReturnForm[LogicalExpand[pCons] ]}, minimumIndex}}
+  ]
+];
+*)
+publicMethod[
+  getMinimum,
+  timeList,
+  pCons, 
+  pars,
+  Module[
+    {minimum, i, minimumIndex, pRules, interval, intervalLess, intervalGreater},
+    minimum = timeList[[1, 1]];
+    minimumIndex = 0;
+    (* TODO: deal with case branching *)
+    pRules = createIntervalRules[pCons];
+	debugPrint["BREAK1 interval: ", N[(timeList[[1, 1]]) /. pRules]];
+    For[i = 2, i <= Length[timeList], i++,
+      interval = Quiet[N[(minimum - timeList[[i, 1]]) /. pRules], {N::meprec}];
+      debugPrint["BREAK1 interval: ", N[(timeList[[i, 1]]) /. pRules]];
+      intervalLess = interval < 0;
+      intervalGreater = interval > 0;
+      If[intervalLess =!= True && intervalGreater =!= True,
+        minimum = timeList[[1, 1]];
+        minimumIndex = 0;
+        Break[]
+      ];
+      If[intervalGreater === True,
+        minimum = timeList[[i, 1]];
+        minimumIndex = i - 1
+      ];
+      If[i == Length[timeList],
+        Return[{{toReturnForm[minimum], 1, {toReturnForm[LogicalExpand[pCons] ]}, minimumIndex}}]
+      ];
+    ];
     For[i = 2, i <= Length[timeList], i++,
       If[Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals] === False,
         minimum = timeList[[i, 1]];
