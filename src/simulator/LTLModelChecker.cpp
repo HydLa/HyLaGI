@@ -14,14 +14,20 @@
 #include "Backend.h"
 #include "ValueModifier.h"
 #include <stdio.h>
+#include "./never_claim/NeverClaim.h"
 
 using namespace std;
+
+#include "../parser/never_claim/y.tab.hpp"
+#include <memory>
+std::shared_ptr<hydla::simulator::Automaton> nc_parse();
 
 namespace hydla {
 namespace simulator {
 
 using namespace std;
 using namespace symbolic_expression;
+using namespace never_claim;
 
 LTLModelChecker::LTLModelChecker(Opts &opts):Simulator(opts), printer(backend){}
 
@@ -60,7 +66,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->add_edge(node2,y_neq_0);
       // node1->add_edge(node1,y_eq_0);
       // node2->add_edge(node2,y_neq_0);
-
+      /*
       // [bouncing ball 2]
       // : Checking []<>(y>7)
       // : ball is always eventually y>7
@@ -72,6 +78,7 @@ phase_result_sptr_t LTLModelChecker::simulate()
       property_init->add_edge(property_init,true_node);
       property_init->add_edge(node1,y_leq_7);
       node1->add_edge(node1,y_leq_7);
+      */
 
       // [bouncing ball 3]
       // : test <>y!=0
@@ -173,10 +180,28 @@ phase_result_sptr_t LTLModelChecker::simulate()
       // property_init->add_edge(node1,p);
       // node1->add_edge(node1,p);
 
+      /*
+      // for comparison
+      auto property2 = nc_parse();
+      auto property_init2 = (PropertyNode *)(property2->initial_node);
+
+      cout << "===== Property Automaton =====" << endl;
+      property2->dump(cout);
+      */
+
+      auto property = nc_parse();
+      auto property_init = (PropertyNode *)(property->initial_node);
+
+      cout << "===== Property Automaton =====" << endl;
+      property->dump(cout);
+
+      /*
       Automaton property;
       property.initial_node = property_init;
+
       cout << "===== Property Automaton =====" << endl;
       property.dump(cout);
+      */
 
       LTLNode *LTL_init = new LTLNode("init",result_root_,property_init,id_counter++);
       current_automaton.initial_node = LTL_init;

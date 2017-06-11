@@ -67,8 +67,19 @@ int main(int argc, char* argv[])
   return hydla_main(argc, argv);
 }
 
+/*
+#include "../parser/never_claim/y.tab.hpp"
+#include <memory>
+std::shared_ptr<hydla::simulator::Automaton> nc_parse();
+*/
 int hydla_main(int argc, char* argv[])
 {
+  /*
+  nc_parse();
+  cout << "owata" << endl;
+  return 0;
+  */
+
   cmdline_options.parse(argc, argv);
   
   signal(SIGINT, signal_handler::interrupt_handler);
