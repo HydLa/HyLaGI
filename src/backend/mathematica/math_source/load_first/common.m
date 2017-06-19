@@ -281,4 +281,7 @@ Switch[optSimplifyLevel,
     _, timeConstrainedSimplify[expr_, assum_] := TimeConstrained[FullSimplify[expr, assum], optTimeConstraint, expr];
 ];
 
+solveOverRorC[consToSolve_,vars_] :=
+  If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
+
 derivativePrefix = "d";

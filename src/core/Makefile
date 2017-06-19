@@ -29,7 +29,7 @@ endif
 
 CXX_OPT  += 
 
-
+DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\"
 
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 

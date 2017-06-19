@@ -33,6 +33,7 @@ struct Opts {
   bool stop_at_failure;
   bool ignore_warnings;
   bool eager_approximation;
+  bool solve_over_reals;
   int approximation_step;
   int extra_dummy_num;
   int simplify;
