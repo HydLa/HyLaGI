@@ -5,22 +5,26 @@
 using namespace std;
 using namespace hydla::simulator;
 
-namespace hydla{
-namespace io{
+namespace hydla {
+namespace io {
 /*
-void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& result_root) const{
-  if(result_root->children.size() == 0){
+void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& result_root) const
+{
+  if (result_root->children.size() == 0)
+  {
     std::cout << "No Result." << std::endl;
     return;
   }
   std::stack< std::pair<phase_result_sptr_t, std::string> > node_stack;
   
-  for(phase_result_sptrs_t::const_iterator it = result_root->children.begin(); it != result_root->children.end(); it++){
+  for (phase_result_sptrs_t::const_iterator it = result_root->children.begin(); it != result_root->children.end(); it++)
+  {
     node_stack.push(std::pair<phase_result_sptr_t, std::string>(*it, ""));
   }
   
   std::cout << "Show[";
-  while(!node_stack.empty()){
+  while (!node_stack.empty())
+  {
     std::pair<phase_result_sptr_t, std::string> now_pair = node_stack.top();
     node_stack.pop();
     phase_result_sptr_t now_node = now_pair.first;
@@ -30,22 +34,27 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
 
     std::string prev_node_time;
 
-    if(now_node->phase==INTERVAL_PHASE){
+    if (now_node->phase==INTERVAL_PHASE)
+    {
       variable_map_t vm = now_node->variable_map;
-      if(out_tmp.str().empty()){
+      if (out_tmp.str().empty())
+      {
         prev_node_time = "0";
         out_tmp << "Table[";
         out_tmp << "{";
-      }else{
+      }
+      else
+      {
         phase_result_sptr_t tmp = now_node->parent;
-        while(tmp->phase!=INTERVAL_PHASE) tmp = tmp->parent;
+        while (tmp->phase!=INTERVAL_PHASE) tmp = tmp->parent;
         prev_node_time = tmp->end_time.get_string();
         out_tmp << ",";
       }
       typename variable_map_t::const_iterator it = vm.begin();
-      while(opts_->output_variables.find(it->first->get_string()) == opts_->output_variables.end()){
+      while (opts_->output_variables.find(it->first->get_string()) == opts_->output_variables.end())
+      {
         it++;
-        if(it == vm.end()) return;
+        if (it == vm.end()) return;
       }
       out_tmp << "Plot[";
       out_tmp << it->second;
@@ -55,36 +64,47 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
       out_tmp << now_node->end_time;
       out_tmp << "} ";
       //        prev_node_time = now_node->end_time.get_string();
-      if(now_node->simulation_state == simulator::ASSERTION)
+      if (now_node->simulation_state == simulator::ASSERTION)
         out_tmp << ", PlotStyle -> Dashed";
       out_tmp << "]"; //Plot
     }
-    if(now_node->children.size() == 0){//葉に到達
+    if (now_node->children.size() == 0)
+    {
+      //葉に到達
       out_tmp << "}, "; //式のリストここまで
-      if(now_node->parameter_map.size() > 0){
+      if (now_node->parameter_map.size() > 0)
+      {
         // 定数の条件
         out_tmp << "{";
         typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
-        while(it != now_node->parameter_map.end()){
-          if(it->second.undefined()){
+        while (it != now_node->parameter_map.end())
+        {
+          if (it->second.undefined())
+          {
             it++;
-          }else{
+          }
+          else
+          {
             out_tmp << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << ", step}";
             break;
           }
         }
-        if(it == now_node->parameter_map.end()){
+        if (it == now_node->parameter_map.end())
+        {
           out_tmp << "{1}";
         }
-      }else{
+      }
+      else
+      {
         out_tmp << "{1}";
       }
       out_tmp << "], "; //Table
       out_tmp << std::endl;
       std::cout << out_tmp.str();
     }
-    else{
-      for(typename phase_result_sptrs_t::const_iterator it = now_node->children.begin(); it != now_node->children.end(); it++)
+    else
+    {
+      for (typename phase_result_sptrs_t::const_iterator it = now_node->children.begin(); it != now_node->children.end(); it++)
         node_stack.push(std::pair<phase_result_sptr_t, std::string>(*it, out_tmp.str()));
     }
   }
@@ -93,5 +113,5 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
 };
 */
 
-} // output
-} // hydla
+} // namespace io
+} // namespace hydla
