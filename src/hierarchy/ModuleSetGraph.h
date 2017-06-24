@@ -11,7 +11,8 @@
 namespace hydla {
 namespace hierarchy {
 
-class ModuleSetGraph : public ModuleSetContainer {
+class ModuleSetGraph : public ModuleSetContainer
+{
 public:
 
   struct superset {};
@@ -25,7 +26,6 @@ public:
       boost::bimaps::tags::tagged<ModuleSet, subset>,
       ModuleSetComparator>
   > edges_t;
-  
 
   ModuleSetGraph();
   ModuleSetGraph(ModuleSet m);
@@ -102,8 +102,6 @@ private:
   std::set<ModuleSet> visited_module_sets_;
 
 };
-
-
 
 } // namespace hierarchy
 } // namespace hydla

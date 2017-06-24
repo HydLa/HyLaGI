@@ -8,7 +8,8 @@
 namespace hydla {
 namespace hierarchy {
 
-class ModuleSetContainer {
+class ModuleSetContainer
+{
 public:
 
   typedef std::set<ModuleSet> module_set_set_t;
@@ -38,7 +39,7 @@ public:
   /**
    * 次に探索すべきモジュール集合が存在しなければfalseを返す．
    */
-  bool has_next(){ return !ms_to_visit_.empty(); }
+  bool has_next() { return !ms_to_visit_.empty(); }
   
   virtual module_set_set_t get_full_ms_list() const;
   
@@ -47,7 +48,7 @@ public:
    */
   virtual ModuleSet unadopted_module_set();
 
-  virtual ModuleSet get_module_set(){ return *ms_to_visit_.rbegin(); }
+  virtual ModuleSet get_module_set() { return *ms_to_visit_.rbegin(); }
 
   /**
    * そのノードと子ノードを以降探索しないようにする

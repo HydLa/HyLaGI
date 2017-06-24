@@ -5,8 +5,8 @@
 #include "DefaultTreeVisitor.h"
 #include "PhaseSimulator.h"
 
-namespace hydla{
-namespace backend{
+namespace hydla {
+namespace backend {
 
 typedef simulator::value_t         value_t;
 typedef simulator::variable_t      variable_t;
@@ -58,7 +58,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *  @param name name of variable
    *  @param value value to be set
   template<typename T>
-    int set(const char* name, const T value){return link_->set(name, value);}
+    int set(const char* name, const T value) { return link_->set(name, value); }
   */
 
   /** call of function
@@ -98,9 +98,10 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    */
   int call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
 
-  void set_variable_set(variable_set_t& v){
+  void set_variable_set(variable_set_t& v)
+  {
     call("resetVariables", false, 0, "", "");
-    for(variable_set_t::iterator it = v.begin(); it != v.end(); it++)
+    for (variable_set_t::iterator it = v.begin(); it != v.end(); it++)
       {
         std::string name = var_prefix + it->get_name();
         int diff = it->get_differential_count();
