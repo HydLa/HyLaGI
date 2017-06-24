@@ -4,13 +4,13 @@
 #include <boost/bimap/bimap.hpp>
 #include "Logger.h"
 
-namespace hydla{
-namespace backend{
+namespace hydla {
+namespace backend {
 
 class Link
 {
   public:
-  virtual ~Link(){}
+  virtual ~Link() {}
 
   /// Type of Datas(used for receive)
   enum DataType
@@ -22,18 +22,18 @@ class Link
     DT_NONE
   };
 
-  virtual void reset(){}
+  virtual void reset() {}
 
   virtual void put_symbol(const char *symbol) = 0;
-  void put_symbol(const std::string& str){put_symbol(str.c_str());}
+  void put_symbol(const std::string& str) {put_symbol(str.c_str());}
   virtual void put_integer(int value) = 0;
   virtual void put_double(double value) = 0;
   virtual void put_number(const char *value) = 0;
   virtual void put_string(const char *value) = 0;
-  virtual void put_string(const std::string &str){put_string(str.c_str());}
-  void put_number(const std::string &val){put_number(val.c_str());}
+  virtual void put_string(const std::string &str) {put_string(str.c_str());}
+  void put_number(const std::string &val) {put_number(val.c_str());}
   virtual void put_function(const char *name, int arg_cnt) = 0;
-  void put_function(const std::string &name, int arg_cnt){put_function(name.c_str(), arg_cnt);}
+  void put_function(const std::string &name, int arg_cnt) {put_function(name.c_str(), arg_cnt);}
   virtual void put_parameter(const std::string& name, int diff_count, int id) = 0;
 
   virtual int get_integer() = 0;
@@ -58,23 +58,30 @@ class Link
   std::string convert_function(const std::string& orig, bool hydla2back, bool &converted)
   {
     std::string ret;
-    if(hydla2back){
+    if (hydla2back)
+    {
       function_map_t::left_iterator it = function_map_.left.find(orig);
-      if(it != function_map_.left.end()){
+      if (it != function_map_.left.end())
+      {
         ret = it->second;
         converted = true;
       }
-      else{
+      else
+      {
         ret = orig;
         converted = false;
       }
-    }else{
+    }
+    else
+    {
       function_map_t::right_iterator it = function_map_.right.find(orig);
-      if(it != function_map_.right.end()){
+      if (it != function_map_.right.end())
+      {
         ret = it->second;
         converted = true;
       }
-      else{
+      else
+      {
         ret = orig;
         converted = false;
       }

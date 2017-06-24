@@ -15,7 +15,8 @@ namespace hierarchy {
  * 参照のこと
  *
  */
-class ModuleSetList : public ModuleSetContainer {
+class ModuleSetList : public ModuleSetContainer
+{
 public:
   ModuleSetList();
   ModuleSetList(ModuleSet m);
@@ -58,7 +59,7 @@ public:
    */
   std::ostream& dump_node_trees(std::ostream& s) const;
 
-  void init(){}
+  void init() {}
 };
 
 } // namespace hierarchy
