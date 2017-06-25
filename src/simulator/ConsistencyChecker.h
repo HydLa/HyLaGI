@@ -105,7 +105,6 @@ private:
 
   void send_range_constraint(const Variable &var, const variable_map_t &vm, bool prev_mode);
 
-
   backend_sptr_t backend;
 
   const variable_map_t *prev_map;
@@ -116,6 +115,5 @@ private:
   std::list<ConstraintStore> inconsistent_constraints;
 };
 
-
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

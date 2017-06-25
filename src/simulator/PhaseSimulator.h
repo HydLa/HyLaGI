@@ -19,7 +19,6 @@ template <class T> class interval;
 namespace hydla {
 namespace simulator {
 
-
 class ValueModifier;
 class MinTimeCalculator;
 
@@ -29,7 +28,7 @@ struct CompareMinTimeResult
 };
 
 typedef std::list<parameter_map_t>                       parameter_maps_t;
- typedef symbolic_expression::node_sptr                     node_sptr;
+typedef symbolic_expression::node_sptr                   node_sptr;
 
 
 struct BreakPoint
@@ -39,7 +38,8 @@ struct BreakPoint
   void *tag;
 };
 
-struct TimeListElement{
+struct TimeListElement
+{
   value_t time;
   ConstraintStore parameter_constraint;
   constraint_t guard;
@@ -47,7 +47,8 @@ struct TimeListElement{
   TimeListElement(){}
 };
 
-struct IntervalNewtonResult {
+struct IntervalNewtonResult
+{
   std::shared_ptr<kv::interval<double>> current_stack_top;
   std::shared_ptr<kv::interval<double>> min_interval;
   std::stack<kv::interval<double>> next_stack;
@@ -56,12 +57,13 @@ struct IntervalNewtonResult {
   bool isAffine;
 };
 
-
-struct HistoryData {
+struct HistoryData
+{
   std::vector<IntervalNewtonResult> results;
 };
 
-class PhaseSimulator{
+class PhaseSimulator
+{
 public:
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~PhaseSimulator();
@@ -86,7 +88,6 @@ public:
   boost::shared_ptr<RelationGraph> relation_graph_;
 
 private:
-
   struct StateOfIntervalNewton;
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
@@ -172,12 +173,11 @@ private:
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
-  int                                upper_bound_of_itv_newton = 100;
+  int                                   upper_bound_of_itv_newton = 100;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
 };
 
-
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

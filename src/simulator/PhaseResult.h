@@ -14,7 +14,7 @@
 
 
 namespace hydla {
-namespace backend{
+namespace backend {
 class Backend;
 }
 
@@ -38,7 +38,7 @@ typedef enum{
   SIMULATED,
   INTERRUPTED,
   NONE
-}SimulationState;
+} SimulationState;
 
 /**
  * type of a phase
@@ -48,7 +48,6 @@ typedef enum {
   POINT_PHASE,
   INTERVAL_PHASE
 } PhaseType;
-
 
 typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
 typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
@@ -74,8 +73,8 @@ typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sp
 typedef std::set<std::string> change_variables_t;
 
 
-typedef std::map<constraint_t, bool> constraint_diff_t;
-typedef std::map<module_set_t::module_t, bool>     module_diff_t;
+typedef std::map<constraint_t, bool>              constraint_diff_t;
+typedef std::map<module_set_t::module_t, bool>    module_diff_t;
 typedef hierarchy::ModuleSet                      module_set_t;
 typedef std::set<module_set_t>                    module_set_set_t;
 
@@ -103,17 +102,16 @@ struct FindMinTimeCandidate
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
 
-struct DCCandidate{
+struct DCCandidate
+{
   value_t                       time;
   std::map<ask_t, bool>         discrete_asks;
   ConstraintStore               parameter_constraint;
 
-  DCCandidate(const value_t                &t,
+  DCCandidate(const value_t &t,
               const std::map<ask_t, bool> &d,
               const ConstraintStore &p)
-                :time(t),
-                 discrete_asks(d),
-                 parameter_constraint(p)
+    : time(t), discrete_asks(d), parameter_constraint(p)
     {}
   DCCandidate(){}
 };
@@ -128,8 +126,8 @@ typedef std::map<std::string, double>  profile_t;
 /**
  * A class to express the result of each phase.
  */
-class PhaseResult {
-
+class PhaseResult
+{
 public:
   static backend::Backend *backend;  
   PhaseType                    phase_type;
@@ -140,7 +138,6 @@ public:
 
   variable_map_t               variable_map;
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
-
 
   ConstraintStore              additional_parameter_constraint; /// use for case analysis
   ConstraintStore              additional_constraint_store; /// use for case analysis
@@ -157,7 +154,6 @@ public:
   guard_time_map_t             guard_time_map;
   ConstraintStore              always_list;
 
-
   SimulationState              simulation_state;
   PhaseResult                 *parent;
   phase_result_sptrs_t         children;
@@ -171,7 +167,6 @@ public:
 
   PhaseResult();  
   ~PhaseResult();
-
 
   asks_t                    get_diff_positive_asks()const;
   asks_t                    get_diff_negative_asks()const;
@@ -192,6 +187,7 @@ public:
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 
   std::string get_string() const;
+
 private:
   void generate_full_information() const;
 

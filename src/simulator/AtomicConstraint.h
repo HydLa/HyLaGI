@@ -2,8 +2,8 @@
 
 #include "Node.h"
 
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
 typedef symbolic_expression::node_sptr constraint_t;
 
@@ -32,6 +32,5 @@ public:
   ConstraintLocation constraint_location;
 };
 
-
-}
-}
+} // namespace simulator
+} // namespace hydla

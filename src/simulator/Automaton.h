@@ -1,13 +1,13 @@
 #pragma once
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include "../symbolic_expression/Node.h"
 #include "PhaseResult.h"
 
-
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
 class AutomatonNode;
 typedef hydla::symbolic_expression::node_sptr              node_sptr;
@@ -40,7 +40,6 @@ public:
   void dump(std::ostream &ost = std::cout);
 };
 
-
 class Automaton
 {
 public:
@@ -62,5 +61,5 @@ private:
   void get_nodes(AutomatonNode *node, std::list<AutomatonNode *> &result_list);
 };
 
-}
-}
+} // namespace simulator
+} // namespace hydla
