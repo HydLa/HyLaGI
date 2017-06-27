@@ -116,6 +116,7 @@ Module[
     ltSol = Quiet[Reduce[lhs < 0 && pCons, Reals] ];
     trueCond = trueCond || ltSol
   ];
+  simplePrint[trueCond];
   trueCond
 ];
 
@@ -125,20 +126,24 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit, pRules},
       If[cons === True,
+        simplePrint["Return(1)"];
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs];
+        pRules = createIntervalRules[pCons];
+        sol = exDSolve[Simplify[cons], prevRs, pRules];
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
         If[sol === overConstrained,
+          simplePrint["Return(2)"];
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           substitutedInit = initCons /. prevRs;
           If[(substitutedInit /. (tRules /. t -> 0)) === False, 
+            simplePrint["Return(3)"];
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];
@@ -147,12 +152,18 @@ publicMethod[
             For[i = 1, i <= Length[tCons], i++,
               conj = tCons[[i]];
               eachCpTrue = prevCons && pCons;
+              debugPrint["conj(1)",conj];
+              debugPrint["eachCpTrue(1)",eachCpTrue];
               For[j = 1, j <= Length[conj], j++,
-                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
+                debugPrint["conj(2)",conj[[j]]];
+                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue];
+                debugPrint["eachCpTrue(2)",eachCpTrue];
               ];
-              cpTrue = cpTrue || eachCpTrue
+              cpTrue = cpTrue || eachCpTrue;
+              debugPrint["cpTrue(1)",cpTrue];
             ];
             cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+            simplePrint["Return(4)"];
             toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
           ]
         ]
@@ -261,7 +272,8 @@ publicMethod[
   cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, prevRs];
+    debugPrint["createIntervalRules[pConstraint] : ", createIntervalRules[pConstraint]];
+    sol = exDSolve[cons, prevRs, createIntervalRules[pConstraint]];
     sol = sol /. prevRs;
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
@@ -556,6 +568,7 @@ publicMethod[
   addParameterConstraint,
   pCons,
   pConstraint = Reduce[pConstraint && pCons, Reals];
+  simplePrint[pConstraint];
 ];
 
 
@@ -816,18 +829,20 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, prevRs_] :=
+exDSolve[expr_, prevRs_, pRules_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr, prevRs];
   listExpr = applyList[expr];
   sol = {};
   resultCons = Select[listExpr, (Head[#] =!= Equal)&];
+  simplePrint[resultCons];
   listExpr = Complement[listExpr, resultCons];
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
-  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
+  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr], pRules ], {}] ];
+  simplePrint[resultRule];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
@@ -840,9 +855,9 @@ Module[
       simplePrint[searchResult];
       If[searchResult === unExpandable,
         Break[],
-        rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+        rules = solveByDSolve[searchResult[[1]], searchResult[[3]], pRules];
         simplePrint[rules];
-        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
+        If[rules === overConstrained || Length[rules] == 0, simplePrint["exDSolve Return(1)"];Return[overConstrained] ];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
         If[Head[rules] === DSolve,
           resultCons = resultCons && And@@searchResult[[1]];
@@ -851,23 +866,31 @@ Module[
           Continue[]
         ];
         resultRule = Union[resultRule, rules[[1]] ];
+        simplePrint["prev applyDSolveResult: ",listExpr];
         listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
+        simplePrint["post applyDSolveResult: ",listExpr];
         listExpr = listExpr //. prevRs;
-        If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
+        If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], simplePrint["listExpr:",listExpr];simplePrint["exDSolve Return(2)"];Return[overConstrained] ];
         listExpr = Select[listExpr, (#=!=True)&];
         tVars = getTimeVariables[listExpr];
         simplePrint[listExpr, tVars];
         resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
-        If[resultCons === False, Return[overConstrained] ];
+        If[resultCons === False, simplePrint["exDSolve Return(3)"];Return[overConstrained] ];
       ]
     ]
   ];
-  simplePrint[resultRule, resultCons, prevRs];
+  (*simplePrint[resultRule, resultCons, prevRs];*)
+  (*
+  debugPrint["exDSolve resultRule(1)", resultRule];
+  debugPrint["exDSolve resultCons(1)", resultCons];
+  debugPrint["exDSolve prevRs(1)", prevRs];
+  *)
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
   restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
   restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];
   restCond = Or2or[restCond];
   restCond = Map[(And2and[#])&, restCond];
+  simplePrint["exDSolve Return(4)"];
   { retCode, restCond, resultRule}
 ];
 
@@ -943,21 +966,105 @@ createPrevRules[var_] := Module[
   ]
 ];
 
+isMaybeImaginary[rootExps_, pRules_] :=
+isMaybeImaginary[rootExps, pRules] =
+Module[
+  {i, innerExpr},
+  For[i = 1, i <= Length[rootExps], i++,
+    (*simplePrint[rootExps[[i]]];*)
+    innerExpr = rootExps[[i]] /. {Sqrt[x_] -> x};
+    debugPrint["Reduce[(innerExpr //. pRules) < 0] : ", Reduce[(innerExpr //. pRules) < 0]];
+    If[Reduce[(innerExpr //. pRules) < 0] === True, Return[True] ];
+  ];
+  False
+];
+
+solveBySymbolicCoefficient[equations_, ini_, vars_, derivatives_, pRules_] :=
+solveBySymbolicCoefficient[equations, ini, vars, derivatives, pRules] =
+Module[
+  {i, j, k, l, pKeys, pKey, replacedEquations = {}, lhs, coefLhs, term, coefTerm, replaced, index = 0, replacedExpr, additionalRules = {}, auxiliaryParameters = {}, sol},
+  pKeys = Keys[pRules];
+  debugPrint["equations : ", equations ];
+  (* expression = First[First[equations]]; *)
+
+  For[k = 1, k <= Length[equations], k++,
+    lhs = Expand[equations[[k]] /. Equal -> Subtract];
+    replacedEquations = Append[replacedEquations, {}];
+    replacedEquations[[k]] = 0;
+
+    For[l = 1, l <= Length[derivatives], l++,
+      lhs = Collect[lhs, derivatives[[l]]];
+    ];
+
+    replacedEquations[[k]] = Equal[lhs, 0];
+  ];
+
+  For[k = 1, k <= Length[replacedEquations], k++,
+    replacedExpr = 0;
+    (* debugPrint["equations : ", equations[[k]] ]; *)
+    lhs = replacedEquations[[k]] /. Equal -> Subtract;
+    (* debugPrint["lhs : ", lhs]; *)
+    additionalRules = Append[additionalRules, {}];
+    For[i = 1, i <= Length[lhs], i++,
+      term = lhs[[i]];
+      (* debugPrint["term : ", term]; *)
+      replaced = False;
+
+      For[l = 1, l <= Length[derivatives], l++,
+        (* debugPrint["derivatives[[l]] : ", derivatives[[l]]]; *)
+        coefTerm = Coefficient[term, derivatives[[l]]];
+        (* debugPrint["coefTerm : ", coefTerm]; *)
+        For[j = 1, j <= Length[pKeys], j++,
+          pKey = pKeys[[j]];
+          If[Not[FreeQ[coefTerm, pKey]],
+            index = index + 1;
+            replacedExpr = replacedExpr + auxiliaryParameter[index]*derivatives[[l]];
+            additionalRules[[k]] = Append[additionalRules[[k]], auxiliaryParameter[index] -> coefTerm];
+            (* debugPrint[coefTerm, " replaced to ", auxiliaryParameter[index]]; *)
+            replaced = True;
+            Break[]
+          ];
+        ];
+        If[replaced, Break[]];
+      ];
+
+      If[Not[replaced],
+        replacedExpr = replacedExpr + lhs[[i]]
+      ];
+    ];
+
+    replacedEquations[[k]] = Equal[replacedExpr, 0];
+  ];
+  debugPrint["replaced to : ", replacedEquations, additionalRules];
+  sol = Check[
+      DSolve[Union[replacedEquations, ini], tVars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+  ];
+  debugPrint["solved : ", sol ];
+  For[k = 1, k <= Length[equations], k++,
+    sol = sol /. additionalRules[[k]];
+  ];
+  debugPrint["solved : ", sol ];
+  sol
+];
 
 (* 渡された式をDSolveで解いて，結果のRuleを返す．
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
   @param vars: exprに出現する変数のリスト
 *)
-solveByDSolve[expr_, vars_] :=
-solveByDSolve[expr, vars] = (* for memoization *)
+solveByDSolve[expr_, vars_, pRules_] :=
+solveByDSolve[expr, vars, pRules] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, i},
+  {ini = {}, sol, sol2, derivatives, i, expressions, rootExps, isSafeForm },
   tVars = Map[(#[t])&, vars];
   derivatives = getTimeVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
+    (*simplePrint[derivatives[[i]] ];*)
     ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
+  (*
   sol = Quiet[
     Check[
       DSolve[Union[expr, ini], tVars, t],
@@ -965,6 +1072,28 @@ Module[
       {DSolve::overdet, DSolve::bvimp}
     ],
   {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
+  ];
+  *)
+  expressions = Union[expr, ini];
+  
+  debugPrint[Union[expr, ini]];
+  debugPrint[tVars];
+  debugPrint[t];
+  
+  sol = Check[
+      DSolve[Union[expr, ini], tVars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+  ];
+  (* simplePrint[pRules]; *)
+  simplePrint[sol];
+  rootExps = Cases[sol, Sqrt[x_], Infinity];
+  (* simplePrint[rootExps]; *)
+  isMaybeUnsafe = isMaybeImaginary[rootExps, pRules];
+  debugPrint["isMaybeUnsafe : ", isMaybeUnsafe];
+  If[isMaybeUnsafe,
+    sol2 = solveBySymbolicCoefficient[expr, ini, vars, derivatives, pRules];
+    sol = sol2
   ];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,

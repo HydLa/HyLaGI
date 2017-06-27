@@ -254,9 +254,32 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
   profile_t &profile
   )
 {
+  HYDLA_LOGGER_DEBUG("%% check_entailment_essential about ", get_infix_string(guard));
+
   CheckEntailmentResult ce_result;
 
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
+
+  {
+    std::string consistent_store_str;
+    int i = 0;
+    for (auto& store : cc_result.consistent_store)
+    {
+      consistent_store_str += "(" + std::to_string(i) + ", " + store->get_string() + "), ";
+      ++i;
+    }
+    HYDLA_LOGGER_DEBUG("%% consistent_store : ", consistent_store_str);
+  }
+  {
+    std::string inconsistent_store_str;
+    int i = 0;
+    for (auto& store : cc_result.inconsistent_store)
+    {
+      inconsistent_store_str += "(" + std::to_string(i) + ", " + store->get_string() + "), ";
+      ++i;
+    }
+    HYDLA_LOGGER_DEBUG("%% inconsistent_store : ", inconsistent_store_str);
+  }
 
   if(cc_result.consistent_store.consistent()){
     HYDLA_LOGGER_DEBUG("%% entailable");

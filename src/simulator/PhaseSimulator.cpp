@@ -695,9 +695,11 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     }
     discrete_variables.clear();
     ConstraintStore local_diff_sum;
+    unsigned count = 0u;
     for(auto adjacent : adjacents)
     {
       unknown_asks.insert(adjacent);
+      HYDLA_LOGGER_DEBUG("BREAK1 ask[", std::to_string(count), "] : ", get_infix_string(adjacent));
     }
     for(auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end() && !expanded;)
     {
@@ -712,6 +714,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
         continue;
       }
 
+      HYDLA_LOGGER_DEBUG("BREAK1 A");
       CheckConsistencyResult check_consistency_result;
       switch(consistency_checker->check_entailment(*relation_graph_, check_consistency_result, ask->get_guard(), ask->get_child(), unknown_asks, phase_type, phase->profile)){
 
@@ -773,6 +776,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
   
   while(true)
   {
+    HYDLA_LOGGER_DEBUG("BREAK1 B");
     timer::Timer consistency_timer;
     CheckConsistencyResult cc_result;
     cc_result = consistency_checker->check_consistency(*relation_graph_, diff_sum, phase_type, phase->profile, unknown_asks, phase->in_following_step());
@@ -789,7 +793,9 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     }
   }
 
+  HYDLA_LOGGER_DEBUG("BREAK1 C");
   if(!unknown_asks.empty()){
+    HYDLA_LOGGER_DEBUG("BREAK1 D");
     phase_result_sptr_t branch_state_false = clone_branch_state(phase);
     constraint_t unknown_guard = (*unknown_asks.begin())->get_guard();
     branch_state_false->additional_constraint_store.add_constraint(constraint_t(new Not(unknown_guard)));
