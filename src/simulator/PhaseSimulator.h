@@ -10,7 +10,6 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
-#include "kv/interval.hpp"
 
 namespace kv
 {
@@ -52,7 +51,7 @@ struct IntervalNewtonResult
 {
   std::shared_ptr<kv::interval<double>> current_stack_top;
   std::shared_ptr<kv::interval<double>> min_interval;
-  std::stack<kv::interval<double>> next_stack;
+  std::stack<kv::interval<double>, std::vector<kv::interval<double>>> next_stack;
   int time_id;
   value_t time_list_element_time;
   bool isAffine;
