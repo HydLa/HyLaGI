@@ -1,13 +1,11 @@
 #pragma once
 
-
 #include "Node.h"
 
 namespace hydla {
 namespace simulator {
 
-class DiscreteAsk :
-  public hydla::symbolic_expression::Ask
+class DiscreteAsk : public hydla::symbolic_expression::Ask
 {
 public:
   typedef hydla::symbolic_expression::node_sptr node_sptr;
@@ -15,8 +13,8 @@ public:
   DiscreteAsk()
   {}
 
-  DiscreteAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child) :
-    hydla::symbolic_expression::Ask(guard, child)
+  DiscreteAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child)
+    : hydla::symbolic_expression::Ask(guard, child)
   {}
     
   virtual ~DiscreteAsk()
@@ -36,8 +34,7 @@ public:
   }
 };
 
-class ContinuousAsk :
-  public hydla::symbolic_expression::Ask
+class ContinuousAsk : public hydla::symbolic_expression::Ask
 {
 public:
   typedef hydla::symbolic_expression::node_sptr node_sptr;
@@ -45,8 +42,8 @@ public:
   ContinuousAsk()
   {}
 
-  ContinuousAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child) :
-    hydla::symbolic_expression::Ask(guard, child)
+  ContinuousAsk(const symbolic_expression::node_sptr& guard, const symbolic_expression::node_sptr& child)
+    : hydla::symbolic_expression::Ask(guard, child)
   {}
     
   virtual ~ContinuousAsk()
@@ -61,10 +58,11 @@ public:
     return hydla::symbolic_expression::BinaryNode::clone(n);
   }
 
-  virtual std::string get_node_type_name() const {
+  virtual std::string get_node_type_name() const
+  {
     return "ContinuousAsk";
   }
 };
 
-} //namespace simulator
-} //namespace hydla 
+} // namespace simulator
+} // namespace hydla 

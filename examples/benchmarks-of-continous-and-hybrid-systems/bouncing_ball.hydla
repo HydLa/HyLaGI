@@ -1,9 +1,10 @@
 INIT <=> 10 <= x <= 10.2 & v = 0.
-MODE1 <=> [](x' = v & v' = -9.81 & x >= 0).
-JUMP1 <=> [](x- = 0 & v- <= 0 => v = -0.75 * v- & x' = v).
+VELOCITY <=> [](x' = v).
+MODE1 <=> [](v' = -9.81).
+JUMP1 <=> [](x- = 0 & v- <= 0 => v = -0.75 * v-).
 
-ASSERT(x <= 10.7).
+ASSERT(x' < 10.7).
 
-INIT, MODE1 << JUMP1.
+INIT, MODE1 << JUMP1, VELOCITY.
 
-//#hylagi -t 10 --fnd
+//#hylagi -t 9.94 --fnd

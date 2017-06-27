@@ -12,7 +12,7 @@ namespace mathematica{
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level, bool solve_over_reals) : env_(0), link_(0)
 {
 
   if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
@@ -32,6 +32,7 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
 
+
   // 警告無視
   MLPutFunction("Set", 2);
   MLPutSymbol("optIgnoreWarnings"); 
@@ -39,7 +40,29 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
+
   
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optTimeConstraint");
+  MLPutFunction("ToExpression", 1);
+  MLPutString(simplify_time.c_str());
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optSimplifyLevel");
+  MLPutInteger(simplify_level);
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
+
+  MLPutFunction("Set", 2);
+  MLPutSymbol("optSolveOverReals");
+  MLPutSymbol(solve_over_reals ? "True" : "False");
+  MLEndPacket();
+  skip_pkt_until(RETURNPKT);
+  MLNewPacket();
 
   MLPutFunction("ToExpression", 1);
   MLPutString(math_source());  

@@ -23,6 +23,8 @@
 #include "Logger.h"
 #include "SignalHandler.h"
 #include "Utility.h"
+#include "AffineTreeVisitor.h"
+#include "Parser.h"
 
 #include <boost/regex.hpp>
 
@@ -103,9 +105,9 @@ int hydla_main(int argc, char* argv[])
 
   //バックスラッシュ直後の改行の除去
   {
-	  const std::regex r("(\\\\[ \t]*(\n|\r\n))");
-	  input = std::regex_replace(input, r, " ");
-	  input = std::regex_replace(input, std::regex("\n"), "\n\n");
+    const std::regex r("([^/]\\\\[ \t]*(\n|\r\n))");
+    input = std::regex_replace(input, r, " ");
+    input = std::regex_replace(input, std::regex("\n"), "\n\n");
   }
   
   input = utility::cr_to_lf(input);
@@ -126,281 +128,283 @@ int hydla_main(int argc, char* argv[])
 
   //マクロ処理
   {
-	  static const bool debugPrint = false;
+    static const bool debugPrint = false;
 
-	  class MacroDefinition
-	  {
-	  public:
+    class MacroDefinition
+    {
+    public:
 
-		  MacroDefinition(const std::string& name, const std::string& argments, const std::string& definition)
-			  : m_name(name)
-			  , m_argments(splitArgments(argments))
-			  , m_definition(definition)
-		  {}
+      MacroDefinition(const std::string& name, const std::string& argments, const std::string& definition)
+        : m_name(name)
+        , m_argments(splitArgments(argments))
+        , m_definition(definition)
+      {}
 
-		  void apply(std::string& input, std::string::size_type offset)const
-		  {
-			  if (debugPrint)
-			  {
-				  std::cout << "apply macro \"" << m_name << "\"\n";
-				  std::cout << "apply target {" << std::string(input.cbegin() + offset, input.cend()) << "}\n";
-			  }
-			  
-			  if (m_argments.empty())
-			  {
-				  for (string::size_type pos = input.find(m_name, offset); pos != string::npos; pos = input.find(m_name, pos))
-				  {
-					  {
-						  //識別子の前後が英数字だったら読み飛ばす
-						  if (0 < pos && isAlNum(input[pos - 1]))
-						  {
-							  pos += m_name.length();
-							  continue;
-						  }
-						  if (pos + m_name.length() < input.length() && isAlNum(input[pos + m_name.length()]))
-						  {
-							  pos += m_name.length();
-							  continue;
-						  }
-					  }
+      void apply(std::string& input, std::string::size_type offset)const
+      {
+        if (debugPrint)
+        {
+          std::cout << "apply macro \"" << m_name << "\"\n";
+          std::cout << "apply target {" << std::string(input.cbegin() + offset, input.cend()) << "}\n";
+        }
 
-					  input.replace(pos, m_name.length(), m_definition);					  
-					  pos += m_definition.length();
-					  
-					  if (debugPrint)
-					  {
-						  std::cout << "name : \"" << m_name << "\"\n";
-						  std::cout << "replaced :\n";
-						  std::cout << input;
-					  }
-				  }
-			  }
-			  else
-			  {
-				  //左括弧と右括弧が同じ数になるように対応づけなければならないので正規表現は使えない
-				  for (string::size_type pos = input.find(m_name, offset); pos != string::npos; pos = input.find(m_name, pos))
-				  {
-					  {
-						  //識別子の前後が英数字だったら読み飛ばす
-						  if (0 < pos && isAlNum(input[pos - 1]))
-						  {
-							  pos += m_name.length();
-							  continue;
-						  }
-						  if (pos + m_name.length() < input.length() && isAlNum(input[pos + m_name.length()]))
-						  {
-							  pos += m_name.length();
-							  continue;
-						  }
-					  }
+        if (m_argments.empty())
+        {
+          for (string::size_type pos = input.find(m_name, offset); pos != string::npos; pos = input.find(m_name, pos))
+          {
+            {
+              //識別子の前後が英数字だったら読み飛ばす
+              if (0 < pos && isAlNum(input[pos - 1]))
+              {
+                pos += m_name.length();
+                continue;
+              }
+              if (pos + m_name.length() < input.length() && isAlNum(input[pos + m_name.length()]))
+              {
+                pos += m_name.length();
+                continue;
+              }
+            }
 
-					  const string::size_type start = input.find_first_of('(', pos);
-					  if (start == string::npos)
-					  {
-						  std::cout << "ERROR\n";
-						  return;
-					  }
+            input.replace(pos, m_name.length(), m_definition);
+            pos += m_definition.length();
 
-					  string::size_type currentPos = start + 1;
-					  
-					  int nestDepth = 1;
-					  while (nestDepth != 0)
-					  {
-						  string::size_type next = input.find_first_of("()", currentPos);
-						  if (next == string::npos)
-						  {
-							  std::cout << "ERROR\n";
-							  return;
-						  }
-						  nestDepth += input[next] == '(' ? 1 : -1;
-						  currentPos = next + 1;
-					  }
-					  
-					  const auto argments = splitArgments(std::string(input.cbegin() + start, input.cbegin() + currentPos));
-					  if (argments.size() != m_argments.size())
-					  {
-						  pos = currentPos;
-						  continue;
-					  }
+            if (debugPrint)
+            {
+              std::cout << "name : \"" << m_name << "\"\n";
+              std::cout << "replaced :\n";
+              std::cout << input;
+            }
+          }
+        }
+        else
+        {
+          //左括弧と右括弧が同じ数になるように対応づけなければならないので正規表現は使えない
+          for (string::size_type pos = input.find(m_name, offset); pos != string::npos; pos = input.find(m_name, pos))
+          {
+            {
+              //識別子の前後が英数字だったら読み飛ばす
+              if (0 < pos && isAlNum(input[pos - 1]))
+              {
+                pos += m_name.length();
+                continue;
+              }
+              if (pos + m_name.length() < input.length() && isAlNum(input[pos + m_name.length()]))
+              {
+                pos += m_name.length();
+                continue;
+              }
+            }
 
-					  const auto def = appliedDefinition(argments);
-					  input.replace(pos, currentPos - pos, def);
-					  pos += def.length();
+            const string::size_type start = input.find_first_of('(', pos);
+            if (start == string::npos)
+            {
+              std::cout << "ERROR\n";
+              return;
+            }
 
-					  if (debugPrint)
-					  {
-						  std::cout << "argments :\n";
-						  for (const auto& arg : argments)
-						  {
-							  std::cout << arg << "\n";
-						  }
+            string::size_type currentPos = start + 1;
 
-						  std::cout << "replaced :\n";
-						  std::cout << input;
-					  }
-				  }
-			  }
-		  }
+            int nestDepth = 1;
+            while (nestDepth != 0)
+            {
+              string::size_type next = input.find_first_of("()", currentPos);
+              if (next == string::npos)
+              {
+                std::cout << "ERROR\n";
+                return;
+              }
+              nestDepth += input[next] == '(' ? 1 : -1;
+              currentPos = next + 1;
+            }
 
-	  private:
+            const auto argments = splitArgments(std::string(input.cbegin() + start, input.cbegin() + currentPos));
+            if (argments.size() != m_argments.size())
+            {
+              pos = currentPos;
+              continue;
+            }
 
-		  static std::vector<std::string> splitArgments(const std::string& argments)
-		  {
-			  const auto left = argments.find_first_of('(');
-			  const auto right = argments.find_last_of(')');
-			  
-			  if (left == string::npos || right == string::npos || !(left + 1 < right))
-			  {
-				  return{};
-			  }
+            const auto def = appliedDefinition(argments);
+            input.replace(pos, currentPos - pos, def);
+            pos += def.length();
 
-			  std::vector<std::string> result;
+            if (debugPrint)
+            {
+              std::cout << "argments :\n";
+              for (const auto& arg : argments)
+              {
+                std::cout << arg << "\n";
+              }
 
-			  const std::string rawStr(argments.cbegin() + left + 1, argments.cbegin() + right);
-			  if (debugPrint)
-			  {
-				  std::cout << "split \"" << rawStr << "\"\n";
-			  }
+              std::cout << "replaced :\n";
+              std::cout << input;
+            }
+          }
+        }
+      }
 
-			  {
-				  string::size_type startPos = 0;
-				  string::size_type currentPos = startPos;
+    private:
 
-				  int nestDepth = 0;
-				  while (true)
-				  {
-					  string::size_type next = rawStr.find_first_of("(),", currentPos);
-					  if (next == string::npos)
-					  {
-						  if (nestDepth == 0)
-						  {
-							  result.emplace_back(rawStr.cbegin() + startPos, rawStr.cend());
-							  if (debugPrint)
-							  {
-								  std::cout << "    add \"" << result.back() << "\"\n";
-							  }
-						  }
-						  break;
+      static std::vector<std::string> splitArgments(const std::string& argments)
+      {
+        const auto left = argments.find_first_of('(');
+        const auto right = argments.find_last_of(')');
 
-					  }
-					  if (rawStr[next] == ',' && nestDepth == 0)
-					  {
-						  result.emplace_back(rawStr.cbegin() + startPos, rawStr.cbegin() + next);
-						  if (debugPrint)
-						  {
-							  std::cout << "    add \"" << result.back() << "\"\n";
-						  }
-						  startPos = next + 1;
-					  }
-					  else if (rawStr[next] != ',')
-					  {
-						  nestDepth += rawStr[next] == '(' ? 1 : -1;
-					  }
-					  
-					  currentPos = next + 1;
-				  }
-			  }
-			  
-			  if (debugPrint)
-			  {
-				  std::cout << "    size : " << result.size() << "\n";
-			  }
+        if (left == string::npos || right == string::npos || !(left + 1 < right))
+        {
+          return{};
+        }
 
-			  return result;
+        std::vector<std::string> result;
 
-		  }
-		  
-		  std::string appliedDefinition(const std::vector<std::string>& argments)const
-		  {
-			  if (m_argments.size() != argments.size())
-			  {
-				  return "";
-			  }
+        const std::string rawStr(argments.cbegin() + left + 1, argments.cbegin() + right);
+        if (debugPrint)
+        {
+          std::cout << "split \"" << rawStr << "\"\n";
+        }
 
-			  std::string result = m_definition;
+        {
+          string::size_type startPos = 0;
+          string::size_type currentPos = startPos;
 
-			  for (size_t i = 0; i < m_argments.size(); ++i)
-			  {
-				  for (string::size_type pos = result.find(m_argments[i]); pos != string::npos; pos = result.find(m_argments[i], pos))
-				  {
-					  {
-						  //識別子の前後が英数字だったら読み飛ばす
-						  if (0 < pos && isAlNum(result[pos - 1]))
-						  {
-							  pos += m_argments[i].length();
-							  continue;
-						  }
-						  if (pos + m_argments[i].length() < result.length() && isAlNum(result[pos + m_argments[i].length()]))
-						  {
-							  pos += m_argments[i].length();
-							  continue;
-						  }
-					  }
-					  result.replace(pos, m_argments[i].length(), argments[i]);
-					  pos += argments[i].length();
-				  }
-			  }
+          int nestDepth = 0;
+          while (true)
+          {
+            string::size_type next = rawStr.find_first_of("(),", currentPos);
+            if (next == string::npos)
+            {
+              if (nestDepth == 0)
+              {
+                result.emplace_back(rawStr.cbegin() + startPos, rawStr.cend());
+                if (debugPrint)
+                {
+                  std::cout << "    add \"" << result.back() << "\"\n";
+                }
+              }
+              break;
 
-			  return result;
-		  }
+            }
+            if (rawStr[next] == ',' && nestDepth == 0)
+            {
+              result.emplace_back(rawStr.cbegin() + startPos, rawStr.cbegin() + next);
+              if (debugPrint)
+              {
+                std::cout << "    add \"" << result.back() << "\"\n";
+              }
+              startPos = next + 1;
+            }
+            else if (rawStr[next] != ',')
+            {
+              nestDepth += rawStr[next] == '(' ? 1 : -1;
+            }
 
-		  static bool isAlNum(char c)
-		  {
-			  return ('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-		  }
+            currentPos = next + 1;
+          }
+        }
 
-		  std::string m_name;
-		  std::vector<std::string> m_argments;
-		  std::string m_definition;
-	  };
+        if (debugPrint)
+        {
+          std::cout << "    size : " << result.size() << "\n";
+        }
 
-	  const string define_header = "#define";
+        return result;
 
-	  std::vector<MacroDefinition> macro_definitions;
-	  const std::regex reg("(#define\\s+)(\\w+)(\\((\\w+)(,(\\w+))*\\))?(.*)\n");
-	  
-	  for (string::size_type pos = comment.find(define_header); pos != string::npos; pos = comment.find(define_header, pos))
-	  {
-		  if (debugPrint)
-		  {
-			  std::cout << "=======================================\n";
-		  }
+      }
 
-		  std::smatch match;
-		  if (std::regex_search((comment.cbegin() + pos), comment.cend(), match, reg))
-		  {
-			  macro_definitions.emplace_back(match[2], match[3], match[7]);
-			  macro_definitions.back().apply(comment, pos + match.length());
+      std::string appliedDefinition(const std::vector<std::string>& argments)const
+      {
+        if (m_argments.size() != argments.size())
+        {
+          return "";
+        }
 
-			  pos += 1;
-		  }
-		  else
-		  {
-			  if (debugPrint)
-			  {
-				  std::cout << "Macro couldn't parse : {\n";
-				  std::cout << std::string((comment.cbegin() + pos), comment.cend()) << "}\n";
-			  }
-			  pos += 1;
-		  }
-	  }
+        std::string result = m_definition;
 
-	  for (const auto& macro : macro_definitions)
-	  {
-		  if (debugPrint)
-		  {
-			  std::cout << "===================================\n";
-		  }
-		  macro.apply(input, 0u);
-	  }
+        for (size_t i = 0; i < m_argments.size(); ++i)
+        {
+          for (string::size_type pos = result.find(m_argments[i]); pos != string::npos; pos = result.find(m_argments[i], pos))
+          {
+            {
+              //識別子の前後が英数字だったら読み飛ばす
+              if (0 < pos && isAlNum(result[pos - 1]))
+              {
+                pos += m_argments[i].length();
+                continue;
+              }
+              if (pos + m_argments[i].length() < result.length() && isAlNum(result[pos + m_argments[i].length()]))
+              {
+                pos += m_argments[i].length();
+                continue;
+              }
+            }
+            result.replace(pos, m_argments[i].length(), argments[i]);
+            pos += argments[i].length();
+          }
+        }
 
-	  if (debugPrint)
-	  {
-		  std::cout << "===================================\n";
-		  std::cout << "<- result\n";
-		  std::cout << input;
-		  std::cout << "result ->\n";
-	  }
+        return result;
+      }
+
+      static bool isAlNum(char c)
+      {
+        return ('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+      }
+
+      std::string m_name;
+      std::vector<std::string> m_argments;
+      std::string m_definition;
+    };
+
+    const string define_header = "#define";
+
+    std::vector<MacroDefinition> macro_definitions;
+    const std::regex reg("(#define\\s+)(\\w+)(\\((\\w+)(,(\\w+))*\\))?(.*)\n");
+
+    for (string::size_type pos = comment.find(define_header); pos != string::npos; pos = comment.find(define_header, pos))
+    {
+      if (debugPrint)
+      {
+        std::cout << "=======================================\n";
+      }
+
+      std::smatch match;
+      if (std::regex_search((comment.cbegin() + pos), comment.cend(), match, reg))
+      {
+        macro_definitions.emplace_back(match[2], match[3], match[7]);
+        macro_definitions.back().apply(comment, pos + match.length());
+
+        pos += 1;
+      }
+      else
+      {
+        if (debugPrint)
+        {
+          std::cout << "Macro couldn't parse : {\n";
+          std::cout << std::string((comment.cbegin() + pos), comment.cend()) << "}\n";
+        }
+        pos += 1;
+      }
+    }
+
+    for (const auto& macro : macro_definitions)
+    {
+      if (debugPrint)
+      {
+        std::cout << "===================================\n";
+      }
+      macro.apply(input, 0u);
+    }
+
+    input = std::regex_replace(input, std::regex("[^#]"), "$&", std::regex_constants::format_no_copy);
+
+    if (debugPrint)
+    {
+      std::cout << "===================================\n";
+      std::cout << "<- result\n";
+      std::cout << input;
+      std::cout << "result ->\n";
+    }
   }
   
   // コメント中の変数省略指定を調べる
@@ -437,6 +441,21 @@ int hydla_main(int argc, char* argv[])
 
     add_vars_from_string(var_string, opts.output_vars, string("[") + (isOmit ? "#omit" : "#output") + "]");
   }
+
+  // {
+  //   Logger::instance().set_log_level(Logger::Debug);
+  //   parser::Parser p(input);
+  //   node_sptr expr = p.arithmetic();
+  //   interval::parameter_idx_map_t map;
+  //   simulator::variable_map_t vm;
+  //   interval::AffineTreeVisitor visitor(map, vm);
+  //   interval::AffineMixedValue affine = visitor.approximate(expr);
+  //   cout << affine << endl;
+  //   cout << affine.to_interval() << endl;
+  //   cout << affine.to_affine() << endl;
+  //   return 0;
+  // }
+  
   
   pt->parse_string(input);
 

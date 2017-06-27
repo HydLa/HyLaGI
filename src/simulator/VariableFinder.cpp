@@ -20,7 +20,6 @@ void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> nod
   accept(node);
 }
 
-
 void VariableFinder::clear(){
   variables_.clear();
   prev_variables_.clear();

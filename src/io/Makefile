@@ -1,7 +1,7 @@
 MAKE_TYPE := library
 
 TARGET	 := libhydla_io.a
-INCLUDES += -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility
+INCLUDES += -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/
 LDFLAGS	 += -L/usr/local/lib
 LIBS	 +=
 DEFINES  +=

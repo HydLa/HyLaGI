@@ -10,7 +10,8 @@ namespace simulator {
 
 using namespace std;
 
-SequentialSimulator::SequentialSimulator(Opts &opts):Simulator(opts), printer(backend)
+SequentialSimulator::SequentialSimulator(Opts &opts)
+  : Simulator(opts), printer(backend)
 {
 }
 
@@ -27,7 +28,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
   {
     dfs(result_root_);
   }
-  catch(const std::runtime_error &se)
+  catch(const std::exception &se)
   {
     error_str += "error ";
     error_str += ": ";
@@ -45,42 +46,45 @@ phase_result_sptr_t SequentialSimulator::simulate()
 void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
   HYDLA_LOGGER_DEBUG_VAR(*current);
-  if(signal_handler::interrupted)
+  if (signal_handler::interrupted)
   {
     current->simulation_state = INTERRUPTED;
     return;
   }
+
   phase_simulator_->apply_diff(*current);
-  while(!current->todo_list.empty())
+
+  while (!current->todo_list.empty())
   {
     phase_result_sptr_t todo = current->todo_list.front();
     current->todo_list.pop_front();
     profile_vector_->insert(todo);
-    if(todo->simulation_state == NOT_SIMULATED)
+    if (todo->simulation_state == NOT_SIMULATED)
     {
       process_one_todo(todo);
-      if(opts_->dump_in_progress){
+      if (opts_->dump_in_progress){
         printer.output_one_phase(todo, "------ In Progress ------");
       }
     }
 
     dfs(todo);
-    if(!opts_->nd_mode || (opts_->stop_at_failure && assertion_failed) )
+    if (!opts_->nd_mode || (opts_->stop_at_failure && assertion_failed))
     {
       omit_following_todos(current);
       break;
     }
   }
+
   phase_simulator_->revert_diff(*current);
 }
 
 void SequentialSimulator::omit_following_todos(phase_result_sptr_t current)
 {
-  while(!current->todo_list.empty())
+  while (!current->todo_list.empty())
   {
     phase_result_sptr_t not_selected_children = current->todo_list.front();
     current->todo_list.pop_front();
-    if(not_selected_children->simulation_state != SIMULATED)
+    if (not_selected_children->simulation_state != SIMULATED)
     {
       current->children.push_back(not_selected_children);
     }
@@ -88,6 +92,5 @@ void SequentialSimulator::omit_following_todos(phase_result_sptr_t current)
   }
 }
 
-
-} // simulator
-} // hydla
+} // namespace simulator
+} // namespace hydla

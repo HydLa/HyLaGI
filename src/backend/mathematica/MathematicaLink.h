@@ -21,7 +21,7 @@ namespace mathematica{
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings);
+  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string &simplify_time, const int simplify_level, bool solve_over_reals);
 
   virtual ~MathematicaLink() ;
 

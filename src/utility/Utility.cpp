@@ -27,7 +27,7 @@ bool num_denom_str(string val_str,
 {
   string::size_type sz = val_str.find(".");
   denominator = "1";
-  if(sz == string::npos)
+  if (sz == string::npos)
   {
     numerator = val_str;
     return false;
@@ -41,7 +41,7 @@ bool num_denom_str(string val_str,
     // trim preceeding zeros
     string::size_type zero_cnt = 
       numerator.find_first_not_of('0');
-    if(zero_cnt != string::npos)
+    if (zero_cnt != string::npos)
     {
       numerator = numerator.substr(zero_cnt);
     }
@@ -49,11 +49,11 @@ bool num_denom_str(string val_str,
   }
 }
 
-string replace(string original, const string &substr, const string &dest )
+string replace(string original, const string &substr, const string &dest)
 {
-  string::size_type  pos( original.find( substr ) );
+  string::size_type pos( original.find( substr ) );
 
-  while( pos != string::npos )
+  while ( pos != string::npos )
   {
     original.replace( pos, substr.length(), dest );
     pos = original.find( substr, pos + dest.length() );
@@ -65,21 +65,26 @@ string replace(string original, const string &substr, const string &dest )
 string remove_comment(string &src)
 {
   std::string comment;
-  for(uint i = 0; i < src.length(); i++) {
-    if(src[i]=='/'&&(i+1)<src.length()&&src[i+1]=='/') {
-      i+=2;
+  for (uint i = 0; i < src.length(); i++)
+  {
+    if (src[i]=='/' && (i+1) < src.length() && src[i+1]=='/')
+    {
+      i += 2;
       uint start_point = i;
-      while(i<src.length()&&src[i]!='\n')i++;
+      while (i < src.length() && src[i]!='\n') i++;
       comment += src.substr(start_point, i-start_point);
       comment += '\n';
       src.erase(start_point - 2, i - start_point + 2);
       i = start_point - 2;
-    } else if(src[i]=='/'&&(i+1)<src.length()&&src[i+1]=='*') {
-      i+=2;
+    }
+    else if (src[i]=='/' && (i+1) < src.length() && src[i+1]=='*')
+    {
+      i += 2;
       uint start_point = i;
-      while(i<src.length()&&!(src[i]=='*'&&(i+1)<src.length()&&src[i+1]=='/'))i++;
+      while (i < src.length() &&
+        !(src[i] == '*' && (i+1) < src.length() && src[i+1] == '/')) i++;
       comment += src.substr(start_point, i-start_point-1);
-      i+=2;
+      i += 2;
       src.erase(start_point - 2, i - start_point + 2);
       i = start_point - 2;
     }
@@ -91,7 +96,7 @@ string cr_to_lf(std::string str)
 {
   string::size_type pos( str.find( "\r" ) );
 
-  while( pos != string::npos )
+  while ( pos != string::npos )
   {
     str.replace( pos, 1, "\n" );
     pos = str.find( "\r", pos + 1);
@@ -103,17 +108,21 @@ string extract_file_name(const string &path)
 {
   string fn;
   string::size_type fpos;
-  if((fpos = path.find_last_of("/")) != string::npos){
+  if ((fpos = path.find_last_of("/")) != string::npos)
+  {
     fn = path.substr(fpos+1);
   }
-  else if((fpos = path.find_last_of("\\")) != string::npos){
+  else if ((fpos = path.find_last_of("\\")) != string::npos)
+  {
     fn = path.substr(fpos+1);
   }
-  else{
+  else
+  {
     fn = path;
   }
 
-  if((fpos = fn.find_last_of(".")) != string::npos){
+  if ((fpos = fn.find_last_of(".")) != string::npos)
+  {
     fn = fn.substr(0, fpos);
   }
 

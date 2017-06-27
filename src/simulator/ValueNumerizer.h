@@ -1,20 +1,16 @@
 #pragma once
 
-
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
 #include "Value.h"
 
-namespace hydla
-{
-namespace simulator
-{
+namespace hydla {
+namespace simulator {
 
 class ValueNumerizer : public symbolic_expression::DefaultTreeVisitor
 {
-  public:
-
+public:
   ValueNumerizer();
 
   /**
@@ -44,8 +40,7 @@ class ValueNumerizer : public symbolic_expression::DefaultTreeVisitor
   
   virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
 
-  private:
-
+private:
   void invalid_node(symbolic_expression::Node &node);
   
   Value current_value;
@@ -53,7 +48,5 @@ class ValueNumerizer : public symbolic_expression::DefaultTreeVisitor
   bool fully_numerized = false;
 };
 
-
-}
-}
-
+} // namespace simulator
+} // namespace hydla

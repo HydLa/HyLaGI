@@ -8,7 +8,8 @@ $MaxExtraPrecision = 1000;
  * constraint: 現在のフェーズでの制約
  * assumptions: assumptions for the current phase
  * pConstraint: 定数についての制約
- * prevConstraint: constraint for previ variables
+ * prevConstraint: constraint for prevs
+ * resultConstraint: constraint solvedBy checkConsystency
  * prevRules:      rules converted from equalities of left-hand limits
  * currentTime:    symbolic expression of current time 
  * initConstraint: 初期値制約
@@ -35,10 +36,12 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
+optTimeConstraint = 1;
+optSimplifyLevel = 1;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
-  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[Reduce::ztest], HoldForm[Minimize::ztest], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
+  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Solve::incnst], HoldForm[Solve::ifun], HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[Reduce::ztest], HoldForm[Minimize::ztest], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
   checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
 ];
 
@@ -105,11 +108,10 @@ symbolToString := (StringJoin[ToString[Unevaluated[#] ], ": ", ToString[InputFor
 SetAttributes[symbolToString, HoldAll];
 
 SetAttributes[prev, Constant];
-SetAttributes[parameter, Constant];
+SetAttributes[p, Constant];
 
 SetAttributes[prev, NHoldAll];
-SetAttributes[parameter, NHoldAll];
-
+SetAttributes[p, NHoldAll];
 
 If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返すようにしておく *)
   debugPrint[arg___] := Print[InputForm[{arg}]];
@@ -147,7 +149,6 @@ derivative[cnt_, var_] := Derivative[cnt][ToExpression[StringReplacePart[ToStrin
 
 (* C++側から直接呼び出す関数の，本体部分の定義を行う関数．デバッグ出力とか，正常終了の判定とか，例外の扱いとかを統一する 
    少しでもメッセージを吐く可能性のある関数は，この関数で定義するようにする．
-   definitionにReturnが含まれていると正常に動作しなくなる （Returnの引数がそのまま返ることになる）ので使わないように！
    返り値にはtoReturnFormを常にかけるようにしたいけど，現状だとリストの番号とかまで文字列にすると例外吐かれるので個別対応・・・
 *)
 
@@ -156,8 +157,9 @@ publicMethod[name_, args___, definition_] := (
     inputPrint[ToString[name], args];
     CheckAbort[
       timeFuncStart[];
-      Module[{publicRet},
-        publicRet = definition;
+      Module[{publicRet, returnValue = Null},
+        returnValue = Do[publicRet = definition, {i, 1, 1}]; (* use Do[] to catch result of Return[] *)
+        If[returnValue =!= Null, publicRet = returnValue];
         simplePrint[publicRet];
         timeFuncEnd[name];
         checkMessage;
@@ -171,14 +173,13 @@ publicMethod[name_, args___, definition_] := (
 publicMethod[
   simplify,
   arg,
-  toReturnForm[Simplify[arg]]
+  Switch[optSimplifyLevel,
+    0, toReturnForm[arg],
+    1, toReturnForm[Simplify[arg]],
+    _, toReturnForm[FullSimplify[arg]]
+  ]
 ];
 
-publicMethod[
-  fullSimplify,
-  arg,
-  toReturnForm[FullSimplify[arg]]
-];
 
 toReturnForm[expr_] := 
 Module[
@@ -186,7 +187,7 @@ Module[
   If[expr === Infinity, Return[inf]];
   (* Derivative[cnt, var] is for return form (avoid collision with derivative[cnt, var] *)
   If[MatchQ[expr, Derivative[_][_]], Return[Derivative[expr[[0, 1]], ToExpression[StringDrop[ToString[expr[[1]] ], 1]  ] ] ] ];
-  If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]], expr[[0, 1]] ] ] ];
+  If[MatchQ[expr, Derivative[_][_][t_]], Return[Derivative[expr[[0, 0, 1]],  ToExpression[StringDrop[ToString[expr[[1]] ], 1] ] ] ] ];
   If[MatchQ[expr, _[t]] && isVariable[Head[expr] ], Return[Head[expr] ] ];
   If[Head[expr] === Real, Return[ToString[expr] ] ];
   If[Head[expr] === p, Return[expr] ];
@@ -235,13 +236,13 @@ getExprCode[expr_] := Switch[Head[expr],
 
 
 (* AndではなくListでくくる *)
-
 applyList[reduceSol_] :=
   If[reduceSol === True, {}, If[Head[reduceSol] === And, List @@ reduceSol, List[reduceSol]]];
 
 (* OrではなくListでくくる *)
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
+
 
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
@@ -266,4 +267,21 @@ getReverseRelop[relop_] := Switch[relop,
                                   GreaterEqual, LessEqual];
 
 variablePrefix = "u";
+
+(* optSimplifyLevel の値に応じた簡約化関数を呼び出す。optTimeConstraint で指定された秒数が経過した場合、簡約化前の値を返す *)
+Switch[optSimplifyLevel,
+    0, timeConstrainedSimplify[expr_] := expr;
+    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
+    _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+];
+
+Switch[optSimplifyLevel,
+    0, timeConstrainedSimplify[expr_, assum_] := expr;
+    1, timeConstrainedSimplify[expr_, assum_] := TimeConstrained[Simplify[expr, assum], optTimeConstraint, expr];
+    _, timeConstrainedSimplify[expr_, assum_] := TimeConstrained[FullSimplify[expr, assum], optTimeConstraint, expr];
+];
+
+solveOverRorC[consToSolve_,vars_] :=
+  If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
+
 derivativePrefix = "d";

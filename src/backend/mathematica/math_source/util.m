@@ -7,10 +7,9 @@ publicMethod[
   expr, time,
   Module[
     {appliedExpr},
-
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[Simplify[appliedExpr]],
+      toReturnForm[timeConstrainedSimplify[appliedExpr]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -26,7 +25,7 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[expr /. t -> t - time]
+  toReturnForm[LogicalExpand[timeConstrainedSimplify[expr /. t -> t - time] ] ]
  (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
@@ -62,30 +61,35 @@ publicMethod[
 publicMethod[
   relationToFunction,
   exp,
-  cons,
   Module[
     {
-      substituted,
       rhs,
       lhs
       },
     If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
-        InvalidRelop,
-      substituted = exp /. Map[(Rule@@#)&, cons];
-      If[substituted === False || substituted === True, 
-        toReturnForm[Infinity],
-        lhs = substituted[[1]];
-        rhs = substituted[[2]];
-        toReturnForm[lhs - rhs]
-      ]
+      InvalidRelop,
+      lhs = exp[[1]];
+      rhs = exp[[2]];
+      toReturnForm[timeConstrainedSimplify[lhs - rhs] ]
     ]
   ]
 ];
 
+publicMethod[
+  substituteVM,
+  expr,
+  variableMap,
+  currentTime,
+  Module[
+    {tRemovedRules},
+    tRemovedRules = Map[(Rule[#[[1]] /. x_[t] -> x, #[[2]]])&, variableMap];
+    toReturnForm[((expr /. x_[t] /; isVariable[x] -> x) /. t -> t + currentTime) //. tRemovedRules]
+  ]
+];
 
 publicMethod[
   differentiateWithTime,
   exp,
-  toReturnForm[D[exp, t] ]
+  toReturnForm[timeConstrainedSimplify[D[exp, t] ] ]
 ];
 

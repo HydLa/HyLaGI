@@ -25,25 +25,17 @@ class AffineApproximator{
   
   void set_simulator(simulator::Simulator* simulator);
 
+  void set_extra_dummy_num(int num);
 
   /**
    * Approximate given variable in given variable map conserving given condition
    */
-  void approximate(const variable_t &var, variable_map_t& variable_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
+  void approximate(const simulator::variable_set_t &vars_to_approximate, variable_map_t& variable_map,  parameter_map_t &parameter_map, value_t &time);
 
-  /**
-   * Approximate time
-   */
-  void approximate_time(value_t &time, const variable_map_t &ip_map, variable_map_t& prev_map,  parameter_map_t &parameter_map, node_sptr condition_to_be_conserved = node_sptr());
+  virtual ~AffineApproximator();  
 
-  /**
-   * Approximate given expression as an affine form
-   * @param node expression
-   * @param parameter_map
-   *          map of parameter to be added parameter for new dummy variables
-   */
-  value_t approximate(node_sptr &expr, parameter_map_t &parameter_map, variable_map_t &variable_map);
-  
+private:
+
   /**
    * Reduce dummy variables
    * @param formulas Formulas to be reduced
@@ -51,9 +43,7 @@ class AffineApproximator{
    */
   void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit);
 
-  virtual ~AffineApproximator();  
 
-private:
   value_t translate_into_symbolic_value(const affine_t &affine_value, parameter_map_t &parameter_map);
   AffineApproximator();
   AffineApproximator(const AffineApproximator& rhs);
@@ -62,11 +52,13 @@ private:
   void invalid_node(symbolic_expression::Node& node);
 
   simulator::Simulator* simulator;
+  int extra_dummy_num = 1;
 
   static interval::AffineApproximator* affine_translator;
 
 
   parameter_idx_map_t parameter_idx_map;
+
   int epsilon_index;
 };
 
