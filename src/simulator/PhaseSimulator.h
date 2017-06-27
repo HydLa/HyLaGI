@@ -10,6 +10,7 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
+#include "kv/interval.hpp"
 
 namespace kv
 {
