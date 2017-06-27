@@ -24,11 +24,11 @@ namespace hydla{
       db -> debug_call();
       //cout << *msc;
 
-      for(auto m : weaker_modules_){
+/*      for(auto m : weaker_modules_){
         for(auto wm : m.second){
           s << "  \"" << m.first.first << "\" -> \"" << wm.first << "\";" << std::endl;
         }
-      }
+      }*/
     }
 
     void Debug::debug_call()
