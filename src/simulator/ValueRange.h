@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <assert.h>
 #include "Value.h"
 
 namespace hydla {

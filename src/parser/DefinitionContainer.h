@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 
@@ -26,7 +26,7 @@ public:
   typedef std::pair<definition_name_t, 
                     bound_variable_count_t>    definition_map_key_t;
 
-  typedef boost::shared_ptr<definition_node_t> definition_map_value_t;
+  typedef std::shared_ptr<definition_node_t> definition_map_value_t;
   typedef std::map<definition_map_key_t, 
                    definition_map_value_t>     definition_map_t;
   typedef typename definition_map_t::const_iterator definition_map_const_iterator;
@@ -43,7 +43,7 @@ public:
 
   definition_map_key_t 
   create_definition_key(
-    const boost::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
+    const std::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
   {
     return std::make_pair(d->get_name(), 
                           d->bound_variable_size());
@@ -52,7 +52,7 @@ public:
   /**
    * 定義ノードを追加する
    */
-  void add_definition(const boost::shared_ptr<definition_node_t>& d)
+  void add_definition(const std::shared_ptr<definition_node_t>& d)
   {
     definition_map_key_t key(create_definition_key(d));
     
@@ -64,7 +64,7 @@ public:
    * すでに登録済みのノードであるかどうか
    */
   bool is_registered(
-    const boost::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
+    const std::shared_ptr<hydla::symbolic_expression::Definition>& d) const 
   {
     return is_registered(create_definition_key(d));
   }
@@ -81,12 +81,12 @@ public:
    * @return 与えられた定義に対するノード．
    *          存在しない定義の場合は空クラスを返す
    */
-  const boost::shared_ptr<definition_node_t> 
+  const std::shared_ptr<definition_node_t> 
   get_definition(const definition_map_key_t& d) const
   {
     definition_map_const_iterator it = definition_map_.find(d);
     if(it == definition_map_.end()) {
-      return boost::shared_ptr<definition_node_t>();
+      return std::shared_ptr<definition_node_t>();
     }
     return it->second;
   }

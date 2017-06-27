@@ -13,7 +13,7 @@ VariableFinder::VariableFinder()
 VariableFinder::~VariableFinder()
 {}
 
-void VariableFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node)
+void VariableFinder::visit_node(std::shared_ptr<symbolic_expression::Node> node)
 {
   in_prev_ = false;
   differential_count_ = 0;
@@ -69,7 +69,7 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const
 }
 
 
-bool VariableFinder::include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const
+bool VariableFinder::include_variables(const std::shared_ptr<symbolic_expression::Node> &constraint) const
 {
   VariableFinder tmp_finder;
   tmp_finder.visit_node(constraint);
@@ -107,7 +107,7 @@ variable_set_t VariableFinder::get_prev_variable_set() const{return prev_variabl
 
 
 // Ask制約
-void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
+void VariableFinder::visit(std::shared_ptr<hydla::symbolic_expression::Ask> node)
 {
   accept(node->get_guard());
   accept(node->get_child());
@@ -115,13 +115,13 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 
 
 // 時刻
-void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
+void VariableFinder::visit(std::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
   variables_.insert(Variable("t", 0));  //Since t is always continuous, it can be regarded as previous value (for simplicity of simulation)
 }
 
 // 変数
-void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
+void VariableFinder::visit(std::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   if(in_prev_){
     prev_variables_.insert(Variable(node->get_name(), differential_count_));
@@ -132,7 +132,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Variabl
 
 
 // 微分
-void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
+void VariableFinder::visit(std::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_count_++;
   accept(node->get_child());
@@ -141,7 +141,7 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Differe
 
 
 // 左極限
-void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
+void VariableFinder::visit(std::shared_ptr<hydla::symbolic_expression::Previous> node)
 {
   in_prev_ = true;
   accept(node->get_child());

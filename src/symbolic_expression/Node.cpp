@@ -539,7 +539,7 @@ void VariadicNode::accept(node_sptr own,
                    BaseNodeVisitor* visitor) 
 {
   assert(this == own.get()); 
-  visitor->visit(boost::dynamic_pointer_cast<VariadicNode>(own));
+  visitor->visit(std::dynamic_pointer_cast<VariadicNode>(own));
 }
 
 std::ostream& Range::dump(std::ostream& s) const
@@ -619,7 +619,7 @@ node_sptr VariadicNode::get_argument(int i)
 
 node_sptr Caller::clone()
 {
-  boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
+  std::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
@@ -632,7 +632,7 @@ node_sptr Caller::clone()
 
 node_sptr ProgramCaller::clone()
 {
-  boost::shared_ptr<ProgramCaller> n(new ProgramCaller());
+  std::shared_ptr<ProgramCaller> n(new ProgramCaller());
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
@@ -644,7 +644,7 @@ node_sptr ProgramCaller::clone()
 }
 node_sptr ConstraintCaller::clone()
 {
-  boost::shared_ptr<ConstraintCaller> n(new ConstraintCaller());
+  std::shared_ptr<ConstraintCaller> n(new ConstraintCaller());
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
@@ -656,7 +656,7 @@ node_sptr ConstraintCaller::clone()
 }
 node_sptr ExpressionListCaller::clone()
 {
-  boost::shared_ptr<ExpressionListCaller> n(new ExpressionListCaller());
+  std::shared_ptr<ExpressionListCaller> n(new ExpressionListCaller());
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
@@ -668,7 +668,7 @@ node_sptr ExpressionListCaller::clone()
 }
 node_sptr ProgramListCaller::clone()
 {
-  boost::shared_ptr<ProgramListCaller> n(new ProgramListCaller());
+  std::shared_ptr<ProgramListCaller> n(new ProgramListCaller());
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
@@ -680,7 +680,7 @@ node_sptr ProgramListCaller::clone()
 }
 node_sptr Definition::clone()
 {
-  boost::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
+  std::shared_ptr<ConstraintDefinition> n(new ConstraintDefinition());
   n->name_ = name_;
 
   n->bound_variables_.resize(bound_variables_.size());
@@ -704,7 +704,7 @@ Parameter::Parameter(const simulator::Parameter &p):
                      VISITOR* visitor) \
   { \
     assert(this == own.get()); \
-    visitor->visit(boost::dynamic_pointer_cast<CLASS>(own)); \
+    visitor->visit(std::dynamic_pointer_cast<CLASS>(own)); \
   }
 
 /// BaseNodeVisitorのaccept関数定義

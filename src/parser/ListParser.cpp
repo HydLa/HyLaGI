@@ -17,20 +17,20 @@ void Parser::list_type_check(){
     for(auto i = program_list_definitions.begin(); i != program_list_definitions.end();)
     {
       bool is_expression_list = false;
-      boost::shared_ptr<ProgramListCaller> def = boost::dynamic_pointer_cast<ProgramListCaller>((*i)->get_child());
+      std::shared_ptr<ProgramListCaller> def = std::dynamic_pointer_cast<ProgramListCaller>((*i)->get_child());
       if(def)
       {
         for(auto ed : expression_list_definitions)
         {
           if(def->get_name() == ed->get_name() && def->actual_arg_size() == ed->bound_variable_size())
           {
-            boost::shared_ptr<ExpressionListDefinition> eld(new ExpressionListDefinition()); 
+            std::shared_ptr<ExpressionListDefinition> eld(new ExpressionListDefinition()); 
             eld->set_name((*i)->get_name());
             for(auto var_it = (*i)->bound_variable_begin(); var_it != (*i)->bound_variable_end(); var_it++)
             {
               eld->add_bound_variable(*var_it);
             }
-            boost::shared_ptr<ExpressionListCaller> elc(new ExpressionListCaller());
+            std::shared_ptr<ExpressionListCaller> elc(new ExpressionListCaller());
             elc->set_name(def->get_name());
             for(auto var_it = def->actual_arg_begin(); var_it != def->actual_arg_end(); var_it++)
             {
@@ -51,9 +51,9 @@ void Parser::list_type_check(){
 }
 
 /// expression_list_callee := name
-boost::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee(){
+std::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee(){
   position_t position = lexer.get_current_position();
-  boost::shared_ptr<ExpressionListDefinition> ret(new ExpressionListDefinition());
+  std::shared_ptr<ExpressionListDefinition> ret(new ExpressionListDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
@@ -63,13 +63,13 @@ boost::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee(){
     return ret; 
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ExpressionListDefinition>();
+  return std::shared_ptr<ExpressionListDefinition>();
 }
 
 /// program_list_callee := name
-boost::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
+std::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
   position_t position = lexer.get_current_position();
-  boost::shared_ptr<ProgramListDefinition> ret(new ProgramListDefinition());
+  std::shared_ptr<ProgramListDefinition> ret(new ProgramListDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
@@ -78,14 +78,14 @@ boost::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
     return ret;
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ProgramListDefinition>();
+  return std::shared_ptr<ProgramListDefinition>();
 }
 
 /**
  * sum_of_list := "sum" "(" expression_list ")"
  */
 node_sptr Parser::sum_of_list(){
-  boost::shared_ptr<SumOfList> ret(new SumOfList());
+  std::shared_ptr<SumOfList> ret(new SumOfList());
   position_t position = lexer.get_current_position();
   if(lexer.get_token() == LOWER_IDENTIFIER &&
      lexer.get_current_token_string() == "sum"){
@@ -112,7 +112,7 @@ node_sptr Parser::sum_of_list(){
  * size_of_list := "|" ( expression_list | program_list ) "|"
  */
 node_sptr Parser::size_of_list(){
-  boost::shared_ptr<SizeOfList> ret(new SizeOfList());
+  std::shared_ptr<SizeOfList> ret(new SizeOfList());
   position_t position = lexer.get_current_position();
   if(lexer.get_token() == VERTICAL_BAR){
     node_sptr tmp;
@@ -145,7 +145,7 @@ node_sptr Parser::program_list_element(){
       if((expr = expression())){
         position_t tmp_position = lexer.get_current_position();
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          boost::shared_ptr<ProgramListElement> e(new ProgramListElement());
+          std::shared_ptr<ProgramListElement> e(new ProgramListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
@@ -172,7 +172,7 @@ node_sptr Parser::expression_list_element(){
       if((expr = expression())){
         position_t tmp_position = lexer.get_current_position();
         if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-          boost::shared_ptr<ExpressionListElement> e(new ExpressionListElement());
+          std::shared_ptr<ExpressionListElement> e(new ExpressionListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
@@ -193,14 +193,14 @@ node_sptr Parser::expression_list_element(){
  */
 node_sptr Parser::conditional_program_list(){
   in_conditional_program_list_ = true;
-  std::vector<boost::shared_ptr<ProgramCaller> > pc;
+  std::vector<std::shared_ptr<ProgramCaller> > pc;
   local_program_caller_.push(pc);
   position_t position = lexer.get_current_position();
   node_sptr tmp;
   if(lexer.get_token() == LEFT_BRACES){
     if((tmp = program())){
       if(lexer.get_token() == VERTICAL_BAR){
-        boost::shared_ptr<ConditionalProgramList> ret(new ConditionalProgramList());
+        std::shared_ptr<ConditionalProgramList> ret(new ConditionalProgramList());
         ret->set_program(tmp);
         if((tmp = list_condition())){
           ret->add_argument(tmp);
@@ -244,7 +244,7 @@ node_sptr Parser::program_list(){
     position_t tmp_position = lexer.get_current_position();
     while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
       if((list = program_list_term())){
-        boost::shared_ptr<Union> uni(new Union(ret,list));
+        std::shared_ptr<Union> uni(new Union(ret,list));
         ret = uni;
       }else{
         error_occurred(lexer.get_current_position(), "expected program list after \"or\"");
@@ -269,7 +269,7 @@ node_sptr Parser::program_list_term(){
     position_t tmp_position = lexer.get_current_position();
     while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
       if((list = program_list_factor())){
-        boost::shared_ptr<Intersection> in(new Intersection(ret,list));
+        std::shared_ptr<Intersection> in(new Intersection(ret,list));
         ret = in;
       }else{
         error_occurred(lexer.get_current_position(), "expected program list after \"and\"");
@@ -296,7 +296,7 @@ node_sptr Parser::program_list_factor(){
   if((ret = conditional_program_list())) return ret;
   if(lexer.get_token() == LEFT_BRACES){
     position_t list_position = lexer.get_current_position();
-    boost::shared_ptr<ProgramList> list(new ProgramList());
+    std::shared_ptr<ProgramList> list(new ProgramList());
     if((ret = program_priority())){
       list->add_argument(ret);
       position_t tmp_position = lexer.get_current_position();
@@ -332,9 +332,9 @@ node_sptr Parser::program_list_factor(){
           position_t right_position = lexer.get_current_position();
           if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
             if(lexer.get_token() == RIGHT_BRACES){
-              boost::shared_ptr<Range> range(
-                new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
-                          boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
+              std::shared_ptr<Range> range(
+                new Range(std::shared_ptr<Number>(new Number(str.substr(num1+1))),
+                          std::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
                 range->set_header(str.substr(0,num1+1));
                 return range;
             }else{
@@ -368,7 +368,7 @@ node_sptr Parser::program_list_factor(){
       node_sptr defined;
       IS_DEFINED_AS(str,0,tmp_program_list_definitions,defined);
       if((defined)){
-        boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
+        std::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
         caller->set_name(str);
         return caller;
       }
@@ -376,7 +376,7 @@ node_sptr Parser::program_list_factor(){
     }
     else
     {
-      boost::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
+      std::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
       caller->set_name(str);
       return caller;
     }
@@ -393,7 +393,7 @@ node_sptr Parser::conditional_expression_list(){
   if(lexer.get_token() == LEFT_BRACES){
     if((tmp = expression())){
       if(lexer.get_token() == VERTICAL_BAR){
-        boost::shared_ptr<ConditionalExpressionList> ret(new ConditionalExpressionList());
+        std::shared_ptr<ConditionalExpressionList> ret(new ConditionalExpressionList());
         ret->set_expression(tmp);
         if((tmp = list_condition())){
           ret->add_argument(tmp);
@@ -439,7 +439,7 @@ node_sptr Parser::nameless_list(){
           if((ret = expression())){
             tmp_position = lexer.get_current_position();
             if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-              boost::shared_ptr<ExpressionList> el(new ExpressionList());
+              std::shared_ptr<ExpressionList> el(new ExpressionList());
               el->set_nameless_expression_arguments(ret);
               return el;
             }
@@ -470,7 +470,7 @@ node_sptr Parser::expression_list(){
     position_t tmp_position = lexer.get_current_position();
     while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
       if((list = expression_list_term())){
-        boost::shared_ptr<Union> uni(new Union(ret,list));
+        std::shared_ptr<Union> uni(new Union(ret,list));
         ret = uni;
       }else{
         error_occurred(lexer.get_current_position(), "expected expression list after \"or\"");
@@ -495,7 +495,7 @@ node_sptr Parser::expression_list_term(){
     position_t tmp_position = lexer.get_current_position();
     while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
       if((list = expression_list_factor())){
-        boost::shared_ptr<Intersection> in(new Intersection(ret,list));
+        std::shared_ptr<Intersection> in(new Intersection(ret,list));
         ret = in;
       }else{
         error_occurred(lexer.get_current_position(), "expected expression list after \"and\"");
@@ -528,7 +528,7 @@ node_sptr Parser::expression_list_factor(){
   if((ret = conditional_expression_list())) return ret;
   if(lexer.get_token() == LEFT_BRACES){
     position_t list_position = lexer.get_current_position();
-    boost::shared_ptr<ExpressionList> list(new ExpressionList());
+    std::shared_ptr<ExpressionList> list(new ExpressionList());
     if((ret = expression())){
       list->add_argument(ret);
       position_t tmp_position = lexer.get_current_position();
@@ -566,9 +566,9 @@ node_sptr Parser::expression_list_factor(){
           if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
             position_t right_position = lexer.get_current_position();
             if(lexer.get_token() == RIGHT_BRACES){
-              boost::shared_ptr<Range> range(
-                new Range(boost::shared_ptr<Number>(new Number(str.substr(num1+1))),
-                          boost::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
+              std::shared_ptr<Range> range(
+                new Range(std::shared_ptr<Number>(new Number(str.substr(num1+1))),
+                          std::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
                 range->set_header(str.substr(0,num1+1));
                 return range;
             }else{
@@ -590,7 +590,7 @@ node_sptr Parser::expression_list_factor(){
         if((num2 = expression())){
           position_t right_position = lexer.get_current_position();
           if(lexer.get_token() == RIGHT_BRACES){
-            return boost::shared_ptr<Range>(new Range(ret,num2));
+            return std::shared_ptr<Range>(new Range(ret,num2));
           }else{
             error_occurred(right_position, "expected \"}\"");
           }
@@ -621,7 +621,7 @@ node_sptr Parser::expression_list_factor(){
       node_sptr defined;
       IS_DEFINED_AS(str,0,tmp_expression_list_definitions,defined);
       if((defined)){
-        boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
+        std::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
         caller->set_name(str);
         return caller;
       }
@@ -629,7 +629,7 @@ node_sptr Parser::expression_list_factor(){
     }
     else
     {
-      boost::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
+      std::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
       caller->set_name(str);
       return caller;
     }
@@ -651,7 +651,7 @@ node_sptr Parser::list_condition(){
     if(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "in"){
       node_sptr list;
       if((list = expression_list())){
-        return boost::shared_ptr<EachElement>(new EachElement(boost::shared_ptr<Variable>(new Variable(name)),list));
+        return std::shared_ptr<EachElement>(new EachElement(std::shared_ptr<Variable>(new Variable(name)),list));
       }else{
         error_occurred(lexer.get_current_position(), "expected expression list after \"in\"");
       }
@@ -663,9 +663,9 @@ node_sptr Parser::list_condition(){
     if(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "in"){
       node_sptr list;
       if((list = program_list())){
-        boost::shared_ptr<ProgramCaller> lhs(new ProgramCaller());
+        std::shared_ptr<ProgramCaller> lhs(new ProgramCaller());
         lhs->set_name(name);
-        return boost::shared_ptr<EachElement>(new EachElement(lhs,list));
+        return std::shared_ptr<EachElement>(new EachElement(lhs,list));
       }else{
         error_occurred(lexer.get_current_position(), "expected program list after \"in\"");
       }
@@ -681,7 +681,7 @@ node_sptr Parser::list_condition(){
       if((rhs = expression_list_element()) ||
          (rhs = program_list_element()) ||
          (rhs = variable())){
-        return boost::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
+        return std::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
       }else{
         error_occurred(lexer.get_current_position(), "expected variable, expression list element or program list element after \"!=\"");
       }
