@@ -8,6 +8,7 @@ class Version {
   Version();
   ~Version();
 
+  static std::string commit_id();
   static std::string version();
   static std::string revision();
   static std::string copyright();

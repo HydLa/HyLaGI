@@ -51,13 +51,15 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
 {
   const BinaryNode* binnode = dynamic_cast<const BinaryNode*>(n);
 
-  if(binnode != NULL) {
+  if (binnode != NULL)
+  {
     const Node* lhs = binnode->lhs_.get();
     const Node* rhs = binnode->rhs_.get();
 
 
     // 左辺ノード
-    if(typeid(*n) == typeid(*lhs)) {
+    if (typeid(*n) == typeid(*lhs))
+    {
       create_child_node_list(cnl, lhs);
     }
     else {
@@ -65,7 +67,8 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
     }
 
     // 右辺ノード
-    if(typeid(*n) == typeid(*rhs)) {
+    if (typeid(*n) == typeid(*rhs))
+    {
       create_child_node_list(cnl, rhs);
     }
     else {
@@ -83,7 +86,8 @@ struct BinaryNode::CheckInclude
   template<typename T>
   bool operator()(T& it)
   {
-    if(!it.second && node->is_same_struct(*it.first, false)) {
+    if (!it.second && node->is_same_struct(*it.first, false))
+    {
       it.second = true;
       return true;
     }
@@ -95,25 +99,29 @@ struct BinaryNode::CheckInclude
 
 bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
 {
-  if(exactly_same) {
+  if (exactly_same)
+  {
     return is_exactly_same(n, exactly_same);
   }
 
-  if(typeid(*this) == typeid(n)) {
+  if (typeid(*this) == typeid(n))
+  {
     // 双方の子ノードの集合が同一かどうか調べる
 
     child_node_list_t this_node;
     child_node_list_t target_node;
     create_child_node_list(this_node,   this);
     create_child_node_list(target_node, static_cast<const BinaryNode*>(&n));
-    if(this_node.size() != target_node.size()) return false;
+    if (this_node.size() != target_node.size()) return false;
 
     child_node_list_t::const_iterator it  = this_node.begin();
     child_node_list_t::const_iterator end = this_node.end();
-    for(; it!=end; ++it) {
-      if(std::find_if(target_node.begin(), 
+    for (; it != end; ++it)
+    {
+      if (std::find_if(target_node.begin(), 
                       target_node.end(), 
-                      CheckInclude(it->first)) == target_node.end()) {
+                      CheckInclude(it->first)) == target_node.end())
+                      {
         return false;
       }
     }
@@ -122,10 +130,6 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
 
   return false;
 }
-
-
-
-
 
     /*
     const Node& n_lhs = *(static_cast<const BinaryNode*>(&n))->lhs_.get();
@@ -158,7 +162,8 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     // の同一視
 
     // このノードがnode1で，比較ノードがnode2だった場合
-    if(!ret && typeid(*this)==typeid(*lhs_) && typeid(n)==typeid(n_rhs)) {
+    if (!ret && typeid(*this) == typeid(*lhs_) && typeid(n) == typeid(n_rhs))
+    {
       const BinaryNode* b_lhs = static_cast<const BinaryNode*>(lhs_.get());
       const BinaryNode* b_n_rhs = static_cast<const BinaryNode*>(&n_rhs);
 
@@ -170,7 +175,8 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
      
 
     // このノードがnode2で，比較ノードがnode1だった場合
-    if(!ret && typeid(*this)==typeid(*rhs_) && typeid(n)==typeid(n_lhs)) {
+    if (!ret && typeid(*this) == typeid(*rhs_) && typeid(n) == typeid(n_lhs))
+    {
       const BinaryNode* b_rhs = static_cast<const BinaryNode*>(rhs_.get());
       const BinaryNode* b_n_lhs = static_cast<const BinaryNode*>(&n_lhs);
 
@@ -308,13 +314,15 @@ std::ostream& ProgramListCaller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << **(it++);
-  while(it!=end) {
+  if (it != end) s << **(it++);
+  while (it != end)
+  {
     s << "," << **(it++);
   }
 
   s << ")>";
-  if(child_) {
+  if (child_)
+  {
     s <<  "["
       << *child_
       << "]";
@@ -332,13 +340,15 @@ std::ostream& ExpressionListCaller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << **(it++);
-  while(it!=end) {
+  if (it != end) s << **(it++);
+  while (it != end)
+  {
     s << "," << **(it++);
   }
 
   s << ")>";
-  if(child_) {
+  if (child_)
+  {
     s <<  "["
       << *child_
       << "]";
@@ -356,13 +366,15 @@ std::ostream& ConstraintCaller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << **(it++);
-  while(it!=end) {
+  if (it != end) s << **(it++);
+  while (it != end)
+  {
     s << "," << **(it++);
   }
 
   s << ")>";
-  if(child_) {
+  if (child_)
+  {
     s <<  "["
       << *child_
       << "]";
@@ -380,13 +392,15 @@ std::ostream& ProgramCaller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << **(it++);
-  while(it!=end) {
+  if (it != end) s << **(it++);
+  while (it != end)
+  {
     s << "," << **(it++);
   }
 
   s << ")>";
-  if(child_) {
+  if (child_)
+  {
     s <<  "["
       << *child_
       << "]";
@@ -403,13 +417,15 @@ std::ostream& Caller::dump(std::ostream& s) const
     << name_
     << "(";
 
-  if(it!=end) s << **(it++);
-  while(it!=end) {
+  if (it != end) s << **(it++);
+  while (it != end)
+  {
     s << "," << **(it++);
   }
 
   s << ")>";
-  if(child_) {
+  if (child_)
+  {
     s <<  "["
       << *child_
       << "]";
@@ -426,8 +442,9 @@ std::ostream& Definition::dump(std::ostream& s) const
   s << name_
     << "(";
 
-  if(it!=end) s << *(it++);
-  while(it!=end) {
+  if (it != end) s << *(it++);
+  while (it != end)
+  {
     s << "," << *(it++);
   }
   s << "):=" << *child_;
@@ -435,15 +452,18 @@ std::ostream& Definition::dump(std::ostream& s) const
   return s;
 }
 
-node_sptr Range::clone(){
+node_sptr Range::clone()
+{
   node_type_sptr n(new Range(get_lhs()->clone(),get_rhs()->clone()));
   n->set_header(get_header());
   return n;
 }
 
-node_sptr ExpressionList::clone(){
+node_sptr ExpressionList::clone()
+{
   node_type_sptr n(new ExpressionList(list_name_));
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i=0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   n->set_nameless_expression_arguments(nameless_expression);
@@ -461,44 +481,54 @@ void ExpressionList::set_nameless_arguments(int list_size)
   nameless_contents_size = list_size;
 }
 
-node_sptr ConditionalExpressionList::clone(){
+node_sptr ConditionalExpressionList::clone()
+{
   node_type_sptr n(new ConditionalExpressionList(list_name_));
   n->set_expression(expression_);
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i = 0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
 
-node_sptr ProgramList::clone(){
+node_sptr ProgramList::clone()
+{
   node_type_sptr n(new ProgramList(list_name_));
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i = 0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
 
-node_sptr ConditionalProgramList::clone(){
+node_sptr ConditionalProgramList::clone()
+{
   node_type_sptr n(new ConditionalProgramList(list_name_));
   n->set_program(program_);
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i = 0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
 
-node_sptr Function::clone(){
+node_sptr Function::clone()
+{
   node_type_sptr n(new Function(name_));
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i = 0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
 
 
-node_sptr UnsupportedFunction::clone(){
+node_sptr UnsupportedFunction::clone()
+{
   node_type_sptr n(new UnsupportedFunction(name_));
-  for(unsigned int i=0;i<arguments_.size();i++){
+  for (unsigned int i = 0;i<arguments_.size();i++)
+  {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
@@ -525,8 +555,8 @@ std::ostream& ConditionalProgramList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_program() << "]";
   s << "[";
-  if(arguments_.size() > 0)s << *arguments_[0];
-  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
+  if (arguments_.size() > 0)s << *arguments_[0];
+  for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -536,8 +566,8 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_expression() << "]";
   s << "[";
-  if(arguments_.size() > 0)s << *arguments_[0];
-  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
+  if (arguments_.size() > 0)s << *arguments_[0];
+  for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
@@ -547,37 +577,43 @@ std::ostream& VariadicNode::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << get_name() << "]";
   s << "[";
-  if(arguments_.size() > 0)s << *arguments_[0];
-  for(int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
+  if (arguments_.size() > 0)s << *arguments_[0];
+  for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
 
 
-void VariadicNode::add_argument(node_sptr node){
+void VariadicNode::add_argument(node_sptr node)
+{
   arguments_.push_back(node);
 }
 
 
-void VariadicNode::set_argument(node_sptr node, int i){
+void VariadicNode::set_argument(node_sptr node, int i)
+{
   arguments_[i] = node;
 }
 
-void VariadicNode::add_argument(Node *node){
+void VariadicNode::add_argument(Node *node)
+{
   arguments_.push_back(node_sptr(node));
 }
 
 
-void VariadicNode::set_argument(Node *node, int i){
+void VariadicNode::set_argument(Node *node, int i)
+{
   arguments_[i].reset(node);
 }
 
 
-int VariadicNode::get_arguments_size(){
+int VariadicNode::get_arguments_size()
+{
   return arguments_.size();
 }
 
-node_sptr VariadicNode::get_argument(int i){
+node_sptr VariadicNode::get_argument(int i)
+{
   return arguments_[i];
 }
 
@@ -589,7 +625,7 @@ node_sptr Caller::clone()
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   
-  if(child_) n->child_ = child_->clone();
+  if (child_) n->child_ = child_->clone();
   
   return n;
 }
@@ -602,7 +638,7 @@ node_sptr ProgramCaller::clone()
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   
-  if(child_) n->child_ = child_->clone();
+  if (child_) n->child_ = child_->clone();
   
   return n;
 }
@@ -614,7 +650,7 @@ node_sptr ConstraintCaller::clone()
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   
-  if(child_) n->child_ = child_->clone();
+  if (child_) n->child_ = child_->clone();
   
   return n;
 }
@@ -626,7 +662,7 @@ node_sptr ExpressionListCaller::clone()
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   
-  if(child_) n->child_ = child_->clone();
+  if (child_) n->child_ = child_->clone();
   
   return n;
 }
@@ -638,7 +674,7 @@ node_sptr ProgramListCaller::clone()
   n->actual_args_.resize(actual_args_.size());
   copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
   
-  if(child_) n->child_ = child_->clone();
+  if (child_) n->child_ = child_->clone();
   
   return n;
 }

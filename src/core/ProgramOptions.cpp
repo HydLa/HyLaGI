@@ -144,7 +144,8 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""),
      "guards to be solved by interval newton method(delimited by \",\")")
     ("step_by_step", value<char>()->default_value('n'),
-      "use find_min_time_step_by_step");
+      "use find_min_time_step_by_step")
+    ("solve_over_reals", value<char>()->default_value('n'), "solve constrants over the reals");
 
 
   options_description hidden_desc("Hidden options");

@@ -9,6 +9,10 @@ namespace hydla {
   Version::~Version() {
   }
 
+  std::string Version::commit_id() {
+	return COMMIT_ID;
+  }
+
   std::string Version::version()  {
     return "0.9.5";
   }
@@ -23,7 +27,7 @@ namespace hydla {
   
   std::string Version::description() {
     std::stringstream s;
-    s << "HyLaGI v" << version() << "\n\n"
+    s << "HyLaGI v" << version() << "(" << commit_id() << ")" "\n\n"
       //      << " (r" << revision() << ")\n\n" 
       << copyright();
 

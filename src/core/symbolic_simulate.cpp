@@ -212,6 +212,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   }
   IF_SPECIFIED("step_by_step")opts.step_by_step = po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
   IF_SPECIFIED("simplify")opts.simplify = po.get<int>("simplify");
+  IF_SPECIFIED("solve_over_reals")opts.solve_over_reals = po.count("solve_over_reals") > 0 && po.get<char>("solve_over_reals") == 'y';
 }
 
 
@@ -223,7 +224,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   else     Logger::instance().set_log_level(Logger::Warn);
 
 
-  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify)));
+  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)

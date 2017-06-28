@@ -8,7 +8,8 @@
 namespace hydla {
 namespace simulator {
 
-class ValueModifier{
+class ValueModifier
+{
 public:
   ValueModifier(backend::Backend &b);
   
@@ -37,11 +38,10 @@ public:
 
   // function with single argument of Value
   Value apply_function(const std::string& function, const Value& value,  const std::string &fmt = "");
+
 private:
   backend::Backend backend;
 };
 
-}
-}
-
-
+} // namespace simulator
+} // namespace hydla

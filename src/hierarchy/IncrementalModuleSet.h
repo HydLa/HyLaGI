@@ -10,7 +10,8 @@ namespace hierarchy {
  * 解候補モジュール集合の集合をインクリメンタルに生成していくクラス
  *
  */
-class IncrementalModuleSet : public ModuleSetContainer{
+class IncrementalModuleSet : public ModuleSetContainer
+{
 public:
 
   typedef ModuleSet::module_t module_t;
@@ -38,7 +39,7 @@ public:
   /**
    * 並列合成として集合を合成する（required制約扱い）
    */
-  void add_required_parallel(IncrementalModuleSet& im){ add_parallel(im); }
+  void add_required_parallel(IncrementalModuleSet& im) { add_parallel(im); }
   
   /**
    * 弱合成として集合を合成する
@@ -79,9 +80,10 @@ public:
 
   void next();
 
-  bool has_next(){ return !ms_to_visit_.empty(); }
+  bool has_next() { return !ms_to_visit_.empty(); }
 
-  ModuleSet get_module_set(){ 
+  ModuleSet get_module_set()
+  { 
     ModuleSet ret = get_max_module_set();
     ret.erase(unadopted_module_set());
     return ret; 
@@ -141,7 +143,6 @@ private:
   node_relations_data_t weaker_modules_;
    
 };
-
 
 } // namespace hierarchy
 } // namespace hydla

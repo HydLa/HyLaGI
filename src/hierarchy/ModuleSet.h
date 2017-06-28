@@ -17,14 +17,16 @@ namespace hierarchy {
  * モジュールの集合を表すクラス
  *
  */
-class ModuleSet {
+class ModuleSet
+{
 public:
   typedef std::pair<std::string,
                     hydla::symbolic_expression::node_sptr> module_t;
   typedef std::set<module_t>                      module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
 
-  struct ModuleComp {
+  struct ModuleComp
+  {
     bool operator()(const module_t& a, const module_t& b) const
     {
       return a.first < b.first;
@@ -92,8 +94,8 @@ public:
   /**
    * モジュールを追加
    */
-  void add_module(const module_t& mod){module_list_.insert(mod);}
-  void insert(const ModuleSet &ms){module_list_.insert(ms.module_list_.begin(), ms.module_list_.end());}
+  void add_module(const module_t& mod) { module_list_.insert(mod); }
+  void insert(const ModuleSet &ms) { module_list_.insert(ms.module_list_.begin(), ms.module_list_.end()); }
 
   bool is_super_set(const ModuleSet& subset_mod) const
   {
@@ -130,12 +132,13 @@ public:
    */ 
   void dispatch(hydla::symbolic_expression::TreeVisitor* visitor)
   {
-    for(auto module :module_list_) {
+    for (auto module :module_list_)
+    {
       (module.second)->accept(module.second, visitor);
     }
   }
   
-  bool operator<(const ModuleSet& rhs) const{return (compare(rhs) < 0);}
+  bool operator<(const ModuleSet& rhs) const { return (compare(rhs) < 0); }
 
   friend std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
 
@@ -145,7 +148,8 @@ private:
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m);
 
-class ModuleSetComparator {
+class ModuleSetComparator
+{
 public:
   bool operator()(const ModuleSet &lhs, 
                   const ModuleSet &rhs) const
@@ -153,7 +157,6 @@ public:
     return lhs.compare(rhs) > 0;
   }
 };
-
 
 } // namespace hierarchy
 } // namespace hydla

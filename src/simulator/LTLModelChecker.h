@@ -35,15 +35,17 @@ typedef std::pair<LTLNode*,node_sptr>         ltl_edge_t;
 typedef std::vector<ltl_edge_t>          ltl_edge_list_t;
 
 
-typedef struct current_checking_node{
+typedef struct current_checking_node
+{
   LTLNode* node;
   ltl_node_list_t created_nodes;
   ltl_path_list_t acceptance_path_list;
 } current_checking_node_t;
+
 typedef std::vector<current_checking_node_t> current_checking_node_list_t;
 
-
-class LTLModelChecker: public Simulator{
+class LTLModelChecker: public Simulator
+{
 public:
   LTLModelChecker(Opts &opts);
   virtual ~LTLModelChecker();
@@ -51,6 +53,7 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_sptr_t simulate();
+
 private:
   void LTLsearch(phase_result_sptr_t current,current_checking_node_list_t checking_list,phase_list_t phase_list);
   current_checking_node_list_t transition(current_checking_node_list_t checking_list,phase_result_sptr_t phase);
@@ -74,5 +77,5 @@ private:
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
 };
 
-} // simulator
-} // hydla
+} // namespace simulator
+} // namespace hydla

@@ -268,11 +268,20 @@ getReverseRelop[relop_] := Switch[relop,
 
 variablePrefix = "u";
 
-
+(* optSimplifyLevel の値に応じた簡約化関数を呼び出す。optTimeConstraint で指定された秒数が経過した場合、簡約化前の値を返す *)
 Switch[optSimplifyLevel,
     0, timeConstrainedSimplify[expr_] := expr;
     1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
     _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
 ];
+
+Switch[optSimplifyLevel,
+    0, timeConstrainedSimplify[expr_, assum_] := expr;
+    1, timeConstrainedSimplify[expr_, assum_] := TimeConstrained[Simplify[expr, assum], optTimeConstraint, expr];
+    _, timeConstrainedSimplify[expr_, assum_] := TimeConstrained[FullSimplify[expr, assum], optTimeConstraint, expr];
+];
+
+solveOverRorC[consToSolve_,vars_] :=
+  If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
 
 derivativePrefix = "d";

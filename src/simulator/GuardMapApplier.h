@@ -7,9 +7,9 @@
 namespace hydla {
 namespace simulator {
 
-class GuardMapApplier : public symbolic_expression::TreeVisitorForAtomicConstraint {
+class GuardMapApplier : public symbolic_expression::TreeVisitorForAtomicConstraint
+{
 public:
-
   GuardMapApplier();
 
   virtual ~GuardMapApplier();
@@ -18,7 +18,6 @@ public:
    * substitute true or false for each atomic_guards in guard
    */
   constraint_t apply(constraint_t guard, const std::map<constraint_t, bool> *map);
-
   
   virtual void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node);
 
@@ -34,5 +33,5 @@ private:
   constraint_t applied_node;
 };
 
-} //namespace simulator
-} //namespace hydla 
+} // namespace simulator
+} // namespace hydla 

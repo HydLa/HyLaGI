@@ -1,4 +1,5 @@
 #pragma once
+
 #include <deque>
 
 #include "Node.h"
@@ -53,7 +54,6 @@ typedef std::set<variable_t, VariableComparator>          variable_set_t;
 class Simulator
 {
 public:
-
   Simulator(Opts& opts);
 
   virtual ~Simulator();
@@ -99,7 +99,6 @@ public:
    * @return the result of profiling
    */
   entire_profile_t get_profile(){return *profile_vector_;}
-
   
   int get_exit_status();
 
@@ -123,7 +122,6 @@ public:
   boost::shared_ptr<phase_simulator_t > phase_simulator_;
 
 protected:
-
   /**
    * シミュレーション時に使用される変数表のオリジナルの作成
    */
@@ -153,9 +151,10 @@ protected:
   bool assertion_failed;
 
   interval::AffineApproximator* affine_transformer_;
+
 private:
   static bool assert_call_back(BreakPoint, phase_result_sptr_t);
 };
 
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

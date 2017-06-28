@@ -7,16 +7,15 @@
 namespace hydla{
 namespace io{
 
-class SymbolicTrajPrinter: public TrajPrinter{
+class SymbolicTrajPrinter: public TrajPrinter
+{
 public:
-
   SymbolicTrajPrinter(simulator::backend_sptr_t b, std::ostream& ostream = std::cout, bool numerize_par = false);
 
-  void output_result_tree(const phase_result_const_sptr_t&)const;
-  void output_one_phase(const phase_result_const_sptr_t&, const std::string& prefix = "")const;
+  void output_result_tree(const phase_result_const_sptr_t&) const;
+  void output_one_phase(const phase_result_const_sptr_t&, const std::string& prefix = "") const;
 
   std::string get_state_output(const phase_result_t& result) const;
-
 
   void output_parameter_map(const parameter_map_t& pm) const;
 
@@ -24,7 +23,6 @@ public:
 
   void output_result_node(const phase_result_const_sptr_t &node,
     std::vector<std::string> &result, int &case_num, int &phase_num) const;
-
 
   void output_property_automaton(simulator::PropertyNode* node);
   void dump_property_automaton(simulator::PropertyNode* node);
@@ -36,10 +34,9 @@ public:
   void output_limits_of_variable_map(std::ostream &stream, backend::Backend* backend_, const phase_result_t& result, const variable_map_t& vm) const;
 
 private:
+  void output_asks(std::ostream &stream, const phase_result_t &phase) const;
 
-  void output_asks(std::ostream &stream, const phase_result_t &phase)const;
-
-  void output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase)const;
+  void output_inconsistent_constraints(std::ostream &stream, const phase_result_t &phase) const;
 
   std::ostream& ostream;
   simulator::backend_sptr_t backend;
@@ -47,5 +44,5 @@ private:
   bool epsilon_mode_flag = false;
 };
 
-}// output
-}// hydla
+} // namespace io
+} // namespace hydla

@@ -37,8 +37,9 @@ std::string ModuleSet::get_name() const
   module_list_t::const_iterator end = module_list_.end();
 
   str += "{";
-  if(it!=end) str += (it++)->first;
-  for(; it!=end; ++it) {
+  if (it!=end) str += (it++)->first;
+  for (; it != end; ++it)
+  {
     str += ", ";
     str += it->first;
   }
@@ -48,8 +49,9 @@ std::string ModuleSet::get_name() const
 
 bool ModuleSet::disjoint(const ModuleSet& ms) const
 {
-  for(auto m : ms){
-    if(module_list_.count(m)) return false;
+  for (auto m : ms)
+  {
+    if (module_list_.count(m)) return false;
   }
   return true;
 }
@@ -61,8 +63,9 @@ ModuleSet::module_list_const_iterator ModuleSet::find(const module_t& mod) const
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
-  for(; it != end; ++it) {
-    if(it->first == mod.first && it->second->get_id() == mod.second->get_id()) return it;
+  for (; it != end; ++it)
+  {
+    if (it->first == mod.first && it->second->get_id() == mod.second->get_id()) return it;
   }
   return this->end();
   */
@@ -75,7 +78,8 @@ std::string ModuleSet::get_infix_string() const
   module_list_t::const_iterator it  = module_list_.begin();    
   module_list_t::const_iterator end = module_list_.end();
 
-  for(; it!=end; ++it) {
+  for (; it != end; ++it)
+  {
     printer.print_infix(it->second, ostr);
   }
   return ostr.str();
@@ -88,8 +92,9 @@ std::ostream& ModuleSet::dump(std::ostream& s) const
   module_list_t::const_iterator end = module_list_.end();
 
   s << "{";
-  if(it != end) s << *(it++)->second;
-  for(; it!=end; ++it) {
+  if (it != end) s << *(it++)->second;
+  for (; it != end; ++it)
+  {
     s << ", " << *it->second;
   }
   s << "}";
@@ -103,7 +108,8 @@ int ModuleSet::compare(const ModuleSet& rhs) const
   module_list_t::const_iterator rhs_it   = rhs.module_list_.begin();
   
   int comp = (int)module_list_.size() - rhs.module_list_.size();
-  while(comp==0 && this_it!=this_end) {
+  while (comp == 0 && this_it != this_end)
+  {
     comp = (this_it++)->first.compare((rhs_it++)->first);
   }
   return comp;
@@ -117,7 +123,10 @@ int ModuleSet::erase(const module_t& m)
 int ModuleSet::erase(const ModuleSet& ms)
 {
   int sum = 0;
-  for(auto m : ms) sum += erase(m);
+  for (auto m : ms)
+  {
+    sum += erase(m);
+  }
   return sum;
 }	
 
@@ -129,9 +138,9 @@ ModuleSet::module_list_const_iterator ModuleSet::erase(const module_list_const_i
 
 bool ModuleSet::including(const ModuleSet& ms) const
 {
-  for(auto m : ms)
+  for (auto m : ms)
   {
-    if(!module_list_.count(m))
+    if (!module_list_.count(m))
     {
       return false;
     }
@@ -148,7 +157,6 @@ std::ostream& operator<<(std::ostream& s, const ModuleSet::module_t& m)
 {
   return s << m.first;
 }
-
 
 } // namespace hierarchy
 } // namespace hydla
