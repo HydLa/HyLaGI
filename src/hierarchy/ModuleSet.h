@@ -5,7 +5,7 @@
 #include <ostream>
 #include <algorithm>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 

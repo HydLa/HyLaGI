@@ -14,7 +14,7 @@ namespace simulator {
 typedef hierarchy::ModuleSet module_set_t;
 typedef hierarchy::ModuleSet::module_t module_t;
 typedef std::set<Variable, VariableComparator> variable_set_t;
-typedef boost::shared_ptr<symbolic_expression::Ask> ask_t;
+typedef std::shared_ptr<symbolic_expression::Ask> ask_t;
 typedef std::set<ask_t> asks_t;
   
 struct VariableNode;
@@ -276,12 +276,12 @@ private:
   void initialize_node_collected();
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings
-  void visit(boost::shared_ptr<symbolic_expression::Ask> ask);
-  void visit(boost::shared_ptr<symbolic_expression::LogicalOr> logical_or);
-  void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
-  void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
-  void visit(boost::shared_ptr<symbolic_expression::Always> always); 
-  void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> binary);
+  void visit(std::shared_ptr<symbolic_expression::Ask> ask);
+  void visit(std::shared_ptr<symbolic_expression::LogicalOr> logical_or);
+  void visit(std::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
+  void visit(std::shared_ptr<symbolic_expression::Not> not_expr);
+  void visit(std::shared_ptr<symbolic_expression::Always> always); 
+  void visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> binary);
   
   var_nodes_t variable_nodes;
   ask_nodes_t ask_nodes;

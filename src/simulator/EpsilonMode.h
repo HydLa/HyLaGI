@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Backend.h"
 #include "PhaseResult.h"

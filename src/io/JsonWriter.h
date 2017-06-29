@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "picojson.h"
@@ -15,8 +15,8 @@ class JsonWriter
 {
 public:
   typedef simulator::PhaseResult                  phase_result_t;
-  typedef boost::shared_ptr<phase_result_t>       phase_result_sptr_t;
-  typedef boost::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
+  typedef std::shared_ptr<phase_result_t>       phase_result_sptr_t;
+  typedef std::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
 
   virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
   hydla::simulator::backend_sptr_t backend;

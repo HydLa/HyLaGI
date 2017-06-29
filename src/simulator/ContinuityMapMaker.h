@@ -4,7 +4,7 @@
 #include <set>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -27,7 +27,7 @@ public:
   /** 
    * 
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node, const bool& in_IP, const bool& negative)
+  void visit_node(std::shared_ptr<symbolic_expression::Node> node, const bool& in_IP, const bool& negative)
   {
     in_interval_ = in_IP;
     negative_ = negative;
@@ -52,16 +52,16 @@ public:
   }
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   // 変数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
 
 private:
   // 集めた制約中に出現する変数とその微分回数のマップ

@@ -11,10 +11,10 @@ BaseNodeVisitor::BaseNodeVisitor()
 BaseNodeVisitor::~BaseNodeVisitor()
 {}
 
-void BaseNodeVisitor::visit(boost::shared_ptr<FactorNode> node)  {assert(0);}
-void BaseNodeVisitor::visit(boost::shared_ptr<UnaryNode> node)   {assert(0);}
-void BaseNodeVisitor::visit(boost::shared_ptr<BinaryNode> node)  {assert(0);}
-void BaseNodeVisitor::visit(boost::shared_ptr<VariadicNode> node)  {assert(0);}
+void BaseNodeVisitor::visit(std::shared_ptr<FactorNode> node)  {assert(0);}
+void BaseNodeVisitor::visit(std::shared_ptr<UnaryNode> node)   {assert(0);}
+void BaseNodeVisitor::visit(std::shared_ptr<BinaryNode> node)  {assert(0);}
+void BaseNodeVisitor::visit(std::shared_ptr<VariadicNode> node)  {assert(0);}
 
 } //namespace symbolic_expression
 } //namespace hydla

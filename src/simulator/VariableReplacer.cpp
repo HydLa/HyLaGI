@@ -53,7 +53,7 @@ void VariableReplacer::replace_range(ValueRange &range)
   }
 }
 
-void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::Variable> node)
 {
   string v_name = node->get_name();
   for(auto it = variable_map.begin();it != variable_map.end(); it++)
@@ -79,7 +79,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Varia
     }
 }
 
-void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::Differential> node)
 {
   differential_cnt++;
   accept(node->get_child());
@@ -88,7 +88,7 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Diffe
 
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
 {                                                     \
   for(int i=0;i<node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
@@ -100,18 +100,18 @@ void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
 }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
 {                                                     \
   dispatch_lhs(node);                                 \
   dispatch_rhs(node);                                 \
 }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
 { dispatch_child(node);}
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)        \
-void VariableReplacer::visit(boost::shared_ptr<NODE_NAME> node){}
+void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node){}
 
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)

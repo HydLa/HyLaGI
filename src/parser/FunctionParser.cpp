@@ -31,7 +31,7 @@ std::string Parser::function_name(){
 }
 
 /// unsupported_function := " " " function_name " " "
-boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
+std::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
   position_t position = lexer.get_current_position();
   std::string name;
   // " " "
@@ -40,26 +40,26 @@ boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
     if((name = function_name()) != ""){
       // " " " 
       if(lexer.get_token() == DOUBLE_QUOTATION){
-        return boost::shared_ptr<UnsupportedFunction>(new UnsupportedFunction(name));
+        return std::shared_ptr<UnsupportedFunction>(new UnsupportedFunction(name));
       }
     }
   }
   lexer.set_current_position(position);
 
-  return boost::shared_ptr<UnsupportedFunction>(); 
+  return std::shared_ptr<UnsupportedFunction>(); 
 }
 
 /// function := function_name 
-boost::shared_ptr<Function> Parser::function(){
+std::shared_ptr<Function> Parser::function(){
   position_t position = lexer.get_current_position();
   std::string name;
   // [a-z,A-Z]+
   if((name = function_name()) != ""){ 
-    return boost::shared_ptr<Function>(new Function(name));
+    return std::shared_ptr<Function>(new Function(name));
   }
   lexer.set_current_position(position);
 
-  return boost::shared_ptr<Function>();
+  return std::shared_ptr<Function>();
 }
 
 /// actual_args := ( "("expression ("," expression)*")" )?
@@ -104,7 +104,7 @@ std::vector<std::string> Parser::formal_args(){
   position_t position = lexer.get_current_position();
   // "("
   if(lexer.get_token() == LEFT_PARENTHESES){
-    boost::shared_ptr<Variable> var;
+    std::shared_ptr<Variable> var;
     // variable
     if((var = variable())){
       ret.push_back(var->get_name());

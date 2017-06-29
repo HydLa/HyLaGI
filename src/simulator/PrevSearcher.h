@@ -4,7 +4,7 @@
 #include <vector>
 #include <set>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -34,7 +34,7 @@ public:
     return include_prev_;
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Previous> node)
   {
     include_prev_ = true;
   }

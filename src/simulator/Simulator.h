@@ -32,12 +32,12 @@ public:
   bool operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs) const;
 };
 
-typedef boost::shared_ptr<backend::Backend>       backend_sptr_t;
+typedef std::shared_ptr<backend::Backend>       backend_sptr_t;
 
 typedef hierarchy::ModuleSetContainer             module_set_container_t;
-typedef boost::shared_ptr<module_set_container_t> module_set_container_sptr;
-typedef boost::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr; 
-typedef std::map<boost::shared_ptr<symbolic_expression::Ask>, bool>
+typedef std::shared_ptr<module_set_container_t> module_set_container_sptr;
+typedef std::shared_ptr<parse_tree::ParseTree>  parse_tree_sptr; 
+typedef std::map<std::shared_ptr<symbolic_expression::Ask>, bool>
                                                   entailed_prev_map_t;
 typedef std::vector<variable_map_t>               variable_maps_t;
 
@@ -119,7 +119,7 @@ public:
 
   backend_sptr_t backend;
 
-  boost::shared_ptr<phase_simulator_t > phase_simulator_;
+  std::shared_ptr<phase_simulator_t > phase_simulator_;
 
 protected:
   /**
@@ -139,7 +139,7 @@ protected:
   module_set_container_sptr module_set_container_;
   
   /// vector for results of profiling
-  boost::shared_ptr<entire_profile_t> profile_vector_;
+  std::shared_ptr<entire_profile_t> profile_vector_;
 
   /// root of the tree of result trajectories
   phase_result_sptr_t result_root_;
