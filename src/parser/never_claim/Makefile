@@ -16,7 +16,7 @@ nc_parser: y.tab.cpp lex.yy.o
 	$(CXX) $(INCLUDES) $(LDFLAGS) $(CXX_OPT) -c $^ -o $(BIN).o 
 
 lex.yy.o: lex.yy.c y.tab.cpp 
-	$(CXX) $(INCLUDES) -c lex.yy.c -o $@
+	$(CXX) $(INCLUDES) $(CXX_OPT) -c lex.yy.c -o $@
 
 y.tab.cpp: nc.y
 	yacc --verbose --debug -d $< -o $@

@@ -39,17 +39,18 @@ std::map<std::string, hydla::never_claim::NeverClaim::GuardCondition> propositio
 
 %union {
   char        *string_value;
+  // hydla::symbolic_expression::Node *node;
   hydla::symbolic_expression::Node *node;
 }
 
-%token <double_value>      DOUBLE_LITERAL
-%token <char>              ATOMIC_PROPOSITION
+%token <double_value> DOUBLE_LITERAL
+%token <char> ATOMIC_PROPOSITION
 %token CR
 %token NEVER SKIP
 %token COLON SEMICOLON D_COLON DEFINITION
 %token IF FI GOTO TRUE ONE
-%left OR
-%left AND
+%left  OR
+%left  AND
 %right NOT
 %token ALWAYS EVENTUALLY BLANK
 %token L_CRULY R_CRULY L_PAREN R_PAREN R_ARROW
