@@ -85,7 +85,6 @@ NeverClaim::BuchiAutomatonSptr NeverClaim::createBA() const
   using namespace simulator;
   using namespace symbolic_expression;
 
-  using NodeSptr = node_sptr;
   using NamedNodePtr = pair<string, PropertyNode *>;
 
   auto buchiAutomaton = make_shared<simulator::Automaton>();

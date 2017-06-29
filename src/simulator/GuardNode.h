@@ -3,10 +3,8 @@
 #include "AtomicConstraint.h"
 #include <list>
 
-namespace hydla
-{
-namespace simulator
-{
+namespace hydla {
+namespace simulator {
 
 struct AskNode;
 class GuardVisitor;
@@ -47,7 +45,8 @@ struct NotGuardNode : public GuardNode
   GuardNode *child;
 };
   
-struct AtomicGuardNode: public GuardNode{
+struct AtomicGuardNode: public GuardNode
+{
   AtomicConstraint atomic_guard;
   std::list<AtomicConstraint*> get_atomic_guards();
   //AtomicConstraint* get_next_atomic_guard();
@@ -56,6 +55,5 @@ struct AtomicGuardNode: public GuardNode{
   virtual ~AtomicGuardNode();
 };
 
-}
-
-}
+} // namespace simulator
+} // namespace hydla

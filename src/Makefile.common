@@ -27,8 +27,8 @@ CXX_OPT  += -Wall -std=c++11 -O
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 endif
 ifeq ($(UNAME),Darwin)
-INCLUDES += -I/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-LDFLAGS  += -L/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+INCLUDES += -I/Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+LDFLAGS  += -L/Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++11 -framework Foundation
 endif
@@ -60,8 +60,8 @@ else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
 endif
 
-#$(DEP_OBJECTS):
-#	$(MAKE) --directory=$(dir $@)
+$(DEP_OBJECTS):
+	$(MAKE) --directory=$(dir $@)
 
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)

@@ -10,17 +10,18 @@ namespace simulator {
 
 class ConstraintStore;
 
-class ValueRange {
+class ValueRange
+{
 public:
   typedef unsigned int uint;
   typedef Value value_t;
-  typedef struct Bound{
+  typedef struct Bound
+  {
     value_t value;
     bool include_bound;
-    Bound():include_bound(false){}
-    Bound(const value_t& val, bool in):value(val), include_bound(in){}
-  }bound_t;
-
+    Bound() : include_bound(false) {}
+    Bound(const value_t& val, bool in) : value(val), include_bound(in) {}
+  } bound_t;
 
   ValueRange(const value_t &lower, bool low_include,
              const value_t &upper, bool up_include);
@@ -50,7 +51,7 @@ public:
 
   value_t get_unique_value() const
   {
-    if(!unique())
+    if (!unique())
     {
       throw std::runtime_error(
         "ValueRange: " + get_string() + 
@@ -61,16 +62,13 @@ public:
 
   std::string get_string() const;
 
-  uint get_lower_cnt()const{return lower_.size();}
-  const bound_t& get_lower_bound() const{assert(lower_.size() > 0); return get_lower_bound(0);}
-  const bound_t& get_lower_bound(const uint& idx) const
-    {assert(idx<lower_.size()); return lower_[idx];}
+  uint get_lower_cnt() const { return lower_.size(); }
+  const bound_t& get_lower_bound() const { assert(lower_.size() > 0); return get_lower_bound(0); }
+  const bound_t& get_lower_bound(const uint& idx) const { assert(idx<lower_.size()); return lower_[idx]; }
 
-  uint get_upper_cnt()const{return upper_.size();}
-  const bound_t& get_upper_bound() const{assert(upper_.size() > 0); return get_upper_bound(0);}
-  const bound_t& get_upper_bound(const uint& idx) const
-    {assert(idx<upper_.size()); return upper_[idx];}
-
+  uint get_upper_cnt() const { return upper_.size(); }
+  const bound_t& get_upper_bound() const { assert(upper_.size() > 0); return get_upper_bound(0); }
+  const bound_t& get_upper_bound(const uint& idx) const { assert(idx<upper_.size()); return upper_[idx]; } 
 
   ConstraintStore create_range_constraint(symbolic_expression::node_sptr to_be_compared);
 
@@ -88,7 +86,7 @@ public:
 
   void add_lower_bound(const value_t& val, const bool& include)
   {
-    if(!val.undefined())
+    if (!val.undefined())
     {
       lower_.push_back(bound_t(val, include));
     }
@@ -96,7 +94,7 @@ public:
 
   void add_upper_bound(const value_t& val, const bool& include)
   {
-    if(!val.undefined())
+    if (!val.undefined())
     {
       upper_.push_back(bound_t(val, include));
     }
@@ -117,7 +115,5 @@ public:
 
 std::ostream& operator<<(std::ostream& s, const ValueRange & val);
 
-
 } // namespace simulator
 } // namespace hydla
-

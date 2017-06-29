@@ -30,8 +30,9 @@ endif
 
 CXX_OPT  += 
 
+DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\"
 
-# ad hoc modification for never claim parser by betsuno
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a) ../parser/never_claim/libhydla_nc_parser.a
+# DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 
 include ../Makefile.common

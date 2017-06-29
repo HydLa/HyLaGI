@@ -7,9 +7,9 @@
 namespace hydla {
 namespace simulator {
 
-class AlwaysFinder : public symbolic_expression::TreeVisitorForAtomicConstraint {
+class AlwaysFinder : public symbolic_expression::TreeVisitorForAtomicConstraint
+{
 public:
-
   AlwaysFinder();
 
   virtual ~AlwaysFinder();
@@ -27,7 +27,6 @@ public:
   virtual void visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node);
 
 private:
-
   always_set_t *always_set;
   ConstraintStore *non_always;
   asks_t           *positive_asks;

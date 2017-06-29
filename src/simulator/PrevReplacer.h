@@ -18,11 +18,11 @@ namespace simulator {
  * A class to replace prevs with parameters.
  * (and introduce parameter)
  */
-class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
+class PrevReplacer : public symbolic_expression::DefaultTreeVisitor
+{
   typedef symbolic_expression::node_sptr                 node_sptr;
 
-  public:
-
+public:
   PrevReplacer(PhaseResult &phase, Simulator& simulator, backend::Backend *b, bool affine);
 
   virtual ~PrevReplacer();
@@ -91,7 +91,7 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::SVtimer> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
 
-  private:
+private:
   ConstraintStore parameter_constraint;
   int differential_cnt;
   bool in_prev;
@@ -100,7 +100,6 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   bool replaced;
   backend::Backend* backend;
   bool affine_mode = false;
-  
 
   symbolic_expression::node_sptr new_child;
 
@@ -110,7 +109,8 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   void dispatch(C* n) 
   {
     accept((n->*getter)());
-    if(new_child) {
+    if (new_child)
+    {
       (n->*setter)(new_child);
       new_child.reset();
     }
@@ -141,6 +141,5 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   }
 };
 
-}
-}
-
+} // namespace simulator
+} // namespace hydla

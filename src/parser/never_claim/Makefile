@@ -6,7 +6,7 @@ INCLUDES += -I/usr/local/include/boost
 LDFLAGS	 += -L/usr/local/lib
 LIBS	 += 
 DEFINES  += 
-CXX_OPT  += -std=c++14
+CXX_OPT  +=
 
 include ../../Makefile.common
 
