@@ -16,14 +16,14 @@
 using namespace std;
 using namespace hydla::backend;
 
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
-bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs)const
+bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs) const
 {
-  if(lhs == nullptr)return true;
-  if(rhs == nullptr)return false;
-  return rhs->id > lhs->id;
+  if (lhs == nullptr) return true;
+  if (rhs == nullptr) return false;
+  return (rhs->id > lhs->id);
 }
 
 Simulator::Simulator(Opts& opts): opts_(&opts), exit_status(EXIT_SUCCESS)
@@ -36,10 +36,10 @@ Simulator::~Simulator()
 {
 }
 
-void Simulator::set_phase_simulator(phase_simulator_t *ps){
+void Simulator::set_phase_simulator(phase_simulator_t *ps)
+{
   phase_simulator_.reset(ps);
   phase_simulator_->set_backend(backend);
-
 }
 
 void Simulator::set_backend(backend_sptr_t back)
@@ -64,7 +64,7 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   phase_simulator_->initialize(variable_set_, parameter_map_,
                                original_map_, module_set_container_, result_root_);
 
-  if(opts_->assertion)
+  if (opts_->assertion)
   {
     BreakPoint bp;
     bp.condition.reset(new symbolic_expression::Not(opts_->assertion));
@@ -84,18 +84,23 @@ void Simulator::reset_result_root()
   result_root_->end_time = value_t("0");
 }
 
-
 void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 {    
-  if(opts_->static_generation_of_module_sets){
-    if(opts_->nd_mode){
+  if (opts_->static_generation_of_module_sets)
+  {
+    if (opts_->nd_mode)
+    {
       ModuleSetContainerInitializer::init<hierarchy::ModuleSetGraph>(
           parse_tree, module_set_container_);
-    }else{
+    }
+    else
+    {
       ModuleSetContainerInitializer::init<hierarchy::ModuleSetList>(
           parse_tree, module_set_container_);
     }
-  }else{ 
+  }
+  else
+  {
     ModuleSetContainerInitializer::init<hierarchy::IncrementalModuleSet>(
         parse_tree, module_set_container_);
   }
@@ -103,9 +108,9 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
 
 void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
 {
-  for(auto entry : parse_tree->get_variable_map())
+  for (auto entry : parse_tree->get_variable_map())
   {
-    for(int d = 0; d <= entry.second; ++d)
+    for (int d = 0; d <= entry.second; ++d)
     {
       variable_t v;
       v.name               = entry.first;
@@ -116,13 +121,11 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
   }
 }
 
-
 parameter_t Simulator::introduce_parameter(const variable_t &var,const PhaseResult &phase, const ValueRange &range)
 {
   parameter_t param(var, phase);
   return introduce_parameter(param, range);
 }
-
 
 parameter_t Simulator::introduce_parameter(const string &name, int differential_cnt, int id, const ValueRange &range)
 {
@@ -137,7 +140,6 @@ parameter_t Simulator::introduce_parameter(const parameter_t &param, const Value
   return param;
 }
 
-
 phase_result_sptr_t Simulator::make_initial_todo()
 {
   phase_result_sptr_t todo(new PhaseResult());
@@ -145,26 +147,31 @@ phase_result_sptr_t Simulator::make_initial_todo()
   result_root_->todo_list.push_back(todo);
   todo->current_time = value_t("0");
   todo->id = 1;
-  todo->phase_type        = POINT_PHASE;
+  todo->phase_type = POINT_PHASE;
   todo->step = 0;
   return todo;
 }
 
 phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo)
 {
-  if( opts_->max_phase >= 0 && todo->step >= opts_->max_phase){
+  if (opts_->max_phase >= 0 && todo->step >= opts_->max_phase)
+  {
     todo->parent->simulation_state = simulator::STEP_LIMIT;
     return phase_list_t();
   }
+
   HYDLA_LOGGER_DEBUG("\n--- Current Todo ---\n", *todo);
   HYDLA_LOGGER_DEBUG("\n--- prev map ---\n", todo->prev_map);
+
   phase_list_t result_list;
-  try{
+
+  try
+  {
     timer::Timer phase_timer;
     result_list = phase_simulator_->process_todo(todo);
     todo->profile["EntirePhase"] += phase_timer.get_elapsed_us();
   }
-  catch(const timeout::TimeOutError &te)
+  catch (const timeout::TimeOutError &te)
   {
     HYDLA_LOGGER_DEBUG(te.what());
     phase_result_sptr_t phase(new PhaseResult(*todo));
@@ -172,6 +179,7 @@ phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo)
     todo->parent->children.push_back(phase);
     exit_status = EXIT_FAILURE;
   }
+
   HYDLA_LOGGER_DEBUG("\n--- Result Phase ---\n", *todo);
   return result_list;
 }
@@ -192,5 +200,5 @@ int Simulator::get_exit_status()
   return exit_status;
 }
 
-}
-}
+} // namespace simulator
+} // namespace hydla

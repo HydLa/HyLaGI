@@ -1,25 +1,24 @@
 // 2015/6/28
 // 2016/1/19 Rewrite
-// Tsutomu WADA
-// The shape of floor is sin.
+// Author: Tsutomu WADA
+// The shape of the floor is a sin wave.
 
-INIT <=> x = 0 /\ x' = 0 /\ y = 10 /\ y' = 0 /\ e = 1 /\ [](e' = 0).
-FALL <=> [](y'' = -10).
-CONSTX <=> [](x'' = 0).
+INIT <=> x = 0 & x' = 0 & y = 10 & y' = 0 & e = 1 & [](e' = 0).
+FALL <=> [](cont = 1 => y'' = -10).
+CONSTX <=> [](cont = 1 => x'' = 0).
 /**
 *     sin = f'(x) / (1+f'(x)^2)^(1/2)
 *     cos =     1 / (1+f'(x)^2)^(1/2)
 *  new x' = (-k * sin^2 + cos^2) * x' + (k+1) * sin * cos      * y'
 *  new y' = (k+1) * sin * cos    * x' + (sin^2 + (-k) * cos^2) * y'
 */
-CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) /\
+CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) &
              c = 1      /(1 + cos(x-)^2)^(1/2)).
-BOUNCE <=> []( y- = sin(x-) => 
+BOUNCE <=> []( y- = sin(x-) => cont = 0 &
         x' = ((-e) * s^2 + c^2) * x'- + ((e+1) * s * c) * y'-
-        /\
+        &
         y' = ((e+1) * s * c) * x'- + (s^2 + (-e) * c^2) * y'-).
 
-INIT, CONST, (FALL, CONSTX) << BOUNCE.
+INIT, CONST, (FALL, CONSTX), [](cont = 1) << BOUNCE.
 
-//#hylagi -p10 --fnd
-//#omit s,c,e,e',y'',x''
+//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1

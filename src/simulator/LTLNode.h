@@ -13,8 +13,8 @@
 #include "ConstraintStore.h"
 #include "Parameter.h"
 
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
 class LTLNode;
 
@@ -42,5 +42,5 @@ class LTLNode : public AutomatonNode
   /* bool search_parameter(value_t var); */
 };
 
-}
-}
+} // namespace simulator
+} // namespace hydla

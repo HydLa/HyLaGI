@@ -49,7 +49,13 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("use_fullsimplify", "use FullSimplify")
+    ("simplify",
+     value<int>()->default_value(1),
+     "the level of simplification at each phase\n"
+     "  0 - no simplification\n"
+     "  1 - use \"Simplify\"\n"
+     "  2 or others - use \"FullSimplify\""
+      )
 
     ("tm",
      value<std::string>()->default_value("n"),
@@ -69,9 +75,13 @@ void ProgramOptions::init_descriptions()
 
     ("debug,d", "display debug trace\n")
 
+    ("simplify_time",
+     value<std::string>()->default_value("1"),
+     "time limit of simplifying expressions in the backend")
+
     ("math_name",
      value<std::string>()->default_value("math"),
-     "name of mathematica command")
+     "name of the command to execute mathematica")
 
     ("time,t",
      value<std::string>()->default_value("Infinity"),
@@ -103,27 +113,39 @@ void ProgramOptions::init_descriptions()
 
     ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
+    
+    ("affine",
+     value<char>()->default_value('n'),
+     "use affine arithmetic to approximate expressions")
+
     ("fail_on_stop",value<char>()->default_value('n'),
      "stop all simulation cases when assertion fails")
 
     ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
     ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
-     "current canidates: DSolve::bvnul, Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
+     "current canidates: Solve::incnst, Solve::ifun, DSolve::bvnul, Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
      "Note: Warnings from HyLaGI itself are always activated"
       )
 
     ("interval,i", value<char>()->default_value('n'), "use interval method")
     ("numerize_without_validation", value<char>()->default_value('n'), "numerize values of variables at the end of each PointPhase")
-
-    ("approximation_step", value<int>()->default_value(0), "the interval of step to approximate value of variable")
+    ("eager_approximation",  value<char>()->default_value('n'), "approximate values in advance of each Point Phase")
+    ("approximation_step", value<int>()->default_value(1), "the interval of step to approximate value of variable")
+    ("extra_dummy_num", value<int>()->default_value(0), "the number of extra dummy parameters in affine arithmetic.")
 
     ("dump_in_progress", value<char>()->default_value('n'),
      "output each phase in progress")
     ("use_shorthand", value<char>()->default_value('n'), "use shorthands for arithmetic expressions (only for parameters)\n")
     ("vars_to_approximate",
      value<std::string>()->default_value(""),
-     "variables to approximate (delimited by \",\")");
+     "variables to approximate (delimited by \",\")")
+    ("guards_to_interval_newton",
+     value<std::string>()->default_value(""),
+     "guards to be solved by interval newton method(delimited by \",\")")
+    ("step_by_step", value<char>()->default_value('n'),
+      "use find_min_time_step_by_step")
+    ("solve_over_reals", value<char>()->default_value('n'), "solve constrants over the reals");
 
 
   options_description hidden_desc("Hidden options");

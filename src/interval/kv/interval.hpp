@@ -615,7 +615,6 @@ template <class T> class interval {
 		return interval(tmp1, tmp2);
 	}
 
-
 	friend T width(const interval& x) {
 		T tmp;
 

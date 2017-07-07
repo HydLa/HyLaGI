@@ -11,6 +11,7 @@
 #include "Backend.h"
 #include "JsonWriter.h"
 #include "Timer.h"
+#include "Utility.h"
 #include "Parser.h"
 #include <sys/stat.h>
 #include <fstream>
@@ -35,7 +36,6 @@ using namespace hydla::backend::mathematica;
 using namespace hydla::io;
 using namespace hydla::logger;
 using namespace std;
-
 
 Simulator* simulator_;
 Opts opts;
@@ -109,9 +109,9 @@ void output_result(Simulator& ss, Opts& opts){
         struct stat st;
         int ret = stat(hydat_dir.c_str(), &st);
         if(ret == -1)
-          {
-            mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-          }
+        {
+          mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        }
     }
     writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
@@ -132,6 +132,17 @@ void output_result(Simulator& ss, Opts& opts){
 }
 
 
+void trim_front_and_behind_space(std::string &buffer)
+{
+      // 前後の空白を取り除く
+  auto left = buffer.find_first_not_of(" ");
+  if (left != string::npos)
+  {
+    auto right = buffer.find_last_not_of(" ");
+    buffer = buffer.substr(left, right - left + 1);
+  }
+}
+
 void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix)
 {
   HYDLA_LOGGER_DEBUG_VAR(vars_list_string);
@@ -139,20 +150,13 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
   string buffer;
   while(std::getline(sstr, buffer, ','))
   {
-    // 前後の空白を取り除く
-    auto left = buffer.find_first_not_of(" ");
-    if (left != string::npos)
-    {
-      auto right = buffer.find_last_not_of(" ");
-      buffer = buffer.substr(left, right - left + 1);
-    }
+    trim_front_and_behind_space(buffer);
     boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
     boost::smatch match;
     if (!boost::regex_search(buffer, match, re))
     {
       cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
     }
-
     set_to_add.insert(buffer);
   }
 }
@@ -172,6 +176,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
     parser::Parser parser(po.get<string>("time"));
     opts.max_time = parser.arithmetic();
   }
+  IF_SPECIFIED("simplify_time")opts.simplify_time = po.get<string>("simplify_time");
   IF_SPECIFIED("phase")opts.max_phase      = po.get<int>("phase");
   IF_SPECIFIED("nd")opts.nd_mode       = po.count("nd") > 0 && po.get<char>("nd") == 'y';
   IF_SPECIFIED("static_generation_of_module_sets")  opts.static_generation_of_module_sets = po.count("static_generation_of_module_sets") && po.get<char>("static_generation_of_module_sets") == 'y';
@@ -182,16 +187,32 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("ha")opts.ha_convert_mode = po.count("ha")>0 && po.get<char>("ha") == 'y';
   IF_SPECIFIED("hs")opts.ha_simulator_mode = po.count("hs")>0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("ltl")opts.ltl_model_check_mode = po.count("ltl")>0 && po.get<char>("ltl") == 'y';
+  IF_SPECIFIED("affine")opts.affine = po.count("affine")>0 && po.get<char>("affine") == 'y';
   IF_SPECIFIED("epsilon")opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("interval")opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
   IF_SPECIFIED("numerize_without_validation")opts.numerize_mode =  po.count("numerize_without_validation") > 0 && po.get<char>("numerize_without_validation") == 'y';
+  IF_SPECIFIED("eager_approximation")opts.eager_approximation =  po.count("eager_approximation") > 0 && po.get<char>("eager_approximation") == 'y';
   IF_SPECIFIED("fail_on_stop")opts.stop_at_failure = po.count("fail_on_stop") > 0 && po.get<char>("fail_on_stop") == 'y';
   IF_SPECIFIED("approximation_step")opts.approximation_step = po.get<int>("approximation_step");
+  IF_SPECIFIED("extra_dummy")opts.extra_dummy_num = po.get<int>("extra_dummy_num");
+
   IF_SPECIFIED("vars_to_approximate")
   {
     add_vars_from_string(po.get<string>("vars_to_approximate"), opts.vars_to_approximate, "");
   }
-  IF_SPECIFIED("use_fullsimplify")opts.fullsimplify = po.count("use_fullsimplify");
+  IF_SPECIFIED("guards_to_interval_newton")
+  {
+    std::stringstream sstr(po.get<string>("guards_to_interval_newton"));
+    string buffer;
+    while(std::getline(sstr, buffer, ','))
+    {
+      buffer = utility::replace(buffer, " ", "");
+      opts.guards_to_interval_newton.insert(buffer);
+    }
+  }
+  IF_SPECIFIED("step_by_step")opts.step_by_step = po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
+  IF_SPECIFIED("simplify")opts.simplify = po.get<int>("simplify");
+  IF_SPECIFIED("solve_over_reals")opts.solve_over_reals = po.count("solve_over_reals") > 0 && po.get<char>("solve_over_reals") == 'y';
 }
 
 
@@ -203,7 +224,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   else     Logger::instance().set_log_level(Logger::Warn);
 
 
-  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings)));
+  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)

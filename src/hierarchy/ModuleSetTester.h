@@ -5,10 +5,11 @@
 namespace hydla {
 namespace hierarchy {
 
-class ModuleSetTester {
+class ModuleSetTester
+{
 public:
-  ModuleSetTester(){}
-  virtual ~ModuleSetTester(){}
+  ModuleSetTester() {}
+  virtual ~ModuleSetTester() {}
 
   virtual bool test_module_set(module_set_sptr ms) = 0;
 };

@@ -1159,7 +1159,7 @@ public:
   virtual std::ostream& dump(std::ostream& s) const 
   {
     Node::dump(s);
-    return s <<"[" << name_ << "]";
+    return s <<"[" << name_ << "," << differential_count_ << ", " << phase_id_ << "]";
   }
 
   void set_name(const std::string& name) 
@@ -1273,6 +1273,7 @@ public:
     return s;
   }
 };
+
 
 class Print : public FactorNode{
 public:

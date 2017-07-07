@@ -10,7 +10,7 @@ using namespace hydla::symbolic_expression;
 namespace hydla {
 namespace simulator {
 
-PrevReplacer::PrevReplacer(PhaseResult &phase, Simulator &simulator): prev_phase(phase), simulator(simulator)
+PrevReplacer::PrevReplacer(PhaseResult &phase, Simulator &simulator, backend::Backend *b, bool affine): prev_phase(phase), simulator(simulator), backend(b), affine_mode(affine)
 {}
 
 PrevReplacer::~PrevReplacer()
@@ -65,8 +65,27 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
     }
     else
     {
-      new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
       parameter_t param(v_name, diff_cnt, prev_phase.id);
+      if(affine_mode)
+      {
+        //replace with affine form
+        if(range.get_upper_cnt() != 1 || range.get_lower_cnt() != 1)
+        {
+          HYDLA_LOGGER_ERROR("invalid range for affine arithmetic mode, " + range.get_string());
+        }
+        hydla::backend::MidpointRadius mr;
+        value_t lb = range.get_lower_bound(0).value;
+        value_t ub = range.get_upper_bound(0).value;
+        backend->call("intervalToMidpointRadius", false, 2, "vltvlt", "r", &lb, &ub, &mr);
+        range.set_upper_bound(value_t("1"), true);
+        range.set_lower_bound(value_t("-1"), true);
+        value_t new_value(mr.midpoint + mr.radius * value_t(param));
+        new_child = new_value.get_node();
+      }
+      else
+      {
+        new_child = symbolic_expression::node_sptr(new symbolic_expression::Parameter(v_name, diff_cnt, prev_phase.id));
+      }
 
       if(!simulator.get_parameter_map().count(param))
       {

@@ -8,7 +8,6 @@
 #include "ConstraintStore.h"
 #include "GuardNode.h"
 
-
 namespace hydla {
 namespace simulator {
 
@@ -42,36 +41,40 @@ struct EdgeToConstraint
   EdgeToConstraint(TellNode *, bool);
 };
 
-struct ConstraintNode{
+struct ConstraintNode
+{
   module_t module; /// module which the constraint belongs to
   bool collected;
-  bool module_adopted; /// whether the module is in ms
+  bool module_adopted; /// whether the module is in current module sets
   bool expanded;
   bool always;
   AskNode* parent;
-  ConstraintNode(const module_t &mod):module(mod), module_adopted(true), expanded(false){}
+  ConstraintNode(const module_t &mod)
+    : module(mod), module_adopted(true), expanded(false) {}
   virtual ~ConstraintNode(){}
   std::vector<EdgeToVariable> edges;
   bool is_active() const;
   virtual std::string get_name() const = 0;
 };
   
-struct TellNode: public ConstraintNode{
-  constraint_t constraint;
-  TellNode(const constraint_t &cons, const module_t &mod):ConstraintNode(mod), constraint(cons)
-    {}
+struct TellNode: public ConstraintNode
+{
+  constraint_t tell;
+  TellNode(const constraint_t &cons, const module_t &mod)
+    : ConstraintNode(mod), tell(cons)
+  {}
   virtual ~TellNode(){}
   std::string get_name() const;
 };
 
-typedef enum{
+typedef enum {
   BOTH,
   TELL_ONLY,
   ASK_ONLY
-}DumpMode;
-
+} DumpMode;
   
-struct AskNode: public ConstraintNode{
+struct AskNode: public ConstraintNode
+{
   ask_t ask;
   bool prev, entailed;
   GuardNode *guard_node;
@@ -79,15 +82,15 @@ struct AskNode: public ConstraintNode{
   ConstraintStore always_children;
   std::list<ConstraintNode*> children;
   AskNode(const ask_t &a, const module_t &mod, GuardNode *guard);
-  virtual ~AskNode(){}
+  virtual ~AskNode() {}
   std::string get_name() const;
 };
-
   
 /**
  * Node for variable
  */
-struct VariableNode{
+struct VariableNode
+{
   Variable variable;
   std::vector<EdgeToConstraint> edges;
   std::vector<AskNode *> ask_edges;
@@ -96,15 +99,12 @@ struct VariableNode{
   std::string get_name() const;
 };
 
-
-
 /**
- * Graph to represent relations of constraints and variables
+ * Bipartite graph to represent relations of constraints and variables
  */
-class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint{
-
+class RelationGraph: public symbolic_expression::TreeVisitorForAtomicConstraint
+{
 public:
-
   RelationGraph(const module_set_t &mods);
 
   virtual ~RelationGraph();
@@ -136,7 +136,6 @@ public:
   void set_entailed(const ask_t &ask, bool entailed);
   asks_t set_entailed(const constraint_t &guard, bool entailed);
 
-
   bool get_entailed(const ask_t &ask)const;
 
   ConstraintStore get_always_list(const ask_t &ask)const;
@@ -166,7 +165,6 @@ public:
    */
   asks_t get_active_asks(bool ignore_prev_asks = false);
 
-
   /**
    * Get all active tells
    */ 
@@ -176,25 +174,19 @@ public:
    * Get the number of connected component in the graph.
    */
   int get_connected_count();
-
   
   /**
-   * Get constraints and modules related to given variable
+   * Get constraints related to given variable
    * @parameter list of connectedconstraints for output
    * @parameter modules for output
    */
-  void get_related_constraints(const Variable &variable, ConstraintStore &constraints,
-                               module_set_t &modules);
+  void get_related_constraints(const Variable &variable, ConstraintStore &constraints);
 
   /**
    * Get constraints and modules related to given constraint
    * @parameter constraints for output
-   * @parameter modules for output
    */
-  void get_related_constraints(constraint_t constraint, ConstraintStore &constraints,
-                               module_set_t &modules);
-
-
+  void get_related_constraints(constraint_t constraint, ConstraintStore &constraints);
 
   /**
    * Get vector of constraints and modules related to given constraints
@@ -203,7 +195,6 @@ public:
    */
   void get_related_constraints_vector(const ConstraintStore &constraints, std::vector<ConstraintStore> &constraints_vector,
                                std::vector<module_set_t> &modules_vector);
-
   
   /**
    * Get vector of constraints and modules related to given variables or constraints
@@ -216,6 +207,9 @@ public:
    * Get variables related to constraint
    */
   variable_set_t get_related_variables(constraint_t constraint);
+
+  /// Get modules related to constraint_store
+  module_set_t get_related_modules(const ConstraintStore &constraint_store);
 
   /// Entail the guard if it is prev_guard
   /// @return true if the guard is prev_guard
@@ -274,8 +268,11 @@ private:
   void check_connected_components();
 
   asks_t set_entailed(AtomicGuardNode *node, bool entailed, bool if_prev = false);
-  void collect_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars);
-  void collect_node(VariableNode* node, ConstraintStore &constraint, module_set_t &ms, variable_set_t &vars);
+
+  void collect_node(TellNode* node, ConstraintStore *constraints, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  void collect_node(VariableNode* node, ConstraintStore *constraint, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  void collect_node(AskNode* node, ConstraintStore *constraints, module_set_t *ms, variable_set_t *vars, bool visit_guards);
+  
   void initialize_node_collected();
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings
@@ -290,17 +287,16 @@ private:
   ask_nodes_t ask_nodes;
   tell_nodes_t tell_nodes;
   guard_nodes_t guard_nodes;
-  
 
   AskNode* parent_ask;
   module_t current_module;
 
-  typedef enum{
+  typedef enum {
     EXPANDING,
     UNEXPANDING,
     ADDING,
     ADDING_ASK
-  }VisitMode;
+  } VisitMode;
 
   std::map<module_t, tell_nodes_t>  module_tell_nodes_map;
   std::map<constraint_t, TellNode*> tell_node_map;
@@ -322,7 +318,5 @@ private:
   bool ignore_prev;
 };
 
-
-
-} //namespace simulator
-} //namespace hydla 
+} // namespace simulator
+} // namespace hydla 

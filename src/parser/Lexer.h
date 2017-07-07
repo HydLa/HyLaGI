@@ -40,7 +40,6 @@ enum Token{
   POWER,               //  "^" | "**"
   EQUAL,               //  "="
   NOT_EQUAL,           //  "!="
-  DIFFERENT_VARIABLE,  //  "=!="
   NOT,                 //  "!"
   LESS,                //  "<"
   LESS_EQUAL,          //  "<="

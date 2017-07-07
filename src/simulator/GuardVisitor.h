@@ -8,7 +8,8 @@ namespace simulator {
 /**
  * A visitor class for GuardNode
  */
-class GuardVisitor {
+class GuardVisitor
+{
 public:
   GuardVisitor(){}
 

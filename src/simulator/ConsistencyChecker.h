@@ -36,7 +36,7 @@ public:
   /**
    * Check whether the constraints related to diff_constraints are consistent or not.
    */
-  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, bool following_step);
+  CheckConsistencyResult check_consistency(RelationGraph &relation_graph, ConstraintStore &diff_constraints, const PhaseType& phase, profile_t &profile, const asks_t &unknown_asks, bool following_step);
 
   /**
    * Get inconsistent module sets in the last check_consistency
@@ -84,7 +84,7 @@ public:
   std::map<std::string, int> get_differential_map(const variable_set_t &);
 
 private:
-  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile);
+  CheckConsistencyResult check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder&, const PhaseType& phase, profile_t &profile, bool following_step);
 
   CheckEntailmentResult check_entailment_essential(
     CheckConsistencyResult &cc_result,
@@ -92,16 +92,18 @@ private:
     const PhaseType &phase,
     profile_t &profile
     );
-  
+
+  /**
+   * @todo refactor
+   */
   void add_continuity(VariableFinder&, const PhaseType &phase, const constraint_t &constraint_for_default_continuity = constraint_t());
 
-  void check_consistency_foreach(const ConstraintStore& constraint_store, module_set_t &module_set, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
+  void check_consistency_foreach(const ConstraintStore& constraint_store, RelationGraph &relation_graph, CheckConsistencyResult &result, const PhaseType& phase, profile_t &profile, bool following_step);
   CheckConsistencyResult call_backend_check_consistency(const PhaseType &phase, ConstraintStore tmp_cons = ConstraintStore());
   void send_init_equation(Variable &var, std::string fmt);
   void send_prev_constraint(const Variable &var);
 
   void send_range_constraint(const Variable &var, const variable_map_t &vm, bool prev_mode);
-
 
   backend_sptr_t backend;
 
@@ -113,6 +115,5 @@ private:
   std::list<ConstraintStore> inconsistent_constraints;
 };
 
-
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

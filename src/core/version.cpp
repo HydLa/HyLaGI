@@ -9,8 +9,12 @@ namespace hydla {
   Version::~Version() {
   }
 
+  std::string Version::commit_id() {
+	return COMMIT_ID;
+  }
+
   std::string Version::version()  {
-    return "0.9.1";
+    return "0.9.5";
   }
   
   std::string Version::revision() {
@@ -18,12 +22,12 @@ namespace hydla {
   }
   
   std::string Version::copyright() {
-    return "Copyright (C) 2008-2015 UEDA Lab. HydLa project";
+    return "Copyright (C) 2008-2017 UEDA Lab. HydLa project";
   }
   
   std::string Version::description() {
     std::stringstream s;
-    s << "HyLaGI v" << version() << "\n\n"
+    s << "HyLaGI v" << version() << "(" << commit_id() << ")" "\n\n"
       //      << " (r" << revision() << ")\n\n" 
       << copyright();
 

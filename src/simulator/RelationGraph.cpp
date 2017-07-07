@@ -9,7 +9,6 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-
 RelationGraph::RelationGraph(const module_set_t &ms)
 {
   for(auto module : ms)
@@ -167,7 +166,7 @@ string get_constraint_name(const constraint_t &constraint, const module_t &modul
 
 string TellNode::get_name() const
 {
-  return (always?"[]":"") + get_constraint_name(constraint, module);
+  return (always?"[]":"") + get_constraint_name(tell, module);
 }
 
 string AskNode::get_name() const
@@ -214,19 +213,21 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       finder.visit_node(constraint);
       variable_set_t variables;
       variables = finder.get_all_variable_set();
-      for(auto variable : variables)
+      for(auto base_variable : variables)
       {
-        if(!variable_node_map.count(variable))continue;
-
-        ConstraintStore connected_constraints;
-        module_set_t connected_ms;
-        VariableNode *var_node = variable_node_map[variable];
-        variable_set_t vars;
-        collect_node(var_node, connected_constraints, connected_ms, vars);
-        if(connected_constraints.size() > 0)
+        for(int i = 0; i <= base_variable.get_differential_count(); i++)
         {
-          constraints_vector.push_back(connected_constraints);
-          module_set_vector.push_back(connected_ms);
+          Variable variable(base_variable.get_name(), i);
+          if(!variable_node_map.count(variable))continue;
+          ConstraintStore connected_constraints;
+          module_set_t connected_ms;
+          VariableNode *var_node = variable_node_map[variable];
+          collect_node(var_node, &connected_constraints, &connected_ms, nullptr, false);
+          if(connected_constraints.size() > 0)
+          {
+            constraints_vector.push_back(connected_constraints);
+            module_set_vector.push_back(connected_ms);
+          }
         }
       }
     }
@@ -237,10 +238,9 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       {
         ConstraintStore connected_constraints;
         module_set_t connected_ms;
-        variable_set_t vars;
         if(tell_node->is_active())
         {
-          collect_node(tell_node, connected_constraints, connected_ms, vars);
+          collect_node(tell_node, &connected_constraints, &connected_ms, nullptr, false);
           constraints_vector.push_back(connected_constraints);
           module_set_vector.push_back(connected_ms);
         }
@@ -249,7 +249,7 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
           // adjacent node may be active (this case is mainly caused by negative asks)
           for(auto edge : tell_node->edges)
           {
-            if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, connected_constraints, connected_ms, vars);
+            if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, &connected_constraints, &connected_ms, nullptr, false);
           }
           if(connected_constraints.size() > 0)
           {
@@ -260,6 +260,55 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
       }
     }
   }
+}
+
+
+
+
+module_set_t RelationGraph::get_related_modules(const ConstraintStore &constraint_store){
+  initialize_node_collected();
+  module_set_t ret;
+  for(auto constraint : constraint_store)
+  {
+    auto constraint_it = tell_node_map.find(constraint);
+    if(constraint_it == tell_node_map.end())
+    {
+      VariableFinder finder;
+      finder.visit_node(constraint);
+      variable_set_t variables;
+      variables = finder.get_all_variable_set();
+      for(auto base_variable : variables)
+      {
+        for(int i = 0; i <= base_variable.get_differential_count(); i++)
+        {
+          Variable variable(base_variable.get_name(), i);
+          if(!variable_node_map.count(variable))continue;
+          VariableNode *var_node = variable_node_map[variable];
+          collect_node(var_node, nullptr, &ret, nullptr, true);
+        }
+      }
+    }
+    else
+    {
+      TellNode *tell_node = constraint_it->second;
+      if(!tell_node->collected)
+      {
+        if(tell_node->is_active())
+        {
+          collect_node(tell_node, nullptr, &ret, nullptr, true);
+        }
+        else
+        {
+          // adjacent node may be active (this case is mainly caused by negative asks)
+          for(auto edge : tell_node->edges)
+          {
+            if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, nullptr, &ret, nullptr, true);
+          }
+        }
+      }
+    }
+  }
+  return ret;
 }
 
 
@@ -280,69 +329,70 @@ void RelationGraph::get_related_constraints_vector(const ConstraintStore &constr
 }
 
 
-void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints, module_set_t &module_set){
+
+void RelationGraph::get_related_constraints(constraint_t constraint, ConstraintStore &constraints){
   initialize_node_collected();
   constraints.clear();
-  module_set.clear();
   auto constraint_it = tell_node_map.find(constraint);
   if(constraint_it == tell_node_map.end())
-  {
-    VariableFinder finder;
-    finder.visit_node(constraint);
-    variable_set_t variables;
-    variables = finder.get_all_variable_set();
-    for(auto variable : variables)
     {
-      if(!variable_node_map.count(variable))continue;
-      VariableNode *var_node = variable_node_map[variable];
-      variable_set_t vars;
-      collect_node(var_node, constraints, module_set, vars);
+      VariableFinder finder;
+      finder.visit_node(constraint);
+      variable_set_t variables;
+      variables = finder.get_all_variable_set();
+      for(auto variable : variables)
+      {
+        if(!variable_node_map.count(variable))continue;
+        VariableNode *var_node = variable_node_map[variable];
+        variable_set_t vars;
+        collect_node(var_node, &constraints, nullptr, nullptr, false);
+      }
     }
-  }
   else
-  {
-    variable_set_t vars;
-    TellNode *tell_node = constraint_it->second;
-    collect_node(tell_node, constraints, module_set, vars);
-  }
+    {
+      variable_set_t vars;
+      TellNode *tell_node = constraint_it->second;
+      collect_node(tell_node, &constraints, nullptr, nullptr, false);
+    }
 }
-
-
-void RelationGraph::get_related_constraints(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
-  initialize_node_collected();
-  constraints.clear();
-  module_set.clear();
-  get_related_constraints_core(var, constraints, module_set);
-}
-
-
 
 void RelationGraph::get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set){
   VariableNode *var_node = variable_node_map[var];
   if(var_node == nullptr)throw HYDLA_ERROR("VariableNode is not found");
-  variable_set_t vars;
-  collect_node(var_node, constraints, module_set, vars);
+  collect_node(var_node, &constraints, &module_set, nullptr, false);
 }
 
-
-void RelationGraph::collect_node(TellNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars){
+void RelationGraph::collect_node(TellNode* node, ConstraintStore *constraints, module_set_t *module_set, variable_set_t *vars, bool visit_guards){
   node->collected = true;
-  ms.add_module(node->module);
-  constraints.add_constraint(node->constraint);
+  if(constraints != nullptr)constraints->add_constraint(node->tell);
+  if(module_set != nullptr)module_set->add_module(node->module);
   for(auto edge : node->edges)
   {
-    if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, constraints, ms, vars);
+    if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, constraints, module_set, vars, visit_guards);
   }
+  if(visit_guards && node->parent != nullptr)collect_node(node->parent, constraints, module_set, vars, visit_guards);
 }
 
-void RelationGraph::collect_node(VariableNode* node, ConstraintStore &constraints, module_set_t &ms, variable_set_t &vars){
-  vars.insert(node->variable);
+void RelationGraph::collect_node(AskNode* node, ConstraintStore *constraints, module_set_t *module_set, variable_set_t *vars, bool visit_guards){
+  node->collected = true;
+  if(module_set != nullptr)module_set->add_module(node->module);
+  for(auto edge : node->edges)
+  {
+    if(!ignore_prev || !edge.ref_prev) collect_node(edge.variable_node, constraints, module_set, vars, visit_guards);
+  }
+  if(visit_guards && node->parent != nullptr)collect_node(node->parent, constraints, module_set, vars, visit_guards);
+}
+
+void RelationGraph::collect_node(VariableNode* node, ConstraintStore *constraints, module_set_t *module_set, variable_set_t *vars, bool visit_guards){
+  if(vars != nullptr)vars->insert(node->variable);
   for(auto edge : node->edges)
   {
     if( (!ignore_prev || !edge.ref_prev)
-        && !edge.tell_node->collected && edge.tell_node->is_active()) collect_node(edge.tell_node, constraints, ms, vars);
+        && !edge.tell_node->collected && edge.tell_node->is_active())
+      collect_node(edge.tell_node, constraints, module_set, vars, visit_guards);
   }
 }
+
 
 void RelationGraph::set_adopted(const module_t &mod, bool adopted)
 {
@@ -463,7 +513,7 @@ asks_t RelationGraph::get_adjacent_asks2var_and_derivatives(const Variable &var,
 list<AtomicConstraint *> RelationGraph::get_atomic_guards(const constraint_t &guard)const
 {
   auto node_it = guard_node_map.find(guard);
-  if(node_it == guard_node_map.end())throw HYDLA_ERROR("unknown guard");
+  if(node_it == guard_node_map.end())throw HYDLA_ERROR("unknown guard:" +  get_infix_string(guard));
   return node_it->second->get_atomic_guards();
 }
 
@@ -494,7 +544,7 @@ ConstraintStore RelationGraph::get_active_tells()
   ConstraintStore tells;
   for(auto tell_node : tell_nodes)
   {
-    if(tell_node->is_active())tells.add_constraint(tell_node->constraint);
+    if(tell_node->is_active())tells.add_constraint(tell_node->tell);
   }
   return tells;
 }
@@ -509,10 +559,7 @@ AskNode::AskNode(const ask_t &a, const module_t &mod, GuardNode *g):ConstraintNo
 
 
 variable_set_t RelationGraph::get_related_variables(constraint_t cons){
-
   variable_set_t vars;
-  ConstraintStore constraints;
-  module_set_t modules;
 
   initialize_node_collected();
     
@@ -524,7 +571,7 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
     {
       if(variable_node_map.count(var))
       {
-        collect_node(variable_node_map[var], constraints, modules, vars);
+        collect_node(variable_node_map[var], nullptr, nullptr, &vars, false);
       }
     }
     return vars;
@@ -532,7 +579,7 @@ variable_set_t RelationGraph::get_related_variables(constraint_t cons){
   else
   {
     TellNode *cons_node = tell_node_map[cons];
-    collect_node(cons_node, constraints, modules, vars);
+    collect_node(cons_node, nullptr, nullptr, &vars, false);
   }
   return vars;
 }
@@ -549,7 +596,7 @@ ConstraintStore RelationGraph::get_constraints()
   {
     if(tell_node->is_active())
     {
-      constraints.add_constraint(tell_node->constraint);
+      constraints.add_constraint(tell_node->tell);
     }
   }
   return constraints;
@@ -562,7 +609,7 @@ ConstraintStore RelationGraph::get_expanded_constraints()
   {
     if(tell_node->expanded)
     {
-      constraints.add_constraint(tell_node->constraint);
+      constraints.add_constraint(tell_node->tell);
     }
   }
   return constraints;
@@ -575,7 +622,7 @@ ConstraintStore RelationGraph::get_adopted_constraints()
   {
     if(tell_node->module_adopted)
     {
-      constraints.add_constraint(tell_node->constraint);
+      constraints.add_constraint(tell_node->tell);
     }
   }
   return constraints;
@@ -726,8 +773,9 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   if(visit_mode == ADDING)
   {
     if(in_always)always_list.add_constraint(ask);
+    constraint_t guard = ask->get_guard();
     VariableFinder finder;
-    finder.visit_node(ask->get_guard());
+    finder.visit_node(guard);
     variable_set_t variables;
 
     AskNode* ask_node;
@@ -735,9 +783,10 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     visit_mode = ADDING_ASK;
     atomic_guard_list.clear();
 
-    accept(ask->get_lhs());
-    visit_mode = ADDING;
+    accept(guard);
+
     ask_node = new AskNode(ask, current_module, current_guard_node);
+    guard_node_map[guard]  = current_guard_node;
     current_guard_node->asks.push_back(ask_node);
     ask_node->atomic_guard_list = atomic_guard_list;
 
@@ -761,6 +810,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
     parent_ask = ask_node;
     ConstraintStore prev_always_list = always_list;
     always_list.clear();
+    visit_mode = ADDING;
     accept(ask->get_rhs());
     ask_node->always_children = always_list;
     always_list = prev_always_list;

@@ -16,12 +16,12 @@ namespace simulator {
 /**
  * Replace variables with their values
  */
-class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
-  typedef hydla::symbolic_expression::node_sptr                 node_sptr;
+class VariableReplacer : public symbolic_expression::DefaultTreeVisitor
+{
+  typedef hydla::symbolic_expression::node_sptr node_sptr;
 
-  public:
-
-  VariableReplacer(const variable_map_t* map);
+public:
+  VariableReplacer(const variable_map_t& map);
 
   void replace_node(symbolic_expression::node_sptr& node);
 
@@ -56,14 +56,12 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Infinity> node);
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SVtimer> node);
 
-  private:
+private:
   int differential_cnt;
   uint replace_cnt;
   const variable_map_t* variable_map;
 
-
   symbolic_expression::node_sptr new_child_;
-
 
   template<class C, 
            const symbolic_expression::node_sptr& (C::*getter)() const,
@@ -102,6 +100,5 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor{
   }
 };
 
-} //namespace parser
-} //namespace hydla
-
+} // namespace parser
+} // namespace hydla

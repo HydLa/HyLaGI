@@ -1,5 +1,4 @@
 #include "ListExpander.h"
-#include "Logger.h"
 
 namespace hydla{
 namespace parser{
@@ -643,6 +642,8 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::ExpressionListEl
   }else num = boost::dynamic_pointer_cast<Number>(node->get_rhs()->clone());
   if(list && num){
     int idx = std::stoi(num->get_number());
+    if(idx <= 0 || idx > list->get_arguments_size())
+      throw error::InvalidIndex(node);
     if((list->get_nameless_expression_arguments()))
     {
       node->set_rhs(num->clone());

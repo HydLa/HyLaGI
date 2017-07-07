@@ -4,8 +4,8 @@
 #include "Simulator.h"
 #include "ConstraintAnalyzer.h"
 
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
 class AnalysisResultChecker : public ConstraintAnalyzer
 {
@@ -21,14 +21,12 @@ public:
       const variable_map_t& vm,
       todo_container_t* todo_container);
 
-
   virtual bool 
     check_conditions(
       const hydla::symbolic_expression::node_sptr& cond,
       simulation_job_sptr_t& state,
       const variable_map_t& vm,
       todo_container_t* todo_container);
-
 
   virtual bool 
     check_conditions(const hydla::hierarchy::module_set_sptr& ms,
@@ -46,5 +44,5 @@ private:
 
 };
 
-}
-}
+} // namespace simulator
+} // namespace hydla

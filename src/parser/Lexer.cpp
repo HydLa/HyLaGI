@@ -206,18 +206,6 @@ Token Lexer::get_token()
         current_token_string = "=>";
         return IMPLIES;
       }
-      if(get_current_char() == '!'){
-        int now_line = line;
-        int now_column = column;
-        next_char();
-        if(get_current_char() == '='){
-          current_token_string = "=!=";
-          next_char();
-          return DIFFERENT_VARIABLE;
-        }
-        line = now_line;
-        column = now_column;
-      }
       return EQUAL;
     case '[':
       if(get_current_char() == ']'){

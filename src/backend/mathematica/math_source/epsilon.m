@@ -12,7 +12,7 @@ publicMethod[checkEdgeGuard, guard, relatedVm, relatedPm,
                         ];
                     debugPrint["#check edge guard : checking guard : ", tmp];
                     debugPrint["#check edge guard : conditions : ", newCondition];
-                    ret = Quiet[FullSimplify[tmp,newCondition]];
+                    ret = Quiet[timeConstrainedSimplify[tmp,newCondition]];
                     debugPrint["#check edge guard : ret : ",ret];
                     TrueQ[ret]
                     ]
@@ -28,7 +28,7 @@ publicMethod[checkEdgeGuardWt, guard, relatedVm, relatedPm, startTime, endTime,
                     debugPrint["#check edge guard : checking guard : ", tmp];
                     newCondition = And[relatedPm, t > startTime && t <= endTime];
                     debugPrint["#check edge guard : conditions : ", newCondition];
-                    ret = Quiet[FullSimplify[tmp,newCondition]];
+                    ret = Quiet[timeConstrainedSimplify[tmp,newCondition]];
                     debugPrint["#check edge guard : ret : ",ret];
                     TrueQ[ret]
                     ]
@@ -144,7 +144,7 @@ publicMethod[
                     If[arg =!= Infinity,
                        direplus = Limit[arg, p[peps, 0, 1] -> 0,Direction->-1];
                        direminus = Limit[arg, p[peps, 0, 1] -> 0,Direction->1];
-                       flag = FullSimplify[direplus - direminus];
+                       flag = timeConstrainedSimplify[direplus - direminus];
                        If[flag === 0,
                           ret = 1,
                           ret = 0

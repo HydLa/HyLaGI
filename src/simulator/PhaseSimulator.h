@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stack>
 #include <iostream>
 #include <string>
 #include <cassert>
@@ -18,7 +19,6 @@ template <class T> class interval;
 namespace hydla {
 namespace simulator {
 
-
 class ValueModifier;
 class MinTimeCalculator;
 
@@ -28,7 +28,7 @@ struct CompareMinTimeResult
 };
 
 typedef std::list<parameter_map_t>                       parameter_maps_t;
- typedef symbolic_expression::node_sptr                     node_sptr;
+typedef symbolic_expression::node_sptr                   node_sptr;
 
 
 struct BreakPoint
@@ -38,9 +38,32 @@ struct BreakPoint
   void *tag;
 };
 
+struct TimeListElement
+{
+  value_t time;
+  ConstraintStore parameter_constraint;
+  constraint_t guard;
+  TimeListElement(value_t t, constraint_t g):time(t), guard(g){}
+  TimeListElement(){}
+};
 
+struct IntervalNewtonResult
+{
+  std::shared_ptr<kv::interval<double>> current_stack_top;
+  std::shared_ptr<kv::interval<double>> min_interval;
+  std::stack<kv::interval<double>, std::vector<kv::interval<double>>> next_stack;
+  int time_id;
+  value_t time_list_element_time;
+  bool isAffine;
+};
 
-class PhaseSimulator{
+struct HistoryData
+{
+  std::vector<IntervalNewtonResult> results;
+};
+
+class PhaseSimulator
+{
 public:
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~PhaseSimulator();
@@ -51,15 +74,12 @@ public:
                           module_set_container_sptr &msc,
                           phase_result_sptr_t root);
 
-
   phase_list_t process_todo(phase_result_sptr_t&);
-
 
   void set_backend(backend_sptr_t);
 
   void apply_diff(const PhaseResult &phase);
 
-  /// revert diff
   void revert_diff(const PhaseResult &phase);
   void revert_diff(const asks_t &positive_asks, const asks_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff);
 
@@ -68,6 +88,7 @@ public:
   boost::shared_ptr<RelationGraph> relation_graph_;
 
 private:
+  struct StateOfIntervalNewton;
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
 
@@ -93,24 +114,32 @@ private:
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
-  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase);
+  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map);
 
+  find_min_time_result_t find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map);
+
+  bool checkAndUpdateGuards(std::map<constraint_t, bool> &guard_map, constraint_t guard, std::list<constraint_t> guard_list, bool &on_time, bool entailed);
+  
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
 
   bool calculate_closure(phase_result_sptr_t& state, asks_t &trigger_asks,   ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& always);
 
   bool check_equality(const value_t &lhs, const value_t &rhs);
 
-  kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm);
+  kv::interval<double> calculate_zero_crossing_of_derivative(const constraint_t& guard,  parameter_map_t &pm);
   
-  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard, const variable_map_t &related_vm, parameter_map_t &pm, bool additional_constraint);
+  std::list<kv::interval<double> > calculate_interval_newton_nd(const constraint_t& guard,  parameter_map_t &pm);
 
-  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range);
+  kv::interval<double> evaluate_interval(const phase_result_sptr_t phase, ValueRange range, bool use_affine);
+
+  StateOfIntervalNewton initialize_newton_state(const constraint_t& time_guard, parameter_map_t &pm);
 
   ValueRange create_range_from_interval(kv::interval<double> itv);
 
  	/// make todos from given phase_result
   void make_next_todo(phase_result_sptr_t& phase);
+
+  void remove_redundant_parameters(phase_result_sptr_t phase);
 
   void approximate_phase(phase_result_sptr_t &phase, variable_map_t &vm_to_approximate);
 
@@ -129,6 +158,7 @@ private:
   variable_set_t *variable_set_;
   parameter_map_t *parameter_map_;
   variable_map_t *variable_map_;
+  variable_set_t vars_to_approximate;
   std::set<std::string> variable_names;
 
   module_set_container_sptr msc_no_init_;
@@ -143,12 +173,11 @@ private:
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
-  double                                upper_bound_of_itv_newton = 100;
+  int                                   upper_bound_of_itv_newton = 100;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
 };
 
-
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

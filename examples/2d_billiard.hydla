@@ -15,8 +15,8 @@ CONST(p) <=> [](p'' = 0).
 WALL(b,e) <=> []( (b- -1 = -10 | 10*|X| = b- +1) => b' = -e*b'- ).
 
 INIT(X[1],Y[1],0,0,10,1),
-{INIT(X[i],Y[i],5*i,5*i,0,0) | i in {1..|X|}, X[i] =!= X[1], Y[i] =!= Y[1]},
+{INIT(X[i],Y[i],5*i,5*i,0,0) | i in {1..|X|}, X[i] != X[1], Y[i] != Y[1]},
 {(CONST(X[i]), CONST(Y[i]), CONST(X[j]), CONST(Y[j])) << COL(X[i],Y[i],X[j],Y[j],1) | i in {1..|X|-1}, j in {i+1..|X|}}. 
 {CONST(p) << WALL(p,1) | p in X or Y}.
 
-//#hylagi -p15 --fnd
+//#hylagi -p8 --fnd

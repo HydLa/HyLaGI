@@ -30,6 +30,7 @@ bool ConstraintStore::consistent() const
 {
   return is_consistent;
 }
+
 // return if this constraint store is always true
 bool ConstraintStore::valid() const
 {

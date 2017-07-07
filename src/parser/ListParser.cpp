@@ -640,7 +640,7 @@ node_sptr Parser::expression_list_factor(){
 /**
  * list_condition := variable "in" expression_list
  *                 | program "in" program_list
- *                 | (expression_list_element | program_list_element | variable) "=!=" (expression_list_element | program_list_element | variable)
+ *                 | (expression_list_element | program_list_element | variable) "!=" (expression_list_element | program_list_element | variable)
  */
 node_sptr Parser::list_condition(){
   node_sptr lhs;
@@ -672,18 +672,18 @@ node_sptr Parser::list_condition(){
     }
   }
   lexer.set_current_position(position);
-// (expression_list_element | program_list_element | variable) "=!=" (expression_list_element | program_list_element | variable)
+// (expression_list_element | program_list_element | variable) "!=" (expression_list_element | program_list_element | variable)
   if((lhs = expression_list_element()) ||
      (lhs = program_list_element()) ||
      (lhs = variable())){
-    if(lexer.get_token() == DIFFERENT_VARIABLE){
+    if(lexer.get_token() == NOT_EQUAL){
       node_sptr rhs;
       if((rhs = expression_list_element()) ||
          (rhs = program_list_element()) ||
          (rhs = variable())){
         return boost::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
       }else{
-        error_occurred(lexer.get_current_position(), "expected variable, expression list element or program list element after \"=!=\"");
+        error_occurred(lexer.get_current_position(), "expected variable, expression list element or program list element after \"!=\"");
       }
     }
   }

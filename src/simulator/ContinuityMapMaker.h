@@ -12,14 +12,14 @@
 namespace hydla {
 namespace simulator {
 
-typedef std::map<std::string, int>                               continuity_map_t;
+typedef std::map<std::string, int> continuity_map_t;
 
 /**
  * Tellノードを調べ，連続性の根拠となる変数（とその微分値）の出現を数えるクラス
  */
-class ContinuityMapMaker : public symbolic_expression::DefaultTreeVisitor {
+class ContinuityMapMaker : public symbolic_expression::DefaultTreeVisitor
+{
 public:
-  
   ContinuityMapMaker();
 
   virtual ~ContinuityMapMaker();
@@ -60,13 +60,10 @@ public:
   // 左極限
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
 
-
   // 変数
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
 
 private:
-
-  
   // 集めた制約中に出現する変数とその微分回数のマップ
   continuity_map_t  variables_;
   int differential_count_;
@@ -75,9 +72,7 @@ private:
   bool negative_;
 };
 
-
 std::ostream& operator<<(std::ostream& s, const continuity_map_t& continuity_map);
 
-} //namespace simulator
-} //namespace hydla 
-
+} // namespace simulator
+} // namespace hydla 

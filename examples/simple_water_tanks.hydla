@@ -25,6 +25,6 @@ NO_INFLOW(x1,r1,x2, outflow) <=> [](x1- = r1- & x2'- = inflow - outflow => x2' =
 INIT(Xs[1], 1, inflow - 1), CONST,
 { INIT(Xs[i], 2 + i/2, -1-((i-1)/17) ) | i in {2..|Xs|} }.
 { LINEAR(Xs[i]) << INFLOW(Xs[i], 1, 1+((i-1)/17) ) | i in {1..|Xs|} }.
-{ LINEAR(Xs[j]) << NO_INFLOW(Xs[i], 1, Xs[j], 1+((j-1)/17)) | i in {1..|Xs|}, j in {1..|Xs|}, i =!= j }.
+{ LINEAR(Xs[j]) << NO_INFLOW(Xs[i], 1, Xs[j], 1+((j-1)/17)) | i in {1..|Xs|}, j in {1..|Xs|}, i != j }.
 
 //#hylagi -p10

@@ -90,6 +90,8 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
   map<string, int> vm;
   variable_set_t variable_set;
 
+
+  // get variables assumed to be continuous
   if(phase == POINT_PHASE)
   {
     if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
@@ -102,8 +104,8 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     variable_set = finder.get_all_variable_set();
   }
 
+  // create a map that projects variables to orders of those derivatives
   auto dm = get_differential_map(variable_set);
-  
   if(phase == INTERVAL_PHASE && constraint_for_default_continuity.get())
   {
     // assuming default continuity for variables in constraints
@@ -112,14 +114,10 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
     auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
     for(auto entry: tmp_dm)
     {
-      if(dm.count(entry.first) >= entry.second) continue;
       for(int i = 0; i <= entry.second;i++){
         variable_t var(entry.first, i);
         send_init_equation(var, fmt);
       }
-//      Value zero_value("0");
-      //    variable_t var(entry.first, entry.second + 1);
-//      backend->call("addEquation", false, 2, "vtvlt", "", &var, &zero_value);
     }
   }
 
@@ -129,7 +127,6 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
       variable_t var(dm_entry.first, i);
       send_init_equation(var, fmt);
     }
-    variable_t var(dm_entry.first, dm_entry.second);
   }
 }
 
@@ -201,8 +198,6 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
 
   VariableFinder finder;
   ConstraintStore constraint_store;
-  module_set_t module_set;
-
 
   asks_t temporarily_invalidated_asks;
   // remove constraints which are children of unknown_asks temporarily
@@ -214,12 +209,11 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
       temporarily_invalidated_asks.insert(ask);
     }
   }
-  relation_graph.get_related_constraints(guard, constraint_store, module_set);
+  relation_graph.get_related_constraints(guard, constraint_store);
   for(auto ask : temporarily_invalidated_asks)
   {
     relation_graph.set_entailed(ask, true);
   }    
-
 
   for(auto ask : unknown_asks)
   {
@@ -298,8 +292,8 @@ void ConsistencyChecker::clear_inconsistent_constraints()
 }
 
 void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constraints,
-                                           module_set_t &module_set,
-                                           CheckConsistencyResult &result,
+                                                   RelationGraph &relation_graph,
+CheckConsistencyResult &result,
                                            const PhaseType& phase,
                                            profile_t &profile,
                                            bool following_step)
@@ -313,12 +307,12 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
   }
   CheckConsistencyResult tmp_result;
 
-  tmp_result = check_consistency_essential(constraints, finder, phase, profile);
+  tmp_result = check_consistency_essential(constraints, finder, phase, profile, following_step);
 
   if(!tmp_result.consistent_store.consistent())
   {
     result.consistent_store.set_consistency(false);
-    inconsistent_module_sets.push_back(module_set);
+    HYDLA_LOGGER_DEBUG(""); inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
     inconsistent_constraints.push_back(constraints);
   }
   else
@@ -390,7 +384,7 @@ void ConsistencyChecker::check_consistency_foreach(const ConstraintStore &constr
   }
 }
 
-CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile, bool following_step)
+CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &relation_graph, ConstraintStore &difference_constraints, const PhaseType& phase, profile_t &profile, const asks_t &unknown_asks, bool following_step)
 {
   CheckConsistencyResult result;
   result_maps.clear();
@@ -398,20 +392,37 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
 
   timer::Timer timer;
   vector<ConstraintStore> related_constraints_list;
-  vector<module_set_t> related_modules_list;
-  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, related_modules_list);
+
+  // remove constraints which are children of unknown_asks temporarily
+  asks_t temporarily_invalidated_asks;
+  for(auto ask : unknown_asks)
+  {
+    HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
+    if(relation_graph.get_entailed(ask))
+    {
+      relation_graph.set_entailed(ask, false);
+      temporarily_invalidated_asks.insert(ask);
+    }
+  }
+
+vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(auto ask : relation_graph.get_active_asks())HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
   for(int i = 0; i < related_constraints_list.size(); i++)
   {
     HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
                        "]: ", related_constraints_list[i]);
-    check_consistency_foreach(related_constraints_list[i], related_modules_list[i], result, phase, profile, following_step);
+    check_consistency_foreach(related_constraints_list[i], relation_graph, result, phase, profile, following_step);
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 
-
   if(result.inconsistent_store.empty()) result.inconsistent_store.set_consistency(false);
+
+  for(auto ask : temporarily_invalidated_asks)
+  {
+    relation_graph.set_entailed(ask, true);
+  }    
+
 
   return result;
 }
@@ -442,7 +453,7 @@ list<ConstraintStore> ConsistencyChecker::get_inconsistent_constraints()
 }
 
 
-CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder &finder, const PhaseType& phase, profile_t &profile)
+CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const ConstraintStore& constraint_store, VariableFinder &finder, const PhaseType& phase, profile_t &profile, bool following_step)
 {
   timer::Timer timer;
   // PPでは変数表を全変数について作成する必要があるので，特定変数だけ解くようにするのは難しい．
@@ -456,7 +467,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
   // }
   // backend->set_variable_set(send_vars);
   backend->call("resetConstraintForVariable", false, 0, "", "");
-  add_continuity(finder, phase);
+  if(following_step)add_continuity(finder, phase);
   profile["AddContinuity"] += timer.get_elapsed_us();
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";

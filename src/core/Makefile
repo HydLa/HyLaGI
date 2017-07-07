@@ -1,6 +1,6 @@
 TARGET	 := ../../bin/hylagi
 
-LIB_DIRS := backend simulator hierarchy parser common io interval symbolic_expression utility
+LIB_DIRS := backend simulator hierarchy parser common io symbolic_expression utility interval
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
@@ -29,7 +29,7 @@ endif
 
 CXX_OPT  += 
 
-
+DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\"
 
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 
