@@ -166,11 +166,6 @@ bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNo
 
   HYDLA_LOGGER_DEBUG_VAR(*larger->phase);
   HYDLA_LOGGER_DEBUG_VAR(*smaller->phase);
-  VariableReplacer replacer(&larger->phase->variable_map);
-  replacer.replace_variable_map(&larger->phase->variable_map);
-  replacer.replace_variable_map(&smaller->phase->variable_map);
-  
-
 
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
@@ -189,7 +184,7 @@ bool HybridAutomatonConverter::check_including(AutomatonNode* larger,AutomatonNo
       cout << x.first.name << " (" << x.first.differential_count << ") " << endl;
     }
   }
-  //
+
   //compareing set of variables
   /*
   backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",

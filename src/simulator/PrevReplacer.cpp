@@ -56,7 +56,7 @@ void PrevReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Variable>
     replaced = true;
 
     // replace variables in the range with their values
-    VariableReplacer v_replacer(&prev_phase.variable_map);
+    VariableReplacer v_replacer(prev_phase.variable_map);
     v_replacer.replace_range(range);
 
     if(range.unique())
