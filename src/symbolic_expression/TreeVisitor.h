@@ -4,6 +4,8 @@
 
 #include "Node.h"
 
+#include "Logger.h"
+
 namespace hydla { 
 namespace symbolic_expression {
   
@@ -22,6 +24,7 @@ public:
 
   virtual void accept(const boost::shared_ptr<Node>& n)
   {
+    //HYDLA_LOGGER_DEBUG("Node : ", n->get_string());
     n->accept(n, this);
   }
 

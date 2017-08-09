@@ -119,6 +119,7 @@ private:
   find_min_time_result_t find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map);
 
   bool checkAndUpdateGuards(std::map<constraint_t, bool> &guard_map, constraint_t guard, std::list<constraint_t> guard_list, bool &on_time, bool entailed);
+  bool absolutelyNotSatisfied(std::map<constraint_t, bool> &guard_map, constraint_t guard, std::list<constraint_t> guard_list, bool &on_time, bool entailed);
   
   pp_time_result_t compare_min_time(const pp_time_result_t &existing, const find_min_time_result_t &newcomer, const ask_t& ask);
 

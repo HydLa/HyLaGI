@@ -121,8 +121,11 @@ void SymbolicTrajPrinter::output_parameter_map(const parameter_map_t& pm) const
   if (numerize_parameter)
   {
     for (; it!=end; ++it) {
-      ValueRange numerized_range = it->second.get_numerized_range();
-      ostream << it->first << "\t: " << numerized_range << "\n";
+      //ValueRange numerized_range = it->second.get_numerized_range();
+      //ostream << it->first << "\t: " << numerized_range << "\n";
+      ostream << it->first << "\t: ";
+      it->second.dump(ostream);
+      ostream << "\n";
     }
   }else
   {
@@ -138,7 +141,7 @@ ostream &stream, const phase_result_t &result) const
   variable_map_t vm = result.variable_map;
   for (auto it = vm.begin(); it!=vm.end(); ++it) {
 
-    // ½ÐÎÏÊÑ¿ô¤ò»ØÄê¤·¤¿¾ì¹ç
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¿ï¿½ï¿½ï¿½ï¿½ê¤·ï¿½ï¿½ï¿½ï¿½ï¿½
     if (opts.output_mode != Opts::None)
     {
       bool hit = false;

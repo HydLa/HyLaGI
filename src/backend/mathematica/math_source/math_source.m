@@ -131,6 +131,7 @@ publicMethod[
         simplePrint["Return(1)"];
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
+        simplePrint[pRules];
         pRules = createIntervalRules[pCons];
         sol = exDSolve[Simplify[cons], prevRs, pRules];
         simplePrint[sol];

@@ -56,15 +56,22 @@ static string get_file_without_ext(const string &path)
 void output_result(Simulator& ss, Opts& opts){
   std::stringstream sstr;
   sstr << "------ Result of Simulation ------\n";
+  HYDLA_LOGGER_DEBUG("%% output_result A");
   hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, opts.interval);
+  HYDLA_LOGGER_DEBUG("%% output_result B");
   if(opts.epsilon_mode >= 0){Printer.set_epsilon_mode(backend_,true);}
 
+  HYDLA_LOGGER_DEBUG("%% output_result C1");
   parameter_map_t par_map = ss.get_parameter_map();
+  HYDLA_LOGGER_DEBUG("%% output_result C2");
   if(!par_map.empty())
   {
     sstr << "---------parameter condition(global)---------" << endl;
+	HYDLA_LOGGER_DEBUG("%% output_result D1");
     Printer.output_parameter_map(par_map);
+	HYDLA_LOGGER_DEBUG("%% output_result D2");
   }
+  HYDLA_LOGGER_DEBUG("%% output_result E");
   Printer.output_result_tree(ss.get_result_root());
   std::cout << sstr.str();
 
@@ -244,6 +251,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
+  HYDLA_LOGGER_DEBUG("%% output result");
   if(!opts.ha_convert_mode)
   {
     output_result(*simulator_, opts);

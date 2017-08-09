@@ -692,6 +692,11 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
   variable_set_t discrete_variables = get_discrete_variables(diff_sum, phase_type);
   bool first = true;
 
+  for (const auto& variable : discrete_variables)
+  {
+    HYDLA_LOGGER_DEBUG("BREAK variable name : ", variable.get_name());
+  }
+
   do
   {
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
@@ -708,6 +713,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       for (auto variable : discrete_variables)
       {
         auto each_adjacents = relation_graph_->get_adjacent_asks(variable.get_name(), phase_type == POINT_PHASE);
+        for (const auto& adj : each_adjacents)
+        {
+          HYDLA_LOGGER_DEBUG("BREAK ask about [", variable.get_name(), "] : ", get_infix_string(adj));
+        }
         adjacents.insert(each_adjacents.begin(), each_adjacents.end());
       }
     }
@@ -729,7 +738,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     for(auto adjacent : adjacents)
     {
       unknown_asks.insert(adjacent);
-      HYDLA_LOGGER_DEBUG("BREAK1 ask[", std::to_string(count), "] : ", get_infix_string(adjacent));
+      HYDLA_LOGGER_DEBUG("BREAK1 ask[", std::to_string(count++), "] : ", get_infix_string(adjacent));
     }
 
     for (auto ask_it = unknown_asks.begin(); ask_it != unknown_asks.end() && !expanded;)
@@ -1184,7 +1193,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
   map<constraint_t, value_t> atomic_guard_time_map;
   map<constraint_t, std::list<value_t> > symbolic_guard_times_map;
-  map<constraint_t, StateOfIntervalNewton> newton_guard_state_map;
+  std::map<constraint_t, StateOfIntervalNewton> newton_guard_state_map;
   map<constraint_t, bool> atomic_guard_map;
 
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();
@@ -1269,6 +1278,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
   for (auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
   {
     const int index = std::distance(newton_guard_state_map.begin(), it);
+	HYDLA_LOGGER_DEBUG_VAR(std::string("first index:") + std::to_string(index));
     const auto& entry = *it;
 
     const std::string atomic_guard_str = get_infix_string(entry.first);
@@ -1297,6 +1307,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       bool needUpdate = true;
       StateOfIntervalNewton &state = entry.second;
       const std::string atomic_guard_str = get_infix_string(entry.first);
+      HYDLA_LOGGER_DEBUG_VAR(atomic_guard_str);
+	  auto nextIt = std::next(it, 1);
+	  HYDLA_LOGGER_DEBUG_VAR(std::string("isLastElement?:") + (nextIt == newton_guard_state_map.end() ? "true" : "false"));
+	  HYDLA_LOGGER_DEBUG_VAR(std::string("atomic_guard_index:") + std::to_string(atomic_guard_index));
 
       optional<IntervalNewtonResult> new_data_opt;
 
@@ -1455,6 +1469,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         else symbolic_guard_times_map[guard].pop_front();
       }
       bool on_time;
+	  HYDLA_LOGGER_DEBUG("BREAK3: ", get_infix_string(guard));
       bool satisfied = checkAndUpdateGuards(atomic_guard_map, guard, guard_list, on_time, entailed);
       if (satisfied)
       {
@@ -1501,7 +1516,9 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
     else guard_map[atomic_guard] = false;
   }
   
+  HYDLA_LOGGER_DEBUG("BREAK3: ", get_infix_string(guard));
   constraint_t applied_guard = applier.apply(guard, &guard_map);
+  HYDLA_LOGGER_DEBUG("BREAK3: ", get_infix_string(applied_guard), " vs ", entailed ? "True" : "False");
   backend_->call("isGuardSatisfied", true, 1, "en", "b", &applied_guard, &satisfied);
   if ((!entailed && satisfied) || (entailed && !satisfied))
   {
@@ -1531,6 +1548,12 @@ bool PhaseSimulator::checkAndUpdateGuards(map<constraint_t, bool> &guard_map, co
     on_time = false;
     return true;
   }
+  return false;
+}
+
+bool PhaseSimulator::absolutelyNotSatisfied(std::map<constraint_t, bool>& guard_map, constraint_t guard, std::list<constraint_t> guard_list, bool & on_time, bool entailed)
+{
+  
   return false;
 }
     
