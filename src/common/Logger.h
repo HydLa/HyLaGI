@@ -191,7 +191,7 @@ public:
   }
 };
 
-#define HYDLA_LOGGER_DEBUG_INTERNAL(...)  hydla::logger::Logger::debug_write(__VA_ARGS__)
+#define HYDLA_LOGGER_DEBUG_INTERNAL(...)  {hydla::logger::Logger::debug_write(__VA_ARGS__);}
 
 /**
  * ログレベルdebugでのログの出力
@@ -203,24 +203,24 @@ public:
 /**
  * ログレベルwarnでのログの出力
  */
-#define HYDLA_LOGGER_WARN_INTERNAL(...)  hydla::logger::Logger::warn_write(__VA_ARGS__)
+#define HYDLA_LOGGER_WARN_INTERNAL(...)  {hydla::logger::Logger::warn_write(__VA_ARGS__);}
 
 #define HYDLA_LOGGER_WARN(...)  HYDLA_LOGGER_WARN_INTERNAL("WARNING: ", __VA_ARGS__)
 
 /**
  * ログレベルerrorでのログの出力
  */
-#define HYDLA_LOGGER_ERROR(...)  hydla::logger::Logger::error_write(__VA_ARGS__)
+#define HYDLA_LOGGER_ERROR(...)  {hydla::logger::Logger::error_write(__VA_ARGS__);}
 
 /**
  * ログレベルfatalでのログの出力
  */
-#define HYDLA_LOGGER_FATAL(...)  hydla::logger::Logger::fatal_write(__VA_ARGS__)
+#define HYDLA_LOGGER_FATAL(...)  {hydla::logger::Logger::fatal_write(__VA_ARGS__);}
 
  /**
  * ログレベルstandardでのログの出力
  */
-#define HYDLA_LOGGER_STANDARD(...)  hydla::logger::Logger::standard_write(__VA_ARGS__)
+#define HYDLA_LOGGER_STANDARD(...)  {hydla::logger::Logger::standard_write(__VA_ARGS__);}
 
 /**
  * log macro for variables (printed like "(name of variable): (value of var)")
