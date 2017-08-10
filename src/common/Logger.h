@@ -34,7 +34,7 @@ public:
     return log_level_;
   }
 
-  bool valid_level(LogLevel level)
+  bool valid_level(LogLevel level) const
   {
     return log_level_ <= level;
   }
@@ -48,7 +48,9 @@ public:
   template<typename... As>
   static void debug_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.debug_ << i.format(args...) << std::endl;
+    if (i.valid_level(LogLevel::Debug)) {
+      i.debug_ << i.format(args...) << std::endl;
+    }
   }
 
   /**
@@ -57,7 +59,9 @@ public:
   template<typename... As>
   static void warn_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.warn_ << i.format(args...) << std::endl;
+    if (i.valid_level(LogLevel::Warn)) {
+      i.warn_ << i.format(args...) << std::endl;
+    }
   }
 
   /**
@@ -66,7 +70,9 @@ public:
   template<typename... As>
   static void error_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.error_ << i.format(args...) << std::endl;
+    if (i.valid_level(LogLevel::Error)) {
+      i.error_ << i.format(args...) << std::endl;
+    }
   }
   
   /**
@@ -75,7 +81,9 @@ public:
   template<typename... As>
   static void fatal_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.fatal_ << i.format(args...) << std::endl;
+    if (i.valid_level(LogLevel::Fatal)) {
+      i.fatal_ << i.format(args...) << std::endl;
+    }
   }
 
   /**
@@ -84,12 +92,16 @@ public:
   template<typename... As>
   static void standard_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.standard_ << i.format(args...) << std::endl;
+    if (i.valid_level(LogLevel::Standard)) {
+      i.standard_ << i.format(args...) << std::endl;
+    }
   }
 
   static void debug_write_row(const std::string& str) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    i.debug_ << str << std::endl;
+    if (i.valid_level(LogLevel::Debug)) {
+      i.debug_ << str << std::endl;
+    }
   }
 
   static bool is_html_mode() {
