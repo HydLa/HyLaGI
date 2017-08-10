@@ -121,6 +121,8 @@ int hydla_main(int argc, char* argv[])
   if(dump_in_advance(options_in_source))return 0;
   process_opts(opts, options_in_source, true);
 
+  Logger::set_html_mode(opts.html);
+
   //マクロ処理
   {
     static const bool debugPrint = false;

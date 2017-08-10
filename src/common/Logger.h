@@ -92,10 +92,14 @@ public:
     i.debug_ << str << std::endl;
   }
 
-  static bool is_html_mode()
-  {
+  static bool is_html_mode() {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    return i.is_html_mode;
+    return i.html_mode;
+  }
+
+  static void set_html_mode(bool enabled) {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+    i.html_mode = enabled;
   }
 
 private:
@@ -150,7 +154,7 @@ private:
   Logger& operator=(const Logger&); 
 
   LogLevel log_level_;
-  bool html_mode = true;
+  bool html_mode = false;
 
   boost::iostreams::filtering_ostream debug_;
   boost::iostreams::filtering_ostream warn_;

@@ -218,12 +218,16 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("step_by_step")opts.step_by_step = po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
   IF_SPECIFIED("simplify")opts.simplify = po.get<int>("simplify");
   IF_SPECIFIED("solve_over_reals")opts.solve_over_reals = po.count("solve_over_reals") > 0 && po.get<char>("solve_over_reals") == 'y';
+  IF_SPECIFIED("html")opts.html = po.count("html") > 0 && po.get<char>("html") == 'y';
 }
 
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   process_opts(opts, cmdline_options, false);
+
+  // todo : コマンドラインオプションをここで読むのは遅すぎるので何とかする
+  //Logger::set_html_mode(opts.html);
 
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
