@@ -21,6 +21,8 @@ SequentialSimulator::~SequentialSimulator()
 
 phase_result_sptr_t SequentialSimulator::simulate()
 {
+  //auto detail = logger::Detail(__FUNCTION__);
+
   std::string error_str = "";
   make_initial_todo();
 
@@ -45,6 +47,8 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
 void SequentialSimulator::dfs(phase_result_sptr_t current)
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   HYDLA_LOGGER_DEBUG_VAR(*current);
   if (signal_handler::interrupted)
   {

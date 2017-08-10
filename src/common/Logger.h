@@ -16,6 +16,7 @@ public:
     Warn,
     Error,
     Fatal,
+    Standard,
     None
   };
 
@@ -47,11 +48,7 @@ public:
   template<typename... As>
   static void debug_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    std::ostringstream stream;
-    using List = int[];
-    List{ ((stream << args), 0) ... };
-
-    i.debug_ << stream.str() << std::endl;
+    i.debug_ << i.format(args...) << std::endl;
   }
 
   /**
@@ -60,11 +57,7 @@ public:
   template<typename... As>
   static void warn_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    std::ostringstream stream;
-    using List = int[];
-    List{ ((stream << args), 0) ... };
-
-    i.warn_ << stream.str() << std::endl;
+    i.warn_ << i.format(args...) << std::endl;
   }
 
   /**
@@ -73,11 +66,7 @@ public:
   template<typename... As>
   static void error_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    std::ostringstream stream;
-    using List = int[];
-    List{ ((stream << args), 0) ... };
-
-    i.error_ << stream.str() << std::endl;
+    i.error_ << i.format(args...) << std::endl;
   }
   
   /**
@@ -86,26 +75,95 @@ public:
   template<typename... As>
   static void fatal_write(const As&... args) {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
-    std::ostringstream stream;
-    using List = int[];
-    List{ ((stream << args), 0) ... };
+    i.fatal_ << i.format(args...) << std::endl;
+  }
 
-    i.fatal_ << stream.str() << std::endl;
+  /**
+  * ログレベルstandardとしてログの出力をおこなう
+  */
+  template<typename... As>
+  static void standard_write(const As&... args) {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+    i.standard_ << i.format(args...) << std::endl;
+  }
+
+  static void debug_write_row(const std::string& str) {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+    i.debug_ << str << std::endl;
   }
 
 private:
+
+  template<typename... As>
+  std::string format(const As&... args) const {
+    std::stringstream stream;
+    using List = int[];
+    List{ ((stream << args), 0) ... };
+
+    if (!is_html_mode) {
+      return stream.str();
+    }
+
+    const std::string old_str(std::move(stream.str()));
+    std::string new_str;
+    new_str.reserve(old_str.length());
+
+    for (const char* data = old_str.data(); *data != '\0'; ++data) {
+      switch (*data) {
+      case '\n':
+        new_str.append("<br>\n");
+        break;
+      case '\"':
+        new_str.append("&quot;");
+        break;
+      case '&':
+        new_str.append("&amp;");
+        break;
+      case '\'':
+        new_str.append("&apos;");
+        break;
+      case '<':
+        new_str.append("&lt;");
+        break;
+      case '>':
+        new_str.append("&gt;");
+        break;
+      default:
+        new_str.push_back(*data);
+        break;
+      }
+    }
+
+    new_str.append("<br>");
+
+    return new_str;
+  }
+
   Logger();
   Logger(const Logger&);
   Logger& operator=(const Logger&); 
 
   LogLevel log_level_;
-  bool is_html_mode = false;
+  bool is_html_mode = true;
 
   boost::iostreams::filtering_ostream debug_;
   boost::iostreams::filtering_ostream warn_;
   boost::iostreams::filtering_ostream error_;
   boost::iostreams::filtering_ostream fatal_;
+  boost::iostreams::filtering_ostream standard_;
 };  
+
+class Detail
+{
+public:
+  Detail(const std::string& summary) {
+    Logger::debug_write_row(std::string("<details><summary>") + summary + "</summary>\n<div style=\"padding-left:1em\">\n");
+  }
+
+  ~Detail() {
+    Logger::debug_write_row("</div>\n</details>\n");
+  }
+};
 
 #define HYDLA_LOGGER_DEBUG_INTERNAL(...)  hydla::logger::Logger::debug_write(__VA_ARGS__)
 
@@ -132,6 +190,11 @@ private:
  * ログレベルfatalでのログの出力
  */
 #define HYDLA_LOGGER_FATAL(...)  hydla::logger::Logger::fatal_write(__VA_ARGS__)
+
+ /**
+ * ログレベルstandardでのログの出力
+ */
+#define HYDLA_LOGGER_STANDARD(...)  hydla::logger::Logger::standard_write(__VA_ARGS__)
 
 /**
  * log macro for variables (printed like "(name of variable): (value of var)")

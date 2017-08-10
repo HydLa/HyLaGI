@@ -10,6 +10,7 @@ Logger::Logger() :
   warn_.push(std::cerr);
   error_.push(std::cerr);
   fatal_.push(std::cerr);
+  standard_.push(std::cout);
 }
 
 Logger::~Logger()
