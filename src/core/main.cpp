@@ -456,10 +456,10 @@ int hydla_main(int argc, char* argv[])
 
   if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
   {
-    cout << "successfully parsed" << endl;
+    HYDLA_LOGGER_STANDARD("successfully parsed");
     return 0;
   }
-  
+
   if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
     return 0;
   }
@@ -468,10 +468,10 @@ int hydla_main(int argc, char* argv[])
   // シミュレーション開始
   int simulation_result = simulate(pt);
 
-  std::cout << "Simulation Time : " << simulation_timer.get_time_string() << std::endl;
-  std::cout << "Finish Time : " << main_timer.get_time_string() << std::endl;
-  cout << endl;
-  
+  HYDLA_LOGGER_STANDARD("Simulation Time : ", simulation_timer.get_time_string());
+  HYDLA_LOGGER_STANDARD("Finish Time : ", main_timer.get_time_string());
+  HYDLA_LOGGER_STANDARD("");
+
   return simulation_result;
 }
 

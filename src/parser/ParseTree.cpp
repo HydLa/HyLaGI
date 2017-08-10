@@ -36,6 +36,8 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream) 
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   // ParseTreeの構築
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;

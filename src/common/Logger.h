@@ -92,6 +92,12 @@ public:
     i.debug_ << str << std::endl;
   }
 
+  static bool is_html_mode()
+  {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+    return i.is_html_mode;
+  }
+
 private:
 
   template<typename... As>
@@ -100,7 +106,7 @@ private:
     using List = int[];
     List{ ((stream << args), 0) ... };
 
-    if (!is_html_mode) {
+    if (!html_mode) {
       return stream.str();
     }
 
@@ -144,24 +150,28 @@ private:
   Logger& operator=(const Logger&); 
 
   LogLevel log_level_;
-  bool is_html_mode = true;
+  bool html_mode = true;
 
   boost::iostreams::filtering_ostream debug_;
   boost::iostreams::filtering_ostream warn_;
   boost::iostreams::filtering_ostream error_;
   boost::iostreams::filtering_ostream fatal_;
   boost::iostreams::filtering_ostream standard_;
-};  
+};
 
 class Detail
 {
 public:
   Detail(const std::string& summary) {
-    Logger::debug_write_row(std::string("<details><summary>") + summary + "</summary>\n<div style=\"padding-left:1em\">\n");
+    if (Logger::is_html_mode()) {
+      Logger::debug_write_row(std::string("<details><summary>") + summary + "</summary>\n<div style=\"padding-left:1em\">\n");
+    }
   }
 
   ~Detail() {
-    Logger::debug_write_row("</div>\n</details>\n");
+    if (Logger::is_html_mode()) {
+      Logger::debug_write_row("</div>\n</details>\n");
+    }
   }
 };
 
