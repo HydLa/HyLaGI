@@ -8,6 +8,28 @@
 namespace hydla {
 namespace logger {
 
+/*! @class Logger
+    @brief
+    ログ出力を行うクラスです。
+
+    実行時にhtmlオプションを付けることにより、ログをHTML形式で出力することができます。
+
+    HTMLモードでは、ログに階層構造に関する情報が付加されます。
+
+    以下に、HTMLモードの出力でそれぞれのタブが中に持っている情報について説明をします。
+
+    |タブ|中身の説明|
+    |:--|:--------|
+    |parse|パース|
+    |call_timer.get_elapsed_us()|時間計測|
+    |dfs|1フェーズ全体の計算|
+    |make_results_from_todo|フェーズのシミュレーション|
+    |calculate_closure|解軌道などの計算|
+    |make_next_todo|離散変化時刻などの計算|
+    |find_min_time|ガードの最小変化時刻の計算|
+    |find_min_time_step_by_step|ガードの最小変化時刻の計算|
+    |output_result|全体結果の出力|
+*/
 class Logger
 {
 public:
