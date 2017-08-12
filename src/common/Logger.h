@@ -114,6 +114,35 @@ public:
     i.html_mode = enabled;
   }
 
+  static void initialize() {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+
+    std::string defaultStyle(R"(
+html {
+  background: #EEE;
+  padding: 1em;
+}
+details {
+  background: #FFF;
+  margin: 7px 0;
+  padding: 0 0 1px 0;
+  border: solid #00a8ff;
+  border-width: 0px 0px 1px 2px;
+}
+summary {
+  background: #00a8ff;
+  color: #FFF;
+  font-weight: bold;
+  padding: 3px;
+  margin: 0 0px 5px -2px;
+}
+)");
+
+    i.debug_ << "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\" />" << std::endl;
+    i.debug_ << std::string("<style>\n") + defaultStyle + "</style>" << std::endl;
+    i.debug_ << "</head>\n<body>" << std::endl;
+  }
+
 private:
 
   template<typename... As>

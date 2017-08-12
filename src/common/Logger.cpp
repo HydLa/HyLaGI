@@ -14,7 +14,13 @@ Logger::Logger() :
 }
 
 Logger::~Logger()
-{}
+{
+  std::cerr << std::endl;
+  std::cout << std::endl;
+
+  hydla::logger::Logger& i = hydla::logger::Logger::instance();
+  i.debug_ << "</body>\n</html>" << std::endl;
+}
 
 Logger& Logger::instance() {
   static Logger inst;

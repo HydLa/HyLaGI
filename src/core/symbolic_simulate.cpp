@@ -227,7 +227,8 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   process_opts(opts, cmdline_options, false);
 
   // todo : コマンドラインオプションをここで読むのは遅すぎるので何とかする
-  //Logger::set_html_mode(opts.html);
+  Logger::set_html_mode(opts.html);
+  Logger::initialize();
 
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
