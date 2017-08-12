@@ -139,6 +139,11 @@ public:
   static void initialize() {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
 
+    if (!i.is_html_mode())
+    {
+      return;
+    }
+
     std::string defaultStyle(R"(
 html {
   background: #EEE;

@@ -15,10 +15,15 @@ Logger::Logger() :
 
 Logger::~Logger()
 {
+  hydla::logger::Logger& i = hydla::logger::Logger::instance();
+  if (!i.is_html_mode())
+  {
+    return;
+  }
+
   std::cerr << std::endl;
   std::cout << std::endl;
 
-  hydla::logger::Logger& i = hydla::logger::Logger::instance();
   i.debug_ << "</body>\n</html>" << std::endl;
 }
 
