@@ -182,7 +182,7 @@ private:
       return stream.str();
     }
 
-    const std::string old_str(std::move(stream.str()));
+    const std::string old_str(stream.str());
     std::string new_str;
     new_str.reserve(old_str.length());
 
