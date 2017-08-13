@@ -175,8 +175,9 @@ private:
   template<typename... As>
   std::string format(const As&... args) const {
     std::stringstream stream;
-    using List = int[];
-    List{ ((stream << args), 0) ... };
+
+    using swallow = std::initializer_list<int>;
+    (void) swallow{ (void(stream << args), 0) ... };
 
     if (!html_mode) {
       return stream.str();
