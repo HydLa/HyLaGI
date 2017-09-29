@@ -243,7 +243,9 @@ applyList[reduceSol_] :=
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
-
+(* Reduce等の出力がAnd/Orの無い単一の制約だった場合の一貫性を保つ *)
+applyListToSingleCons[reduceSol_] :=
+    If[MemberQ[{And,Or}, Head[reduceSol]], reduceSol, List[reduceSol]];
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
 And2and[reduceSol_] :=

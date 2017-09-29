@@ -47,7 +47,7 @@ publicMethod[
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
+    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
@@ -152,6 +152,7 @@ publicMethod[
               ];
               cpTrue = cpTrue || eachCpTrue
             ];
+			debugPrint["cpFalse", cpFalse];
             cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
             toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
           ]
@@ -218,28 +219,15 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {map, tmpCons, succeded = false},
+    {map, tmpCons=cons},
 
     If[cons === True, Return[{{}}]];
-    If[cons === False, Return[{}]];    
+    If[cons === False, Return[{}]];
 
-    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
-    If[Head[tmpCons] =!= LogicalOr,
-      {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
-    ];
-    simplePrint[tmpCons, succeeded];
-    If[!succeeded,
-      (* try to solve with parameters *)
-      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      tmpCons = Reduce[tmpCons, vars, Reals];
-      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
-      tmpCons = LogicalExpand[tmpCons];
-    ];
-
-    tmpCons = applyListToOr[tmpCons];
-    tmpCons = Map[(applyList[#])&, tmpCons];
-    tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
-    debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
+    tmpCons = applyListToOr[applyListToSingleCons[tmpCons]];
+    debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
+    tmpCons = Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1];
+    debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
     map = ruleOutException[map];
@@ -320,11 +308,9 @@ publicMethod[
         {{}},
       If[map === False,
          {},
-         map = LogicalExpand[map];
-         map = applyListToOr[map];
-         map = Map[(applyList[#])&, map];
-         map = Map[(adjustExprs[#, isParameter])&, map];
-         debugPrint["map after adjustExprs in createParameterMap", map];
+         map = applyListToOr[applyListToSingleCons[map]];
+         map = Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1];
+         debugPrint["map after createMap in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
          map
       ]
@@ -361,6 +347,19 @@ getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 getParameters[exprs_] := Union[Cases[exprs, p[_, _, _], {0, Infinity}]];
 
+getRelativeParameters[pars_, pConsList_] :=
+  Module[
+    {npars, npConsList},
+    If[pars === {},
+      {},
+      npars = Complement[Flatten[Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]>0)&]], pars];
+      npConsList = Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]==0)&];
+      Union[pars, getRelativeParameters[npars,npConsList]]
+    ]
+  ]
+
+
+
 (* 式中に定数名が出現するか否か *)
 
 hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], {0, Infinity}] ] > 0;
@@ -385,6 +384,23 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
+(* 変数varsに関する制約ストアからjudgeFunctionでTrueとなる変数に関するMapを作成 *)
+createMap[consList_, judgeFunction_, vars_, pars_] :=
+  Map[
+    (Fold[
+      (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
+          Union[#1, {getReverseRelop[#2[[2]] ]@@{#2[[3]],#2[[1]] }, #2[[4]]@@{#2[[3]],#2[[5]] } } ],
+        If[MemberQ[{Equal,Unequal,Less,LessEqual,Greater,GreaterEqual}, Head[#2]]&&judgeFunction[#2[[1]]],
+          Append[#1, #2],
+        If[Head[#2]===Element&&judgeFunction[#2[[1]]],
+          Append[#1, Equal[#2[[1]], True]],
+          #1] ] ] )&,
+      {},
+      #
+    ])&,
+    applyListToOr[applyListToSingleCons[Reduce[consList, Join[pars,vars]]]]
+  ]
+
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 adjustExprs[andExprs_, judgeFunction_] :=
 Fold[
@@ -399,6 +415,7 @@ Fold[
   {},
   andExprs
 ];
+
 
 publicMethod[
   resetConstraint,
@@ -531,7 +548,7 @@ publicMethod[
 publicMethod[
   resetConstraintForParameter,
   pCons,
-  pConstraint = Reduce[pCons, Reals];
+  pConstraint = Reduce[pCons, getParameters[pCons], Reals];
 ];
 
 
@@ -555,7 +572,9 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pCons,
-  pConstraint = Reduce[pConstraint && pCons, Reals];
+  pConstraint = Reduce[pConstraint && pCons, Union[getParameters[pConstraint], getParameters[pCons]], Reals];
+  debugPrint["pConstraint", pConstraint];
+  debugPrint["pCons", pCons]
 ];
 
 
@@ -648,8 +667,9 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    parsInCons = Union[getParameters[tCons], getParameters[maxTime] ];
     consList = applyList[pCons];
+    parsInCons = Union[getRelativeParameters[getParameters[tCons && maxCons], consList]];
+    debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     restPCons = And@@Complement[consList, necessaryPCons];
     necessaryPCons = And@@necessaryPCons;
@@ -1156,6 +1176,6 @@ publicMethod[
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];
-    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
+    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], parsInVM, Reals] ] ]}
   ]
 ];
