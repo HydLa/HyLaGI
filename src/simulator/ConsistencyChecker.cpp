@@ -40,7 +40,7 @@ void ConsistencyChecker::send_range_constraint(const Variable &var, const variab
   else
   {
     // replace variables in the range with their values
-    VariableReplacer v_replacer(vm);
+    VariableReplacer v_replacer(vm, false);
     v_replacer.replace_range(range);
     if(range.get_upper_cnt())
     {

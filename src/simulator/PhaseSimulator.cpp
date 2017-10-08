@@ -1655,7 +1655,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           diff_variables.insert(var_set.begin(), var_set.end());
         }
       }
-
       guard_time_map_t guard_time_map;
 
       // 各変数に関する最小時刻をask単位で更新する．
@@ -2055,7 +2054,7 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time
 
 itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range, bool use_affine)
 {
-  VariableReplacer v_replacer(phase->variable_map);
+  VariableReplacer v_replacer(phase->variable_map, false);
   v_replacer.replace_range(range);
   range = value_modifier->apply_function("simplify", range);
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();

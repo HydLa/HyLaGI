@@ -224,9 +224,9 @@ publicMethod[
     If[cons === True, Return[{{}}]];
     If[cons === False, Return[{}]];
 
-    tmpCons = applyListToOr[applyListToSingleCons[tmpCons]];
+    tmpCons = consToDoubleList[tmpCons];
     debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
-    tmpCons = Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1];
+    tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
     debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
@@ -308,8 +308,8 @@ publicMethod[
         {{}},
       If[map === False,
          {},
-         map = applyListToOr[applyListToSingleCons[map]];
-         map = Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1];
+         map = consToDoubleList[map];
+         map = Union[Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1]];
          debugPrint["map after createMap in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
          map
@@ -398,7 +398,7 @@ createMap[consList_, judgeFunction_, vars_, pars_] :=
       {},
       #
     ])&,
-    applyListToOr[applyListToSingleCons[Reduce[consList, Join[pars,vars]]]]
+    consToDoubleList[Reduce[consList, Join[pars,vars]]]
   ]
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
@@ -610,6 +610,7 @@ makeListFromPiecewise[minT_, others_] := Module[
 ];
 
 
+
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
   そうでない場合は0を末尾に付加して返す．条件によって変化する場合は，条件を絞り込んでそれぞれを返す *)
 compareWithMaxTime[maxT_, timeCond_] :=
@@ -667,7 +668,7 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    consList = applyList[pCons];
+    consList = Flatten[consToDoubleList[LogicalExpand[pCons]]];
     parsInCons = Union[getRelativeParameters[getParameters[tCons && maxCons], consList]];
     debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
@@ -699,7 +700,7 @@ publicMethod[
         resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]}, -1})&, ret];
         resultList
       ]
-    ]
+      ]
   ]
 ];
 
@@ -1171,7 +1172,7 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    parsInVM = Union[getParameters[start], getParameters[end], getParameters[vm] ];
+    parsInVM = Fold[Union[#1, getRelativeParameters[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
