@@ -714,20 +714,10 @@ publicMethod[
   time1, time2, pCons1, pCons2,
   Module[
     {
-      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons, pRules, intervalLess, intervalGreater, interval
+      andCond, caseEq, caseLe, caseGr, ret, usedPars, otherPCons = False, pRules, intervalLess, intervalGreater, interval
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
     andCond = Reduce[pCons1 && pCons2];
-    If[andCond === True,
-      necessaryPCons = True;
-      otherPCons = True,
-      If[Head[andCond] =!= Or,
-        necessaryPCons = andCond; otherPCons = True,
-        necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
-        otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
-        necessaryPCons = Reduce[necessaryPCons, Reals];
-      ]
-    ];
     If[andCond === False,
       Return[{{False}, {False}, {False}}]
     ];
@@ -740,23 +730,20 @@ publicMethod[
       interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
       intervalLess = interval < 0;
       If[intervalLess === True,
-        Return[{{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}}]
+        Return[{{toReturnForm[LogicalExpand[andCond] ]}, {False}, {False}}]
       ];
       intervalGreater = interval > 0;
       If[intervalGreater === True,
-        Return[{{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}}]
+        Return[{{False}, {toReturnForm[LogicalExpand[andCond] ]}, {False}}]
       ];
     ];
     (* If it isn't determined, use Reduce *)
-    caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+    caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
     simplePrint[caseEq];
-    caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+    caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
     simplePrint[caseLe];
-    caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+    caseGr = Reduce[andCond && !caseLe && !caseEq];
     simplePrint[caseGr];
-    caseEq = caseEq && otherPCons;
-    caseLe = caseLe && otherPCons;
-    caseGr = caseGr && otherPCons;
     {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
   ]
 ];
