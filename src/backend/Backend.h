@@ -1,5 +1,8 @@
 #pragma once
 
+#include <set>
+#include <string>
+
 #include "Link.h"
 
 #include "DefaultTreeVisitor.h"
@@ -264,6 +267,10 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
 
   //valと関係演算子を元に、rangeを設定する
   void set_range(const simulator::value_t &val, simulator::range_t &range, const int& relop);
+
+  //Mathematicaがillegalpktを返してきたときにリトライできる関数リスト
+  //グローバル変数を変更しない関数や、重複して実行しても問題ない関数を手動で登録する
+  std::set<std::string> pure_functions;
 };
 
 } // namespace backend

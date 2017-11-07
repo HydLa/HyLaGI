@@ -1,12 +1,14 @@
 #include <float.h>
 #include <queue>
 #include <utility>
+#include <iomanip>
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
 #include "AffineTreeVisitor.h"
 #include "Logger.h"
 #include "HydLaError.h"
 #include <sstream>
+#include <fstream>
 
 namespace hydla
 {
@@ -51,55 +53,152 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     return true;
   }
   
-
-  double max_width = width(candidate) * 2;
-  double min_width = 0;
-  while(true)
+  try
   {
-    double w = (max_width + min_width)/ 2;
-    if(max_width <= min_width || w == max_width || w == min_width) throw HYDLA_ERROR("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". "); 
-    tmp.lower() = candidate.lower() - w / 2.;
-    tmp.upper() = candidate.upper() + w / 2.;
-    std::cerr.precision(17);
-    HYDLA_LOGGER_DEBUG_VAR(tmp);
-  
-    itvd n_x, div;
-    bool parted;
-    IntervalTreeVisitor visitor;
-    itvd time_interval = itvd(mid(tmp));
-
-    itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
-    itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
-
-    HYDLA_LOGGER_DEBUG_VAR(f_result);
-    HYDLA_LOGGER_DEBUG_VAR(d_result);
-  
-    div = division_part1(f_result, d_result, parted);
-
-    HYDLA_LOGGER_DEBUG("div : ", div);
-
-
-    if(parted || in(0.,d_result))
+    double max_width = width(candidate) * 2;
+    double min_width = 0;
+    while (true)
     {
-      max_width = (max_width + min_width) / 2;
-      HYDLA_LOGGER_DEBUG("partition occured.");
-      continue;
-    }
-  
-    n_x = mid(tmp) - div;
+      double w = (max_width + min_width) / 2;
+      if (max_width <= min_width || w == max_width || w == min_width) throw HYDLA_ERROR("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ");
+      tmp.lower() = candidate.lower() - w / 2.;
+      tmp.upper() = candidate.upper() + w / 2.;
+      std::cerr.precision(17);
+      HYDLA_LOGGER_DEBUG_VAR(tmp);
 
-    HYDLA_LOGGER_DEBUG("n_x : ", n_x);
-  
-    if(proper_subset(n_x, tmp))
-    {
-      return true;
+      itvd n_x, div;
+      bool parted;
+      IntervalTreeVisitor visitor;
+      itvd time_interval = itvd(mid(tmp));
+
+      itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
+      itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
+
+      HYDLA_LOGGER_DEBUG_VAR(f_result);
+      HYDLA_LOGGER_DEBUG_VAR(d_result);
+
+      div = division_part1(f_result, d_result, parted);
+
+      HYDLA_LOGGER_DEBUG("div : ", div);
+
+
+      if (parted || in(0., d_result))
+      {
+        max_width = (max_width + min_width) / 2;
+        HYDLA_LOGGER_DEBUG("partition occured.");
+        continue;
+      }
+
+      n_x = mid(tmp) - div;
+
+      HYDLA_LOGGER_DEBUG("n_x : ", n_x);
+
+      if (proper_subset(n_x, tmp))
+      {
+        return true;
+      }
+      else
+      {
+        HYDLA_LOGGER_DEBUG("proper_subset failed");
+        min_width = (max_width + min_width) / 2;
+        continue;
+      }
     }
-    else
+  }
+  catch (const hydla::HydLaError& e)
+  {
+    /*
+    std::ofstream ofs_check("interval_newton_show_existence_check_log.csv");
+    std::ofstream ofs_check2("interval_newton_show_existence_check_log2.txt");
+
+    ofs_check2 << std::setprecision(6);
+
+    ofs_check << "w, result\r\n";
+
+    const double max_width = width(candidate) * 2;
+    const double min_width = 0;
+
+    const int divNum = 1000;
+    const double dW = max_width / divNum;
+
+    for (int i = 0; i < divNum; ++i)
     {
-      HYDLA_LOGGER_DEBUG("proper_subset failed");
-      min_width = (max_width + min_width) / 2;
-      continue;
+      const double w = dW*i;
+
+      ofs_check << w << ", ";
+      ofs_check2 << w << ", ";
+
+      tmp.lower() = candidate.lower() - w / 2.;
+      tmp.upper() = candidate.upper() + w / 2.;
+      std::cerr.precision(17);
+
+      ofs_check2 << tmp << ", ";
+      
+      itvd n_x, div;
+      bool parted;
+      IntervalTreeVisitor visitor;
+      itvd time_interval = itvd(mid(tmp));
+
+      itvd f_result = visitor.get_interval_value(exp, &time_interval, &phase_map_);
+      itvd d_result = visitor.get_interval_value(dexp, &tmp, &phase_map_);
+
+      div = division_part1(f_result, d_result, parted);
+
+      if (parted || in(0., d_result))
+      {
+        ofs_check << "3\r\n";
+        ofs_check2 << "3\r\n";
+        continue;
+      }
+
+      n_x = mid(tmp) - div;
+
+      if (proper_subset(n_x, tmp))
+      {
+        ofs_check << "2\r\n";
+        ofs_check2 << "2\r\n";
+        continue;
+      }
+      else
+      {
+        ofs_check << "1\r\n";
+        ofs_check2 << "1\r\n";
+        continue;
+      }
     }
+    ofs_check.close();
+
+    throw;
+    //*/
+    
+    //*
+    {
+      std::ofstream ofs_interval("interval_newton_show_existence_error_log.csv");
+
+      ofs_interval << "t, lower, upper, mid\r\n";
+
+      std::vector<itvd> interval_candidates;
+
+      const int divNum = 1000;
+      const double maxT = 5.0;
+      const double dt = maxT / divNum;
+
+      for (int i = 0; i < divNum; ++i)
+      {
+        const double t = dt*i;
+
+        IntervalTreeVisitor visitor;
+        itvd time_interval = itvd(t);
+        const itvd current_range = visitor.get_interval_value(exp, &time_interval, &phase_map_);
+
+        ofs_interval << t << ", " << current_range.lower() << ", " << current_range.upper() << ", " << mid(current_range) << "\r\n";
+      }
+
+      ofs_interval.close();
+
+      throw;
+    }
+    //*/
   }
 }
 

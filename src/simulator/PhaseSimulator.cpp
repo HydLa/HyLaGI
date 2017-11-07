@@ -1327,8 +1327,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
             IntervalNewtonResult new_data;
             new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
 
-            state.min_interval =
-              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
+            /*state.min_interval =
+              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
+			state.min_interval =
+				interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
 
             new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
             new_data.next_stack = state.stack;
@@ -1353,8 +1355,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
           IntervalNewtonResult new_data;
           new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
 
-          state.min_interval =
-            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));
+          /*state.min_interval =
+            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
+		  state.min_interval =
+			  interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
 
           new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
           new_data.next_stack = state.stack;
@@ -1494,6 +1498,11 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         backend_->call("productWithNegatedConstraint", true, 2, "csncsn", "cs", &current_parameter_constraint, &candidate.parameter_constraint, &current_parameter_constraint);
         HYDLA_LOGGER_DEBUG_VAR(current_parameter_constraint.consistent());
         if (!current_parameter_constraint.consistent()) break;
+      }
+      //正しい？
+      else
+      {
+        return min_time_for_this_ask;
       }
     }
     if (!current_parameter_constraint.consistent()) break;

@@ -2,8 +2,11 @@
 #include "Timer.h"
 #include <stdarg.h>
 #include <sstream>
+#include <regex>
 #include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
+#include "LinkError.h"
+#include "MathematicaLink.h"
 
 using namespace std;
 
@@ -35,7 +38,11 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs)
 }
 
 
-Backend::Backend(Link* link)
+Backend::Backend(Link* link):
+  pure_functions({
+  "hasParameter",
+  "hasParameter"
+})
 {
   link_.reset(link);
 }
@@ -392,6 +399,8 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 
 int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
+  HYDLA_LOGGER_DEBUG("BREAK A: Backend::call function: ", name);
+
   timer::Timer call_timer;
   link_->trace = trace;
   link_->pre_send();
@@ -413,7 +422,77 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
     }
     link_->post_receive();
     va_end(args);
-  }catch(...)
+  }
+  catch (LinkError e)
+  {
+    va_end(args);
+
+    const std::string what = (e.what());
+
+    HYDLA_LOGGER_DEBUG("BREAK A: mathlink error => ", what);
+    HYDLA_LOGGER_DEBUG("BREAK A: mathlink error occured at: ", name);
+
+    std::regex reg("[\\S\\s]*illegalpkt[\\S\\s]*");
+    if (!std::regex_match(what, reg))
+    {
+      HYDLA_LOGGER_DEBUG("BREAK A: error is not illegalpkt. finish...");
+      throw;
+    }
+
+    mathematica::MathematicaLink* mlink = reinterpret_cast<mathematica::MathematicaLink*>(link_.get());
+
+    HYDLA_LOGGER_DEBUG("BREAK A: error is illegalpkt");
+
+    bool succeeded = false;
+
+    //if (pure_functions.find(name) != pure_functions.end())
+    {
+      while (!succeeded)
+      {
+        link_->post_receive();
+
+        //HYDLA_LOGGER_DEBUG("BREAK A: MLError : ", std::to_string(mlink->MLError()));
+        HYDLA_LOGGER_DEBUG("BREAK A: MLError : ", std::string(mlink->MLErrorMessage()));
+
+        HYDLA_LOGGER_DEBUG("BREAK A: retry...");
+        timer::Timer call_timer;
+        link_->trace = trace;
+        link_->pre_send();
+        link_->put_converted_function(name, arg_cnt);
+        va_list args;
+        va_start(args, ret_fmt);
+        try
+        {
+          for (int i = 0; args_fmt[i] != '\0'; i++)
+          {
+            void* arg = va_arg(args, void *);
+            i += read_args_fmt(args_fmt, i, arg);
+          }
+          link_->pre_receive();
+          for (int i = 0; ret_fmt[i] != '\0'; i++)
+          {
+            void* ret = va_arg(args, void *);
+            i += read_ret_fmt(ret_fmt, i, ret);
+          }
+          link_->post_receive();
+          va_end(args);
+
+          succeeded = true;
+        }
+        catch (...)
+        {
+          HYDLA_LOGGER_DEBUG("BREAK B: mathlink error occured");
+          va_end(args);
+        }
+      }
+    }
+
+    if (!succeeded)
+    {
+      throw;
+    }
+  }
+  catch(...)
   {
     va_end(args);
     throw;

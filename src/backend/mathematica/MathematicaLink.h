@@ -124,7 +124,8 @@ public:
   void intCase();
   void funcCase();
 
-  
+  int MLError() { return ::MLError(link_); }
+  const char* MLErrorMessage() { return ::MLErrorMessage(link_); }
 
   inline std::string backend_name(){return "Mathematica";}
 
@@ -161,7 +162,7 @@ private:
   int MLGetType()                         {return ::MLGetType(link_);}      
   int MLFlush()                           {return ::MLFlush(link_);}
 
-  int MLError()                           {return ::MLError(link_);}
+  
 
   std::string input_print_;
   std::string debug_print_;
