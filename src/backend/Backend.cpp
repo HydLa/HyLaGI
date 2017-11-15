@@ -6,8 +6,8 @@
 #include <regex>
 #include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
-#include "LinkError.h"
-#include "MathematicaLink.h"
+//#include "LinkError.h"
+//#include "MathematicaLink.h"
 
 using namespace std;
 
@@ -493,7 +493,14 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
   //    throw;
   //  }
   //}
-  catch (LinkError e)
+  /*catch (LinkError e)
+  {
+    const std::string what = (e.what());
+    HYDLA_LOGGER_DEBUG("BREAK_Backend.cpp: mathlink error => ", what);
+    va_end(args);
+    throw;
+  }*/
+  catch (std::runtime_error e)
   {
     const std::string what = (e.what());
     HYDLA_LOGGER_DEBUG("BREAK_Backend.cpp: mathlink error => ", what);
