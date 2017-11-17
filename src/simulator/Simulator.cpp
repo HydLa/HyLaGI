@@ -49,6 +49,8 @@ void Simulator::set_backend(backend_sptr_t back)
 
 void Simulator::initialize(const parse_tree_sptr& parse_tree)
 {
+  auto detail = logger::Detail("call_timer.get_elapsed_us()");
+
   init_module_set_container(parse_tree);
 
   assertion_failed = false;

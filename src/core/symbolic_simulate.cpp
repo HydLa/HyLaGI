@@ -54,6 +54,8 @@ static string get_file_without_ext(const string &path)
 }
 
 void output_result(Simulator& ss, Opts& opts){
+  auto detail = logger::Detail(__FUNCTION__);
+
   std::stringstream sstr;
   sstr << "------ Result of Simulation ------\n";
   HYDLA_LOGGER_DEBUG("%% output_result A");
@@ -73,7 +75,10 @@ void output_result(Simulator& ss, Opts& opts){
   }
   HYDLA_LOGGER_DEBUG("%% output_result E");
   Printer.output_result_tree(ss.get_result_root());
-  std::cout << sstr.str();
+  HYDLA_LOGGER_STANDARD(sstr.str());
+
+  //todo : この std::cout << std::endl; を外すと、ログの出力が遅延して detail タグが先に閉じてしまう...
+  std::cout << std::endl;
 
   std::string of_name = cmdline_options.get<string>("output_name");
   if(of_name.empty())
@@ -102,23 +107,23 @@ void output_result(Simulator& ss, Opts& opts){
     writer.set_epsilon_mode(backend_, true);
     std::string of_name = cmdline_options.get<string>("output_name");
     if(of_name.empty())
+    {
+      const std::string hydat_dir = "./hydat/";
+      if(cmdline_options.count("input-file"))
       {
-        const std::string hydat_dir = "./hydat/";
-        if(cmdline_options.count("input-file"))
-          {
-            std::string if_name = cmdline_options.get<string>("input-file");
-            of_name = hydat_dir + get_file_without_ext(if_name) + "_diff.hydat";
-          }
-        else
-          {
-            of_name = hydat_dir + "no_name_diff.hydat";
-          }
-        struct stat st;
-        int ret = stat(hydat_dir.c_str(), &st);
-        if(ret == -1)
-        {
-          mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        }
+        std::string if_name = cmdline_options.get<string>("input-file");
+        of_name = hydat_dir + get_file_without_ext(if_name) + "_diff.hydat";
+      }
+      else
+      {
+        of_name = hydat_dir + "no_name_diff.hydat";
+      }
+      struct stat st;
+      int ret = stat(hydat_dir.c_str(), &st);
+      if(ret == -1)
+      {
+        mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }
     }
     writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
@@ -220,6 +225,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("step_by_step")opts.step_by_step = po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
   IF_SPECIFIED("simplify")opts.simplify = po.get<int>("simplify");
   IF_SPECIFIED("solve_over_reals")opts.solve_over_reals = po.count("solve_over_reals") > 0 && po.get<char>("solve_over_reals") == 'y';
+  IF_SPECIFIED("html")opts.html = po.count("html") > 0 && po.get<char>("html") == 'y';
 }
 
 
@@ -227,9 +233,12 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   process_opts(opts, cmdline_options, false);
 
+  // todo : コマンドラインオプションをここで読むのは遅すぎるので何とかする
+  Logger::set_html_mode(opts.html);
+  Logger::initialize();
+
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
-
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();

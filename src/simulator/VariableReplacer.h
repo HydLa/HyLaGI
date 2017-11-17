@@ -21,7 +21,7 @@ class VariableReplacer : public symbolic_expression::DefaultTreeVisitor
   typedef hydla::symbolic_expression::node_sptr node_sptr;
 
 public:
-  VariableReplacer(const variable_map_t& map);
+  VariableReplacer(const variable_map_t& map, bool v_to_par);
 
   void replace_node(symbolic_expression::node_sptr& node);
 
@@ -58,6 +58,7 @@ private:
   int differential_cnt;
   uint replace_cnt;
   const variable_map_t& variable_map;
+  const bool v_to_par;
 
   symbolic_expression::node_sptr new_child_;
 

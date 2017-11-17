@@ -40,7 +40,7 @@ void ConsistencyChecker::send_range_constraint(const Variable &var, const variab
   else
   {
     // replace variables in the range with their values
-    VariableReplacer v_replacer(vm);
+    VariableReplacer v_replacer(vm, false);
     v_replacer.replace_range(range);
     if(range.get_upper_cnt())
     {
@@ -90,37 +90,20 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
   map<string, int> vm;
   variable_set_t variable_set;
 
-
   // get variables assumed to be continuous
+  if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
   if(phase == POINT_PHASE)
   {
-    if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
     variable_set = finder.get_variable_set();
     fmt += "n";
   }
   else
   {
-    fmt += "z";
     variable_set = finder.get_all_variable_set();
+    fmt += "z";
   }
-
   // create a map that projects variables to orders of those derivatives
   auto dm = get_differential_map(variable_set);
-  if(phase == INTERVAL_PHASE && constraint_for_default_continuity.get())
-  {
-    // assuming default continuity for variables in constraints
-    VariableFinder tmp_finder;
-    tmp_finder.visit_node(constraint_for_default_continuity);
-    auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
-    for(auto entry: tmp_dm)
-    {
-      for(int i = 0; i <= entry.second;i++){
-        variable_t var(entry.first, i);
-        send_init_equation(var, fmt);
-      }
-    }
-  }
-
   for(auto dm_entry : dm)
   {
     for(int i = 0; i < dm_entry.second;i++){

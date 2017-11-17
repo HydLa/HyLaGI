@@ -243,7 +243,8 @@ applyList[reduceSol_] :=
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
-
+consToDoubleList[expr_] :=
+  If[Head[expr]===Or, List@@Map[applyList[#]&, expr], {applyList[expr]}]
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
 And2and[reduceSol_] :=

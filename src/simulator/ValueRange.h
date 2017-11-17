@@ -44,7 +44,9 @@ public:
    */
   void set_unique_value(const value_t& val)
   {
-    unique_value_ = val;
+    if(val.get_string()!="True"){
+      unique_value_ = val;
+    }
     lower_.clear();
     upper_.clear();
   }

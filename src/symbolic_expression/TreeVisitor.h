@@ -4,8 +4,6 @@
 
 #include "Node.h"
 
-#include "Logger.h"
-
 namespace hydla { 
 namespace symbolic_expression {
   

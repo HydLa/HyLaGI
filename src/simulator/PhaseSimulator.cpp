@@ -153,6 +153,8 @@ value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase,
 
 std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_result_sptr_t& todo)
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
@@ -686,6 +688,8 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase
 
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigger_asks, ConstraintStore &diff_sum, asks_t &positive_asks, asks_t &negative_asks, ConstraintStore& expanded_always)
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   asks_t unknown_asks = trigger_asks;
   bool expanded;
   PhaseType phase_type = phase->phase_type;
@@ -883,6 +887,8 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
   {
     return find_min_time_step_by_step(guard, original_vm, time_limit, phase, entailed, atomic_guard_min_time_interval_map);
   }
+
+  auto detail = logger::Detail(__FUNCTION__);
 
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
@@ -1181,6 +1187,8 @@ PhaseSimulator::StateOfIntervalNewton PhaseSimulator::initialize_newton_state(co
 
 find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map)
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   list<Parameter> parameters;
@@ -1577,6 +1585,8 @@ void PhaseSimulator::remove_redundant_parameters(phase_result_sptr_t phase)
 void
 PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   timer::Timer next_todo_timer;
 
   HYDLA_LOGGER_DEBUG_VAR(*phase);
@@ -1681,7 +1691,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           diff_variables.insert(var_set.begin(), var_set.end());
         }
       }
-
       guard_time_map_t guard_time_map;
 
       // 各変数に関する最小時刻をask単位で更新する．
@@ -2081,7 +2090,7 @@ list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t& time
 
 itvd PhaseSimulator::evaluate_interval(const phase_result_sptr_t phase, ValueRange range, bool use_affine)
 {
-  VariableReplacer v_replacer(phase->variable_map);
+  VariableReplacer v_replacer(phase->variable_map, false);
   v_replacer.replace_range(range);
   range = value_modifier->apply_function("simplify", range);
   vector<parameter_map_t> parameter_map_vector = phase->get_parameter_maps();

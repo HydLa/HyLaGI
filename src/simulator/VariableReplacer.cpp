@@ -9,7 +9,7 @@ namespace simulator {
 
 
 
-VariableReplacer::VariableReplacer(const variable_map_t& map):variable_map(map)
+VariableReplacer::VariableReplacer(const variable_map_t& map, bool v_to_par):variable_map(map), v_to_par(v_to_par)
 {}
 
 VariableReplacer::~VariableReplacer()
@@ -44,11 +44,13 @@ void VariableReplacer::replace_range(ValueRange &range)
     {
       value_t val = range.get_lower_bound(i).value;
       replace_value(val);
+      range.set_lower_bound(val, range.get_lower_bound(i).include_bound);
     }
     for(uint i = 0; i < range.get_upper_cnt(); i++)
     {
       value_t val = range.get_upper_bound(i).value;
       replace_value(val);
+      range.set_upper_bound(val, range.get_upper_bound(i).include_bound);
     }
   }
 }
@@ -60,13 +62,13 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Varia
     {
       if(it->first.get_name() == v_name && it->first.get_differential_count() == differential_cnt)
       {
-        //TODO: 値が範囲を持っている場合にも対応する
-        assert(it->second.unique());
-        node_sptr node = it->second.get_unique_value().get_node()->clone();
-        VariableReplacer replacer(variable_map);
-        replace_node(node);
-        
-        new_child_ = node;
+        //ignore variables that haven't been replaced with parameters yet.
+        if(!it->second.unique()){
+          return;
+        }
+        node_sptr new_node = it->second.get_unique_value().get_node()->clone();
+        replace_node(new_node);
+        new_child_ = new_node;
         replace_cnt++;
         // upper_bound to avoid infinite loop (may be caused by circular reference)
         if(replace_cnt >= variable_map.size())
@@ -84,6 +86,12 @@ void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Diffe
   differential_cnt++;
   accept(node->get_child());
   differential_cnt--;
+}
+
+void VariableReplacer::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> parameter){
+  if(v_to_par){
+    new_child_ = symbolic_expression::node_sptr(parameter);
+  }
 }
 
 
@@ -129,7 +137,6 @@ DEFINE_DEFAULT_VISIT_BINARY(Power)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(symbolic_expression::Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)

@@ -47,7 +47,7 @@ publicMethod[
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
+    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
@@ -164,6 +164,7 @@ publicMethod[
               cpTrue = cpTrue || eachCpTrue;
               debugPrint["cpTrue(1)",cpTrue];
             ];
+			debugPrint["cpFalse", cpFalse];
             cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
             simplePrint["Return(4)"];
             toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
@@ -231,28 +232,15 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {map, tmpCons, succeded = false},
+    {map, tmpCons=cons},
 
     If[cons === True, Return[{{}}]];
-    If[cons === False, Return[{}]];    
+    If[cons === False, Return[{}]];
 
-    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
-    If[Head[tmpCons] =!= LogicalOr,
-      {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
-    ];
-    simplePrint[tmpCons, succeeded];
-    If[!succeeded,
-      (* try to solve with parameters *)
-      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      tmpCons = Reduce[tmpCons, vars, Reals];
-      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
-      tmpCons = LogicalExpand[tmpCons];
-    ];
-
-    tmpCons = applyListToOr[tmpCons];
-    tmpCons = Map[(applyList[#])&, tmpCons];
-    tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
-    debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
+    tmpCons = consToDoubleList[tmpCons];
+    debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
+    tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
+    debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
     map = ruleOutException[map];
@@ -335,11 +323,9 @@ publicMethod[
         {{}},
       If[map === False,
          {},
-         map = LogicalExpand[map];
-         map = applyListToOr[map];
-         map = Map[(applyList[#])&, map];
-         map = Map[(adjustExprs[#, isParameter])&, map];
-         debugPrint["map after adjustExprs in createParameterMap", map];
+         map = consToDoubleList[map];
+         map = Union[Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1]];
+         debugPrint["map after createMap in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
          map
       ]
@@ -376,6 +362,19 @@ getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 getParameters[exprs_] := Union[Cases[exprs, p[_, _, _], {0, Infinity}]];
 
+getRelativeParameters[pars_, pConsList_] :=
+  Module[
+    {npars, npConsList},
+    If[pars === {},
+      {},
+      npars = Complement[Flatten[Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]>0)&]], pars];
+      npConsList = Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]==0)&];
+      Union[pars, getRelativeParameters[npars,npConsList]]
+    ]
+  ]
+
+
+
 (* 式中に定数名が出現するか否か *)
 
 hasParameter[exprs_] := Length[Cases[exprs, p[_, _, _], {0, Infinity}] ] > 0;
@@ -400,6 +399,23 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
+(* 変数varsに関する制約ストアからjudgeFunctionでTrueとなる変数に関するMapを作成 *)
+createMap[consList_, judgeFunction_, vars_, pars_] :=
+  Map[
+    (Fold[
+      (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
+          Union[#1, {getReverseRelop[#2[[2]] ]@@{#2[[3]],#2[[1]] }, #2[[4]]@@{#2[[3]],#2[[5]] } } ],
+        If[MemberQ[{Equal,Unequal,Less,LessEqual,Greater,GreaterEqual}, Head[#2]]&&judgeFunction[#2[[1]]],
+          Append[#1, #2],
+        If[Head[#2]===Element&&judgeFunction[#2[[1]]],
+          Append[#1, Equal[#2[[1]], True]],
+          #1] ] ] )&,
+      {},
+      #
+    ])&,
+    consToDoubleList[Reduce[consList, Join[pars,vars]]]
+  ]
+
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 adjustExprs[andExprs_, judgeFunction_] :=
 Fold[
@@ -414,6 +430,7 @@ Fold[
   {},
   andExprs
 ];
+
 
 publicMethod[
   resetConstraint,
@@ -546,7 +563,7 @@ publicMethod[
 publicMethod[
   resetConstraintForParameter,
   pCons,
-  pConstraint = Reduce[pCons, Reals];
+  pConstraint = Reduce[pCons, getParameters[pCons], Reals];
 ];
 
 
@@ -570,8 +587,13 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pCons,
+  (*
   pConstraint = Reduce[pConstraint && pCons, Reals];
   simplePrint[pConstraint];
+  *)
+  pConstraint = Reduce[pConstraint && pCons, Union[getParameters[pConstraint], getParameters[pCons]], Reals];
+  debugPrint["pConstraint", pConstraint];
+  debugPrint["pCons", pCons]
 ];
 
 
@@ -605,6 +627,7 @@ makeListFromPiecewise[minT_, others_] := Module[
     Append[retMinT, {minT[[2]], tmpCondition}]
   ]
 ];
+
 
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
@@ -664,8 +687,9 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    parsInCons = Union[getParameters[tCons], getParameters[maxTime] ];
-    consList = applyList[pCons];
+    consList = Flatten[consToDoubleList[LogicalExpand[pCons]]];
+    parsInCons = Union[getRelativeParameters[getParameters[tCons && maxCons], consList]];
+    debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     restPCons = And@@Complement[consList, necessaryPCons];
     necessaryPCons = And@@necessaryPCons;
@@ -695,7 +719,7 @@ publicMethod[
         resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]}, -1})&, ret];
         resultList
       ]
-    ]
+      ]
   ]
 ];
 
@@ -709,20 +733,10 @@ publicMethod[
   time1, time2, pCons1, pCons2,
   Module[
     {
-      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons, pRules, intervalLess, intervalGreater, interval
+      andCond, caseEq, caseLe, caseGr, ret, usedPars, otherPCons = False, pRules, intervalLess, intervalGreater, interval
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
     andCond = Reduce[pCons1 && pCons2];
-    If[andCond === True,
-      necessaryPCons = True;
-      otherPCons = True,
-      If[Head[andCond] =!= Or,
-        necessaryPCons = andCond; otherPCons = True,
-        necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
-        otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
-        necessaryPCons = Reduce[necessaryPCons, Reals];
-      ]
-    ];
     If[andCond === False,
       Return[{{False}, {False}, {False}}]
     ];
@@ -735,23 +749,20 @@ publicMethod[
       interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
       intervalLess = interval < 0;
       If[intervalLess === True,
-        Return[{{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}}]
+        Return[{{toReturnForm[LogicalExpand[andCond] ]}, {False}, {False}}]
       ];
       intervalGreater = interval > 0;
       If[intervalGreater === True,
-        Return[{{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}}]
+        Return[{{False}, {toReturnForm[LogicalExpand[andCond] ]}, {False}}]
       ];
     ];
     (* If it isn't determined, use Reduce *)
-    caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+    caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
     simplePrint[caseEq];
-    caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+    caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
     simplePrint[caseLe];
-    caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+    caseGr = Reduce[andCond && !caseLe && !caseEq];
     simplePrint[caseGr];
-    caseEq = caseEq && otherPCons;
-    caseLe = caseLe && otherPCons;
-    caseGr = caseGr && otherPCons;
     {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
   ]
 ];
@@ -1259,11 +1270,11 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    parsInVM = Union[getParameters[start], getParameters[end], getParameters[vm] ];
+    parsInVM = Fold[Union[#1, getRelativeParameters[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];
-    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
+    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], parsInVM, Reals] ] ]}
   ]
 ];
