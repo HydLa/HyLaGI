@@ -700,7 +700,7 @@ publicMethod[
     simplePrint[necessaryPCons];
     simplePrint[restPCons];
 
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
+    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 3],
          onTime = False,
          Minimize::wksol
        ],
@@ -708,7 +708,7 @@ publicMethod[
     ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
-    If[Head[minT] === Minimize,
+    If[minT === $Aborted || Head[minT] === Minimize,
       Message[findMinTime::minimizeFailure, minT],
       minT = First[minT];
       If[minT === Infinity,
