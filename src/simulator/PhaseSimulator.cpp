@@ -1189,6 +1189,97 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 {
   auto detail = logger::Detail(__FUNCTION__);
 
+  //短絡評価の実装
+  if (opts_->interval)
+  {
+    std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
+    map<constraint_t, bool> atomic_guard_map;
+    list<constraint_t> ignore_guard_list;
+
+    for (auto atomic_guard : guards)
+    {
+      constraint_t g = atomic_guard->constraint;
+      variable_map_t related_vm = get_related_vm(g, original_vm);
+      bool by_newton = false;
+      if (opts_->guards_to_interval_newton.empty())
+      {
+        cout << "apply Interval Newton method to " << get_infix_string(g) << "?('y' or 'n')" << endl;
+        char c;
+        cin >> c;
+        if (c == 'y')
+        {
+          by_newton = true;
+        }
+      }
+      else
+      {
+        // TODO: avoid string comparison
+        if (opts_->guards_to_interval_newton.count(get_infix_string(g)))
+        {
+          by_newton = true;
+        }
+      }
+
+      //ここから書き換える
+      value_t lower("0");
+      constraint_t time_guard;
+      backend_->call("substituteVM", true, 3, "etmvtvlt", "e", &g, &related_vm, &phase->current_time, &time_guard);
+      if (typeid(*(time_guard)) == typeid(True))
+      {
+        //TODO: consider to improve efficiency by exploiting the information that this guard will be forever true
+        atomic_guard_map[g] = true;
+      }
+      else if (typeid(*(time_guard)) == typeid(False))
+      {
+        atomic_guard_map[g] = false;
+      }
+      else
+      {
+        if (by_newton)
+        {
+          ignore_guard_list.push_back(atomic_guard->constraint);
+        }
+        else
+        {
+          HYDLA_LOGGER_DEBUG("BREAK_ERROR: ", get_infix_string(guard));
+          /*find_min_time_result_t time_list_for_this_guard;
+          backend_->call("solveTimeEquation", true, 2, "etvlt", "f", &time_guard, &lower, &time_list_for_this_guard);
+          std::list<value_t> symbolic_time_list;
+          for (auto candidate : time_list_for_this_guard)
+          {
+            symbolic_time_list.push_back(candidate.time);
+          }
+          symbolic_guard_times_map[g] = symbolic_time_list;*/
+        }
+
+        /*const type_info &guard_type = typeid(*(atomic_guard->constraint));
+        if (guard_type == typeid(Equal) || guard_type == typeid(UnEqual))
+        {
+          atomic_guard_map[atomic_guard->constraint] = (guard_type == typeid(Equal));
+        }
+        else
+        {
+          bool true_at_initial_time;
+          backend_->call("trueAtInitialTime", true, 2, "etvlt", "b", &time_guard, &lower, &true_at_initial_time);
+          atomic_guard_map[atomic_guard->constraint] = true_at_initial_time;
+        }*/
+      }
+    }
+
+    //ガード判定
+    bool on_time;
+    bool has_discrete_change = checkAndUpdateGuards(atomic_guard_map, guard, ignore_guard_list, on_time, entailed);
+
+    HYDLA_LOGGER_DEBUG("BREAK_TEST1 hasDiscreteChange about ", get_infix_string(guard), " : ", (has_discrete_change ? "True" : "False"));
+
+    if (!has_discrete_change)
+    {
+      find_min_time_result_t min_time_for_this_ask;
+      return min_time_for_this_ask;
+    }
+    //std::cout << "BREAK_TEST1 hasDiscreteChange about " << get_infix_string(guard) << " : " << has_discrete_change << std::endl;
+  }
+
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard));
   std::list<AtomicConstraint *> guards = relation_graph_->get_atomic_guards(guard);
   list<Parameter> parameters;
@@ -1286,7 +1377,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
   for (auto it = newton_guard_state_map.begin(); it != newton_guard_state_map.end(); ++it)
   {
     const int index = std::distance(newton_guard_state_map.begin(), it);
-	HYDLA_LOGGER_DEBUG_VAR(std::string("first index:") + std::to_string(index));
+    HYDLA_LOGGER_DEBUG_VAR(std::string("first index:") + std::to_string(index));
     const auto& entry = *it;
 
     const std::string atomic_guard_str = get_infix_string(entry.first);
@@ -1316,9 +1407,9 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
       StateOfIntervalNewton &state = entry.second;
       const std::string atomic_guard_str = get_infix_string(entry.first);
       HYDLA_LOGGER_DEBUG_VAR(atomic_guard_str);
-	  auto nextIt = std::next(it, 1);
-	  HYDLA_LOGGER_DEBUG_VAR(std::string("isLastElement?:") + (nextIt == newton_guard_state_map.end() ? "true" : "false"));
-	  HYDLA_LOGGER_DEBUG_VAR(std::string("atomic_guard_index:") + std::to_string(atomic_guard_index));
+      auto nextIt = std::next(it, 1);
+      HYDLA_LOGGER_DEBUG_VAR(std::string("isLastElement?:") + (nextIt == newton_guard_state_map.end() ? "true" : "false"));
+      HYDLA_LOGGER_DEBUG_VAR(std::string("atomic_guard_index:") + std::to_string(atomic_guard_index));
 
       optional<IntervalNewtonResult> new_data_opt;
 
@@ -1337,8 +1428,8 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
             /*state.min_interval =
               interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
-			state.min_interval =
-				interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
+            state.min_interval =
+              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
 
             new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
             new_data.next_stack = state.stack;
@@ -1365,8 +1456,8 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
 
           /*state.min_interval =
             interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
-		  state.min_interval =
-			  interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
+          state.min_interval =
+            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
 
           new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
           new_data.next_stack = state.stack;
@@ -1481,7 +1572,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         else symbolic_guard_times_map[guard].pop_front();
       }
       bool on_time;
-	  HYDLA_LOGGER_DEBUG("BREAK3: ", get_infix_string(guard));
+      HYDLA_LOGGER_DEBUG("BREAK3: ", get_infix_string(guard));
       bool satisfied = checkAndUpdateGuards(atomic_guard_map, guard, guard_list, on_time, entailed);
       if (satisfied)
       {
