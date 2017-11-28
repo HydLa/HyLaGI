@@ -13,3 +13,4 @@ src/reduce_source_converter/rsc
 *.hydat
 *~
 workspace/
+*.pyc

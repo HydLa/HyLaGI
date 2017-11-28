@@ -473,6 +473,8 @@ int hydla_main(int argc, char* argv[])
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     //msc->dump_priority_data_for_graphviz(cout);
     Debug::dump_debug(&db, input, pt, msc);
+    //Debug::debug_call();
+    //Debug::debug_tree(pt);
     return 0;
   }
   
