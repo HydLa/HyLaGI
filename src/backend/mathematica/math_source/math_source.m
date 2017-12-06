@@ -133,8 +133,8 @@ publicMethod[
         Assuming[assum,
         simplePrint[pRules];
         pRules = createIntervalRules[pCons];
-        (* sol = exDSolve[Simplify[cons], prevRs, pRules]; *)
-        sol = exDSolve[Simplify[cons], prevRs];
+        sol = exDSolve[Simplify[cons], prevRs, pRules];
+        (* sol = exDSolve[Simplify[cons], prevRs]; *)
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
@@ -164,7 +164,7 @@ publicMethod[
               cpTrue = cpTrue || eachCpTrue;
               debugPrint["cpTrue(1)",cpTrue];
             ];
-			debugPrint["cpFalse", cpFalse];
+            debugPrint["cpFalse", cpFalse];
             cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
             simplePrint["Return(4)"];
             toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
@@ -263,8 +263,8 @@ publicMethod[
   Module[
     {sol, tStore, ret},
     debugPrint["createIntervalRules[pConstraint] : ", createIntervalRules[pConstraint]];
-    (* sol = exDSolve[cons, prevRs, createIntervalRules[pConstraint]]; *)
-    sol = exDSolve[cons, prevRs];
+    sol = exDSolve[cons, prevRs, createIntervalRules[pConstraint]];
+    (* sol = exDSolve[cons, prevRs]; *)
     sol = sol /. prevRs;
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
@@ -843,7 +843,7 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, prevRs_] :=
+exDSolve[expr_, prevRs_, pRules_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
   inputPrint["exDSolve", expr, prevRs];
@@ -855,7 +855,7 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
-  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
+  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr], pRules ], {}] ];
   simplePrint[resultRule];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
@@ -869,7 +869,7 @@ Module[
       simplePrint[searchResult];
       If[searchResult === unExpandable,
         Break[],
-        rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+        rules = solveByDSolve[searchResult[[1]], searchResult[[3]], pRules];
         simplePrint[rules];
         If[rules === overConstrained || Length[rules] == 0, simplePrint["exDSolve Return(1)"];Return[overConstrained] ];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
@@ -1067,16 +1067,17 @@ Module[
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
   @param vars: exprに出現する変数のリスト
 *)
-solveByDSolve[expr_, vars_] :=
-solveByDSolve[expr, vars] = (* for memoization *)
+solveByDSolve[expr_, vars_, pRules_] :=
+solveByDSolve[expr, vars, pRules] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, i},
+  {ini = {}, sol, derivatives, i, sol2, expressions, rootExps, isSafeForm},
   tVars = Map[(#[t])&, vars];
   derivatives = getTimeVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
     ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
+  (*
   sol = Quiet[
     Check[
       DSolve[Union[expr, ini], tVars, t],
@@ -1084,6 +1085,28 @@ Module[
       {DSolve::overdet, DSolve::bvimp}
     ],
   {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
+  ];
+  *)
+  expressions = Union[expr, ini];
+  
+  debugPrint[Union[expr, ini]];
+  debugPrint[tVars];
+  debugPrint[t];
+  
+  sol = Check[
+      DSolve[Union[expr, ini], tVars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+  ];
+  (* simplePrint[pRules]; *)
+  simplePrint[sol];
+  rootExps = Cases[sol, Sqrt[x_], Infinity];
+  (* simplePrint[rootExps]; *)
+  isMaybeUnsafe = isMaybeImaginary[rootExps, pRules];
+  debugPrint["isMaybeUnsafe : ", isMaybeUnsafe];
+  If[isMaybeUnsafe,
+    sol2 = solveBySymbolicCoefficient[expr, ini, vars, derivatives, pRules];
+    sol = sol2
   ];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
