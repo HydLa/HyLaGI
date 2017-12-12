@@ -1063,6 +1063,65 @@ Module[
   sol
 ];
 
+solveBySymbolicCoefficient2[equations_, ini_, vars_, derivatives_, pRules_] :=
+solveBySymbolicCoefficient2[equations, ini, vars, derivatives, pRules] =
+Module[
+  {i, j, k, l, pKeys, pKey, replacedEquations = {}, lhs, coefLhs, coefs, basis, term, coefTerm, coefIndex, replaced, index = 0, replacedExpr, additionalRules = {}, auxiliaryParameters = {}, sol},
+  pKeys = Keys[pRules];
+  debugPrint["equations : ", equations ];
+  (* expression = First[First[equations]]; *)
+
+  For[k = 1, k <= Length[equations], k++,
+    replacedEquations = Append[replacedEquations, {}];
+    replacedEquations[[k]] = Expand[equations[[k]]];
+  ];
+
+  For[k = 1, k <= Length[replacedEquations], k++,
+    replacedExpr = 0;
+    (* debugPrint["equations : ", equations[[k]] ]; *)
+    lhs = replacedEquations[[k]] /. Equal -> Subtract;
+    (* debugPrint["lhs : ", lhs]; *)
+    additionalRules = Append[additionalRules, {}];
+
+    coefs = CoefficientRules[lhs, derivatives];
+    (*線形の場合しか考慮しなくてよいのでCoefficientRulesは次のパターンしか取り得ない*)
+    basis = Append[IdentityMatrix[Length[derivatives]], ConstantArray[0, Length[derivatives]]];
+
+    For[l = 1, l <= Length[basis], l++,
+      debugPrint["derivatives[[l]] : ", derivatives[[l]]];
+      (*debugPrint[basis[l]];*)
+      coefIndex = Position[coefs, basis[l]];
+      If[coefIndex == {}, Continue[]];
+      coefTerm = coefs[[ coefIndex[[1]][[1]] ]][[2]];
+
+      debugPrint["coefTerm : ", coefTerm];
+
+      index = index + 1;
+      replacedExpr = replacedExpr + auxiliaryParameter[index] * If[l<Length[basis], derivatives[[l]], 1];
+      additionalRules[[k]] = Append[additionalRules[[k]], auxiliaryParameter[index] -> coefTerm];
+    ];
+
+    If[replacedExpr == 0,
+      replacedExpr = lhs
+    ];
+
+    replacedEquations[[k]] = Equal[replacedExpr, 0];
+  ];
+
+  debugPrint["replaced to : ", replacedEquations, additionalRules];
+  sol = Check[
+      DSolve[Union[replacedEquations, ini], tVars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+  ];
+  debugPrint["solved : ", sol ];
+  For[k = 1, k <= Length[equations], k++,
+    sol = sol /. additionalRules[[k]];
+  ];
+  debugPrint["solved : ", sol ];
+  sol
+];
+
 (* 渡された式をDSolveで解いて，結果のRuleを返す．
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
   @param vars: exprに出現する変数のリスト
@@ -1105,7 +1164,7 @@ Module[
   isMaybeUnsafe = isMaybeImaginary[rootExps, pRules];
   debugPrint["isMaybeUnsafe : ", isMaybeUnsafe];
   If[isMaybeUnsafe,
-    sol2 = solveBySymbolicCoefficient[expr, ini, vars, derivatives, pRules];
+    sol2 = solveBySymbolicCoefficient2[expr, ini, vars, derivatives, pRules];
     sol = sol2
   ];
   (* remove solutions with imaginary numbers *)
