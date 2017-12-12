@@ -1088,16 +1088,17 @@ Module[
     basis = Append[IdentityMatrix[Length[derivatives]], ConstantArray[0, Length[derivatives]]];
 
     For[l = 1, l <= Length[basis], l++,
-      If[l<Length[derivatives], debugPrint["derivatives[[l]] : ", derivatives[[l]]]];
-      (*debugPrint[basis[l]];*)
-      coefIndex = Position[coefs, basis[l]];
+      (*If[l<=Length[derivatives], debugPrint["derivatives[[l]] : ", derivatives[[l]]]];*)
+      debugPrint[basis[l]];
+      coefIndex = Position[coefs, basis[[l]]];
+      debugPrint[coefIndex];
       If[coefIndex == {}, Continue[]];
       coefTerm = coefs[[ coefIndex[[1]][[1]] ]][[2]];
 
       debugPrint["coefTerm : ", coefTerm];
 
       index = index + 1;
-      replacedExpr = replacedExpr + auxiliaryParameter[index] * If[l<Length[basis], derivatives[[l]], 1];
+      replacedExpr = replacedExpr + auxiliaryParameter[index] * If[l<=Length[derivatives], derivatives[[l]], 1];
       additionalRules[[k]] = Append[additionalRules[[k]], auxiliaryParameter[index] -> coefTerm];
     ];
 
