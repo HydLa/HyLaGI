@@ -1088,7 +1088,7 @@ Module[
     basis = Append[IdentityMatrix[Length[derivatives]], ConstantArray[0, Length[derivatives]]];
 
     For[l = 1, l <= Length[basis], l++,
-      debugPrint["derivatives[[l]] : ", derivatives[[l]]];
+      If[l<Length[derivatives], debugPrint["derivatives[[l]] : ", derivatives[[l]]]];
       (*debugPrint[basis[l]];*)
       coefIndex = Position[coefs, basis[l]];
       If[coefIndex == {}, Continue[]];
