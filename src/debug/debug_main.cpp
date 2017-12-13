@@ -31,7 +31,7 @@ namespace hydla{
 
       cout << "huga" << std::endl;
       msc->dump_priority_data_for_graphviz(sout2);
-      //cout << sout2.str() << std::endl;
+      cout << sout2.str() << std::endl;
       msc->dump_module_sets_for_graphviz(sout);
       //cout << sout.str() << std::endl;
       //Json_p::make_h_map(sout);
@@ -40,7 +40,7 @@ namespace hydla{
       cout << "hugaaa1" << std::endl;
       pt->dump_in_json(sout1);//json形式の取得
       cout << sout1.str() << std::endl;
-      std::tie(constraint_map, h_map) = Json_p::json_p(sout1);
+      std::tie(constraint_map, h_map) = Json_p::json_p(sout1, sout2.str());
       v_map = Json_p::make_v_map(pt);
       db -> debug_call(constraint_map, v_map, h_map);
     }

@@ -14,5 +14,5 @@ src/reduce_source_converter/rsc
 *~
 workspace/
 *.pyc
-src/.DS_Store
+./.DS_Store
 src/debug/*.pyc

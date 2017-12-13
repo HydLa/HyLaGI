@@ -15,10 +15,11 @@ def add_equation(name, eq):
 
 def solve_equation(name1, name2):
   #exec("sol = solve([" + name1 + ", " + name2 + "],[x, y, z, zz])")
-  #print(ask_0_WALL)
+  #print("sol = solve(" + name1 + "," + name2 + ")")
+  #print(name2)
   exec("sol = solve(" + name1 + "," + name2 + ")")
   return str(sol)
-  
+
 def solve_inequalities(name1, name2):
   #exec("sol = solve([" + name1 + ", " + name2 + "],[x, y, z, zz])")
   #print(ask_0_WALL)
