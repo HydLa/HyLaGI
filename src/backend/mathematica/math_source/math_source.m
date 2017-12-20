@@ -386,7 +386,7 @@ hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 resolveOrd[cons_, vars_, pars_] :=
   Module[
     {relatedConsMap, resolved = {}, restVars=vars, found},
-    relatedConsMap = Association[Map[Function[var, var -> Select[cons, MemberQ[getVariablesWithDerivatives[#], var]&]], vars]]
+    relatedConsMap = Association[Map[Function[var, var -> Select[cons, MemberQ[getVariablesWithDerivatives[#], var]&]], vars]];
     While[True,
       found =
         Select[
