@@ -58,19 +58,9 @@ namespace hydla{
 
         error = add_var(add_var_list);
         std::tie(equation_name_map, range_map, sym_prio_map) = add_equations(constraint_map, solve_var, h_map);
-        for(auto p2 : sym_prio_map){
-              std::cout << "hoge" << std::endl;
-          for(auto p3 : p2){
-            for(auto p4 : p3){
-              std::cout << p4 << ", " << std::flush;
-            }
-              std::cout << "huga" << std::endl;
-          }
-        }
 
-        /// 初期変数の登録(AAAeq:解なしかどうかの判定。AAAeq_true:不等式内の変数に値が与えられて、かつ解が存在しないときには解を返してくれないので、1をいれて再計算しなくてはならない？)
+        /// 初期変数の登録(AAAeq:解なしかどうかの判定。)
         error = add_equation("AAAeq", "AAAvar - 1");
-        //error = add_equation("AAAeq_true", "1");
 
         for(auto each_cons : h_map){
           if(each_cons[0] == "1"){
@@ -81,31 +71,11 @@ namespace hydla{
         }
 
         each_ask_cons_sets = make_cons_sets(ask_eq_list);
-        /*for(auto p2 : each_ask_cons_sets){
-          for(auto p3 : p2){
-            std::cout << p3 << ", " << std::flush;
-          }
-              std::cout << "huga" << std::endl;
-        }*/
         /// 前件の計算を行う
         each_var_val_map = make_ask_map(each_ask_cons_sets, true_eq_list, equation_name_map, range_map, add_var_list);
 
-        /// 前件の計算結果の確認
-        /*std::cout << "" << std::endl;
-        std::cout << "ask solution" << std::endl;
-        for(auto p : each_var_val_map){
-          for(auto p2 : p.first){
-            std::cout << p2 << ", " << std::flush;
-          }
-          std::cout << "hogeeee" << std::endl;
-          for (auto entry : p.second){
-            std::cout << entry.first << "<->" << entry.second << std::endl;
-          }
-        }*/
 
-        /// 後件の計算を行う 
-        std::cout << "" << std::endl;
-        std::cout << "tell solution" << std::endl;
+        /// 後件の計算を行う
         eq_list = {};
         ret_make_tell_map = make_tell_map(each_var_val_map, equation_name_map, range_map, add_var_list, eq_list, sym_prio_map);
       }
@@ -113,6 +83,7 @@ namespace hydla{
         PyErr_Print();
         fprintf(stderr, "Failed to load \n");
       }
+      /// 結果の出力
       std::cout << "" << std::endl;
       std::cout << "ask solution" << std::endl;
       for(auto p : each_var_val_map){
@@ -151,6 +122,34 @@ namespace hydla{
       Py_Finalize();
     }
 
+
+    /// 前件の計算
+    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::make_ask_map(std::vector<std::vector<std::string>> each_ask_cons_sets, std::vector<std::string> true_eq_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list){
+      std::vector<std::string> eq_list;
+      std::map<std::vector<std::string>, std::map<std::string, std::string>> ret;
+
+      for(auto each_ask_cons_set : each_ask_cons_sets){
+        each_ask_cons_set.insert(each_ask_cons_set.end(), true_eq_list.begin(), true_eq_list.end());
+        eq_list = each_ask_cons_set;
+        eq_list = make_eq_list(equation_name_map, eq_list, true, false);
+        
+        bool duplication_flag = false; /// すでにある候補制約集合と重複しているかどうかのフラグ
+        std::map<std::string, std::string> var_val; /// <x:1,y:1>
+
+        var_val = make_val_map(range_map, eq_list, add_var_list);
+        if(var_val.count("no_result")==1){
+          continue;
+        }
+        duplication_flag = check_duplication_ask(ret, var_val, each_ask_cons_set);
+        if(!duplication_flag){
+          std::sort(each_ask_cons_set.begin(), each_ask_cons_set.end());
+          ret[each_ask_cons_set] = var_val;
+        }
+      }
+      return ret;
+    }
+
+
     /// 後件の計算
     std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::make_tell_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, 
       std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list, std::vector<std::string> each_eq_list, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
@@ -165,23 +164,11 @@ namespace hydla{
         eq_list = each_eq_list;
         add_eq_list = make_eq_list(equation_name_map, var_val_map.first, true, true);
         eq_list.insert(eq_list.end(), add_eq_list.begin(), add_eq_list.end());
-
-          for(auto p2 : var_val_map.first){
-            std::cout << p2 << ", " << std::flush;
-          }
-          std::cout << "end" << std::endl;
-          for (auto entry : var_val_map.second){
-            std::cout << entry.first << "<->" << entry.second << std::endl;
-          }
-
         std::map<std::string, std::string> var_val_after; /// <x:1,y:1>
 
         /// make_val_map([<ask_0_BOUNCE, x<0>,...], [INIT, FALL,...], [x,y,Px,...]);
         var_val_after = make_val_map(range_map, eq_list, add_var_list);
-        //if(var_val_after.empty()){ /// 解なしか暗黙の連続性に反する変数が存在する場合
         if(var_val_after.count("no_result")==1){
-          std::cout << "No Solution" << std::endl;
-          std::cout << var_val_after["no_result"] << std::endl;
           /// TODO:unsat coreを求めて、減らせる制約を減らして再計算する(複数の式の矛盾から、原因の制約を導いて無視、再度解く)
           resolve_cons_set = resolve_without_unsat_core(var_val_map.first, var_val_after, sym_prio_map);/// 制約を減らす
           if(resolve_cons_set[0] != "no_solution"){ /// 制約を減らせた場合は再計算する
@@ -197,12 +184,8 @@ namespace hydla{
           ret = connect_map(ret, back_ret);
           continue;
         }
-        std::cout << "" << std::endl;
-        std::cout << "check continue val" << std::endl;
         discrete_val = check_continue_val(var_val_map.first, var_val_map.second, var_val_after, add_var_list, equation_name_map, range_map);
-        std::cout << "" << std::endl;
         if(!discrete_val.empty()){ /// 解なしか暗黙の連続性に反する変数が存在する場合
-          std::cout << "conflict discrete" << std::endl;
           resolve_cons_set = make_resolve_cons_set(discrete_val, var_val_map.first, sym_prio_map);/// 制約を減らす
           if(resolve_cons_set[0] != "no_solution"){ /// 制約を減らせた場合は再計算する
             resolve_var_val_map.clear();
@@ -215,19 +198,8 @@ namespace hydla{
           ret = connect_map(ret, back_ret);
           continue;
         }
-        std::cout << "Find Solutions" << std::endl;
-        for(auto p2 : var_val_map.first){
-          std::cout << p2 << ", " << std::flush;
-        }
-        std::cout << "end" << std::endl;
-        for(auto p2 : var_val_after){
-          std::cout << "<" << p2.first << "," << p2.second << ">" << std::flush;
-        }
-        std::cout << "." << std::endl;
-        std::cout << "check val map" << std::endl;
         back_ret = check_val_map(var_val_map.first, var_val_map.second, var_val_after, add_var_list, equation_name_map, range_map, sym_prio_map);
         ret = connect_map(ret, back_ret);
-        std::cout << "" << std::endl;
       }
       return ret;
     }
@@ -235,7 +207,262 @@ namespace hydla{
 
 
 
+/// solve.pyからの出力をマップにパースする(TODO:と、言いつつ全ての計算を行なっているので、この部分を関数化する)
+    std::map<std::string, std::string> Solve_sym::make_val_map(std::map<std::string, std::string> range_map, std::vector<std::string> eq_list, std::vector<std::string> add_var_list){
+      std::vector<std::string> split_str, split_val, add_var_list_c, split_in_val, split_solve_ret, split_each_solve_ret, eq_solve_ret, split_each_ret, split_e_each_ret;
+      std::map<std::string, std::string> ret; /// <x:1,y:1>
+      std::string subs, each_range_name, solve_ret, renge_eq, renge_eq_subs, renge_eq_o, mul_eq, each_eq_solve_ret_name, solve_var, solve_eq_list;
+      bool flag, inf_flag, var_flag, replace_flag;
+      bool rest_val = true;
 
+      add_var_list_c = add_var_list;
+
+      /// 等式の計算を行う(値が求まる変数全てに値が欲しいから繰り返し行う)
+      while(rest_val){
+        rest_val = false;
+        solve_var = conv_list(add_var_list_c);
+        solve_eq_list = conv_list(eq_list);
+        boost::algorithm::replace_all(solve_var, "[", "");
+        boost::algorithm::replace_all(solve_var, "]", "");
+        solve_ret = solve_equation(solve_eq_list, solve_var);
+        /// []が帰ってくるならばその制約集合は解なし
+        if(solve_ret == "[]" or solve_ret == "False"){
+          ret.clear();
+          renge_eq = "";
+          ret = find_unsat_core("equality", eq_list, solve_var, renge_eq, ""); /// 全ての等式の中からunsat_coreとなる等式を求める
+          ret["no_result"] = "equality";
+          return ret;
+        }
+
+        /// いらない部分の消去(TODO:複数の解がある時はこれではダメ "}, {" でsplitして複数の候補制約集合に分割する(文字列はsplitできないので、一回特殊文字か何かに置き換える))
+        boost::algorithm::replace_all(solve_ret, "[", "");
+        boost::algorithm::replace_all(solve_ret, "]", "");
+        /// 上は複数の解が存在する場合専用
+        boost::algorithm::replace_all(solve_ret, "{", "");
+        boost::algorithm::replace_all(solve_ret, "}", "");
+        boost::algorithm::replace_all(solve_ret, " ", "");
+
+        
+        boost::split(split_str, solve_ret, boost::is_any_of(","));
+        for(auto each_val : split_str){
+          boost::split(split_val, each_val, boost::is_any_of(":"));
+          if(split_val[0] != "AAAvar"){
+            rest_val = true;
+            ret[split_val[0]] = split_val[1];
+            auto itr = std::find(add_var_list_c.begin(), add_var_list_c.end(), split_val[0]);
+            if(itr != add_var_list_c.end()){
+              add_var_list_c.erase(itr);
+            }
+          }
+        }
+      }
+      /// 等式で解が全くもとまらないが、解なしではない場合にも対応する
+      //if(ret.empty()){
+        ret["AAAvar"] = "1";
+      //}
+      /// 不等式を解くために等式で求まった変数を代入する
+
+      flag = false;
+      subs += ".subs([";
+      for(auto each_val : ret){
+        if(flag){
+          subs += ",";
+        }
+        flag = true;
+        subs += "(" + each_val.first + ", " + each_val.second + ")";
+      }
+      subs += "])";
+      /// 不等式にsubsを代入して解く(等式と異なり、不等式は式を直接与えて計算する)
+      for(auto each_range : range_map){
+        each_range_name = each_range.first;
+        if(std::find(eq_list.begin(), eq_list.end(), each_range_name) != eq_list.end()){
+          renge_eq = each_range.second;
+          /// 使用変数を求める
+          boost::split(split_in_val, renge_eq, boost::is_any_of(" -(),"));
+          for(auto each_in_val : split_in_val){ /// 不等式の要素ごとに回す
+            if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
+              renge_eq_subs = "(" + renge_eq + ")" + subs;
+              /// ここで引数として与える変数に値が代入され、他の未知数が存在する時は呼び出しがうまくいかず解が帰ってこないが、現状はそのあとの処理としてうまく行っているので放置しておく
+              solve_ret = solve_inequalities(renge_eq_subs, each_in_val); /// TODO:solve_inequalitiesの返しを"|"が最大優先度になるようにしたい(ケース分岐に対応するため)
+              /// 変数マップを作る(可能性としては複数の範囲、一つの範囲、一つの等式がありそう)
+              if(solve_ret == "False"){ // その不等式内に答えが存在しない場合
+                ret.clear();
+                ret = find_unsat_core("range", eq_list, solve_var, renge_eq_subs, each_in_val); /// range:不等式が矛盾する
+                ret["no_result"] = "range";
+                return ret;
+              }else if(solve_ret == "True"){ // 代入した値がそのまま正しい場合
+                continue;
+              }else{
+                boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
+                for(auto each_solve_ret : split_solve_ret){
+                  boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+                  for(auto each_split_each_solve_ret : split_each_solve_ret){
+                    boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                    inf_flag = false;
+                    var_flag = false;
+                    for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
+                      if(each_eq_solve_ret == "oo"){ /// infを含む範囲はとりあえずいらない
+                        inf_flag = true;
+                        break;
+                      }
+                      if(std::find(add_var_list.begin(), add_var_list.end(), each_eq_solve_ret) != add_var_list.end()){ /// 要素が変数として認識できる場合
+                        var_flag = true;
+                        each_eq_solve_ret_name = each_eq_solve_ret;
+                      }
+                    }
+                    if(!inf_flag and var_flag){
+                      if(ret.count(each_eq_solve_ret_name) == 0){
+                        ret[each_eq_solve_ret_name] = each_split_each_solve_ret;
+                      }else{
+                        ret[each_eq_solve_ret_name] = ret[each_eq_solve_ret_name] + "," + each_split_each_solve_ret;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      /// 不等式をといた結果として、複数解が存在する場合、それらの成立判定を行う
+      for(auto each_ret : ret){
+        if(each_ret.second.find(",") != std::string::npos){ /// 複数解が存在するかの判定
+          boost::split(split_each_ret, each_ret.second, boost::is_any_of(" "));
+          mul_eq = "";
+          for(auto e_split_each_ret : split_each_ret){
+            if(e_split_each_ret.find("/") != std::string::npos){ /// python2.7では分数の余りを切り捨ててしまうので、書き換える必要がある
+              boost::split(split_e_each_ret, e_split_each_ret, boost::is_any_of("/"));
+              mul_eq += "Retional(" + split_e_each_ret[0] + "," + split_e_each_ret[1] + ")";
+            }else{
+              mul_eq += e_split_each_ret;
+            }
+          }
+          mul_eq = "[" + mul_eq + "]";
+          solve_ret = solve_equation(mul_eq, each_ret.first);
+          if(solve_ret == "False"){ // その不等式内に答えが存在しない場合
+            ret.clear();
+            ret = find_unsat_core("var", eq_list, solve_var, each_ret.first, ""); /// var:その変数の式が矛盾する()
+            ret["no_result"] = "var";
+            return ret;
+          }else{
+            boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));
+            for(auto each_solve_ret : split_solve_ret){
+              replace_flag = false;
+              boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+              for(auto each_split_each_solve_ret : split_each_solve_ret){
+                boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                inf_flag = false;
+                var_flag = false;
+                for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
+                  if(each_eq_solve_ret == "oo"){ /// infを含む範囲はとりあえずいらない
+                    inf_flag = true;
+                    break;
+                  }
+                  if(std::find(add_var_list.begin(), add_var_list.end(), each_eq_solve_ret) != add_var_list.end()){ /// 要素が変数として認識できる場合
+                    var_flag = true;
+                    each_eq_solve_ret_name = each_eq_solve_ret;
+                  }
+                }
+                if(!inf_flag and var_flag){
+                  if(!replace_flag){ /// すでに書き換わっている場合は後に付け足すだけ
+                    ret[each_eq_solve_ret_name] = each_split_each_solve_ret;
+                    replace_flag = true;
+                  }else{
+                    ret[each_eq_solve_ret_name] = ret[each_eq_solve_ret_name] + "," + each_split_each_solve_ret;
+                  }
+                }
+              }
+            }
+          }
+        }else{
+          continue;
+        }
+      }
+      return ret;
+    }
+
+
+
+
+    /// 得られたprev変数の解が一致するかどうかの確認(包含されている場合は分割を行う必要があるため)
+    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::check_val_map(std::vector<std::string> var_val_map_first,std::map<std::string, std::string> var_val_map_second, std::map<std::string, std::string> var_val_after, std::vector<std::string> add_var_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
+      std::string val_before, n_str, y_str;
+      bool flag, undef_flag, ask_flag;
+      std::vector<std::string> split_in_val, var_val_map_first_split, var_val_map_first_base;
+      int error;
+      std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, ret_make_tell_map, ret;
+
+      var_val_map_first_base = var_val_map_first;
+      /// そもそも、　元の候補制約集合からask制約が抜けている場合は、prev変数値は変わるはずなのだからその基準で分割はしない
+      for(auto var_map_after : var_val_after){
+        if(var_map_after.first[0] == 'P'){ /// prev変数のみを確認する
+          val_before = "";
+          flag = false;
+          undef_flag = false;
+          /// 使用変数を求める
+          boost::split(split_in_val, var_map_after.second, boost::is_any_of(" -/*"));
+          for(auto each_in_val : split_in_val){ /// 式の要素ごとに回す /// tellの時の判定
+            if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
+              if(each_in_val != var_map_after.first){ /// 確認しているprev変数以外の変数が出現した場合は値が定まらないから流す(?)(TODO:prevの変数が出たら一致しないって言ってもいいかも)
+                undef_flag = true;
+                break;
+              }
+            }
+          }
+          for(auto var_map : var_val_map_second){ /// askの時の判定
+            if(var_map.first == var_map_after.first){
+              val_before = var_map.second;
+              flag = true;
+              break;
+            }
+          }
+          if(!undef_flag){
+            if(flag){ /// askの時にprev変数が決まっている場合
+              if(val_before == var_map_after.second){ /// askの時と同じprev値の時はそのままでいい
+                continue;
+              }
+              ask_flag = false;
+              ask_flag = find_inc_rel(val_before, var_map_after.second); /// TODO:複数値が存在するとき、比較している2つの式の集合が等しいか確認する
+              if(ask_flag){
+                continue;
+              }
+            }
+            /// askと違うprev値なら、tellで求めたprev値以外のprev値はどうなるのか確認する(名前をつける。どうにかする)
+            //std::cout << "~Eq("+var_map_after.first+","+var_map_after.second+")" << std::endl;
+            n_str = var_map_after.first+"N"+var_map_after.second;
+            boost::algorithm::replace_all(n_str, "(", "");
+            boost::algorithm::replace_all(n_str, ")", "");
+            boost::algorithm::replace_all(n_str, " ", "");
+            boost::algorithm::replace_all(n_str, ">=", "igtoe");
+            boost::algorithm::replace_all(n_str, "<=", "iltoe");
+            boost::algorithm::replace_all(n_str, ">", "igt");
+            boost::algorithm::replace_all(n_str, "<", "ilt");
+            y_str = var_map_after.first+"Y"+var_map_after.second;
+            boost::algorithm::replace_all(y_str, "(", "");
+            boost::algorithm::replace_all(y_str, ")", "");
+            boost::algorithm::replace_all(y_str, " ", "");
+            boost::algorithm::replace_all(y_str, ">=", "igtoe");
+            boost::algorithm::replace_all(y_str, "<=", "iltoe");
+            boost::algorithm::replace_all(y_str, ">", "igt");
+            boost::algorithm::replace_all(y_str, "<", "ilt");
+            error = add_equation(n_str, "0"); /// TODO:範囲値が来た時にどうするか(特殊解の想定なので、範囲は存在しないと信じてる(今の所))
+            range_map[n_str] = "~Eq("+var_map_after.first+","+var_map_after.second+")";
+            var_val_map_first_base.push_back(y_str); /// PDyY0のような感じ。式を追加する必要があるなら追加するが、今の所必要なさそう
+            var_val_map_first_split = var_val_map_first;
+            var_val_map_first_split.push_back(n_str);
+            each_var_val_map[var_val_map_first_split] = var_val_map_second;
+            ret_make_tell_map = make_tell_map(each_var_val_map, equation_name_map, range_map, add_var_list, {n_str}, sym_prio_map);
+            ret = connect_map(ret, ret_make_tell_map);
+          }
+        }
+      }
+      ret[var_val_map_first_base] = var_val_after;
+      return ret;
+    }
+
+
+
+///////////////// 制約階層から制約集合を変更する関連の処理を行う関数 /////////////////////////
     /// unsat_coreの制約を制約階層に基づいて取り除いた制約集合を返す
     std::vector<std::string> Solve_sym::resolve_without_unsat_core(std::vector<std::string> var_val_map_first, std::map<std::string, std::string> var_val_after, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
       std::vector<std::string> ret;
@@ -247,7 +474,6 @@ namespace hydla{
         /// pre_eraseをもらって削除する制約を決める
         boost::split(split_str, var_val_after["unsat_cons"], boost::is_any_of(","));
         for(auto cons : split_str){
-          std::cout << cons << std::endl;
           boost::split(split_str_, cons, boost::is_any_of("_"));
           c_cons = split_str_[2];
           for(auto sym_prio : sym_prio_map){ /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
@@ -305,7 +531,7 @@ namespace hydla{
       return ret;
     }
 
-    /// 矛盾する変数をもらって、制約階層に基づき制約を減らす(TODO:制約階層に基づきってところが実装できていない(とりあえず循環構造を持っている制約階層を考えないで実装してみる？))
+    /// 矛盾する変数をもらって、制約階層に基づき制約を減らす(TODO:制約階層に基づきってところが実装できていない(とりあえず循環構造を持っている制約階層を考えないで実装してみた))
     std::vector<std::string> Solve_sym::make_resolve_cons_set(std::vector<std::string> discrete_val, std::vector<std::string> var_val_map_first, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
       std::vector<std::string> ret, pre_erase, erase;
       std::vector<std::string> emp = {};
@@ -321,11 +547,6 @@ namespace hydla{
               }else{
                 for(auto each_sym : sym_prio[1]){ /// sym_prioの変数ごとに回す
                   if(each_sym == conflict_val){ /// sym_prioの変数名が候補制約集合内の変数名と一致するなら
-                    std::cout << conflict_val << " : " << each_cons << " < " << std::flush;
-                    for(auto each_prio : sym_prio[2]){
-                      std::cout << each_prio << ", " << std::flush;
-                    }
-                    std::cout << "end." << std::endl; /// 変数名：候補制約集合内の制約名 < 候補制約集合内の制約より優先度が高い制約名
                     pre_erase.push_back(each_cons);
                     break;
                   }
@@ -392,7 +613,6 @@ namespace hydla{
         for(auto sym_prio : sym_prio_map){ /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
           if(sym_prio[0][0] == cons){ /// sym_prioの制約名が候補制約集合内の制約と一致するなら
             for(auto each_prio : sym_prio[2]){
-              //std::cout << each_prio << std::endl;
               if(std::find(pre_erase.begin(), pre_erase.end(), each_prio) != pre_erase.end()){
                 flag = true;
                 break;
@@ -411,6 +631,15 @@ namespace hydla{
       }
       return ret;
     }
+
+
+
+
+
+
+
+///////////////// unsat core(変数 or 制約)を見つける関数 /////////////////////////
+
     /// unsat coreとなる制約式を求める(複数の式の矛盾から、原因の制約を導く)
     std::map<std::string, std::string> Solve_sym::find_unsat_core(std::string error_m, std::vector<std::string> eq_list, std::string solve_var, std::string renge_eq, std::string each_in_val){
       std::map<std::string, std::string> ret;
@@ -418,17 +647,13 @@ namespace hydla{
       std::string solve_eq_list, add_cons, solve_ret, v_eq;
       bool s_sat, d_sat;
 
-      std::cout << "error_m" << std::endl;
-      std::cout << error_m << std::endl;
       s_sat = true;
       s_eq_list.clear();
       if(error_m == "equality"){
-        //s_eq_list.push_back("AAAeq_true");
         s_eq_list.push_back("AAAeq");
         while(s_sat){
           d_eq_list = s_eq_list;
           d_sat = true;
-          std::cout << "hoge" << std::endl;
           while(d_sat){
             for(auto eq : eq_list){
               if(std::find(d_eq_list.begin(), d_eq_list.end(), eq) == d_eq_list.end()){
@@ -440,8 +665,6 @@ namespace hydla{
             /// 追加した制約式を含めて解を求める
             solve_eq_list = conv_list(d_eq_list);
             solve_ret = solve_equation(solve_eq_list, solve_var);
-            std::cout << solve_ret << std::endl;
-            std::cout << solve_eq_list << std::endl;
             /// []が帰ってくるならばその制約集合は解なし
             if(solve_ret == "[]" or solve_ret == "False"){
               s_eq_list.push_back(add_cons);
@@ -451,12 +674,10 @@ namespace hydla{
           /// 追加した制約式を含めて解を求める
           solve_eq_list = conv_list(s_eq_list);
           solve_ret = solve_equation(solve_eq_list, solve_var);
-          std::cout << solve_ret << std::endl;
-            std::cout << solve_eq_list << std::endl;
           /// []が帰ってくるならばその制約集合は解なし
           if(solve_ret == "[]" or solve_ret == "False"){
             for(auto unsat_cons : s_eq_list){
-              if(unsat_cons != "AAAeq_true" and unsat_cons != "AAAeq"){
+              if(unsat_cons != "AAAeq"){
                 if(ret["unsat_cons"] == ""){
                   ret["unsat_cons"] = unsat_cons;
                 }else{
@@ -474,18 +695,11 @@ namespace hydla{
         boost::algorithm::replace_all(renge_eq, "])", "");
         boost::split(eq, renge_eq, boost::is_any_of("?"));
         v_eq = eq[1];
-        std::cout << "v_eq" << std::endl;
-        std::cout << v_eq << std::endl;
-        //boost::algorithm::replace_all(v_eq, "(", "");
-        //boost::algorithm::replace_all(v_eq, ")", "");
-        std::cout << "v_eq" << std::endl;
-        std::cout << v_eq << std::endl;
         boost::split(eq_var, v_eq, boost::is_any_of("!"));
         s_eq_list.push_back(eq[0]);
         while(s_sat){
           d_eq_list = s_eq_list;
           d_sat = true;
-          std::cout << "hoge" << std::endl;
           while(d_sat){
             for(auto eq : eq_var){
               if(std::find(d_eq_list.begin(), d_eq_list.end(), eq) == d_eq_list.end()){
@@ -495,15 +709,8 @@ namespace hydla{
               }
             }
             /// 追加した制約式を含めて解を求める
-            //solve_eq_list = conv_list(d_eq_list);
             solve_eq_list = make_sub_list(d_eq_list);
-            std::cout << "hoge" << std::endl;
-            std::cout << solve_eq_list << std::endl;
             solve_ret = solve_equation(solve_eq_list, each_in_val);
-            std::cout << "huga" << std::endl;
-            std::cout << solve_ret << std::endl;
-            std::cout << "hoge" << std::endl;
-            std::cout << solve_eq_list << std::endl;
             /// []が帰ってくるならばその制約集合は解なし
             if(solve_ret == "[]" or solve_ret == "False"){
               s_eq_list.push_back(add_cons);
@@ -514,246 +721,17 @@ namespace hydla{
           //solve_eq_list = conv_list(s_eq_list);
           solve_eq_list = make_sub_list(s_eq_list);
           solve_ret = solve_equation(solve_eq_list, each_in_val);
-          std::cout << solve_ret << std::endl;
-            std::cout << solve_eq_list << std::endl;
           /// []が帰ってくるならばその制約集合は解なし
           if(solve_ret == "[]" or solve_ret == "False"){
-            /*for(auto unsat_cons : s_eq_list){
-              if(unsat_cons != "AAAeq_true" and unsat_cons != "AAAeq"){
-                if(ret["unsat_cons"] == ""){
-                  ret["unsat_cons"] = unsat_cons;
-                }else{
-                  ret["unsat_cons"] = ret["unsat_cons"] + "," + unsat_cons;
-                }
-              }
-            }*/
             ret["unsat_cons"] = each_in_val;
             s_sat = false;
           }
         }
       }
-      //ret["unsat_cons"] = ;
       return ret;
     }
 
-
-/// solve.pyからの出力をマップにパースする(TODO:と、言いつつ全ての計算を行なっているので、この部分を関数化する)
-    std::map<std::string, std::string> Solve_sym::make_val_map(std::map<std::string, std::string> range_map, std::vector<std::string> eq_list, std::vector<std::string> add_var_list){
-      std::vector<std::string> split_str, split_val, add_var_list_c, split_in_val, split_solve_ret, split_each_solve_ret, eq_solve_ret, split_each_ret, split_e_each_ret;
-      std::map<std::string, std::string> ret; /// <x:1,y:1>
-      std::string subs, each_range_name, solve_ret, renge_eq, renge_eq_subs, renge_eq_o, mul_eq, each_eq_solve_ret_name, solve_var, solve_eq_list;
-      bool flag, inf_flag, var_flag, replace_flag;
-      bool rest_val = true;
-
-      add_var_list_c = add_var_list;
-
-      /// 等式の計算を行う(値が求まる変数全てに値が欲しいから繰り返し行う)
-      while(rest_val){
-        rest_val = false;
-        solve_var = conv_list(add_var_list_c);
-        solve_eq_list = conv_list(eq_list);
-        std::cout << solve_eq_list << std::endl;
-        boost::algorithm::replace_all(solve_var, "[", "");
-        boost::algorithm::replace_all(solve_var, "]", "");
-        std::cout << solve_var << std::endl;
-        solve_ret = solve_equation(solve_eq_list, solve_var);
-        std::cout << solve_ret << std::endl;
-        /// []が帰ってくるならばその制約集合は解なし
-        if(solve_ret == "[]" or solve_ret == "False"){
-          ret.clear();
-          renge_eq = "";
-          ret = find_unsat_core("equality", eq_list, solve_var, renge_eq, ""); /// 全ての等式の中からunsat_coreとなる等式を求める
-            std::cout << "unsat" << std::endl;
-            std::cout << ret["unsat_cons"] << std::endl;
-          ret["no_result"] = "equality";
-          return ret;
-        }
-
-        /// いらない部分の消去(TODO:複数の解がある時はこれではダメ "}, {" でsplitして複数の候補制約集合に分割する(文字列はsplitできないので、一回特殊文字か何かに置き換える))
-        boost::algorithm::replace_all(solve_ret, "[", "");
-        boost::algorithm::replace_all(solve_ret, "]", "");
-        /// 上は複数の解が存在する場合専用
-        boost::algorithm::replace_all(solve_ret, "{", "");
-        boost::algorithm::replace_all(solve_ret, "}", "");
-        boost::algorithm::replace_all(solve_ret, " ", "");
-
-        
-        boost::split(split_str, solve_ret, boost::is_any_of(","));
-        for(auto each_val : split_str){
-          //std::cout << each_val << std::endl;
-          boost::split(split_val, each_val, boost::is_any_of(":"));
-          if(split_val[0] != "AAAvar"){
-            //std::cout << split_val[0] << "->" << split_val[1] << std::endl;
-            rest_val = true;
-            ret[split_val[0]] = split_val[1];
-            auto itr = std::find(add_var_list_c.begin(), add_var_list_c.end(), split_val[0]);
-            if(itr != add_var_list_c.end()){
-              add_var_list_c.erase(itr);
-            }
-          }
-        }
-      }
-      /// 等式で解が全くもとまらないが、解なしではない場合にも対応する
-      //if(ret.empty()){
-        ret["AAAvar"] = "1";
-      //}
-      /// 不等式を解くために等式で求まった変数を代入する
-
-      flag = false;
-      subs += ".subs([";
-      for(auto each_val : ret){
-        if(flag){
-          subs += ",";
-        }
-        flag = true;
-        //std::cout << each_val.first << "->" << each_val.second << std::endl;
-        subs += "(" + each_val.first + ", " + each_val.second + ")";
-      }
-      subs += "])";
-      //std::cout << subs << std::endl;
-      /// 不等式にsubsを代入して解く(等式と異なり、不等式は式を直接与えて計算する)
-      for(auto each_range : range_map){
-        each_range_name = each_range.first;
-        if(std::find(eq_list.begin(), eq_list.end(), each_range_name) != eq_list.end()){
-          //std::cout << each_range_name << std::endl;
-          renge_eq = each_range.second;
-          //std::cout << each_range.second << std::endl;
-          /// 使用変数を求める
-          boost::split(split_in_val, renge_eq, boost::is_any_of(" -(),"));
-          for(auto each_in_val : split_in_val){ /// 不等式の要素ごとに回す
-            if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
-              //std::cout << each_in_val << std::endl;
-              renge_eq_subs = "(" + renge_eq + ")" + subs;
-              /// ここで引数として与える変数に値が代入され、他の未知数が存在する時は呼び出しがうまくいかず解が帰ってこないが、現状はそのあとの処理としてうまく行っているので放置しておく
-              solve_ret = solve_inequalities(renge_eq_subs, each_in_val); /// TODO:solve_inequalitiesの返しを"|"が最大優先度になるようにしたい(ケース分岐に対応するため)
-              //std::cout << "solve_ret" << std::endl;
-              //std::cout << solve_ret << std::endl; /// (-oo < Py) & (Py < 1/2)こんなんが帰って来る(他にはEq(a, 1) & (((-oo < Py) & (Py < -1)) | ((1 < Py) & (Py < 2)))こんなんとか)
-              /// 変数マップを作る(可能性としては複数の範囲、一つの範囲、一つの等式がありそう)
-              if(solve_ret == "False"){ // その不等式内に答えが存在しない場合
-                ret.clear();
-                ret = find_unsat_core("range", eq_list, solve_var, renge_eq_subs, each_in_val); /// range:不等式が矛盾する
-                  std::cout << "unsat" << std::endl;
-                  std::cout << ret["unsat_cons"] << std::endl;
-                ret["no_result"] = "range";
-                return ret;
-              }else if(solve_ret == "True"){ // 代入した値がそのまま正しい場合
-                continue;
-              }else{
-                boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
-                for(auto each_solve_ret : split_solve_ret){
-                  boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
-                  for(auto each_split_each_solve_ret : split_each_solve_ret){
-                    boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
-                    inf_flag = false;
-                    var_flag = false;
-                    for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
-                      if(each_eq_solve_ret == "oo"){ /// infを含む範囲はとりあえずいらない
-                        inf_flag = true;
-                        break;
-                      }
-                      if(std::find(add_var_list.begin(), add_var_list.end(), each_eq_solve_ret) != add_var_list.end()){ /// 要素が変数として認識できる場合
-                        var_flag = true;
-                        each_eq_solve_ret_name = each_eq_solve_ret;
-                      }
-                    }
-                    if(!inf_flag and var_flag){
-                      if(ret.count(each_eq_solve_ret_name) == 0){
-                        ret[each_eq_solve_ret_name] = each_split_each_solve_ret;
-                      }else{
-                        ret[each_eq_solve_ret_name] = ret[each_eq_solve_ret_name] + "," + each_split_each_solve_ret;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      /// 不等式をといた結果として、複数解が存在する場合、それらの成立判定を行うstd::cout << "" << std::endl;
-      /*std::cout << "ksksksksks solution" << std::endl;
-      for(auto p : ret){
-        std::cout << p.first << std::endl;
-        std::cout << p.second << std::endl;
-      }*/
-      for(auto each_ret : ret){
-        if(each_ret.second.find(",") != std::string::npos){ /// 複数解が存在するかの判定
-          boost::split(split_each_ret, each_ret.second, boost::is_any_of(" "));
-          mul_eq = "";
-          for(auto e_split_each_ret : split_each_ret){
-            if(e_split_each_ret.find("/") != std::string::npos){ /// python2.7では分数の余りを切り捨ててしまうので、書き換える必要がある
-              boost::split(split_e_each_ret, e_split_each_ret, boost::is_any_of("/"));
-              mul_eq += "Retional(" + split_e_each_ret[0] + "," + split_e_each_ret[1] + ")";
-            }else{
-              mul_eq += e_split_each_ret;
-            }
-          }
-          mul_eq = "[" + mul_eq + "]";
-          solve_ret = solve_inequalities(mul_eq, each_ret.first);
-          //std::cout << "solve_ret" << std::endl;
-          //std::cout << solve_ret << std::endl;
-          if(solve_ret == "False"){ // その不等式内に答えが存在しない場合
-            ret.clear();
-            ret = find_unsat_core("var", eq_list, solve_var, each_ret.first, ""); /// var:その変数の式が矛盾する()
-              std::cout << "unsat" << std::endl;
-              std::cout << ret["unsat_cons"] << std::endl;
-            ret["no_result"] = "var";
-            return ret;
-          }else{
-            boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));
-            for(auto each_solve_ret : split_solve_ret){
-              replace_flag = false;
-              boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
-              for(auto each_split_each_solve_ret : split_each_solve_ret){
-                boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
-                inf_flag = false;
-                var_flag = false;
-                for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
-                  if(each_eq_solve_ret == "oo"){ /// infを含む範囲はとりあえずいらない
-                    inf_flag = true;
-                    break;
-                  }
-                  if(std::find(add_var_list.begin(), add_var_list.end(), each_eq_solve_ret) != add_var_list.end()){ /// 要素が変数として認識できる場合
-                    var_flag = true;
-                    each_eq_solve_ret_name = each_eq_solve_ret;
-                  }
-                }
-                    std::cout << "hugaaaa" << std::endl;
-                    std::cout << each_split_each_solve_ret << std::endl;
-                if(!inf_flag and var_flag){
-                  if(!replace_flag){ /// すでに書き換わっている場合は後に付け足すだけ
-                    ret[each_eq_solve_ret_name] = each_split_each_solve_ret;
-                    //std::cout << "huga" << std::endl;
-                    //std::cout << each_split_each_solve_ret << std::endl;
-                    replace_flag = true;
-                  }else{
-                    ret[each_eq_solve_ret_name] = ret[each_eq_solve_ret_name] + "," + each_split_each_solve_ret;
-                  }
-                }
-              }
-            }
-          }
-        }else{
-          continue;
-        }
-      }
-      return ret;
-    }
-
-    /// 2つの候補制約集合と解のマップを結合する
-    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::connect_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> base,std::map<std::vector<std::string>, std::map<std::string, std::string>> add){
-      std::map<std::vector<std::string>, std::map<std::string, std::string>> ret;
-
-      ret = base;
-      for(auto a : add){
-        ret.insert(std::make_pair(a.first, a.second));
-      }
-      return ret;
-    }
-
-
-
-    /// 得られた変数の解が連続するかどうかの確認(微分値の暗黙の連続性を確認するため)一つの変数において2つ以上の階数で離散変化が発生する場合のみその変数の配列を返す(TODO:askの時の値と比較、同一なら連続とする処理を加える)
+    /// 得られた変数の解が連続するかどうかの確認(微分値の暗黙の連続性を確認するため)一つの変数において2つ以上の階数で離散変化が発生する場合のみその変数の配列を返す
     std::vector<std::string> Solve_sym::check_continue_val(std::vector<std::string> var_val_map_first,std::map<std::string, std::string> var_val_map_second, std::map<std::string, std::string> var_val_after, std::vector<std::string> add_var_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map){
       std::vector<std::string> ret, sub_ret;
       std::string prev_name, val_name;
@@ -763,7 +741,6 @@ namespace hydla{
           continue;
         }
         if(var_map_after.first[0] != 'P'){ /// prev変数以外を確認する
-          std::cout << var_map_after.first << std::endl;
           prev_name = "P"+var_map_after.first;
           val_name = var_map_after.first;
           for (int i = 0; i < 5; ++i){ /// 使用している変数名を抽出する
@@ -774,12 +751,7 @@ namespace hydla{
             }
           }
           if(prev_name == var_map_after.second || var_val_map_second[var_map_after.first] == var_map_after.second){ /// 対象の変数の値がprev値と一致する、またはaskの時の解と一致するなら連続
-            std::cout << "continue" << std::endl;
-            std::cout << var_map_after.second << std::endl;
           }else{ /// それ以外の変数は不連続として扱う(TODO:prevの値によっては連続になることもありうるので、その辺の対応)
-            std::cout << "discrete" << std::endl;
-            std::cout << var_map_after.second << std::endl;
-            std::cout << val_name << std::endl;
             if(std::find(sub_ret.begin(), sub_ret.end(), val_name) != sub_ret.end()){
               ret.push_back(val_name);
             }
@@ -789,147 +761,8 @@ namespace hydla{
       }
       std::sort(ret.begin(), ret.end());
       ret.erase(std::unique(ret.begin(), ret.end()), ret.end() );
-      std::cout << "fin" << std::endl;
-          /*for(auto p2 : ret){
-            std::cout << p2 << ", " << std::flush;
-          }
-          std::cout << "end" << std::endl;*/
-      /// no_solutionが見たい（TODO:本来は消す）
-      //ret = {};
       return ret;
     }
-
-
-    /// 得られたprev変数の解が一致するかどうかの確認(包含されている場合は分割を行う必要があるため)
-    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::check_val_map(std::vector<std::string> var_val_map_first,std::map<std::string, std::string> var_val_map_second, std::map<std::string, std::string> var_val_after, std::vector<std::string> add_var_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
-      std::string val_before, n_str, y_str;
-      bool flag, undef_flag, ask_flag;
-      std::vector<std::string> split_in_val, var_val_map_first_split, var_val_map_first_base;
-      int error;
-      std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, ret_make_tell_map, ret;
-
-      var_val_map_first_base = var_val_map_first;
-      /// そもそも、　元の候補制約集合からask制約が抜けている場合は、prev変数値は変わるはずなのだからその基準で分割はしない
-      for(auto var_map_after : var_val_after){
-        if(var_map_after.first[0] == 'P'){ /// prev変数のみを確認する
-          val_before = "";
-          flag = false;
-          undef_flag = false;
-          std::cout << var_map_after.second << std::endl;
-          /// 使用変数を求める
-          boost::split(split_in_val, var_map_after.second, boost::is_any_of(" -/*"));
-          for(auto each_in_val : split_in_val){ /// 式の要素ごとに回す /// tellの時の判定
-            if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
-              if(each_in_val != var_map_after.first){ /// 確認しているprev変数以外の変数が出現した場合は値が定まらないから流す(?)(TODO:prevの変数が出たら一致しないって言ってもいいかも)
-                undef_flag = true;
-                break;
-              }
-            }
-          }
-          for(auto var_map : var_val_map_second){ /// askの時の判定
-            if(var_map.first == var_map_after.first){
-              std::cout << "hogehoge" << std::endl;
-              std::cout << var_map.second << std::endl;
-              std::cout << var_map_after.second << std::endl;
-              val_before = var_map.second;
-              flag = true;
-              break;
-            }
-          }
-          if(!undef_flag){
-            if(flag){ /// askの時にprev変数が決まっている場合
-              if(val_before == var_map_after.second){ /// askの時と同じprev値の時はそのままでいい
-                continue;
-              }/*else{ /// 包含判定する // これいらない気がする(包含しないことなんてない)
-                std::cout << var_map_after.second << std::endl;
-                std::cout << var_val_map_second[var_map_after.first] << std::endl;
-              }*/
-              ask_flag = false;
-              ask_flag = find_inc_rel(val_before, var_map_after.second); /// TODO:複数値が存在するとき、比較している2つの式の集合が等しいか確認する
-              if(ask_flag){
-                continue;
-              }
-            }//else{ /// askの時に変数が決まっていない場合(-inf~infの範囲)
-            /// askと違うprev値なら、tellで求めたprev値以外のprev値はどうなるのか確認する(名前をつける。どうにかする)
-            std::cout << "~Eq("+var_map_after.first+","+var_map_after.second+")" << std::endl;
-            n_str = var_map_after.first+"N"+var_map_after.second;
-            boost::algorithm::replace_all(n_str, "(", "");
-            boost::algorithm::replace_all(n_str, ")", "");
-            boost::algorithm::replace_all(n_str, " ", "");
-            boost::algorithm::replace_all(n_str, ">=", "igtoe");
-            boost::algorithm::replace_all(n_str, "<=", "iltoe");
-            boost::algorithm::replace_all(n_str, ">", "igt");
-            boost::algorithm::replace_all(n_str, "<", "ilt");
-            y_str = var_map_after.first+"Y"+var_map_after.second;
-            boost::algorithm::replace_all(y_str, "(", "");
-            boost::algorithm::replace_all(y_str, ")", "");
-            boost::algorithm::replace_all(y_str, " ", "");
-            boost::algorithm::replace_all(y_str, ">=", "igtoe");
-            boost::algorithm::replace_all(y_str, "<=", "iltoe");
-            boost::algorithm::replace_all(y_str, ">", "igt");
-            boost::algorithm::replace_all(y_str, "<", "ilt");
-            error = add_equation(n_str, "0"); /// TODO:範囲値が来た時にどうするか(特殊解の想定なので、範囲は存在しないと信じてる(今の所))
-            range_map[n_str] = "~Eq("+var_map_after.first+","+var_map_after.second+")";
-            var_val_map_first_base.push_back(y_str); /// PDyY0のような感じ。式を追加する必要があるなら追加するが、今の所必要なさそう
-            var_val_map_first_split = var_val_map_first;
-            var_val_map_first_split.push_back(n_str);
-            each_var_val_map[var_val_map_first_split] = var_val_map_second;
-            ret_make_tell_map = make_tell_map(each_var_val_map, equation_name_map, range_map, add_var_list, {n_str}, sym_prio_map);
-            ret = connect_map(ret, ret_make_tell_map);
-          }
-        }
-      }
-      ret[var_val_map_first_base] = var_val_after;
-      std::cout << "fin" << std::endl;
-      return ret;
-    }
-
-    bool Solve_sym::find_inc_rel(std::string val_before, std::string var_map_after_second){
-      //bool ret;
-      std::string ret_val_before, ret_var_map_after_second;
-
-      var_map_after_second = "[" + val_before + "," + var_map_after_second + "]";
-      val_before = "[" + val_before + "]";
-      ret_val_before = solve_inequalities(val_before, "");
-      ret_var_map_after_second = solve_inequalities(var_map_after_second, "");
-      return (ret_val_before == ret_var_map_after_second);
-    }
-
-
-    /// 前件の計算
-    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::make_ask_map(std::vector<std::vector<std::string>> each_ask_cons_sets, std::vector<std::string> true_eq_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list){
-      std::vector<std::string> eq_list;
-      std::map<std::vector<std::string>, std::map<std::string, std::string>> ret;
-
-      for(auto each_ask_cons_set : each_ask_cons_sets){
-        each_ask_cons_set.insert(each_ask_cons_set.end(), true_eq_list.begin(), true_eq_list.end());
-        eq_list = each_ask_cons_set;
-        eq_list = make_eq_list(equation_name_map, eq_list, true, false);
-        
-        bool duplication_flag = false; /// すでにある候補制約集合と重複しているかどうかのフラグ
-        std::map<std::string, std::string> var_val; /// <x:1,y:1>
-
-        var_val = make_val_map(range_map, eq_list, add_var_list);
-        for(auto var_val_ : var_val){
-          std::cout << var_val_.first << "<->" << var_val_.second << std::endl;
-        }
-        //if(var_val.empty()){
-        if(var_val.count("no_result")==1){
-          std::cout << "empty" << std::endl;
-          std::cout << var_val["no_result"] << std::endl;
-          continue;
-        }
-        duplication_flag = check_duplication_ask(ret, var_val, each_ask_cons_set);
-        if(!duplication_flag){
-          std::sort(each_ask_cons_set.begin(), each_ask_cons_set.end());
-          ret[each_ask_cons_set] = var_val;
-        }
-      }
-      return ret;
-    }
-
-
-
 
 
 ///////////////// 式変形用関数 /////////////////////////
@@ -1006,6 +839,162 @@ namespace hydla{
       return ret;
     }
 
+/// 式から使用している変数を抽出する
+    std::vector<std::string> Solve_sym::get_sym(std::string eq){
+      std::vector<std::string> ret, split_eq;
+      std::string val_name;
+
+      boost::split(split_eq, eq, boost::is_any_of(" <>=+-*/()"), boost::token_compress_on);
+      for(auto each_split_eq : split_eq){
+        //if(var_map_after.first == "AAAvar"){
+        //  continue;
+        //}
+        if(/*each_split_eq[0] != 'P' and */each_split_eq != ""){ /// prev変数も見るよ
+          val_name = each_split_eq;
+          for (int i = 0; i < 5; ++i){ /// 使用している変数名を抽出する
+           if(val_name[0] == 'D'){
+              val_name = val_name.substr(1);
+            }else{
+              break;
+            }
+          }
+          if(islower(val_name[0]) == 0 and val_name[0] != 'P'){
+            continue;
+          }
+          ret.push_back(val_name);
+          ret.push_back(each_split_eq);
+        }
+      }
+      std::sort(ret.begin(), ret.end());
+      ret.erase(std::unique(ret.begin(), ret.end()), ret.end() );
+      return ret;
+    }
+
+/// 第２引数で与えられた制約モジュールによって作成されたpython内の式の名前をリストで返す(ask制約とtell制約の式の名前を返すかを第３、４引数で指定する)
+    std::vector<std::string> Solve_sym::make_eq_list(std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::vector<std::string> solve_module, bool add_ask, bool add_tell){
+      std::string module_name, cons_name;
+      std::vector<std::string> ret;
+
+      for(auto equation_name : equation_name_map){
+        module_name = equation_name[0][0];
+        if(std::find(solve_module.begin(), solve_module.end(), module_name) == solve_module.end()){
+          continue;
+        }
+        if(add_ask){
+          for(auto ask : equation_name[1]){
+            ret.push_back(ask);
+          }
+        }
+        if(add_tell){
+          for(auto tell : equation_name[2]){
+            ret.push_back(tell);
+          }
+        }
+      }
+      /// AAAvar=1を返す式を追加する(本当に解なしか確認するため)
+      ret.push_back("AAAeq");
+      return ret;
+    }
+
+
+/// 制約式全体の登録(中でadd_equation()を呼ぶ) 同時に制約階層と使用変数の情報を作成して返す
+    std::tuple<std::vector<std::vector<std::vector<std::string>>>, std::map<std::string, std::string>, std::vector<std::vector<std::vector<std::string>>>> Solve_sym::add_equations(std::vector<std::vector<std::vector<std::string>>> constraint_map, std::string solve_var, std::vector<std::vector<std::string>> h_map){
+      int error;
+      std::string eqation_name, cons_name;
+      std::vector<std::string> each_name, each_ask, each_tell;
+      std::vector<std::vector<std::string>> each_m;
+      std::vector<std::vector<std::vector<std::string>>> ret;
+      std::map<std::string, std::string> ret_range;
+      std::vector<std::vector<std::vector<std::string>>> ret_sym_prio_map; /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
+      std::vector<std::vector<std::string>> sym_prio_map;
+      std::vector<std::string> sym_, prio_, sym_ret;
+
+      for(auto cons : constraint_map){
+        each_name.clear();
+        each_ask.clear();
+        each_tell.clear();
+        each_m.clear();
+        prio_.clear();
+        sym_.clear();
+        sym_prio_map.clear();
+        cons_name = cons[0][0];
+        each_name.push_back(cons_name);
+        int count_ask = 0;
+        int count_tell = 0;
+        for(auto ask : cons[1]){
+          if(ask == "null"){
+            continue;
+          }
+          eqation_name = "ask_"+std::to_string(count_ask)+"_"+cons_name;
+          if(ask.find("<") == std::string::npos){
+            error = add_equation(eqation_name, ask);
+          }else{
+            error = add_equation(eqation_name, "0");
+            std::cout << "range : " << ask << std::endl;
+            ret_range[eqation_name] = ask;
+          }
+          each_ask.push_back(eqation_name);
+          count_ask += 1;
+          sym_ret = get_sym(ask);
+          sym_.insert(sym_.end(), sym_ret.begin(), sym_ret.end());
+        }
+        for(auto tell : cons[2]){
+          if(tell == "null"){
+            continue;
+          }
+          eqation_name = "tell_"+std::to_string(count_tell)+"_"+cons_name;
+          error = add_equation(eqation_name, tell);
+          each_tell.push_back(eqation_name);
+          count_tell += 1;
+          sym_ret = get_sym(tell);
+          sym_.insert(sym_.end(), sym_ret.begin(), sym_ret.end());
+        }
+        each_m.push_back(each_name);
+        each_m.push_back(each_ask);
+        each_m.push_back(each_tell);
+        ret.push_back(each_m);
+        std::sort(sym_.begin(), sym_.end());
+        sym_.erase(std::unique(sym_.begin(), sym_.end()), sym_.end() );
+        for(auto h : h_map){
+          if(h[1] == cons_name){
+            for(int i = 2; i < h.size(); i++){
+              prio_.push_back(h[i]);
+            }
+          }
+        }
+        sym_prio_map.push_back(each_name);
+        sym_prio_map.push_back(sym_);
+        sym_prio_map.push_back(prio_);
+        ret_sym_prio_map.push_back(sym_prio_map);
+      }
+      return std::forward_as_tuple(ret, ret_range, ret_sym_prio_map);
+    }
+
+
+/// 2つの候補制約集合と解のマップを結合する
+    std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::connect_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> base,std::map<std::vector<std::string>, std::map<std::string, std::string>> add){
+      std::map<std::vector<std::string>, std::map<std::string, std::string>> ret;
+
+      ret = base;
+      for(auto a : add){
+        ret.insert(std::make_pair(a.first, a.second));
+      }
+      return ret;
+    }
+
+///////////////// 判定用関数 /////////////////////
+
+/// 与えられた同じ変数に対する2つの式が意味的に等しいかの判定を行う
+    bool Solve_sym::find_inc_rel(std::string val_before, std::string var_map_after_second){
+      std::string ret_val_before, ret_var_map_after_second;
+
+      var_map_after_second = "[" + val_before + "," + var_map_after_second + "]";
+      val_before = "[" + val_before + "]";
+      ret_val_before = solve_equation(val_before, "");
+      ret_var_map_after_second = solve_equation(var_map_after_second, "");
+      return (ret_val_before == ret_var_map_after_second);
+    }
+
 /// 制約集合の答えとして得られた結果がすでに登録されている結果と重複するかの判定
     bool Solve_sym::check_duplication_ask(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::map<std::string, std::string> var_val, std::vector<std::string> each_ask_cons_set){
       bool ret;
@@ -1062,6 +1051,8 @@ namespace hydla{
     }
 
 
+
+
 ///////////////// python接続用関数 /////////////////////
 
 /// 変数名の登録
@@ -1112,137 +1103,6 @@ namespace hydla{
       return ret;
     }
 
-/// 制約式全体の登録(中でadd_equation()を呼ぶ) 同時に制約階層と使用変数の情報を作成する
-    std::tuple<std::vector<std::vector<std::vector<std::string>>>, std::map<std::string, std::string>, std::vector<std::vector<std::vector<std::string>>>> Solve_sym::add_equations(std::vector<std::vector<std::vector<std::string>>> constraint_map, std::string solve_var, std::vector<std::vector<std::string>> h_map){
-      int error;
-      std::string eqation_name, cons_name;
-      std::vector<std::string> each_name, each_ask, each_tell;
-      std::vector<std::vector<std::string>> each_m;
-      std::vector<std::vector<std::vector<std::string>>> ret;
-      std::map<std::string, std::string> ret_range;
-      std::vector<std::vector<std::vector<std::string>>> ret_sym_prio_map; /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
-      std::vector<std::vector<std::string>> sym_prio_map;
-      std::vector<std::string> sym_, prio_, sym_ret;
-
-      for(auto cons : constraint_map){
-        each_name.clear();
-        each_ask.clear();
-        each_tell.clear();
-        each_m.clear();
-        prio_.clear();
-        sym_.clear();
-        sym_prio_map.clear();
-        cons_name = cons[0][0];
-        each_name.push_back(cons_name);
-        int count_ask = 0;
-        int count_tell = 0;
-        for(auto ask : cons[1]){
-          if(ask == "null"){
-            continue;
-          }
-          eqation_name = "ask_"+std::to_string(count_ask)+"_"+cons_name;
-          //std::cout << ask << std::endl;
-          if(ask.find("<") == std::string::npos){
-            error = add_equation(eqation_name, ask);
-          }else{
-            error = add_equation(eqation_name, "0");
-            std::cout << "range : " << ask << std::endl;
-            ret_range[eqation_name] = ask;
-          }
-          each_ask.push_back(eqation_name);
-          count_ask += 1;
-          sym_ret = get_sym(ask);
-          sym_.insert(sym_.end(), sym_ret.begin(), sym_ret.end());
-        }
-        for(auto tell : cons[2]){
-          if(tell == "null"){
-            continue;
-          }
-          eqation_name = "tell_"+std::to_string(count_tell)+"_"+cons_name;
-          error = add_equation(eqation_name, tell);
-          each_tell.push_back(eqation_name);
-          count_tell += 1;
-          sym_ret = get_sym(tell);
-          sym_.insert(sym_.end(), sym_ret.begin(), sym_ret.end());
-        }
-        each_m.push_back(each_name);
-        each_m.push_back(each_ask);
-        each_m.push_back(each_tell);
-        ret.push_back(each_m);
-        std::sort(sym_.begin(), sym_.end());
-        sym_.erase(std::unique(sym_.begin(), sym_.end()), sym_.end() );
-        for(auto h : h_map){
-          if(h[1] == cons_name){
-            for(int i = 2; i < h.size(); i++){
-              prio_.push_back(h[i]);
-            }
-          }
-        }
-        sym_prio_map.push_back(each_name);
-        sym_prio_map.push_back(sym_);
-        sym_prio_map.push_back(prio_);
-        ret_sym_prio_map.push_back(sym_prio_map);
-      }
-      return std::forward_as_tuple(ret, ret_range, ret_sym_prio_map);
-    }
-
-    /// 式から使用している変数を抽出する
-    std::vector<std::string> Solve_sym::get_sym(std::string eq){
-      std::vector<std::string> ret, split_eq;
-      std::string val_name;
-
-      boost::split(split_eq, eq, boost::is_any_of(" <>=+-*/()"), boost::token_compress_on);
-      for(auto each_split_eq : split_eq){
-        //if(var_map_after.first == "AAAvar"){
-        //  continue;
-        //}
-        if(/*each_split_eq[0] != 'P' and */each_split_eq != ""){ /// prev変数も見るよ
-          val_name = each_split_eq;
-          for (int i = 0; i < 5; ++i){ /// 使用している変数名を抽出する
-           if(val_name[0] == 'D'){
-              val_name = val_name.substr(1);
-            }else{
-              break;
-            }
-          }
-          if(islower(val_name[0]) == 0 and val_name[0] != 'P'){
-            continue;
-          }
-          ret.push_back(val_name);
-          ret.push_back(each_split_eq);
-        }
-      }
-      std::sort(ret.begin(), ret.end());
-      ret.erase(std::unique(ret.begin(), ret.end()), ret.end() );
-      return ret;
-    }
-
-/// 第２引数で与えられた制約モジュールによって作成されたpython内の式の名前をリストで返す(ask制約とtell制約の式の名前を返すかを第３、４引数で指定する)
-    std::vector<std::string> Solve_sym::make_eq_list(std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::vector<std::string> solve_module, bool add_ask, bool add_tell){
-      std::string module_name, cons_name;
-      std::vector<std::string> ret;
-
-      for(auto equation_name : equation_name_map){
-        module_name = equation_name[0][0];
-        if(std::find(solve_module.begin(), solve_module.end(), module_name) == solve_module.end()){
-          continue;
-        }
-        if(add_ask){
-          for(auto ask : equation_name[1]){
-            ret.push_back(ask);
-          }
-        }
-        if(add_tell){
-          for(auto tell : equation_name[2]){
-            ret.push_back(tell);
-          }
-        }
-      }
-      /// AAAvar=1を返す式を追加する(本当に解なしか確認するため)
-      ret.push_back("AAAeq");
-      //ret.push_back("AAAeq_true");
-      return ret;
-    }
 /// ガード式を解き、第2引数の変数に対しての解を返す
     std::string Solve_sym::solve_equation(std::string name, std::string eq){
         std::string ret = "";
@@ -1270,7 +1130,7 @@ namespace hydla{
         }
       return ret;
     }
-/// 不等式を解き、第2引数の変数に対しての解を返す(現在はsolve_equationと同じ)
+/// 不等式を解き、第2引数の変数に対しての解を返す(現在はsolve_equationと同じだが、返しを"|"が最大優先度になるようにしたい(ケース分岐に対応するため))
     std::string Solve_sym::solve_inequalities(std::string name, std::string eq){
         std::string ret = "";
         int error = 0;
