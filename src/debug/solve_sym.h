@@ -29,10 +29,14 @@ namespace hydla {
       static std::vector<std::string> check_continue_val(std::vector<std::string> var_val_map_first,std::map<std::string, std::string> var_val_map_second, std::map<std::string, std::string> var_val_after, std::vector<std::string> add_var_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map);
       static std::map<std::vector<std::string>, std::map<std::string, std::string>> make_ask_map(std::vector<std::vector<std::string>> each_ask_cons_sets, std::vector<std::string> true_eq_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list);
       static std::map<std::vector<std::string>, std::map<std::string, std::string>> make_tell_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list, std::vector<std::string> eq_list, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
-      static std::map<std::vector<std::string>, std::map<std::string, std::string>> find_unsat_core(std::string error_m, std::vector<std::string> var_val_map_first, std::map<std::string, std::string> var_val_after);
+      static std::vector<std::string> resolve_without_unsat_core(std::vector<std::string> var_val_map_first, std::map<std::string, std::string> var_val_after, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
       static std::vector<std::string> get_sym(std::string eq);
       static std::vector<std::string> make_resolve_cons_set(std::vector<std::string> discrete_val, std::vector<std::string> var_val_map_first, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
       static std::map<std::vector<std::string>, std::map<std::string, std::string>> connect_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> base,std::map<std::vector<std::string>, std::map<std::string, std::string>> add);
+      static std::vector<std::string> decide_erase_cons(std::vector<std::string> pre_erase, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
+      static std::map<std::string, std::string> find_unsat_core(std::string error_m, std::vector<std::string> eq_list, std::string solve_var, std::string renge_eq, std::string each_in_val);
+      static std::string make_sub_list(std::vector<std::string> list);
+      static bool find_inc_rel(std::string val_before, std::string var_map_after_second);
 
 
     };
