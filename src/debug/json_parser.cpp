@@ -28,21 +28,12 @@ namespace hydla{
       value jstr;
       std::string err = parse(jstr, sout);
       std::string serch_str = json_search(jstr, false, false);
-      cout << serch_str << endl;
-      //cout << prio << endl;
       std::vector<std::vector<std::vector<std::string>>> v_ret;
       std::vector<std::vector<std::string>> h_ret;
       std::map<std::string, std::vector<std::string>> p_ret;
-      //v_ret = {{{"HOGE"},{"1=1","2=2"},{"3=3"}},{{"HUGA"},{"1=1","2=2"},{"3=3"}}};
       v_ret = make_vector(serch_str);
       p_ret = make_prio_map(prio);
       h_ret = make_h_map(v_ret, p_ret);
-      /*for(auto p : h_ret){
-            cout << "h_ret" << endl;
-        for(auto p1 : p){
-            cout << p1 << endl;
-        }
-      }*/
       return std::forward_as_tuple(v_ret, h_ret);
     }
 
@@ -57,14 +48,8 @@ namespace hydla{
         if (p.find("->") != std::string::npos) {
           boost::algorithm::replace_all(p, " ", "");
           boost::algorithm::replace_all(p, "\"", "");
-          //cout << "p_ret" << endl;
-          //cout << p << endl;
           boost::split(split_p, p, boost::is_any_of("->"), boost::token_compress_on);
           ret[split_p[1]].push_back(split_p[0]);
-          /*for(auto p1 : split_p){
-            cout << "p1_ret" << endl;
-            cout << p1 << endl;
-          }*/
         }
       }
       while(1){ /// 直接階層が設定されていない制約も確認する
@@ -83,14 +68,6 @@ namespace hydla{
           break;
         }
       }
-      /*for(auto p : ret){
-        cout << "p1_ret" << endl;
-        cout << p.first << std::endl;
-        cout << "p2_ret" << endl;
-        for(auto p1 : p.second){
-          cout << p1 << std::endl;
-        }
-      }*/
       return ret;
     }
 
@@ -120,12 +97,10 @@ namespace hydla{
         }
       }
       for(auto p : ret){
-        //cout << "hp_ret" << endl;
         h.clear();
         h.push_back(p[0]);
         h.push_back(p[1]);
         for(auto p1 : p_ret[p[1]]){
-          //cout << p1 << endl;
           h.push_back(p1);
         }
         h_ret.push_back(h);
@@ -251,10 +226,8 @@ namespace hydla{
           //ret = rhs + " - " + lhs;
           ret = lhs + " - " + rhs + " <= 0 ";
         }else if(type_name == "Greater"){
-          //ret = rhs + " - " + lhs;
           ret = rhs + " - " + lhs + " < 0 ";
         }else if(type_name == "GreaterEqual"){
-          //ret = rhs + " - " + lhs;
           ret = rhs + " - " + lhs + " <= 0 ";
         }else if(type_name == "Power"){
           ret = lhs + " ** " + rhs;
@@ -285,8 +258,6 @@ namespace hydla{
 
       for (auto entry : parse_tree->get_variable_map())
       {
-        //cout << entry.first << std::endl;
-        //cout << entry.second << std::endl;
         map_ret.push_back(entry.first);
         map_ret.push_back(std::to_string(entry.second));
         ret.push_back(map_ret);

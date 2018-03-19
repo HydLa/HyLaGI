@@ -26,20 +26,19 @@ namespace hydla{
       int error;
       char *a = "a";
       char **aa = &a;
-      bool flag;
       std::string solve_var;
       std::vector<std::string> add_var_list, eq_list, ask_eq_list, true_eq_list;
       std::vector<std::vector<std::string>> each_ask_cons_sets;
       std::vector<std::vector<std::vector<std::string>>> equation_name_map;
 
       std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, ret_make_tell_map;///<{"INIT","FALL"},<x:1,y:1>}>
+      std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > ret_make_tell_map_2;///<{"INIT","FALL"},<x:1,y:1>}>
       std::map<std::string, std::string> range_map;
       std::vector<std::vector<std::vector<std::string>>> sym_prio_map; /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
 
       add_var_list = mv_to_v(v_map);
       add_var_list.push_back("AAAvar");
       solve_var = conv_list(add_var_list);
-      std::cout << solve_var << std::endl;
 
 /// solve.py接続部分
       Py_InitializeEx(0);
@@ -77,49 +76,135 @@ namespace hydla{
 
         /// 後件の計算を行う
         eq_list = {};
-        ret_make_tell_map = make_tell_map(each_var_val_map, equation_name_map, range_map, add_var_list, eq_list, sym_prio_map);
+        ret_make_tell_map_2 = make_tell_map_over(each_var_val_map, equation_name_map, range_map, add_var_list, eq_list, sym_prio_map);
       }
       else {
         PyErr_Print();
         fprintf(stderr, "Failed to load \n");
       }
-      /// 結果の出力
-      std::cout << "" << std::endl;
-      std::cout << "ask solution" << std::endl;
-      for(auto p : each_var_val_map){
-        flag = false;
-        for(auto p2 : p.first){
-          if(!flag){
-            flag = true;
-            std::cout << p2 << std::flush;
-          }else{
-            std::cout << ", " << p2 << std::flush;
-          }
-        }
-        std::cout << "." << std::endl;
-        for (auto entry : p.second){
-          std::cout << "<" << entry.first << "," << entry.second << ">" << std::flush;
-        }
-        std::cout << "" << std::endl;
-      }
-      std::cout << "tell solution" << std::endl;
-      for(auto p : ret_make_tell_map){
-        flag = false;
-        for(auto p2 : p.first){
-          if(!flag){
-            flag = true;
-            std::cout << p2 << std::flush;
-          }else{
-            std::cout << ", " << p2 << std::flush;
-          }
-        }
-        std::cout << "." << std::endl;
-        for (auto entry : p.second){
-          std::cout << "<" << entry.first << "," << entry.second << ">" << std::flush;
-        }
-        std::cout << "" << std::endl;
-      }
+      find_result(ret_make_tell_map_2, v_map);
       Py_Finalize();
+    }
+
+    /// 結果の表示
+    void Solve_sym::find_result(std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > ret_make_tell_map_2, std::vector<std::vector<std::string>> v_map){
+      bool flag, OCflag;
+      std::map<std::string, std::string> each_ret;
+      std::vector<std::map<std::string, std::string>> ret;
+      std::string ccs, prev_val, val_name, prev;
+      std::vector<std::string> use_val;
+      int ii;
+      for(auto m : ret_make_tell_map_2){
+        for(auto p : m.first){
+          flag = false;
+          for(auto p2 : p.first){
+            if(!flag){
+              flag = true;
+            }else{
+            }
+          }
+          prev_val = "";
+          for (auto entry : p.second){
+            if(entry.first != "AAAvar"){
+              if(entry.first[0] == 'P'){
+                val_name = entry.first.substr(1);
+                ii = 0;
+                while (ii < 10){
+                  if(val_name[0] == 'D'){
+                    val_name = val_name.substr(1) + "'";
+                  }else{
+                    break;
+                  }
+                }
+                prev_val += val_name + "=" + entry.second + ";";
+              }
+            }
+          }
+        }
+        for(auto p : m.second){
+          flag = false;
+          ccs = "";
+          for(auto p2 : p.first){
+            if(!flag){
+              flag = true;
+              ccs = p2;
+            }else{
+              ccs += ", " + p2;
+            }
+          }
+          ccs += ".";
+          each_ret.insert(std::make_pair("CCS", ccs));
+          each_ret.insert(std::make_pair("prev_val", prev_val));
+          OCflag = false;
+            use_val = {};
+          for (auto entry : p.second){
+            if(entry.first != "AAAvar"){
+              //std::cout << "<" << entry.first << "," << entry.second << ">" << std::flush;
+              val_name = entry.first;
+              ii = 0;
+              while (ii < 10){
+                if(val_name[0] == 'P'){
+                  val_name = val_name.substr(1);
+                }else if(val_name[0] == 'D'){
+                  val_name = val_name.substr(1);
+                }else{
+                  break;
+                }
+              }
+              //std::cout << val_name << std::endl;
+              use_val.push_back(val_name);
+            }
+            if(entry.first == "unsat_cons"){
+              val_name = entry.second;
+              prev = "-";
+              ii = 0;
+              while (ii < 10){
+                if(val_name[0] == 'P'){
+                  val_name = val_name.substr(1);
+                }else if(val_name[0] == 'D'){
+                  val_name = val_name.substr(1) + "'";
+                }else{
+                  val_name = prev + val_name;
+                  break;
+                }
+              }
+              each_ret.insert(std::make_pair("Cause", val_name + " is unsat val."));
+              each_ret.insert(std::make_pair("ME", "Over Constrained"));
+              ret.push_back(each_ret);
+              OCflag = true;
+              break;
+            }
+          }
+          if(!OCflag){
+            for(auto vvv : v_map){
+              for(auto uv : use_val){
+                if(vvv[0] == uv){
+                  OCflag = true;
+                  break;
+                }
+              }
+              if(!OCflag){
+                each_ret.insert(std::make_pair("Cause", vvv[0] + " is undefined"));
+                each_ret.insert(std::make_pair("ME", "Under Constrained"));
+                ret.push_back(each_ret);
+                break;
+              }
+            }
+          }
+          each_ret.clear();
+        }
+      }
+      for(auto r : ret){
+        for(auto rr : r){
+          std::cout << "<" << rr.first << "," << rr.second << ">" << std::flush;
+        }
+        std::cout << "" << std::endl;
+        std::cout << "CCS -> " << r["CCS"] << std::endl;
+        std::cout << "prev_val -> " << r["prev_val"] << std::endl;
+        std::cout << "ME -> " << r["ME"] << std::endl;
+        std::cout << r["Cause"] << std::endl;
+        std::cout << "" << std::endl;
+      }
     }
 
 
@@ -149,6 +234,21 @@ namespace hydla{
       return ret;
     }
 
+
+    /// 後件の計算の際，前件の結果と合わせてマッピングするための関数
+    std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > Solve_sym::make_tell_map_over(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, 
+      std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list, std::vector<std::string> each_eq_list, std::vector<std::vector<std::vector<std::string>>> sym_prio_map){
+      std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > ret;
+      std::map<std::vector<std::string>, std::map<std::string, std::string>> back_ret, e_var_val_map;
+
+      for(auto var_val_map : each_var_val_map){
+        e_var_val_map.insert(std::make_pair(var_val_map.first, var_val_map.second));
+        back_ret = make_tell_map(e_var_val_map, equation_name_map, range_map, add_var_list, each_eq_list, sym_prio_map);
+        ret.insert(std::make_pair(e_var_val_map, back_ret));
+        e_var_val_map.clear();
+      }
+      return ret;
+    }
 
     /// 後件の計算
     std::map<std::vector<std::string>, std::map<std::string, std::string>> Solve_sym::make_tell_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, 
@@ -428,7 +528,6 @@ namespace hydla{
               }
             }
             /// askと違うprev値なら、tellで求めたprev値以外のprev値はどうなるのか確認する(名前をつける。どうにかする)
-            //std::cout << "~Eq("+var_map_after.first+","+var_map_after.second+")" << std::endl;
             n_str = var_map_after.first+"N"+var_map_after.second;
             boost::algorithm::replace_all(n_str, "(", "");
             boost::algorithm::replace_all(n_str, ")", "");
@@ -930,7 +1029,7 @@ namespace hydla{
             error = add_equation(eqation_name, ask);
           }else{
             error = add_equation(eqation_name, "0");
-            std::cout << "range : " << ask << std::endl;
+            //std::cout << "range : " << ask << std::endl;
             ret_range[eqation_name] = ask;
           }
           each_ask.push_back(eqation_name);

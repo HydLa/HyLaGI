@@ -15,8 +15,12 @@ namespace hydla {
       static void solve_main(std::vector<std::vector<std::vector<std::string>>> constraint_map, std::vector<std::vector<std::string>> v_map, std::vector<std::vector<std::string>> h_map);
       /// 前件の計算
       static std::map<std::vector<std::string>, std::map<std::string, std::string>> make_ask_map(std::vector<std::vector<std::string>> each_ask_cons_sets, std::vector<std::string> true_eq_list, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list);
+    /// 後件の計算の際，前件の結果と合わせてマッピングするための関数
+      static std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > make_tell_map_over(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list, std::vector<std::string> eq_list, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
       /// 後件の計算
       static std::map<std::vector<std::string>, std::map<std::string, std::string>> make_tell_map(std::map<std::vector<std::string>, std::map<std::string, std::string>> each_var_val_map, std::vector<std::vector<std::vector<std::string>>> equation_name_map, std::map<std::string, std::string> range_map, std::vector<std::string> add_var_list, std::vector<std::string> eq_list, std::vector<std::vector<std::vector<std::string>>> sym_prio_map);
+      /// 結果の表示
+      static void find_result(std::map<std::map<std::vector<std::string>, std::map<std::string, std::string>>, std::map<std::vector<std::string>, std::map<std::string, std::string>> > ret_make_tell_map_2, std::vector<std::vector<std::string>> v_map);
 
 
       /// solve.pyからの出力をマップにパースする(TODO:と、言いつつ全ての計算を行なっているので、この部分を関数化する)
