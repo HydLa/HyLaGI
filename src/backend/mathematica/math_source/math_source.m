@@ -135,10 +135,19 @@ publicMethod[
         debugPrint["sol after exDSolve", sol];
         If[sol === overConstrained,
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
+          debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           substitutedInit = initCons /. prevRs;
-          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
+          debugPrint["hoge"];
+          debugPrint[cons];
+          debugPrint[initCons];
+          debugPrint[prevRs];
+          debugPrint[substitutedInit];
+          debugPrint[tRules];
+          debugPrint[(initCons /. (tRules /. t -> 0))];
+          debugPrint[(substitutedInit /. (tRules /. t -> 0))];
+          If[(initCons /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];

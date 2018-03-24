@@ -2,7 +2,7 @@ MAKE_TYPE := library
 
 TARGET	 := libhydla_backend.a
 INCLUDES += -I. -I./mathematica
-INCLUDES += -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility
+INCLUDES += -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval
 CXX_OPT  += 
 
 SRC_DIR += mathematica

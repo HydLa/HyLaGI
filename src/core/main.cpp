@@ -28,6 +28,10 @@
 
 #include <boost/regex.hpp>
 
+// debug
+#include "debug_main.h"
+
+
 // namespace
 using namespace boost;
 using namespace hydla;
@@ -36,6 +40,7 @@ using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parse_tree;
+using namespace hydla::debug;
 using namespace hydla::hierarchy;
 using namespace std;
 
@@ -462,6 +467,16 @@ int hydla_main(int argc, char* argv[])
     return 0;
   }
 
+  if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
+  {
+    cout << "debug constraint" << endl;
+    Debug db;
+    ModuleSetContainerCreator<IncrementalModuleSet> mcc;
+    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    Debug::dump_debug(&db, input, pt, msc);
+    return 0;
+  }
+  
   if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
     return 0;
   }
@@ -491,6 +506,12 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 
   if(po.count("dump_parse_tree_json")>0) {
     pt->dump_in_json(cout);
+    return true;
+  }
+
+  if(po.count("debug_constraint")>0) {
+    //dump_debug(cout);
+    //cout << "hoge";
     return true;
   }
 
