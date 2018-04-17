@@ -693,7 +693,7 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    consList = Flatten[consToDoubleList[LogicalExpand[pCons]]];
+    consList = applyList[LogicalExpand[pCons]];
     parsInCons = Union[getRelativeVars[getParameters[tCons && maxCons], consList, getParameters]];
     debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
