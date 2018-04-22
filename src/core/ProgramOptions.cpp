@@ -39,6 +39,7 @@ void ProgramOptions::init_descriptions()
     ("parse_only", "only try to parse given program")
     ("dump_parse_tree", "only output parse tree")
     ("dump_parse_tree_json", "only output parse tree in JSON format")
+    ("debug_constraint", "debugging program")
 
     ("dump_module_set_graph", "only output candidate sets of module sets\n"
      "  in graph representation")
