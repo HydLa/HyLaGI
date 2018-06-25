@@ -51,7 +51,6 @@ void ParseTree::parse(std::istream& stream)
       expression_list_definition,
       program_list_definition
   );
-  
   HYDLA_LOGGER_DEBUG("\n--- Parse Tree ---\n", *this);
   HYDLA_LOGGER_DEBUG("\n--- Constraint Definition ---\n", constraint_definition);
   HYDLA_LOGGER_DEBUG("\n--- Program Definition ---\n",    program_definition);

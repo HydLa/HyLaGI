@@ -141,11 +141,19 @@ publicMethod[
         If[sol === overConstrained,
           simplePrint["Return(2)"];
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
+          debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           substitutedInit = initCons /. prevRs;
-          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
-            simplePrint["Return(3)"];
+          debugPrint["hoge"];
+          debugPrint[cons];
+          debugPrint[initCons];
+          debugPrint[prevRs];
+          debugPrint[substitutedInit];
+          debugPrint[tRules];
+          debugPrint[(initCons /. (tRules /. t -> 0))];
+          debugPrint[(substitutedInit /. (tRules /. t -> 0))];
+          If[(initCons /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];
@@ -237,7 +245,7 @@ publicMethod[
     If[cons === True, Return[{{}}]];
     If[cons === False, Return[{}]];
 
-    tmpCons = consToDoubleList[tmpCons];
+    tmpCons = applyListToOr[tmpCons];
     debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
     tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
     debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
@@ -323,7 +331,7 @@ publicMethod[
         {{}},
       If[map === False,
          {},
-         map = consToDoubleList[map];
+         map = applyListToOr[map];
          map = Union[Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1]];
          debugPrint["map after createMap in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
@@ -359,17 +367,16 @@ getTimeVariables[exprs_] := Map[(#[t])&, getVariables[exprs]];
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 (* 式中に出現する記号定数を取得 *)
-
 getParameters[exprs_] := Union[Cases[exprs, p[_, _, _], {0, Infinity}]];
 
-getRelativeParameters[pars_, pConsList_] :=
+getRelativeVars[vars_, consList_, getFunc_] :=
   Module[
-    {npars, npConsList},
-    If[pars === {},
+    {nvars, npConsList},
+    If[vars === {},
       {},
-      npars = Complement[Flatten[Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]>0)&]], pars];
-      npConsList = Select[Map[(getParameters[#])&, pConsList], (Length[Intersection[#, pars]]==0)&];
-      Union[pars, getRelativeParameters[npars,npConsList]]
+      nvars = Complement[Flatten[Select[Map[(getFunc[#])&, consList], (Length[Intersection[#, vars]]>0)&]], vars];
+      nconsList = Select[Map[(getFunc[#])&, consList], (Length[Intersection[#, vars]]==0)&];
+      Union[vars, getRelativeVars[nvars,nconsList,getFunc]]
     ]
   ]
 
@@ -399,21 +406,47 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
+resolveOrd[cons_, vars_, pars_] :=
+  Module[
+    {relatedConsMap, resolved = {}, restVars=vars, found},
+    For[i=1, i<=Length[vars], i++,
+      relatedConsMap[vars[[i]]] = Select[cons, MemberQ[getVariablesWithDerivatives[#], vars[[i]] ]&];
+    ];
+    While[True,
+      found =
+        Select[
+          restVars,
+          Function[var, Fold[(#1||Complement[getVariablesWithDerivatives[#2], Append[resolved, var]]==={})&, False, applyList[relatedConsMap[var]] ]]
+        ];
+      If[found == {},
+         Break[],
+         resolved = Join[resolved, found];
+         restVars = Complement[restVars, found];
+         found = {}
+      ]
+    ];
+    Join[resolved, restVars]
+  ]
+
+
 (* 変数varsに関する制約ストアからjudgeFunctionでTrueとなる変数に関するMapを作成 *)
-createMap[consList_, judgeFunction_, vars_, pars_] :=
-  Map[
-    (Fold[
-      (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
-          Union[#1, {getReverseRelop[#2[[2]] ]@@{#2[[3]],#2[[1]] }, #2[[4]]@@{#2[[3]],#2[[5]] } } ],
-        If[MemberQ[{Equal,Unequal,Less,LessEqual,Greater,GreaterEqual}, Head[#2]]&&judgeFunction[#2[[1]]],
-          Append[#1, #2],
-        If[Head[#2]===Element&&judgeFunction[#2[[1]]],
-          Append[#1, Equal[#2[[1]], True]],
-          #1] ] ] )&,
-      {},
-      #
-    ])&,
-    consToDoubleList[Reduce[consList, Join[pars,vars]]]
+createMap[cons_, judgeFunction_, vars_, pars_] :=
+  Module [
+    {resolvedVars},
+    resolvedVars = If[vars === {}, {}, resolveOrd[cons, vars, pars]];
+    simplePrint[Join[pars, resolvedVars]];
+    Map[
+      (Fold[
+        (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
+            Union[#1, {getReverseRelop[#2[[2]] ]@@{#2[[3]],#2[[1]] }, #2[[4]]@@{#2[[3]],#2[[5]] } } ],
+          If[MemberQ[{Equal,Unequal,Less,LessEqual,Greater,GreaterEqual}, Head[#2]]&&judgeFunction[#2[[1]]],
+            Append[#1, #2],
+            #1] ])&,
+        {},
+        #
+      ])&,
+      consToDoubleList[Reduce[cons, Join[pars,resolvedVars]]]
+    ]
   ]
 
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
@@ -687,8 +720,8 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    consList = Flatten[consToDoubleList[LogicalExpand[pCons]]];
-    parsInCons = Union[getRelativeParameters[getParameters[tCons && maxCons], consList]];
+    consList = applyList[LogicalExpand[pCons]];
+    parsInCons = Union[getRelativeVars[getParameters[tCons && maxCons], consList, getParameters]];
     debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     restPCons = And@@Complement[consList, necessaryPCons];
@@ -696,7 +729,7 @@ publicMethod[
     simplePrint[necessaryPCons];
     simplePrint[restPCons];
 
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
+    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 3],
          onTime = False,
          Minimize::wksol
        ],
@@ -704,7 +737,7 @@ publicMethod[
     ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
-    If[Head[minT] === Minimize,
+    If[minT === $Aborted || Head[minT] === Minimize,
       Message[findMinTime::minimizeFailure, minT],
       minT = First[minT];
       If[minT === Infinity,
@@ -1353,7 +1386,7 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    parsInVM = Fold[Union[#1, getRelativeParameters[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2]]&, {}, consToDoubleList[pm]];
+    parsInVM = Fold[Union[#1, getRelativeVars[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2, getParameters]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];

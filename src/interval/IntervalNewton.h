@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <vector>
 #include "kv/interval.hpp"
 #include "kv/rdouble.hpp"
 #include "kv/dd.hpp"

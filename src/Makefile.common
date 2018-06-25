@@ -21,7 +21,7 @@ endif
 
 ifeq ($(UNAME),Linux)
 INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/ 
 
 CXX_OPT  += -Wall -std=c++14 -O
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg

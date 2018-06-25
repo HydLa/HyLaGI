@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2016 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef STROBOMAP_HPP

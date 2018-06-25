@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2016 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef INTERVAL_HPP
@@ -11,8 +11,6 @@
 #include <cmath>
 #include <string>
 #include <sstream>
-
-#pragma clang diagnostic ignored "-Wunused-variable"
 
 #include <kv/convert.hpp>
 #include <kv/constants.hpp>
@@ -546,18 +544,18 @@ template <class T> class interval {
 	}
 
 	friend interval sqrt(const interval& x) {
-		T tmp1, tmp2;
+		interval r;
 
 		if (x.inf < 0.) {
 			throw std::domain_error("interval: sqrt of negative value");
 		}
 
 		rop<T>::begin();
-		tmp1 = rop<T>::sqrt_down(x.inf);
-		tmp2 = rop<T>::sqrt_up(x.sup);
+		r.inf = rop<T>::sqrt_down(x.inf);
+		r.sup = rop<T>::sqrt_up(x.sup);
 		rop<T>::end();
 
-		return interval(tmp1, tmp2);
+		return r;
 	}
 
 	const T& lower() const {
@@ -615,6 +613,7 @@ template <class T> class interval {
 		return interval(tmp1, tmp2);
 	}
 
+
 	friend T width(const interval& x) {
 		T tmp;
 
@@ -649,6 +648,16 @@ template <class T> class interval {
 		return mid(x);
 	}
 
+	friend void midrad(const interval& x, T& m, T& r) {
+		T tmp;
+		m = mid(x);
+		rop<T>::begin();
+		r = rop<T>::sub_up(x.sup, m);
+		tmp = rop<T>::sub_up(m, x.inf);
+		rop<T>::end();
+		if (tmp > r) r = tmp;
+	}
+
 	friend T norm(const interval& x) {
 		if (x.inf >= 0.) return x.sup;
 		if (x.sup <= 0.) return -x.inf;
@@ -673,6 +682,24 @@ template <class T> class interval {
 		T tmp = -x.inf;
 		if (x.sup > tmp) tmp = x.sup;
 		return interval(0., tmp);
+	}
+
+	friend interval max(const interval& x, const interval& y) {
+		T z1, z2;
+		z1 = x.inf;
+		if (y.inf > z1) z1 = y.inf;
+		z2 = x.sup;
+		if (y.sup > z2) z2 = y.sup;
+		return interval(z1, z2);
+	}
+
+	friend interval min(const interval& x, const interval& y) {
+		T z1, z2;
+		z1 = x.inf;
+		if (y.inf < z1) z1 = y.inf;
+		z2 = x.sup;
+		if (y.sup < z2) z2 = y.sup;
+		return interval(z1, z2);
 	}
 
 	template <class C> friend typename boost::enable_if_c< acceptable_n<C, interval>::value, bool >::type in(const C& a, const interval& x) {
@@ -1723,15 +1750,15 @@ template <class T> class interval {
 	}
 
 	static interval sinh_point(const T& x) {
+		interval tmp;
 		if (x >= -0.5 && x <= 0.5) {
 			return sinh_origin(x);
-		} else {
-			if (x == -std::numeric_limits<T>::infinity()) {
-				return -interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
-			}
-			interval tmp;
+		} else if (x > 0.) {
 			tmp = exp_point(x);
-			return (tmp - 1./tmp) * 0.5;
+			return (tmp - 1. / tmp) * 0.5;
+		} else {
+			tmp = exp_point(-x);
+			return (1. / tmp - tmp) * 0.5;
 		}
 	}
 
@@ -1740,12 +1767,14 @@ template <class T> class interval {
 	}
 
 	static interval cosh_point(const T& x) {
-		if (x == -std::numeric_limits<T>::infinity()) {
-			return interval((std::numeric_limits<T>::max)(), std::numeric_limits<T>::infinity());
-		}
 		interval tmp;
-		tmp = exp_point(x);
-		return (tmp + 1./tmp) * 0.5;
+		if (x >= 0.) {
+			tmp = exp_point(x);
+			return (tmp + 1. / tmp) * 0.5;
+		} else {
+			tmp = exp_point(-x);
+			return (1. / tmp + tmp) * 0.5;
+		}
 	}
 
 	friend interval cosh(const interval& I) {
