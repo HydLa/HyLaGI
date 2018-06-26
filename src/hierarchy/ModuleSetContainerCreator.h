@@ -182,8 +182,11 @@ public:
     if (!in_constraint_caller_) container_name_+="-";
   }
 
-
-
+  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
+  {
+    if (!in_constraint_caller_) container_name_+="-";
+    accept(node->get_child());
+  }
 
   virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
   {

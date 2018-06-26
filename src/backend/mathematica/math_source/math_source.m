@@ -726,8 +726,8 @@ publicMethod[
         {},
         ret = makeListFromPiecewise[minT, necessaryPCons];
         ret = Map[({#[[1]], #[[2]] && restPCons})&, ret];
-        (* 時刻が0となる場合はinfとする．*)
-        ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
++       (* 時刻が0となる場合は弾く．*)
++       ret = Select[ret, (#[[1]] =!= 0)&];
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)
