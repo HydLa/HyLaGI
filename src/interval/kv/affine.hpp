@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include <map> //@hylagi
+#include <set> //@hylagi
 
 #include <kv/interval.hpp>
 #include <kv/rdouble.hpp>
@@ -1702,7 +1703,9 @@ template <class T> class ep_reduce_v {
   ub::vector<T> v;
   T score;
   int index; // @hylagi to identify intervalized dummy variables
+  bool is_param; // @hylagi to avoid reduction
   void calc_score() {
+    if (is_param){score = std::numeric_limits<T>::max(); return;}
     int s = v.size();
     int i, j;
     T m1, m2, tmp;
@@ -1738,7 +1741,7 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
 }
 
 //template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
-template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // @hylagi modified
+template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, const std::set<int>& parameter_indices, int n_limit = 0) { // @hylagi modified
     
   int s = x.size();
   int m = affine<T>::maxnum();
@@ -1765,6 +1768,7 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
   for (i=1; i<=m; i++) {
     a[i-1].v.resize(s);
     a[i-1].index = i; // @hylagi
+    a[i-1].is_param = parameter_indices.find(i) != parameter_indices.end();
     result_map.insert(std::make_pair(i, -1)); // @hylagi
     for (j=0; j<s; j++) {
       a[i-1].v(j) = (i < x(j).a.size()) ? x(j).a(i) : (T)0.;

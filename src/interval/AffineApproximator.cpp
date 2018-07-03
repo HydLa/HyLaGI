@@ -42,27 +42,26 @@ void AffineApproximator::set_extra_dummy_num(int num)
 }
 
 
-void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit)
+void AffineApproximator::reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit, const std::set<int>& parameter_indices)
 {
-  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit);
+  std::map<int, int> index_map = kv::epsilon_reduce(formulas, limit, parameter_indices);
+  parameter_idx_map_t replaced_parameter_idx_map;
   for(auto pair : index_map)
   {
     parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(pair.first);
     if(r_it == parameter_idx_map.right.end())
     {
-      HYDLA_LOGGER_DEBUG("Not Found");
       continue;
     }
 
-    if(pair.second == -1)
+    if(pair.second != -1)
     {
-      parameter_idx_map.right.erase(r_it);
-    }
-    else
-    {
-      parameter_idx_map.right.replace_key(r_it, pair.second);
+      std::stringstream ss;
+      replaced_parameter_idx_map.insert(parameter_idx_map_t::value_type(r_it->second, pair.second));
     }
   }
+
+  parameter_idx_map = replaced_parameter_idx_map;
 }
 
 value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine_value, parameter_map_t &parameter_map)
@@ -75,7 +74,10 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   int available_index;
   for(int i = 1; i < affine_value.a.size(); i++)
   {
-    if(affine_value.a(i) == 0)continue;
+    if(affine_value.a(i) == 0)
+    {
+      continue;
+    }
     parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);
     if(r_it == parameter_idx_map.right.end())
     {
@@ -113,11 +115,12 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   return ret;
 }
 
-void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate,  variable_map_t &variable_map, parameter_map_t &parameter_map, value_t &time)
+void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_approximate, variable_map_t &variable_map, parameter_map_t &parameter_map, value_t &time)
 {
   parameter_idx_map.clear();
   affine_t::maxnum() = 0;
   AffineTreeVisitor visitor(parameter_idx_map, variable_map);
+
   std::map<simulator::variable_t, affine_t> affine_map;
   for(auto var: vars_to_approximate)
   {
@@ -149,6 +152,15 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     time_is_affine = true;
   }
 
+  std::set<int> parameter_indices;
+  for(parameter_idx_map_t::const_iterator it = parameter_idx_map.begin(); it != parameter_idx_map.end(); ++it)
+  {
+    if(it->left.get_differential_count() != -1)
+    {
+      parameter_indices.emplace(it->right);
+    }
+  }
+
   // 試験的にダミー変数の削減をしてみる TODO:外部から削減タイミングを指定するようにする
   kv::ub::vector<affine_t> formulas(affine_map.size() + (time_is_affine?1:0));
   int i = 0;
@@ -166,7 +178,8 @@ void AffineApproximator::approximate(const simulator::variable_set_t &vars_to_ap
     var_index_map[element.first] = i;
     ++i;
   }
-  reduce_dummy_variables(formulas, formulas.size() + extra_dummy_num);
+  
+  reduce_dummy_variables(formulas, formulas.size() + extra_dummy_num, parameter_indices);
 
   if(time_is_affine)
   {

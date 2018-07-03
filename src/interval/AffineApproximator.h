@@ -40,8 +40,9 @@ private:
    * Reduce dummy variables
    * @param formulas Formulas to be reduced
    * @param limit the number which the number of dummy variables are to be after reduction
+   * @param parameter_indices Parameter indices of affine formulas to preserve in reduction
    */
-  void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit);
+  void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit, const std::set<int>& parameter_indices);
 
 
   value_t translate_into_symbolic_value(const affine_t &affine_value, parameter_map_t &parameter_map);
