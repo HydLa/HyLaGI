@@ -11,7 +11,7 @@ trySolve[cons_, vars_] :=
         eachCons = consToSolve[[i]];
         If[Head[eachCons] === Equal,
           (* swap lhs and rhs if rhs is variable *)
-          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[1]] == eachCons[[2]])];
+          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[2]] == eachCons[[1]])];
           If[isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
             trivialCons = trivialCons && eachCons;
             consToSolve = Drop[consToSolve, {i}];
