@@ -147,7 +147,7 @@ void ProgramOptions::init_descriptions()
     ("step_by_step", value<char>()->default_value('n'),
       "use find_min_time_step_by_step")
     ("solve_over_reals", value<char>()->default_value('n'), "solve constrants over the reals")
-    ("html", value<char>()->default_value('n'), "output log with HTML format");
+    ("html", value<char>()->default_value('n'), "output log with HTWS format");
 
 
   options_description hidden_desc("Hidden options");

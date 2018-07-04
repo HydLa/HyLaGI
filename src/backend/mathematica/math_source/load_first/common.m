@@ -139,7 +139,7 @@ delimiterAddedString[del_, {h_, t__}] := StringJoin[h, del, delimiterAddedString
 
 SetAttributes[publicMethod, HoldAll];
 
-(* MathLinkでDerivativeの送信がややこしいのでこっちで変換する *)
+(* WSTPでDerivativeの送信がややこしいのでこっちで変換する *)
 
 derivativeInit[cnt_, var_] := Derivative[cnt][var][0];
 derivativeTime[cnt_, var_] := Derivative[cnt][var][t];
