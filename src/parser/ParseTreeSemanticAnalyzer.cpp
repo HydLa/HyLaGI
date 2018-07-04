@@ -411,7 +411,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 {
   // 子ノードが微分か変数でなかったらエラー
   if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
-     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+     !boost::dynamic_pointer_cast<Variable>(node->get_child()) && 
+     !boost::dynamic_pointer_cast<ExpressionListElement>(node->get_child())) {
        throw InvalidDifferential(node);
   }
 
@@ -426,7 +427,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
 {  
   // 子ノードが微分か変数でなかったらエラー
   if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
-     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+     !boost::dynamic_pointer_cast<Variable>(node->get_child()) &&
+     !boost::dynamic_pointer_cast<ExpressionListElement>(node->get_child())) {
        throw InvalidPrevious(node);
   }
 
@@ -544,6 +546,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> 
 // ExpressionListElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
 {
+  dispatch_rhs(node);
   node_sptr ret = list_expander_.expand_list(node);
   boost::shared_ptr<ExpressionListElement> ele = boost::dynamic_pointer_cast<ExpressionListElement>(ret);
   if(!(ele)) accept(ret);
