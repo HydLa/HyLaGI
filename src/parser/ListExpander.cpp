@@ -94,7 +94,9 @@ symbolic_expression::node_sptr ListExpander::circular_check(
 
 node_sptr ListExpander::expand_list(boost::shared_ptr<SumOfList> node){
   accept(node);
-  return boost::dynamic_pointer_cast<Plus>(new_child);
+  node_sptr ret = boost::dynamic_pointer_cast<Plus>(new_child);
+  if(ret) return ret;
+  else return boost::dynamic_pointer_cast<Number>(new_child);
 }
 
 boost::shared_ptr<Number> ListExpander::expand_list(boost::shared_ptr<SizeOfList> node){
