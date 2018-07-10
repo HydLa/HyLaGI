@@ -96,7 +96,9 @@ node_sptr ListExpander::expand_list(boost::shared_ptr<SumOfList> node){
   accept(node);
   node_sptr ret = boost::dynamic_pointer_cast<Plus>(new_child);
   if(ret) return ret;
-  else return boost::dynamic_pointer_cast<Number>(new_child);
+  ret = boost::dynamic_pointer_cast<Number>(new_child);
+  if(ret) return ret;
+  return boost::shared_ptr<Number>(new Number("0"));
 }
 
 boost::shared_ptr<Number> ListExpander::expand_list(boost::shared_ptr<SizeOfList> node){
