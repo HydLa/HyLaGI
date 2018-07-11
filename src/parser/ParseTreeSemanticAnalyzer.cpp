@@ -501,7 +501,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
 {
   // TODO: implement
-  assert(0);
+  // assert(0);
 }
 
 // ConditionalExpressionList
@@ -556,6 +556,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> n
 // SizeOfList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
 {
+  dispatch_child(node);
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
   if(!new_child_) new_child_ = ret;
@@ -564,6 +565,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
 // SumOfList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
 {
+  dispatch_child(node);
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
   if(!new_child_) new_child_ = ret;
@@ -580,6 +582,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node
 // Range
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Range> node)
 {
+  dispatch_lhs(node);
+  dispatch_rhs(node);
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
   if(!new_child_) new_child_ = ret;
