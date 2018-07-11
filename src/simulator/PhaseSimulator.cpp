@@ -1601,7 +1601,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
     time_limit -= phase->current_time;
 
     variable_map_t original_vm = phase->variable_map;
+    timer::Timer shift_time_timer;
     phase->variable_map = value_modifier->shift_time(phase->current_time, phase->variable_map);
+    phase->profile["ShiftTime"] += shift_time_timer.get_elapsed_us();
 
     if (phase->in_following_step())
     {
@@ -1613,7 +1615,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         {
           phase->variable_map[var] = vm_to_take_over[var];
           // create a variable map whose start point(t=0) is the start of this phase
+          timer::Timer shift_time_timer;
           original_vm[var] = value_modifier->shift_time(-phase->current_time, vm_to_take_over[var]);
+          phase->profile["ShiftTime"] += shift_time_timer.get_elapsed_us();
         }
       }
     }
@@ -1636,7 +1640,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
             {
               for (auto &entry : candidate.other_guards_to_time_condition)
               {
+                timer::Timer shift_time_timer;
                 entry.second = value_modifier->shift_time(-(phase->current_time - phase->parent->parent->current_time), value_t(entry.second) ).get_node();
+                phase->profile["ShiftTime"] += shift_time_timer.get_elapsed_us();
               }
               cand_it++;
             }
