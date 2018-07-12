@@ -173,14 +173,6 @@ public:
     return child_;
   }
 
-  /**
-   * getter of child node
-   */
-  const node_sptr& get_child_node() const
-  {
-    return child_;
-  }
-
 protected:
   node_sptr child_;
 };

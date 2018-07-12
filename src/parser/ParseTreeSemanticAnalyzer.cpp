@@ -498,15 +498,23 @@ DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 
 // ExpressionList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
-{
+DEFINE_DEFAULT_VISIT_ARBITRARY(ExpressionList)
+//void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
+//{
   // TODO: implement
   // assert(0);
-}
+//}
 
 // ConditionalExpressionList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionList> node)
 {
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
 }
@@ -539,6 +547,13 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
 // ConditionalProgramList
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
 {
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
 }
@@ -546,6 +561,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> 
 // ExpressionListElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
 {
+  dispatch_lhs(node);
   dispatch_rhs(node);
   node_sptr ret = list_expander_.expand_list(node);
   boost::shared_ptr<ExpressionListElement> ele = boost::dynamic_pointer_cast<ExpressionListElement>(ret);
@@ -608,13 +624,14 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Intersection> node)
 // EachElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
 {
-  assert(0);
+  dispatch_rhs(node);
+  //assert(0);
 }
 
 // DifferentVariable
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
 {
-  assert(0);
+  //assert(0);
 }
 
 
