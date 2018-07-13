@@ -142,6 +142,8 @@ void DefaultTreeVisitor::visit(boost::shared_ptr<Intersection> node)    {accept(
 void DefaultTreeVisitor::visit(boost::shared_ptr<SizeOfList> node)    {accept(node->get_child());}
 // SumOfList
 void DefaultTreeVisitor::visit(boost::shared_ptr<SumOfList> node)    {accept(node->get_child());}
+// MulOfList
+void DefaultTreeVisitor::visit(boost::shared_ptr<MulOfList> node)    {accept(node->get_child());}
 
 } //namespace symbolic_expression
 } //namespace hydla

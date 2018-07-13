@@ -101,6 +101,15 @@ node_sptr ListExpander::expand_list(boost::shared_ptr<SumOfList> node){
   return boost::shared_ptr<Number>(new Number("0"));
 }
 
+node_sptr ListExpander::expand_list(boost::shared_ptr<MulOfList> node){
+  accept(node);
+  node_sptr ret = boost::dynamic_pointer_cast<Times>(new_child);
+  if(ret) return ret;
+  ret = boost::dynamic_pointer_cast<Number>(new_child);
+  if(ret) return ret;
+  return boost::shared_ptr<Number>(new Number("1"));
+}
+
 boost::shared_ptr<Number> ListExpander::expand_list(boost::shared_ptr<SizeOfList> node){
   accept(node);
   return boost::dynamic_pointer_cast<Number>(new_child);
@@ -162,42 +171,21 @@ boost::shared_ptr<VariadicNode> ListExpander::expand_list(boost::shared_ptr<Rang
   if(lhs_num && rhs_num){
     if(node->get_header().length() == 0){
       ret = boost::shared_ptr<ExpressionList>(new ExpressionList());
-      if (std::stoi(lhs_num->get_number()) <= std::stoi(rhs_num->get_number())){
-        for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
-          ret->add_argument(boost::shared_ptr<Number>(new Number(std::to_string(i))));
-        }
-      }else{
-        for(int i = std::stoi(lhs_num->get_number()); i >= std::stoi(rhs_num->get_number()); i--){
-          ret->add_argument(boost::shared_ptr<Number>(new Number(std::to_string(i))));
-        }
+      for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
+        ret->add_argument(boost::shared_ptr<Number>(new Number(std::to_string(i))));
       }
     }else if('A' <= node->get_header()[0] && node->get_header()[0] <= 'Z'){
       ret = boost::shared_ptr<ProgramList>(new ProgramList());
-      if (std::stoi(lhs_num->get_number()) <= std::stoi(rhs_num->get_number())){
-        for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
-          boost::shared_ptr<ConstraintCaller> caller = boost::shared_ptr<ConstraintCaller>(new ConstraintCaller());
-          caller->set_name(node->get_header()+std::to_string(i));
-          ret->add_argument(caller);
-        }
-      }else{
-        for(int i = std::stoi(lhs_num->get_number()); i >= std::stoi(rhs_num->get_number()); i--){
-          boost::shared_ptr<ConstraintCaller> caller = boost::shared_ptr<ConstraintCaller>(new ConstraintCaller());
-          caller->set_name(node->get_header()+std::to_string(i));
-          ret->add_argument(caller);
-        }
+      for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
+        boost::shared_ptr<ConstraintCaller> caller = boost::shared_ptr<ConstraintCaller>(new ConstraintCaller());
+        caller->set_name(node->get_header()+std::to_string(i));
+        ret->add_argument(caller);
       }
     }else{
       ret = boost::shared_ptr<ExpressionList>(new ExpressionList());
-      if (std::stoi(lhs_num->get_number()) <= std::stoi(rhs_num->get_number())){
-        for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
-          boost::shared_ptr<Variable> variable = boost::shared_ptr<Variable>(new Variable(node->get_header()+std::to_string(i)));
-          ret->add_argument(variable);
-        }
-      }else{
-        for(int i = std::stoi(lhs_num->get_number()); i >= std::stoi(rhs_num->get_number()); i--){
-          boost::shared_ptr<Variable> variable = boost::shared_ptr<Variable>(new Variable(node->get_header()+std::to_string(i)));
-          ret->add_argument(variable);
-        }
+      for(int i = std::stoi(lhs_num->get_number()); i <= std::stoi(rhs_num->get_number()); i++){
+        boost::shared_ptr<Variable> variable = boost::shared_ptr<Variable>(new Variable(node->get_header()+std::to_string(i)));
+        ret->add_argument(variable);
       }
     }
   }
@@ -817,6 +805,26 @@ void ListExpander::visit(boost::shared_ptr<symbolic_expression::SumOfList> node)
   for(int i = 0; i < list->get_arguments_size(); i++){
     if(ret){
       ret = boost::shared_ptr<Plus>(new Plus(ret,list->get_argument(i)));
+    }else{
+      ret = list->get_argument(i);
+    }
+  }
+  new_child = ret;
+}
+
+void ListExpander::visit(boost::shared_ptr<symbolic_expression::MulOfList> node){
+  node_sptr ret;
+  accept(node->get_child());
+  boost::shared_ptr<ExpressionList> list;
+  if(new_child){
+    list = boost::dynamic_pointer_cast<ExpressionList>(new_child->clone());
+    new_child.reset();
+  }else{
+    list = boost::dynamic_pointer_cast<ExpressionList>(node->get_child()->clone());
+  }
+  for(int i = 0; i < list->get_arguments_size(); i++){
+    if(ret){
+      ret = boost::shared_ptr<Times>(new Times(ret,list->get_argument(i)));
     }else{
       ret = list->get_argument(i);
     }

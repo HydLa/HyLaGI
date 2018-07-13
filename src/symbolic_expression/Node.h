@@ -1709,6 +1709,11 @@ DEFINE_UNARY_NODE(SizeOfList)
 DEFINE_UNARY_NODE(SumOfList)
 
 /**
+ * Mul of List
+ */
+DEFINE_UNARY_NODE(MulOfList)
+
+/**
  * Expression List
  */
 class ExpressionList : public VariadicNode {

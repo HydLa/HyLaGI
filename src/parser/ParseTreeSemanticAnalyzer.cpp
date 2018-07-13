@@ -587,6 +587,15 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
   if(!new_child_) new_child_ = ret;
 }
 
+// MulOfList
+void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<MulOfList> node)
+{
+  dispatch_child(node);
+  node_sptr ret = list_expander_.expand_list(node);
+  accept(ret);
+  if(!new_child_) new_child_ = ret;
+}
+
 // ProgramListElement
 void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node)
 {

@@ -109,6 +109,33 @@ node_sptr Parser::sum_of_list(){
 }
 
 /**
+ * mul_of_list := "mul" "(" expression_list ")"
+ */
+node_sptr Parser::mul_of_list(){
+  boost::shared_ptr<MulOfList> ret(new MulOfList());
+  position_t position = lexer.get_current_position();
+  if(lexer.get_token() == LOWER_IDENTIFIER &&
+     lexer.get_current_token_string() == "mul"){
+    if(lexer.get_token() == LEFT_PARENTHESES){
+      node_sptr tmp;
+      if((tmp = expression_list())){
+        ret->set_child(tmp);
+        position_t tmp_position = lexer.get_current_position();
+        if(lexer.get_token() == RIGHT_PARENTHESES){
+          return ret;
+        }else{
+          error_occurred(tmp_position, "expected \")\" after expression list");
+        }
+      }else{
+        error_occurred(lexer.get_current_position(), "expected expression list after \"(\"");
+      }
+    }
+  }
+  lexer.set_current_position(position);
+  return node_sptr();
+}
+
+/**
  * size_of_list := "|" ( expression_list | program_list ) "|"
  */
 node_sptr Parser::size_of_list(){

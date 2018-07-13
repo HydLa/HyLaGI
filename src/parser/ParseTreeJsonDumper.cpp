@@ -449,5 +449,10 @@ void ParseTreeJsonDumper::visit(boost::shared_ptr<SumOfList> node)
   dump_node(node);
 }
 
+// MulOfList
+void ParseTreeJsonDumper::visit(boost::shared_ptr<MulOfList> node)
+{
+  dump_node(node);
+}
 } //namespace parser
 } //namespace hydla
