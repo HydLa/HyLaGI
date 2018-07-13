@@ -51,7 +51,7 @@ void ProgramOptions::init_descriptions()
      "  in graphviz format")
 
     ("simplify",
-     value<int>()->default_value(1),
+     value<int>()->default_value(0),
      "the level of simplification at each phase\n"
      "  0 - no simplification\n"
      "  1 - use \"Simplify\"\n"
