@@ -76,7 +76,7 @@ void ProgramOptions::init_descriptions()
 
     ("debug,d", "display debug trace\n")
 
-    ("simplify_time",
+    ("simplify_time,s",
      value<std::string>()->default_value("1"),
      "time limit of simplifying expressions in the backend")
 
