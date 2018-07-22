@@ -172,7 +172,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   const constraint_t &constraint_for_default_continuity,
   const asks_t &unknown_asks,
   const PhaseType &phase,
-  profile_t &profile
+  profile_t &profile,
+  bool following_step
   )
 {
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(guard) );
@@ -206,7 +207,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     finder.visit_node(constraint);
   }
-  add_continuity(finder, phase, constraint_for_default_continuity);
+  if(following_step) add_continuity(finder, phase, constraint_for_default_continuity);
   backend->call("addConstraint", true, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }

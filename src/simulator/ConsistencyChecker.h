@@ -56,7 +56,8 @@ public:
     const constraint_t &node_sptr,
     const asks_t &unknown_asks,
     const PhaseType &phase,
-    profile_t &profile
+    profile_t &profile,
+    bool following_step
     );
 
   CheckEntailmentResult check_entailment(
