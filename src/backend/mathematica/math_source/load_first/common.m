@@ -24,6 +24,11 @@ $MaxExtraPrecision = 1000;
  * profileList: プロファイリング結果のリスト
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
+ * tmpCacheStack:
+ * prevExcludedCons:
+ * checkFirstFlag:
+ * cache:
+ * 
  * opt...: 各種オプションのON/OFF．
  *)
 
@@ -35,6 +40,9 @@ parameters = {};
 dList = {};
 profileList = {};
 createMapList = {};
+tmpCacheStack = {};
+checkFirstFlag = True;
+cache = True;
 assumptions = True;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)

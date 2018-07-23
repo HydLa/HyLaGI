@@ -42,19 +42,31 @@ publicMethod[
   checkConsistencyPoint,
   cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False},
+    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False, tmpCache, prevCond},
     initRules = Map[(Rule@@#)&, applyList[init] ];
+    If[checkFirstFlag === True,
+      tmpCache = Last[tmpCacheStack];
+      tmpCacheStack = Most[tmpCacheStack];
+    ];
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
+    sol = sol /. Element[_,_] -> True;
+    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
+    prevExcludedCons = And@@Select[applyList[sol], !(!Head[#]===Equal && hasPrevVariable[#] && !hasVariable[#])&];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
         cpTrue = pcons;
-        cpFalse = False,
+        cpFalse = False;
+        Quiet[
+          prevCond = Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
+        ],
         cpTrue = False;
-        cpFalse = pcons
+        cpFalse = pcons;
+        Quiet[
+          prevCond = !Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
+        ]
       ],
       Quiet[
         cpTrue = Reduce[Exists[Evaluate[Join[vars, prevs] ], (resultConstraint /. t -> current) && pcons], pars, Reals], {Reduce::useq}
@@ -66,9 +78,30 @@ publicMethod[
       Quiet[
         cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
       ];
+      Quiet[
+        prevCond = Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
+      ];
+      (* prev condition not to satisfy *)
+      If[cpTrue === False && checkFirstFlag,
+        prevCond = !prevCond
+      ];
+      (* prev condition to satisfy and not *)
+      If[cpTrue =!= False && cpFalse =!= False && checkFirstFlag === True || cpTrue =!= False && !checkFirstFlag,
+        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond] ];
+        prevCond = !prevCond;
+      ];
     ];
     checkMessage;
     simplePrint[cpFalse];
+    simplePrint[checkFirstFlag];
+    simplePrint[prevExcludedCons];
+    simplePrint[prevCond];
+    simplePrint[tmpCache];
+    If[checkFirstFlag === True,
+      tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond]];
+      checkFirstFlag = False;
+    ];
+    simplePrint[tmpCacheStack];
     toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
   ]
 ];
@@ -237,6 +270,12 @@ publicMethod[
     tmpCons = tmpCons /. Equal[x_?(!hasVariable[#]&),y_?(!hasVariable[#]&)] -> True;
     debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
     tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
+    simplePrint[prevExcludedCons];
+    simplePrint[Last[tmpCacheStack]];
+    tmpCache = createMap[Last[tmpCacheStack] && prevExcludedCons, isVariable, getVariablesWithDerivatives[prevExcludedCons], Union[getPrevVariables[prevExcludedCons], getParameters[prevExcludedCons] ] ];
+    simplePrint[tmpCache];
+    cache = cache && LogicalExpand[And@@First[tmpCache] ];
+    simplePrint[cache];
     debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
@@ -471,6 +510,27 @@ publicMethod[
   resetConstraintForVariable,
   constraint = True;
   initConstraint = True;
+];
+
+publicMethod[
+  initCache,
+  tmpCacheStack = Append[tmpCacheStack, True];
+];
+
+publicMethod[
+  enableCheckFirst,
+  checkFirstFlag = True;
+];
+
+publicMethod[
+  popCache,
+  Module[
+    {tmpCache},
+    tmpCache = Last[tmpCacheStack];
+    tmpCacheStack = Most[tmpCacheStack];
+    simplePrint[tmpCache];
+    {toReturnForm[LogicalExpand[tmpCache] ]}
+  ]
 ];
 
 publicMethod[

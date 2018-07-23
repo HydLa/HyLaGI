@@ -240,6 +240,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
 {
   CheckEntailmentResult ce_result;
 
+  backend->call("enableCheckFirst", false, 0, "", "");
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
   if(cc_result.consistent_store.consistent()){
@@ -456,6 +457,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency_essential(const Con
 
   const char* fmt = (phase == POINT_PHASE)?"csn":"cst";
   backend->call("addConstraint", true, 1, fmt, "", &constraint_store);
+  backend->call("enableCheckFirst", false, 0, "", "");
   return call_backend_check_consistency(phase);
 }
 
