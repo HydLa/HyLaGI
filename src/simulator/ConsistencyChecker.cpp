@@ -207,7 +207,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     finder.visit_node(constraint);
   }
-  if(following_step) add_continuity(finder, phase, constraint_for_default_continuity);
+  add_continuity(finder, phase, constraint_for_default_continuity);
   backend->call("addConstraint", true, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }

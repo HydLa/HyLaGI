@@ -87,8 +87,8 @@ publicMethod[
       ];
       (* prev condition to satisfy and not *)
       If[cpTrue =!= False && cpFalse =!= False && checkFirstFlag === True || cpTrue =!= False && !checkFirstFlag,
-        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond] ];
-        prevCond = !prevCond;
+        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && !prevCond] ];
+        If[!checkFirstFlag, tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond] ]; ];
       ];
     ];
     checkMessage;
@@ -134,13 +134,6 @@ Module[
   If[hasVariable[lhs], Return[True] ];
 
   trueCond = False;
-
-  eqSol = Quiet[Reduce[lhs == 0 && pCons, Reals]];
-  simplePrint[eqSol];
-  If[eqSol =!= False,
-    eqSol = ccIntervalForEach[operator[D[cond[[1]], t], D[cond[[2]], t]], initRules, eqSol];
-    trueCond = trueCond || eqSol
-  ];
   If[MemberQ[{Unequal, Greater, GreaterEqual}, operator],
     gtSol = Quiet[Reduce[lhs > 0 && pCons, Reals] ];
     trueCond = trueCond || gtSol
@@ -158,45 +151,67 @@ publicMethod[
   checkConsistencyInterval,
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
-    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit},
+    {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit, prevExcludedRules, eachTmpCache, tmpCache, topCache},
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs];
+        sol = exDSolve[Simplify[cons] ];
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
+        prevExcludedRules = sol;
         If[sol === overConstrained,
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
-          debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
-          tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-          simplePrint[tRules];
-          substitutedInit = initCons /. prevRs;
-          debugPrint["hoge"];
-          debugPrint[cons];
-          debugPrint[initCons];
-          debugPrint[prevRs];
-          debugPrint[substitutedInit];
-          debugPrint[tRules];
-          debugPrint[(initCons /. (tRules /. t -> 0))];
-          debugPrint[(substitutedInit /. (tRules /. t -> 0))];
-          If[(initCons /. (tRules /. t -> 0)) === False, 
+          If[(sol[[2]] //. prevRs) === False,
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
-            tCons = sol[[2]] /. tRules;
-            initRules = makeRulesForVariable[substitutedInit];
-            simplePrint[tCons];
-            cpTrue = False;
-            For[i = 1, i <= Length[tCons], i++,
-              conj = tCons[[i]];
-              eachCpTrue = prevCons && pCons;
-              For[j = 1, j <= Length[conj], j++,
-                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
+            sol = sol //. prevRs;
+            tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+            simplePrint[tRules];
+            substitutedInit = initCons /. prevRs;
+            debugPrint["hoge"];
+            debugPrint[cons];
+            debugPrint[initCons];
+            debugPrint[prevRs];
+            debugPrint[substitutedInit];
+            debugPrint[tRules];
+            debugPrint[(initCons /. (tRules /. t -> 0))];
+            debugPrint[(substitutedInit /. (tRules /. t -> 0))];
+            If[(initCons /. (tRules /. t -> 0)) === False, 
+              toReturnForm[{{False}, {LogicalExpand[pCons]}}],
+              tCons = sol[[2]] /. tRules;
+              initRules = makeRulesForVariable[substitutedInit];
+              prevExcludedRules = makeRulesForVariable[initCons];
+              simplePrint[tCons];
+              simplePrint[initRules];
+              simplePrint[prevExcludedRules];
+              cpTrue = False;
+              tmpCache = False;
+              For[i = 1, i <= Length[tCons], i++,
+                conj = tCons[[i]];
+                eachCpTrue = prevCons && pCons;
+                eachTmpCache = True;
+                For[j = 1, j <= Length[conj], j++,
+                  eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue];
+                  eachTmpCache = eachTmpCache && ccIntervalForEach[conj[[j]], prevExcludedRules, True];
+                  simplePrint[eachCpTrue];
+                  simplePrint[eachTmpCache];
+                ];
+                tmpCache = tmpCache || eachTmpCache;
+                cpTrue = cpTrue || eachCpTrue
               ];
-              cpTrue = cpTrue || eachCpTrue
-            ];
-			debugPrint["cpFalse", cpFalse];
-            cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-            toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+              cpTrue = Reduce[cpTrue, Join[pars, prevVars], Reals];
+              cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+              If[checkFirstFlag,
+                simplePrint[tmpCacheStack];
+                topCache = Last[tmpCacheStack];
+                tmpCacheStack = Most[tmpCacheStack];
+                If[cpTrue =!= False && cpFalse =!= False,
+                  tmpCacheStack = Append[tmpCacheStack, topCache && LogicalExpand[!tmpCache]];
+                ];
+                tmpCacheStack = Append[tmpCacheStack, topCache && tmpCache];
+              ];
+              toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+            ]
           ]
         ]
       ]
@@ -298,7 +313,7 @@ publicMethod[
   cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, prevRs];
+    sol = exDSolve[cons];
     sol = sol /. prevRs;
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
@@ -919,10 +934,10 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, prevRs_] :=
+exDSolve[expr_] :=
 Module[
   {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
-  inputPrint["exDSolve", expr, prevRs];
+  inputPrint["exDSolve", expr];
   listExpr = applyList[expr];
   sol = {};
   resultCons = Select[listExpr, (Head[#] =!= Equal)&];
@@ -932,7 +947,7 @@ Module[
   simplePrint[listExpr];
   resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
-    resultRule = resultRule[[1]] /. prevRs;
+    resultRule = resultRule[[1]];
     listExpr = {},
     (* resultRule may equal overconstrained for the constraint such as x'[t] == 0 && x[t] == 0 && x[0] == 0,
        therefore we have to check furthermore. *)
@@ -955,17 +970,17 @@ Module[
         ];
         resultRule = Union[resultRule, rules[[1]] ];
         listExpr = applyDSolveResult[searchResult[[2]], rules[[1]] ];
-        listExpr = listExpr //. prevRs;
+        simplePrint[listExpr];
         If[MemberQ[listExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], Return[overConstrained] ];
         listExpr = Select[listExpr, (#=!=True)&];
         tVars = getTimeVariables[listExpr];
         simplePrint[listExpr, tVars];
-        resultCons = applyDSolveResult[resultCons, resultRule] /. prevRs;
+        resultCons = applyDSolveResult[resultCons, resultRule];
         If[resultCons === False, Return[overConstrained] ];
       ]
     ]
   ];
-  simplePrint[resultRule, resultCons, prevRs];
+  simplePrint[resultRule, resultCons];
   retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
   restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
   restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];

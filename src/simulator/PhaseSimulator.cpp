@@ -348,7 +348,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   phase->profile["# of CalculateClosure"]++;
 
   backend_->call("popCache", true, 0, "", "cs", &cache_prev_cond);
-  std::cout << "cache_prev_cond:" << cache_prev_cond << std::endl;
 
   for (auto module_set : consistency_checker->get_inconsistent_module_sets())
   {
