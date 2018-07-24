@@ -15,6 +15,8 @@ using namespace hydla::backend;
 namespace hydla {
 namespace io {
 
+using uint = unsigned;
+
 void JsonWriter::write(const simulator_t &simulator, const std::string &name, const std::string &hydla_name)
 {
   object json_object;

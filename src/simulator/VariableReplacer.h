@@ -13,6 +13,8 @@
 namespace hydla {
 namespace simulator {
 
+using uint = unsigned;
+
 /**
  * Replace variables with their values
  */

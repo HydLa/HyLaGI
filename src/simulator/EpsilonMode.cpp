@@ -20,6 +20,8 @@ using namespace hydla::logger;
 using namespace hydla::symbolic_expression;
 using namespace hydla::backend;
 
+using uint = unsigned;
+
 void hydla::simulator::cut_high_order_epsilon(Backend* backend_, phase_result_sptr_t& phase, int diff_cnt)
 {
   Parameter par("eps", 0, 1);

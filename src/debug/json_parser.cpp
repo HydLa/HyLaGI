@@ -57,7 +57,7 @@ namespace hydla{
         for(auto p : ret){
           for(auto p1 : p.second){
             for(auto p2 : ret[p1]){
-              if(std::find(p.second.begin(), p.second.end(), p2) == p.second.end() and p2 != p.first){
+              if(std::find(p.second.begin(), p.second.end(), p2) == p.second.end() && p2 != p.first){
                 ret[p.first].push_back(p2);
                 flag = true;
               }

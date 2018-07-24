@@ -29,7 +29,7 @@
 #include <boost/regex.hpp>
 
 // debug
-#include "debug_main.h"
+//#include "debug_main.h"
 
 
 // namespace
@@ -40,7 +40,7 @@ using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parse_tree;
-using namespace hydla::debug;
+//using namespace hydla::debug;
 using namespace hydla::hierarchy;
 using namespace std;
 
@@ -52,7 +52,7 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& p);
 bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
-bool process_opts(Opts& opts, ProgramOptions& p, bool use_default);
+void process_opts(Opts& opts, ProgramOptions& p, bool use_default);
 void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix);
 
 extern ProgramOptions cmdline_options;
@@ -467,7 +467,7 @@ int hydla_main(int argc, char* argv[])
     return 0;
   }
 
-  if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
+  /*if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
   {
     cout << "debug constraint" << endl;
     Debug db;
@@ -475,7 +475,7 @@ int hydla_main(int argc, char* argv[])
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     Debug::dump_debug(&db, input, pt, msc);
     return 0;
-  }
+  }*/
   
   if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
     return 0;

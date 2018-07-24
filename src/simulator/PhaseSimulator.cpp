@@ -1136,7 +1136,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
     min_time_for_this_ask = min_time_calculator.calculate_min_time(&guard_time_map, guard, entailed, time_limit);
   }
 
-  if (opts_->numerize_mode || opts_->epsilon_mode || opts_->interval > 0)
+  if (opts_->numerize_mode || opts_->epsilon_mode || opts_->interval)
   {
     for (auto &each_case: min_time_for_this_ask)
     {

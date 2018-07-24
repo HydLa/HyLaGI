@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <boost/program_options.hpp>
 
 namespace hydla {
@@ -18,8 +19,9 @@ public:
    * 実行時に与えられたオプションを解析する
    */
   void parse(int argc, char* argv[]);
+  void parse(const std::vector<std::string>& args);
 
-  void parse(std::string str);
+  void parse(const std::string& str);
 
   template<typename T>
   T get(const char name[]) const 

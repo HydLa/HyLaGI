@@ -2,6 +2,10 @@
 
 #include <sstream>
 
+#ifndef COMMIT_ID
+#define COMMIT_ID "Commit ID undefined"
+#endif
+
 namespace hydla {
   Version::Version() {
   }
@@ -10,7 +14,7 @@ namespace hydla {
   }
 
   std::string Version::commit_id() {
-	return COMMIT_ID;
+    return COMMIT_ID;
   }
 
   std::string Version::version()  {

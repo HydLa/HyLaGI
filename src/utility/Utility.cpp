@@ -12,6 +12,8 @@ namespace hydla
 namespace utility
 {
 
+using uint = unsigned;
+
 bool num_denom_str(double val,
                    string &numerator,
                    string &denominator)

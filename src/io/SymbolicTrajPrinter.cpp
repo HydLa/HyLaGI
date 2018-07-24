@@ -138,7 +138,6 @@ ostream &stream, const phase_result_t &result) const
   variable_map_t vm = result.variable_map;
   for (auto it = vm.begin(); it!=vm.end(); ++it) {
 
-    // 出力変数を指定した場合
     if (opts.output_mode != Opts::None)
     {
       bool hit = false;

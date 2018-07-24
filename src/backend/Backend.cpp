@@ -13,6 +13,8 @@ using namespace simulator;
 using namespace parse_tree;
 using namespace symbolic_expression;
 
+using uint = unsigned;
+
 const std::string Backend::var_prefix = "u";
 // use different prefix to distinct variables and constants
 const std::string Backend::par_prefix = "p";

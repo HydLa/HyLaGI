@@ -10,6 +10,10 @@
 namespace hydla{
   namespace parser{
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 enum Token{
   LOWER_IDENTIFIER,    //  [a-z, "_"] [a-z, A-Z, "_", 0-9]*
   UPPER_IDENTIFIER,    //  [A-Z] [a-z, A-Z, "_", 0-9]*

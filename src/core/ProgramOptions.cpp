@@ -1,6 +1,25 @@
+#include <regex>
 #include "ProgramOptions.h"
 
+#ifdef _MSC_VER
+#  ifdef _DEBUG
+#    pragma comment(lib, "libboost_program_options-vc140-mt-sgd-1_59.lib")
+#  else
+#    pragma comment(lib, "libboost_program_options-vc140-mt-s-1_59.lib")
+#  endif
+#endif
+
 #define LINE_LENGTH 30
+
+namespace
+{
+  std::vector<std::string> split(const std::string& s, const std::regex& pattern)
+  {
+    std::sregex_token_iterator first(s.begin(), s.end(), pattern, -1);
+    std::sregex_token_iterator last;
+    return std::vector<std::string>(first, last);
+  }
+}
 
 namespace hydla {
 
@@ -160,7 +179,6 @@ void ProgramOptions::init_descriptions()
   cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
 }
 
-
 void ProgramOptions::parse(int argc, char* argv[])
 {
   positional_options_description positional_opt;
@@ -172,7 +190,19 @@ void ProgramOptions::parse(int argc, char* argv[])
   notify(vm_);
 }
 
-void ProgramOptions::parse(string src_str)
+void ProgramOptions::parse(const std::vector<std::string>& args)
+{
+  positional_options_description positional_opt;
+  positional_opt.add("input-file", -1);
+
+  store(command_line_parser(args).
+        options(cmdline_desc_).
+        positional(positional_opt).extra_parser(reg_toggle).run(), vm_);
+  notify(vm_);
+}
+
+/*
+void ProgramOptions::parse(const std::string& src_str)
 {
   char dst_str[src_str.length()];
   strcpy(dst_str, src_str.c_str());
@@ -191,6 +221,16 @@ void ProgramOptions::parse(string src_str)
   }
 
   parse(argc, argv);
+}
+*/
+
+void ProgramOptions::parse(const std::string& src_str)
+{
+  auto options = split(src_str, std::regex(" "));
+  // Set the first element(program name) to dummy
+  options.insert(options.begin(), std::string());
+  //parse(argc, argv);
+  parse(options);
 }
 
 } //namespace hydla

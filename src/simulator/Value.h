@@ -34,12 +34,12 @@ public:
   /**
    * 渡された数式を値とするValueを作る
    */
-  Value(const symbolic_expression::node_sptr & node);
+  Value(const symbolic_expression::node_sptr& node);
   
   /**
    * construct Value from given parameter
    */
-  Value(const Parameter &param);
+  Value(const symbolic_expression::Parameter& param);
 
   /**
    * construct Value from given double value

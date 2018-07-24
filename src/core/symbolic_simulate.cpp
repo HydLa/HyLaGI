@@ -90,7 +90,11 @@ void output_result(Simulator& ss, Opts& opts){
     int ret = stat(hydat_dir.c_str(), &st);
     if(ret == -1)
     {
+#ifdef _MSC_VER
+      CreateDirectory(hydat_dir.c_str(), NULL);
+#else
       mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
     }
   }
   JsonWriter writer;
@@ -115,7 +119,11 @@ void output_result(Simulator& ss, Opts& opts){
       int ret = stat(hydat_dir.c_str(), &st);
       if(ret == -1)
       {
+#ifdef _MSC_VER
+        CreateDirectory(hydat_dir.c_str(), NULL);
+#else
         mkdir(hydat_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
       }
     }
     writer.write(*simulator_, of_name, input_file_name + "_diff");

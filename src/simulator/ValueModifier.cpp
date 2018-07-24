@@ -5,6 +5,8 @@ using namespace std;
 namespace hydla{
 namespace simulator{
 
+using uint = unsigned;
+
 ValueModifier::ValueModifier(backend::Backend &b):backend(b)
 {
 }

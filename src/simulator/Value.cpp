@@ -94,13 +94,13 @@ bool Value::isZero() const
 
 Value::Value(){}
 
-Value::Value(const std::string &str){
+Value::Value(const std::string& str){
   node_.reset(new Number(str));
 }
 
-Value::Value(const Parameter &param)
+Value::Value(const hydla::symbolic_expression::Parameter& param)
 {
-  node_.reset(new symbolic_expression::Parameter(
+  node_.reset(new hydla::symbolic_expression::Parameter(
                param.get_name(),
                param.get_differential_count(), 
                param.get_phase_id()));
@@ -118,7 +118,7 @@ Value::Value(double num)
   node_.reset(new Float(num));
 }
 
-Value::Value(const Value::node_sptr & node){
+Value::Value(const Value::node_sptr& node){
   node_ = node;
 }
 
@@ -143,7 +143,7 @@ Value Value::get_numerized_value()const
   return value;
 }
 
-void Value::set_node(const symbolic_expression::node_sptr &n)
+void Value::set_node(const hydla::symbolic_expression::node_sptr &n)
 {
   node_ = n;
 }

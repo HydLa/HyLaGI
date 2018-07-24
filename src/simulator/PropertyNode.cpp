@@ -12,7 +12,7 @@ using namespace simulator;
 
 PropertyNode::PropertyNode(int id, PropertyNodeType type):AutomatonNode(phase_result_sptr_t(), to_string(id),id){
   this->type = type;
-  if(type == ACCEPTANCE_CYCLE | type == ACCEPTANCE_STATE){
+  if(type == ACCEPTANCE_CYCLE || type == ACCEPTANCE_STATE){
     this->set_peripheries(2);
   }
   this->edge_guard_write = true;
