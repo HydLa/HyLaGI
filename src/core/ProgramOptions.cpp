@@ -50,7 +50,7 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("simplify",
+    ("simplify,s",
      value<int>()->default_value(0),
      "the level of simplification at each phase\n"
      "  0 - no simplification\n"
@@ -76,7 +76,7 @@ void ProgramOptions::init_descriptions()
 
     ("debug,d", "display debug trace\n")
 
-    ("simplify_time,s",
+    ("simplify_time",
      value<std::string>()->default_value("1"),
      "time limit of simplifying expressions in the backend")
 
