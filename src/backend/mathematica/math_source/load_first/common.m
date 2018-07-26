@@ -28,11 +28,13 @@ $MaxExtraPrecision = 1000;
  * prevExcludedCons:
  * checkFirstFlag:
  * cache:
+ * exTime:
  * 
  * opt...: 各種オプションのON/OFF．
  *)
 
 
+exTime = 0;
 variables = {};
 prevVariables = {};
 timeVariables = {};

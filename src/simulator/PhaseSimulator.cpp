@@ -244,6 +244,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     }
   }
 
+  backend_->call("initCache", false, 0, "", "");
   while (module_set_container->has_next())
   {
     // TODO: unadopted_ms も差分をとるようにして使いたい
@@ -339,15 +340,12 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
   asks_t ms_local_positives, ms_local_negatives;
   ConstraintStore ms_local_always;
-  ConstraintStore cache_prev_cond;
 
   consistency_checker->clear_inconsistent_constraints();
-  backend_->call("initCache", false, 0, "", "");
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
 
-  backend_->call("popCache", true, 0, "", "cs", &cache_prev_cond);
 
   for (auto module_set : consistency_checker->get_inconsistent_module_sets())
   {
@@ -386,6 +384,9 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->unadopted_mss.insert(unadopted_ms);
     phase->parent->children.push_back(phase);
 
+    ConstraintStore cache_prev_cond;
+    backend_->call("popCache", true, 0, "", "cs", &cache_prev_cond);
+    std::cout << cache_prev_cond << std::endl;
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if (create_result.size() == 0)
     {

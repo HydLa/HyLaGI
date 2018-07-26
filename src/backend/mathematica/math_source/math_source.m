@@ -42,7 +42,7 @@ publicMethod[
   checkConsistencyPoint,
   cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False, tmpCache, prevCond},
+    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False, tmpCache, prevCond, tm},
     initRules = Map[(Rule@@#)&, applyList[init] ];
     If[checkFirstFlag === True,
       tmpCache = Last[tmpCacheStack];
@@ -53,15 +53,15 @@ publicMethod[
     {sol, solved} = trySolve[initSubsituted, vars];
     sol = sol /. Element[_,_] -> True;
     resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
-    prevExcludedCons = And@@Select[applyList[sol], !(!Head[#]===Equal && hasPrevVariable[#] && !hasVariable[#])&];
+    prevExcludedCons = And@@Select[applyList[sol], !(!Head[#]===Equal && hasPrevVariable[#] && !hasVariable[#])&] ;
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
         cpTrue = pcons;
         cpFalse = False;
-        Quiet[
-          prevCond = Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
-        ],
+        {tm, prevCond} = Timing[Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals] ];
+        exTime = tm + exTime;
+        simplePrint[exTime],
         cpTrue = False;
         cpFalse = pcons;
         Quiet[
@@ -276,7 +276,7 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {map, tmpCons=cons},
+    {map, tmpCons=cons, tm},
 
     If[cons === True, Return[{{}}]];
     If[cons === False, Return[{}]];
@@ -287,7 +287,9 @@ publicMethod[
     tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
     simplePrint[prevExcludedCons];
     simplePrint[Last[tmpCacheStack]];
-    tmpCache = createMap[Last[tmpCacheStack] && prevExcludedCons, isVariable, getVariablesWithDerivatives[prevExcludedCons], Union[getPrevVariables[prevExcludedCons], getParameters[prevExcludedCons] ] ];
+    {tm, tmpCache} = Timing[createMap[Last[tmpCacheStack] && prevExcludedCons, isVariable, getVariablesWithDerivatives[prevExcludedCons], Union[getPrevVariables[prevExcludedCons], getParameters[prevExcludedCons] ] ] ];
+    exTime = exTime + tm;
+    simplePrint[exTime];
     simplePrint[tmpCache];
     cache = cache && LogicalExpand[And@@First[tmpCache] ];
     simplePrint[cache];
@@ -314,12 +316,14 @@ publicMethod[
   Module[
     {sol, tStore, ret},
     sol = exDSolve[cons];
-    sol = sol /. prevRs;
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,
       Message[createVariableMapInterval::underconstrained],
       tStore = createDifferentiatedEquations[vars, sol[[3]] ];
       tStore = Select[tStore, (!hasVariable[ #[[2]] ])&];
+      cache = cache && And@@tStore;
+      simplePrint[cache];
+      tStore = tStore /. prevRs;
       ret = {convertExprs[tStore]};
       ret = ruleOutException[ret];
       ret
@@ -540,11 +544,11 @@ publicMethod[
 publicMethod[
   popCache,
   Module[
-    {tmpCache},
-    tmpCache = Last[tmpCacheStack];
+    {ret},
+    ret = Last[tmpCacheStack] && LogicalExpand[cache];
+    cache = True;
     tmpCacheStack = Most[tmpCacheStack];
-    simplePrint[tmpCache];
-    {toReturnForm[LogicalExpand[tmpCache] ]}
+    {toReturnForm[LogicalExpand[ret]]}
   ]
 ];
 
