@@ -25,16 +25,19 @@ $MaxExtraPrecision = 1000;
  * dList: 微分方程式とその一般解を保持するリスト {微分方程式のリスト, その一般解, 変数の置き換え規則}
  * createMapList: createMap関数への入力と出力の組のリスト
  * tmpCacheStack:
- * prevExcludedCons:
+ * givenCons:
  * checkFirstFlag:
  * cache:
  * exTime:
- * 
+ * pointTime:
+ * intervalTime:
  * opt...: 各種オプションのON/OFF．
  *)
 
 
 exTime = 0;
+pointTime = 0;
+intervalTime = 0;
 variables = {};
 prevVariables = {};
 timeVariables = {};
@@ -43,6 +46,7 @@ dList = {};
 profileList = {};
 createMapList = {};
 tmpCacheStack = {};
+givenCons = True;
 checkFirstFlag = True;
 cache = True;
 assumptions = True;

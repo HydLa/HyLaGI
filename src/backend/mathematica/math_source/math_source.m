@@ -32,41 +32,52 @@ trySolve[cons_, vars_] :=
 
 
 checkConsistencyPoint[] := (
-  checkConsistencyPoint[constraint && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime ]
+  Module[
+    {tm, ret},
+    {tm, ret} = Timing[checkConsistencyPoint[constraint && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime ]];
+    pointTime = pointTime + tm;
+    simplePrint[pointTime];
+    ret
+  ]
 );
 
-checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[tmpCons && constraint  && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime]
+checkConsistencyPoint[tmpCons_] := (
+  Module[
+    {tm, ret},
+    {tm, ret} = Timing[checkConsistencyPoint[tmpCons && constraint  && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime] ];
+    pointTime = pointTime + tm;
+    simplePrint[pointTime];
+    ret
+  ]
 );
 
 publicMethod[
   checkConsistencyPoint,
   cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False, tmpCache, prevCond, tm},
+    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False, tmpCache, resolvedPrevCons, tm},
     initRules = Map[(Rule@@#)&, applyList[init] ];
-    If[checkFirstFlag === True,
-      tmpCache = Last[tmpCacheStack];
-      tmpCacheStack = Most[tmpCacheStack];
-    ];
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
     sol = sol /. Element[_,_] -> True;
     resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
-    prevExcludedCons = And@@Select[applyList[sol], !(!Head[#]===Equal && hasPrevVariable[#] && !hasVariable[#])&] ;
+    simplePrint[sol];
+    If[checkFirstFlag === True,
+      tmpCache = Last[tmpCacheStack];
+      tmpCacheStack = Most[tmpCacheStack];
+      {tm, {resolvedPrevCons, givenCons}} = Timing[resolvePrev[applyList[sol] ] ];
+      exTime = tm + exTime;
+      simplePrint[exTime];
+    ];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
         cpTrue = pcons;
-        cpFalse = False;
-        {tm, prevCond} = Timing[Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals] ];
-        exTime = tm + exTime;
-        simplePrint[exTime],
+        cpFalse = False,
         cpTrue = False;
         cpFalse = pcons;
-        Quiet[
-          prevCond = !Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
-        ]
+        resolvedPrevCons = !resolvedPrevCons
       ],
       Quiet[
         cpTrue = Reduce[Exists[Evaluate[Join[vars, prevs] ], (resultConstraint /. t -> current) && pcons], pars, Reals], {Reduce::useq}
@@ -78,27 +89,32 @@ publicMethod[
       Quiet[
         cpFalse = Reduce[pcons && !cpTrue, pars, Reals], {Reduce::useq}
       ];
-      Quiet[
-        prevCond = Reduce[Exists[Evaluate[Join[vars, pars]],  prevExcludedCons], getPrevVariables[prevExcludedCons], Reals], {Reduce::useq}
-      ];
       (* prev condition not to satisfy *)
       If[cpTrue === False && checkFirstFlag,
-        prevCond = !prevCond
+        resolvedPrevCons = !resolvedPrevCons
       ];
       (* prev condition to satisfy and not *)
-      If[cpTrue =!= False && cpFalse =!= False && checkFirstFlag === True || cpTrue =!= False && !checkFirstFlag,
-        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && !prevCond] ];
-        If[!checkFirstFlag, tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond] ]; ];
+      If[cpTrue =!= False && cpFalse =!= False && checkFirstFlag,
+        {tm, resolvedPrevCons} = Timing[Resolve[Exists[getVariablesWithDerivatives[resolvedPrevCons], resolvedPrevCons]]];
+        exTime = tm + exTime;
+        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && !resolvedPrevCons] ];
+      ];
+      If[cpTrue =!= False && !checkFirstFlag,
+        {tm, {resolvedPrevCons, givenCons}} = Timing[resolvePrev[applyList[sol] ] ];
+        exTime = tm + exTime;
+        {tm, resolvedPrevCons} = Timing[Resolve[Exists[getVariablesWithDerivatives[resolvedPrevCons], resolvedPrevCons] ] ];
+        exTime = tm + exTime;
+        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[Last[tmpCacheStack] && !resolvedPrevCons] ];
+        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[Last[tmpCacheStack] && resolvedPrevCons] ];
       ];
     ];
     checkMessage;
     simplePrint[cpFalse];
     simplePrint[checkFirstFlag];
-    simplePrint[prevExcludedCons];
-    simplePrint[prevCond];
+    simplePrint[resolvedPrevCons];
     simplePrint[tmpCache];
     If[checkFirstFlag === True,
-      tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && prevCond]];
+      tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && resolvedPrevCons]];
       checkFirstFlag = False;
     ];
     simplePrint[tmpCacheStack];
@@ -109,10 +125,23 @@ publicMethod[
 (* インターバルフェーズにおける無矛盾性判定 *)
 
 checkConsistencyInterval[] :=  (
-  checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+  Module[
+    {tm, ret},
+    {tm, ret} = Timing[checkConsistencyInterval[constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]];
+    intervalTime = intervalTime + tm;
+    simplePrint[intervalTime];
+    ret
+  ]
 );
 
-checkConsistencyInterval[tmpCons_] :=  (checkConsistencyInterval[tmpCons && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters]
+checkConsistencyInterval[tmpCons_] :=  (
+  Module[
+    {tm, ret},
+    {tm, ret} = Timing[checkConsistencyInterval[tmpCons && constraint, initConstraint, assumptions, timeVariables, prevRules, prevConstraint, pConstraint, parameters] ];
+    intervalTime = intervalTime + tm;
+    simplePrint[intervalTime];
+    ret
+  ]
 );
 
 ccIntervalForEach[cond_, initRules_, pCons_] :=
@@ -276,23 +305,31 @@ publicMethod[
   createVariableMap,
   cons, vars, assum, pars, current,
   Module[
-    {map, tmpCons=cons, tm},
+    {map, tmpCons=cons, succeeded=False},
 
     If[cons === True, Return[{{}}]];
     If[cons === False, Return[{}]];
 
-    tmpCons = applyListToOr[tmpCons];
-    tmpCons = tmpCons /. Equal[x_?(!hasVariable[#]&),y_?(!hasVariable[#]&)] -> True;
-    debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
-    tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
-    simplePrint[prevExcludedCons];
-    simplePrint[Last[tmpCacheStack]];
-    {tm, tmpCache} = Timing[createMap[Last[tmpCacheStack] && prevExcludedCons, isVariable, getVariablesWithDerivatives[prevExcludedCons], Union[getPrevVariables[prevExcludedCons], getParameters[prevExcludedCons] ] ] ];
-    exTime = exTime + tm;
-    simplePrint[exTime];
-    simplePrint[tmpCache];
-    cache = cache && LogicalExpand[And@@First[tmpCache] ];
+    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
+    If[Head[tmpCons] =!= LogicalOr,
+      {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
+    ];
+    simplePrint[tmpCons, succeeded];
+    If[!succeeded,
+        (* try to solve with parameters *)
+        tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
+        tmpCons = Reduce[tmpCons, vars, Reals];
+        tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
+        tmpCons = LogicalExpand[tmpCons];
+    ];
+
+    simplePrint[Last[tmpCacheStack] ];
+    cache = cache && givenCons;
     simplePrint[cache];
+
+    tmpCons = applyListToOr[tmpCons];
+    tmpCons = Map[(applyList[#])&, tmpCons];
+    tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
     debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
@@ -451,6 +488,34 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
+resolvePrev[consList_] :=
+  Module[
+    {vars=getVariablesWithDerivatives[consList], prevs=getPrevVariables[consList], relatedCons, relatedVars, newRelatedVars, newRelatedCons, remainCons=consList, ret={}},
+    For[i=1, i<=Length[prevs], i++,
+      If[remainCons === {}, Break[]];
+      relatedCons = Select[remainCons, MemberQ[getPrevVariables[#], prevs[[i]] ]& ];
+      remainCons = Complement[remainCons, relatedCons];
+      relatedVars = {};
+      newRelatedCons = relatedCons;
+      While[True,
+        newRelatedVars = getVariablesWithDerivatives[newRelatedCons];
+        If[Length[newRelatedVars] === 0,
+          Break[],
+          newRelatedCons = Select[remainCons, MemberQ[getVariablesWithDerivatives[#], newRelatedVars]& ];
+          remainCons = Complement[remainCons, newRelatedCons];
+          relatedVars = Join[relatedVars, newRelatedVars];
+          relatedCons = Join[relatedCons, newRelatedCons];
+        ];
+      ];
+      simplePrint[relatedVars];
+      simplePrint[relatedCons];
+      If[Length[relatedVars] < Length[relatedCons],
+        ret = Join[ret, relatedCons];
+      ];
+    ];
+    {And@@ret, And@@Complement[consList, ret]}
+  ]
+
 resolveOrd[cons_, vars_] :=
   Module[
     {relatedConsMap, resolved = {}, restVars=vars, found},
@@ -545,9 +610,11 @@ publicMethod[
   popCache,
   Module[
     {ret},
-    ret = Last[tmpCacheStack] && LogicalExpand[cache];
+    ret = Last[tmpCacheStack] && cache;
     cache = True;
     tmpCacheStack = Most[tmpCacheStack];
+    ret = ret /. Derivative[cnt_][var_][_] -> Derivative[cnt][var];
+    simplePrint[LogicalExpand[ret]];
     {toReturnForm[LogicalExpand[ret]]}
   ]
 ];
