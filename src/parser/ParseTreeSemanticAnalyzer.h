@@ -173,6 +173,9 @@ private:
   // SumOfList
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
 
+  // MulOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::MulOfList> node);
+
   // Range
   virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
 

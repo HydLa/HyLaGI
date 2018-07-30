@@ -246,7 +246,7 @@ node_sptr Parser::statement(){
           }
           error_occurred(tmp_position, "expected \".\" after program list definition");
         }else{
-          error_occurred(tmp_position, "expected list after \";=\"");
+          error_occurred(tmp_position, "expected list after \":=\"");
         }
       }
     }

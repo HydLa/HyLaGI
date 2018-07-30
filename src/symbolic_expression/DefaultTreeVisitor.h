@@ -170,6 +170,9 @@ public:
   // SumOfList
   virtual void visit(boost::shared_ptr<SumOfList> node);
 
+  // MulOfList
+  virtual void visit(boost::shared_ptr<MulOfList> node);
+
 };
 
 } //namespace symbolic_expression

@@ -1166,7 +1166,8 @@ symbolic_expression::node_sptr Backend::receive_function()
           || equal_ignoring_case(symbol, "Less")
           || equal_ignoring_case(symbol, "LessEqual")
           || equal_ignoring_case(symbol, "Greater")
-          || equal_ignoring_case(symbol, "GreaterEqual"))        
+          || equal_ignoring_case(symbol, "GreaterEqual")
+          || equal_ignoring_case(symbol, "Complex"))
   { // 加減乗除など，二項演算子で書かれる関数
     symbolic_expression::node_sptr lhs, rhs;
     ret = receive_node();
@@ -1202,6 +1203,8 @@ symbolic_expression::node_sptr Backend::receive_function()
         ret = symbolic_expression::node_sptr(new symbolic_expression::Greater(lhs, rhs));
       else if (equal_ignoring_case(symbol, "GreaterEqual"))
         ret = symbolic_expression::node_sptr(new symbolic_expression::GreaterEqual(lhs, rhs));
+      else if (equal_ignoring_case(symbol, "Complex"))
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Plus(lhs, new symbolic_expression::Times(rhs,new symbolic_expression::ImaginaryUnit())));
     }
   }
   else if (equal_ignoring_case(symbol, "derivative"))

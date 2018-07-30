@@ -173,14 +173,6 @@ public:
     return child_;
   }
 
-  /**
-   * getter of child node
-   */
-  const node_sptr& get_child_node() const
-  {
-    return child_;
-  }
-
 protected:
   node_sptr child_;
 };
@@ -1715,6 +1707,11 @@ DEFINE_UNARY_NODE(SizeOfList)
  * Sum of List
  */
 DEFINE_UNARY_NODE(SumOfList)
+
+/**
+ * Mul of List
+ */
+DEFINE_UNARY_NODE(MulOfList)
 
 /**
  * Expression List

@@ -150,6 +150,8 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
   // SumOfList
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+  // MulOfList
+  virtual void visit(boost::shared_ptr<symbolic_expression::MulOfList> node);
 
 private:
   void dump_node(boost::shared_ptr<symbolic_expression::FactorNode> node);

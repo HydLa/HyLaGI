@@ -173,6 +173,9 @@ public:
   // SumOfList 
   virtual void visit(boost::shared_ptr<SumOfList> node) = 0;
 
+  // MulOfList 
+  virtual void visit(boost::shared_ptr<MulOfList> node) = 0;
+
   // SizeOfList 
   virtual void visit(boost::shared_ptr<SizeOfList> node) = 0;
 

@@ -178,7 +178,7 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
 
 void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 {
-  opts.mathlink      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -mathlink'";
+  opts.wstp      = "-linkmode launch -linkname '" + po.get<string>("math_name") + " -wstp'";
   if(po.count("debug"))
   {
     opts.debug_mode    = true;
@@ -240,7 +240,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
 
-  backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
+  backend_.reset(new Backend(new MathematicaLink(opts.wstp, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();
 
   if(opts.ltl_model_check_mode)

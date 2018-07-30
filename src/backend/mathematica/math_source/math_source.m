@@ -246,6 +246,7 @@ publicMethod[
     If[cons === False, Return[{}]];
 
     tmpCons = applyListToOr[tmpCons];
+    tmpCons = tmpCons /. Equal[x_?(!hasVariable[#]&),y_?(!hasVariable[#]&)] -> True;
     debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
     tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
     debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
@@ -406,7 +407,7 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
-resolveOrd[cons_, vars_, pars_] :=
+resolveOrd[cons_, vars_] :=
   Module[
     {relatedConsMap, resolved = {}, restVars=vars, found},
     For[i=1, i<=Length[vars], i++,
@@ -433,7 +434,7 @@ resolveOrd[cons_, vars_, pars_] :=
 createMap[cons_, judgeFunction_, vars_, pars_] :=
   Module [
     {resolvedVars},
-    resolvedVars = If[vars === {}, {}, resolveOrd[cons, vars, pars]];
+    resolvedVars = If[vars === {}, {}, resolveOrd[cons, vars]];
     simplePrint[Join[pars, resolvedVars]];
     Map[
       (Fold[
@@ -445,7 +446,7 @@ createMap[cons_, judgeFunction_, vars_, pars_] :=
         {},
         #
       ])&,
-      consToDoubleList[Reduce[cons, Join[pars,resolvedVars]]]
+      consToDoubleList[Quiet[Reduce[cons, Join[pars,resolvedVars]], Reduce::useq]]
     ]
   ]
 

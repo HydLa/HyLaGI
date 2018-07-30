@@ -243,6 +243,7 @@ node_sptr Parser::diff(){
 /**
  * factor := constant 
  *         | sum_of_list
+ *         | mul_of_list
  *         | (fanction | unsupported_function) "(" (expression ("," expression)* )? ")"
  *         | parameter
  *         | variable
@@ -259,6 +260,8 @@ node_sptr Parser::factor(){
   if((ret = constant())) return ret;
   // sum_of_list
   if((ret = sum_of_list())){ return ret;}
+  // mul_of_list
+  if((ret = mul_of_list())){ return ret;}
 
   boost::shared_ptr<VariadicNode> func;
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mathlink.h"
+#include "wstp.h"
 #include "LinkError.h"
 #include <string.h>
 #include "Link.h"
@@ -21,7 +21,7 @@ namespace mathematica{
 class MathematicaLink : public Link
 {
 public:
-  MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string &simplify_time, const int simplify_level, bool solve_over_reals);
+  MathematicaLink(const std::string &wstp_name, bool ignore_warnings, const std::string &simplify_time, const int simplify_level, bool solve_over_reals);
 
   virtual ~MathematicaLink() ;
 
@@ -46,38 +46,38 @@ public:
    */ 
   void skip_pkt_until(int pkt_name);
 
-  inline MLENV get_env()  {return env_;}
-  inline MLINK get_link() {return link_;}
+  inline WSENV get_env()  {return env_;}
+  inline WSLINK get_link() {return link_;}
 
   inline void put_function(const char* s, int n) {
-    MLPutFunction(s, n);
+    WSPutFunction(s, n);
   }
 
   inline void put_symbol(const char* s) {
-    MLPutSymbol(s);
+    WSPutSymbol(s);
   }
 
   inline void put_number(const char* value)
   {
-    MLPutFunction("ToExpression", 1);
-    MLPutString(value);
+    WSPutFunction("ToExpression", 1);
+    WSPutString(value);
   }
   
   void put_symbol(const std::string& s) {
-    MLPutSymbol(s.c_str());
+    WSPutSymbol(s.c_str());
   }
 
   void put_string(const char* s) {
-    MLPutString(s);
+    WSPutString(s);
   }
 
   void put_integer(int i) {
-    MLPutInteger(i);
+    WSPutInteger(i);
   } 
 
   void put_double(double num)
   {
-    MLPutDouble(num);
+    WSPutDouble(num);
   }
 
   void put_parameter(const std::string& name, int diff_count, int id);
@@ -132,43 +132,43 @@ public:
 private:
 
   /////////// Mathematica Function /////////////
-  int MLPutFunction(const char *s, int n)   {return ::MLPutFunction(link_, s, n);}
-  int MLGetFunction(const char **s,int *n)  {return ::MLGetFunction(link_, s, n);}
+  int WSPutFunction(const char *s, int n)   {return ::WSPutFunction(link_, s, n);}
+  int WSGetFunction(const char **s,int *n)  {return ::WSGetFunction(link_, s, n);}
 
-  int MLPutInteger(int i)                 {return ::MLPutInteger(link_, i);}
-  int MLGetInteger(int *i)                {return ::MLGetInteger(link_, i);}
+  int WSPutInteger(int i)                 {return ::WSPutInteger(link_, i);}
+  int WSGetInteger(int *i)                {return ::WSGetInteger(link_, i);}
 
-  int MLPutDouble(double d)               {return ::MLPutDouble(link_, d);}
-  int MLGetDouble(double *d)               {return ::MLGetDouble(link_, d);}
-  int MLPutSymbol(const char *s)          {return ::MLPutSymbol(link_, s);}
-  int MLGetSymbol(const char **s)         {return ::MLGetSymbol(link_, s);}
-  void MLReleaseSymbol(const char *s)     {return ::MLReleaseSymbol(link_, s);}
+  int WSPutDouble(double d)               {return ::WSPutDouble(link_, d);}
+  int WSGetDouble(double *d)               {return ::WSGetDouble(link_, d);}
+  int WSPutSymbol(const char *s)          {return ::WSPutSymbol(link_, s);}
+  int WSGetSymbol(const char **s)         {return ::WSGetSymbol(link_, s);}
+  void WSReleaseSymbol(const char *s)     {return ::WSReleaseSymbol(link_, s);}
 
-  int MLPutString(const char*s)           {return ::MLPutString(link_, s);}
-  int MLGetString(const char **s)         {return ::MLGetString(link_, s);}
-  void MLReleaseString(const char *s)     {return ::MLReleaseString(link_, s);}
+  int WSPutString(const char*s)           {return ::WSPutString(link_, s);}
+  int WSGetString(const char **s)         {return ::WSGetString(link_, s);}
+  void WSReleaseString(const char *s)     {return ::WSReleaseString(link_, s);}
 
-  int MLPutNext(int type)                 {return ::MLPutNext(link_, type);}
-  int MLGetNext()                         {return ::MLGetNext(link_);}
+  int WSPutNext(int type)                 {return ::WSPutNext(link_, type);}
+  int WSGetNext()                         {return ::WSGetNext(link_);}
 
 
-  int MLPutArgCount(int n)                {return ::MLPutArgCount(link_, n);}
-  int MLGetArgCount(int *n)               {return ::MLGetArgCount(link_, n);}
+  int WSPutArgCount(int n)                {return ::WSPutArgCount(link_, n);}
+  int WSGetArgCount(int *n)               {return ::WSGetArgCount(link_, n);}
 
-  int MLEndPacket()                       {return ::MLEndPacket(link_);}
-  int MLReady()                           {return ::MLReady(link_);}
-  int MLNextPacket()                      {return ::MLNextPacket(link_);}
-  int MLNewPacket()                       {return ::MLNewPacket(link_);}
-  int MLGetType()                         {return ::MLGetType(link_);}      
-  int MLFlush()                           {return ::MLFlush(link_);}
+  int WSEndPacket()                       {return ::WSEndPacket(link_);}
+  int WSReady()                           {return ::WSReady(link_);}
+  int WSNextPacket()                      {return ::WSNextPacket(link_);}
+  int WSNewPacket()                       {return ::WSNewPacket(link_);}
+  int WSGetType()                         {return ::WSGetType(link_);}      
+  int WSFlush()                           {return ::WSFlush(link_);}
 
-  
+  int WSError()                           {return ::WSError(link_);}
 
   std::string input_print_;
   std::string debug_print_;
 
-  MLENV env_;
-  MLINK link_;
+  WSENV env_;
+  WSLINK link_;
 
   bool on_next_;
 

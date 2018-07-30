@@ -121,6 +121,7 @@ class AffineTreeVisitor : public symbolic_expression::TreeVisitor{
   virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+  virtual void visit(boost::shared_ptr<symbolic_expression::MulOfList> node);
   virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
   
 private:

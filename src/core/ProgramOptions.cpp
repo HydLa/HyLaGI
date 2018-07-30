@@ -50,7 +50,7 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("simplify",
+    ("simplify,s",
      value<int>()->default_value(1),
      "the level of simplification at each phase\n"
      "  0 - no simplification\n"

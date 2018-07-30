@@ -37,6 +37,7 @@ public:
   symbolic_expression::node_sptr expand_list(boost::shared_ptr<symbolic_expression::ProgramListElement>);
   boost::shared_ptr<symbolic_expression::Number> expand_list(boost::shared_ptr<symbolic_expression::SizeOfList>);
   symbolic_expression::node_sptr expand_list(boost::shared_ptr<symbolic_expression::SumOfList>);
+  symbolic_expression::node_sptr expand_list(boost::shared_ptr<symbolic_expression::MulOfList>);
 
   virtual void visit(boost::shared_ptr<symbolic_expression::Previous>);
   virtual void visit(boost::shared_ptr<symbolic_expression::Equal>);
@@ -104,6 +105,7 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller>);
   virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList>);
   virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList>);
+  virtual void visit(boost::shared_ptr<symbolic_expression::MulOfList>);
 
   std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  get_called_expression_list_definition();
   std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  get_called_program_list_definition();
