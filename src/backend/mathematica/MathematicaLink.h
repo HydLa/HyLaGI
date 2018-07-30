@@ -124,9 +124,6 @@ public:
   void intCase();
   void funcCase();
 
-  int MLError() { return ::MLError(link_); }
-  const char* MLErrorMessage() { return ::MLErrorMessage(link_); }
-
   inline std::string backend_name(){return "Mathematica";}
 
 private:
