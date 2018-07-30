@@ -11,7 +11,7 @@ trySolve[cons_, vars_] :=
         eachCons = consToSolve[[i]];
         If[Head[eachCons] === Equal,
           (* swap lhs and rhs if rhs is variable *)
-          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[1]] == eachCons[[2]])];
+          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[2]] == eachCons[[1]])];
           If[isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
             trivialCons = trivialCons && eachCons;
             consToSolve = Drop[consToSolve, {i}];
@@ -744,8 +744,8 @@ publicMethod[
         {},
         ret = makeListFromPiecewise[minT, necessaryPCons];
         ret = Map[({#[[1]], #[[2]] && restPCons})&, ret];
-        (* 時刻が0となる場合はinfとする．*)
-        ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+        (* 時刻が0となる場合は弾く．*)
+        ret = Select[ret, (#[[1]] =!= 0)&];
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)

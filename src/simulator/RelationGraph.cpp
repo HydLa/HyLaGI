@@ -42,6 +42,7 @@ void RelationGraph::add(module_t &mod)
 {
   current_module = mod;
   visit_mode = ADDING;
+  in_always = false;
   parent_ask = nullptr;
   accept(mod.second);
 }
