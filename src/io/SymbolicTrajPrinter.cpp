@@ -28,7 +28,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   stringstream sstr;
   if (result.phase_type == INTERVAL_PHASE)
   {
-    sstr << "---------IP " << result.id << "---------" << endl;
+    sstr << "---------IP " << result.id << "---------" << (result.cache_hit ? "*" : "") << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     output_inconsistent_constraints(sstr, result);
     output_asks(sstr, result);
@@ -43,7 +43,7 @@ string SymbolicTrajPrinter::get_state_output(const phase_result_t& result) const
   }
   else
   {
-    sstr << "---------PP " << result.id << "---------" << endl;
+    sstr << "---------PP " << result.id << "---------" << (result.cache_hit ? "*" : "") << endl;
     sstr << "unadopted modules: " << result.unadopted_ms.get_name() << endl;
     output_inconsistent_constraints(sstr, result);
     output_asks(sstr, result);

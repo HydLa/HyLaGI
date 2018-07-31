@@ -136,6 +136,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   CalculateTLinearResult receive_ct();
   create_vm_t receive_cv();
   constraint_store_t receive_cs();
+  pair<constraint_store_t, constraint_store_t> receive_cache_result();
   
   value_t receive_value();
   symbolic_expression::node_sptr receive_function();

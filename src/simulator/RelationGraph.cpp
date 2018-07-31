@@ -449,6 +449,15 @@ ConstraintStore RelationGraph::get_always_list(const ask_t &ask)const
   return it->second->always_children;
 }
 
+asks_t RelationGraph::get_entailed_asks() const
+{
+  asks_t asks;
+  for(auto ask_node : ask_nodes) {
+    if(ask_node->entailed) asks.insert(ask_node->ask);
+  }
+  return asks;
+}
+
 bool RelationGraph::get_entailed(const ask_t &ask)const
 {
   auto node_it = ask_node_map.find(ask);

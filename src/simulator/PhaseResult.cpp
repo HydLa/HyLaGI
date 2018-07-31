@@ -187,6 +187,9 @@ string PhaseResult::get_string()const
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
+  if(phase.cache_hit){
+    s << "*" << endl;
+  }
   s << "%% PhaseType: " << phase.phase_type << endl;
   s << "%% id: " <<  phase.id          << endl;
   s << "%% step: " <<  phase.step << endl;

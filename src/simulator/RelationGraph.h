@@ -254,6 +254,8 @@ public:
 
   GuardNode *get_guard_node(const constraint_t &guard);
 
+  asks_t get_entailed_asks() const;
+
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
   

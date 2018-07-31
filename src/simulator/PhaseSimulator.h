@@ -10,6 +10,7 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
+#include "CacheManager.h"
 
 namespace kv
 {
@@ -166,6 +167,7 @@ private:
   phase_result_sptr_t result_root;
 
   boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  boost::shared_ptr<CacheManager>       cache_manager_;
   int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;

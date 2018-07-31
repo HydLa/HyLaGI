@@ -339,6 +339,58 @@ publicMethod[
   ]
 ];
 
+createVariableMapFromCache[{prevCond_, cons_, pointFlag_}] := (
+  Module[
+    {tm, ret},
+    {tm, ret} = Timing[createVariableMapFromCache[prevCond, cons, prevConstraint, prevRules, pConstraint, assumptions, currentTime, pointFlag] ];
+    cacheTime = tm + cacheTime;
+    simplePrint[cacheTime];
+    ret
+  ]
+);
+
+
+publicMethod[
+  createVariableMapFromCache,
+  pCond, constraint, prevCons, prevRs, pCons, assum, current, pointFlag,
+  Module[
+    {cond=pCond, cons=constraint, vars=getVariables[cons], map},
+
+    If[pointFlag,
+      cond = cond /. t -> current;
+      cons = cons /. t -> current;
+    ];
+    
+    cond = (cond  //. prevRs) && prevConstraint && pConstraint;
+
+    If[cond === False, Return[{}]];
+
+    cons = timeConstrainedSimplify[(cons  //. prevRs) && prevConstraint && pConstraint];
+    simplePrint[cons];
+    {cons, succeeded} = tryToTransformConstraints[applyList[cons] , vars];
+
+    simplePrint[cons, succeeded];
+    If[!succeeded,
+        (* try to solve with parameters *)
+        cons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
+        cons = Reduce[cons, vars, Reals];
+        cons = removeUnnecessaryConstraints[cons, hasVariable];
+        cons = LogicalExpand[cons];
+    ];
+    simplePrint[cons];
+    cons = And@@Map[(Expand[#])&, applyList[cons] ];
+  
+    cons = applyListToOr[cons];
+    cons = Map[(applyList[#])&, cons];
+    cons = Map[(adjustExprs[#, isVariable])&, cons];
+    debugPrint["cons after createMap in createVariableMap", cons];
+    map = Map[(convertExprs[#])&, cons];
+    map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
+    map = ruleOutException[map];
+    simplePrint[map];
+    map
+  ]
+];
 
 
 createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, timeVariables];
@@ -609,13 +661,14 @@ publicMethod[
 publicMethod[
   popCache,
   Module[
-    {ret},
-    ret = Last[tmpCacheStack] && cache;
+    {prevCond, ret},
+    prevCond = Last[tmpCacheStack];
+    ret = cache;
     cache = True;
     tmpCacheStack = Most[tmpCacheStack];
     ret = ret /. Derivative[cnt_][var_][_] -> Derivative[cnt][var];
-    simplePrint[LogicalExpand[ret]];
-    {toReturnForm[LogicalExpand[ret]]}
+    prevCond = prevCond /. Derivative[cnt_][var_][_] -> Derivative[cnt][var];
+    toReturnForm[{{LogicalExpand[prevCond]}, {LogicalExpand[ret]}} ]
   ]
 ];
 

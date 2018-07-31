@@ -28,6 +28,7 @@ $MaxExtraPrecision = 1000;
  * givenCons:
  * checkFirstFlag:
  * cache:
+ * cacheTime:
  * exTime:
  * pointTime:
  * intervalTime:
@@ -36,6 +37,7 @@ $MaxExtraPrecision = 1000;
 
 
 exTime = 0;
+cacheTime = 0;
 pointTime = 0;
 intervalTime = 0;
 variables = {};
@@ -47,7 +49,7 @@ profileList = {};
 createMapList = {};
 tmpCacheStack = {};
 givenCons = True;
-checkFirstFlag = True;
+checkFirstFlag = False;
 cache = True;
 assumptions = True;
 

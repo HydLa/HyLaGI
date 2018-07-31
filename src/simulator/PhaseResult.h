@@ -165,6 +165,8 @@ public:
   
   profile_t                    profile;
 
+  bool cache_hit = false;
+
   PhaseResult();  
   ~PhaseResult();
 

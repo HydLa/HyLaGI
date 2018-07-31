@@ -244,6 +244,12 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     }
   }
 
+  if(cache_manager_->check_cache_consistency(todo->phase_type, relation_graph_->get_entailed_asks(), todo->parent->unadopted_ms, todo->diff_sum)){
+    cache_manager_->set_phase_result(todo);
+    result_list.push_back(todo);
+    return result_list;
+  }
+
   backend_->call("initCache", false, 0, "", "");
   while (module_set_container->has_next())
   {
@@ -328,6 +334,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
 
+  asks_t entailed_asks = relation_graph_->get_entailed_asks();
+
   ConstraintStore local_diff_sum = phase->diff_sum;
   for (auto diff : module_diff)
   {
@@ -384,9 +392,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->unadopted_mss.insert(unadopted_ms);
     phase->parent->children.push_back(phase);
 
-    ConstraintStore cache_prev_cond;
-    backend_->call("popCache", true, 0, "", "cs", &cache_prev_cond);
-    std::cout << cache_prev_cond << std::endl;
     vector<variable_map_t> create_result = consistency_checker->get_result_maps();
     if (create_result.size() == 0)
     {
@@ -479,6 +484,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       }
       phase->discrete_differential_set = discrete_vs;
     }
+    cache_manager_->new_cache(entailed_asks, phase);
+    cache_manager_->dump_cache(std::cout);
   }
   revert_diff(ms_local_positives, ms_local_negatives, ms_local_always, module_diff);
   return result_list;
@@ -675,6 +682,7 @@ void PhaseSimulator::set_backend(backend_sptr_t back)
 {
   backend_ = back;
   consistency_checker.reset(new ConsistencyChecker(backend_));
+  cache_manager_.reset(new CacheManager(backend_));
 }
 
 variable_set_t get_discrete_variables(ConstraintStore &diff_sum, PhaseType phase_type)

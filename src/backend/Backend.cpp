@@ -120,6 +120,25 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       }
     }
     break;
+    case 'l':
+    {
+      VariableForm form;
+      get_form('n', form);
+      pair<ConstraintStore, ConstraintStore> *cs = (pair<ConstraintStore, ConstraintStore> *)arg;
+      link_->put_function("List", 3);
+      send_cs(cs->first, form);
+      send_cs(cs->second, form);
+      char c = args_fmt[++i];
+      if(c == 'p'){
+        link_->put_symbol("True");
+      }else if(c == 'i'){
+        link_->put_symbol("False");
+      }else{
+        invalid_fmt(args_fmt, i);
+      }
+    }
+    break;
+
     default:
       invalid_fmt(args_fmt, i);
       break;
@@ -362,6 +381,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
       // for cs
       ConstraintStore* cs = (ConstraintStore*)ret;
       *cs = receive_cs();
+      break;
+    }
+    case 'r':
+    {
+      pair<constraint_store_t, constraint_store_t>* result = (pair<constraint_store_t, constraint_store_t>*)ret;
+      *result = receive_cache_result();
       break;
     }
     default:
@@ -1015,6 +1040,18 @@ check_consistency_result_t Backend::receive_cc()
   assert(outer_cnt == 2);
   ret.consistent_store = receive_cs();
   ret.inconsistent_store = receive_cs();
+  return ret;
+}
+
+pair<constraint_store_t, constraint_store_t> Backend::receive_cache_result()
+{
+  pair<constraint_store_t, constraint_store_t> ret;
+  std::string outer_name;
+  int outer_cnt;
+  link_->get_function(outer_name, outer_cnt);
+  assert(outer_cnt == 2);
+  ret.first = receive_cs();
+  ret.second = receive_cs();
   return ret;
 }
 
