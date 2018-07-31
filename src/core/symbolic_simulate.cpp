@@ -224,14 +224,13 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  process_opts(opts, cmdline_options, false);
+  //process_opts(opts, cmdline_options, false);
 
-  // todo : コマンドラインオプションをここで読むのは遅すぎるので何とかする
-  Logger::set_html_mode(opts.html);
-  Logger::initialize();
+  //Logger::set_html_mode(opts.html);
+  //Logger::initialize();
 
-  if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
-  else     Logger::instance().set_log_level(Logger::Warn);
+  //if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
+  //else     Logger::instance().set_log_level(Logger::Warn);
 
   backend_.reset(new Backend(new MathematicaLink(opts.wstp, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();

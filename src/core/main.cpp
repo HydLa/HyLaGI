@@ -458,7 +458,13 @@ int hydla_main(int argc, char* argv[])
   //   return 0;
   // }
   
-  
+  process_opts(opts, cmdline_options, false);
+
+  Logger::set_html_mode(opts.html);
+  Logger::initialize();
+  if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
+  else     Logger::instance().set_log_level(Logger::Warn);
+
   pt->parse_string(input);
 
   if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
