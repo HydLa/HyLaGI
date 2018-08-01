@@ -354,7 +354,7 @@ publicMethod[
   createVariableMapFromCache,
   pCond, constraint, prevCons, prevRs, pCons, assum, current, pointFlag,
   Module[
-    {cond=pCond, cons=constraint, vars=getVariables[cons], map},
+    {cond=pCond, cons=constraint, vars=getVariables[cons], map, tm},
 
     If[pointFlag,
       cond = cond /. t -> current;
@@ -365,7 +365,12 @@ publicMethod[
 
     If[cond === False, Return[{}]];
 
-    cons = timeConstrainedSimplify[(cons  //. prevRs) && prevConstraint && pConstraint];
+    If[pointFlag,
+      {tm, cons} = Timing[And@@Map[(timeConstrainedSimplify[#])&, applyList[(cons  //. prevRs)]] && prevConstraint && pConstraint];
+      simpTime = tm + simpTime,
+      cons = (cons  //. prevRs) && prevConstraint && pConstraint
+    ];
+    simplePrint[simpTime];
     simplePrint[cons];
     {cons, succeeded} = tryToTransformConstraints[applyList[cons] , vars];
 

@@ -246,6 +246,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
   if(cache_manager_->check_cache_consistency(todo->phase_type, relation_graph_->get_entailed_asks(), todo->parent->unadopted_ms, todo->diff_sum)){
     cache_manager_->set_phase_result(todo);
+    module_set_container->remove_included_ms_by_current_ms();
     result_list.push_back(todo);
     return result_list;
   }

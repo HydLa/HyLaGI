@@ -40,6 +40,7 @@ exTime = 0;
 cacheTime = 0;
 pointTime = 0;
 intervalTime = 0;
+simpTime = 0;
 variables = {};
 prevVariables = {};
 timeVariables = {};

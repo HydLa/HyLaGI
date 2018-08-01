@@ -8,7 +8,8 @@ publicMethod[
   Module[
     {appliedExpr},
     appliedExpr = (expr /. t -> time);
-    If[Element[appliedExpr, Reals] =!= False,
+    (*If[Element[appliedExpr, Reals] =!= False,*)
+    If[True,
       toReturnForm[timeConstrainedSimplify[appliedExpr]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
