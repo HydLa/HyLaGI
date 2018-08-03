@@ -145,10 +145,10 @@ public:
     }
 
     std::string defaultStyle(R"(
-html {
+/*html {
   background: #EEE;
   padding: 1em;
-}
+}*/
 details {
   background: #FFF;
   margin: 7px 0;
