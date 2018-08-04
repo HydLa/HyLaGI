@@ -91,7 +91,8 @@ publicMethod[
       ];
       (* prev condition not to satisfy *)
       If[cpTrue === False && checkFirstFlag,
-        resolvedPrevCons = !resolvedPrevCons
+        resolvedPrevCons = !resolvedPrevCons;
+        simplePrint[resolvedPrevCons]
       ];
       (* prev condition to satisfy and not *)
       If[cpTrue =!= False && cpFalse =!= False && checkFirstFlag,
@@ -104,8 +105,8 @@ publicMethod[
         exTime = tm + exTime;
         {tm, resolvedPrevCons} = Timing[Resolve[Exists[getVariablesWithDerivatives[resolvedPrevCons], resolvedPrevCons] ] ];
         exTime = tm + exTime;
-        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[Last[tmpCacheStack] && !resolvedPrevCons] ];
-        tmpCacheStack = Append[tmpCacheStack, LogicalExpand[Last[tmpCacheStack] && resolvedPrevCons] ];
+        tmpCacheStack = Append[tmpCacheStack, Last[tmpCacheStack] && !resolvedPrevCons ];
+        tmpCacheStack = Append[tmpCacheStack, Last[tmpCacheStack] && resolvedPrevCons ];
       ];
     ];
     checkMessage;
@@ -113,8 +114,9 @@ publicMethod[
     simplePrint[checkFirstFlag];
     simplePrint[resolvedPrevCons];
     simplePrint[tmpCache];
+    simplePrint[LogicalExpand[tmpCache && resolvedPrevCons] ];
     If[checkFirstFlag === True,
-      tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && resolvedPrevCons]];
+      tmpCacheStack = Append[tmpCacheStack, LogicalExpand[tmpCache && resolvedPrevCons] ];
       checkFirstFlag = False;
     ];
     simplePrint[tmpCacheStack];
@@ -235,7 +237,7 @@ publicMethod[
                 topCache = Last[tmpCacheStack];
                 tmpCacheStack = Most[tmpCacheStack];
                 If[cpTrue =!= False && cpFalse =!= False,
-                  tmpCacheStack = Append[tmpCacheStack, topCache && LogicalExpand[!tmpCache]];
+                  tmpCacheStack = Append[tmpCacheStack, topCache && !tmpCache];
                 ];
                 tmpCacheStack = Append[tmpCacheStack, topCache && tmpCache];
               ];
@@ -366,7 +368,7 @@ publicMethod[
     If[cond === False, Return[{}]];
 
     If[pointFlag,
-      {tm, cons} = Timing[And@@Map[(timeConstrainedSimplify[#])&, applyList[(cons  //. prevRs)]] && prevConstraint && pConstraint];
+      {tm, cons} = Timing[And@@Map[(timeConstrainedSimplify[# //. prevRs])&, applyList[cons]] && prevConstraint && pConstraint];
       simpTime = tm + simpTime,
       cons = (cons  //. prevRs) && prevConstraint && pConstraint
     ];
@@ -673,7 +675,7 @@ publicMethod[
     tmpCacheStack = Most[tmpCacheStack];
     ret = ret /. Derivative[cnt_][var_][_] -> Derivative[cnt][var];
     prevCond = prevCond /. Derivative[cnt_][var_][_] -> Derivative[cnt][var];
-    toReturnForm[{{LogicalExpand[prevCond]}, {LogicalExpand[ret]}} ]
+    toReturnForm[{{LogicalExpand[Simplify[prevCond]]}, {LogicalExpand[ret]}} ]
   ]
 ];
 

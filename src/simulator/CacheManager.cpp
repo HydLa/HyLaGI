@@ -40,6 +40,7 @@ void CacheManager::new_cache(const asks_t pos_asks, const phase_result_sptr_t ph
       , phase->inconsistent_constraints
       , phase->discrete_differential_set
   );
+  //std::cout << "hogehogehoge" << "\n" << *phase << std::endl;
   if(phase->phase_type == POINT_PHASE){
     cache_map_point_[key].push_back(cache);
   }else{
@@ -61,9 +62,11 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
         if(vm_list.size() == 0){
           return false;
         }
+        /*
         for (auto vm : vm_list) {
           std::cout << vm << std::endl;
         }
+        */
         cache->cache_vm = vm_list[0];
         consistent_cache_list_.push_back(cache);
       }
@@ -73,14 +76,26 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
   }else{
     if(cache_map_interval_.count(key) > 0){
       cache_list = cache_map_interval_[key];
+      /*
+      std::cout << "----------- interval cache hit! -----------" << endl;
+      std::cout << "  cond:" << endl;
+      std::cout << "    " << get<0>(key) << "," << get<1>(key) << "," << get<2>(key) << endl;
+      std::cout << "  constraint:" << endl;
+      for (auto cache : cache_list) {
+        std::cout << "    " << cache->cache_result.first << ":" << cache->cache_result.second << endl;
+        std::cout << endl;
+      }
+      */
       for (auto &cache : cache_list) {
         backend_->call("createVariableMapFromCache", true, 1, "cli", "cv", &cache->cache_result, &vm_list);
         if(vm_list.size() == 0){
           return false;
         }
+        /*
         for (auto vm : vm_list) {
           std::cout << vm << std::endl;
         }
+        */
         cache->cache_vm = vm_list[0];
         consistent_cache_list_.push_back(cache);
       }
@@ -102,6 +117,7 @@ void CacheManager::set_phase_result(phase_result_sptr_t phase){
   phase->add_diff_positive_asks(cache->diff_positive_asks);
   phase->add_diff_negative_asks(cache->diff_negative_asks);
   phase->diff_sum = cache->diff_sum;
+  phase->unadopted_ms = cache->unadopted_ms;
   phase->unadopted_ms = cache->unadopted_ms;
   phase->module_diff = cache->module_diff;
   phase->inconsistent_module_sets = cache->inconsistent_module_sets;
@@ -130,6 +146,7 @@ void CacheManager::dump_cache(std::ostream& s){
     s << endl;
     cnt++;
   }
+  cnt = 1;
 
   s << "---- interval cache costraint ----" << endl;
   cnt = 1;

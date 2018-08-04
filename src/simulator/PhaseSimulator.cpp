@@ -486,7 +486,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       phase->discrete_differential_set = discrete_vs;
     }
     cache_manager_->new_cache(entailed_asks, phase);
-    cache_manager_->dump_cache(std::cout);
   }
   revert_diff(ms_local_positives, ms_local_negatives, ms_local_always, module_diff);
   return result_list;
