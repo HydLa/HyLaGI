@@ -418,7 +418,8 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
     va_end(args);
     throw;
   }
-  HYDLA_LOGGER_DEBUG_VAR(call_timer.get_elapsed_us());
+  HYDLA_LOGGER_DEBUG(name);
+  hydla::logger::Logger::debug_write_timer(call_timer);
   return 0;
 }
 
