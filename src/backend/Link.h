@@ -49,49 +49,21 @@ class Link
   virtual void post_receive() = 0;
 
   virtual std::string backend_name() = 0;
-  std::string convert_function(const std::string& orig, bool hydla2back)
-  {
-    bool converted;
-    return convert_function(orig, hydla2back, converted);
-  }
+  //std::string convert_function(const std::string& orig, bool hydla2back)
+  //{
+  //  bool converted;
+  //  return convert_function(orig, hydla2back, converted);
+  //}
 
-  std::string convert_function(const std::string& orig, bool hydla2back, bool &converted)
-  {
-    std::string ret;
-    if (hydla2back)
-    {
-      function_map_t::left_iterator it = function_map_.left.find(orig);
-      if (it != function_map_.left.end())
-      {
-        ret = it->second;
-        converted = true;
-      }
-      else
-      {
-        ret = orig;
-        converted = false;
-      }
-    }
-    else
-    {
-      function_map_t::right_iterator it = function_map_.right.find(orig);
-      if (it != function_map_.right.end())
-      {
-        ret = it->second;
-        converted = true;
-      }
-      else
-      {
-        ret = orig;
-        converted = false;
-      }
-    }
-    return ret;
-  }
+  //std::string convert_function(const std::string& orig, bool hydla2back, bool &converted)
+  //{
+  //  converted = true;
+  //  return orig;
+  //}
 
   void put_converted_function(const std::string &orig, int arg_cnt)
   {
-    put_function(convert_function(orig, true), arg_cnt);
+    put_function(orig, arg_cnt);
   }
 
   virtual std::string get_input_print() = 0;
@@ -100,8 +72,8 @@ class Link
 
   bool trace = true;
   protected:
-  typedef boost::bimaps::bimap<std::string, std::string > function_map_t;
-  function_map_t function_map_;
+  // typedef boost::bimaps::bimap<std::string, std::string > function_map_t;
+  // function_map_t function_map_;
 };
 
 } // namespace backend
