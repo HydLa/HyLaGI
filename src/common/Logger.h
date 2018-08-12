@@ -156,16 +156,20 @@ public:
     }
 
     std::string defaultStyle(R"(
-::-webkit-scrollbar {
-  width: 15px;
+html {
+  height: 100%;
 }
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 1em;
+body {
+  margin: 0;
+  height: 100%;
 }
-::-webkit-scrollbar-track {
-  color: #00f;
-  background-color: rgba(0, 0, 0, 0.1);
+.ps__rail-y {
+  opacity: 1.0!important;
+  width: 15px!important;
+  background-size:100% 100% !important;
+}
+.ps__thumb-y {
+  width: 10px!important;
 }
 details {
   background: #FFF;
@@ -201,10 +205,9 @@ summary {
   right: 30px;
 }
 #closeButton {
-  bottom: 87px;
+  bottom: 72px;
   right: 30px;
-}
-)");
+})");
 
     i.debug_ << "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\" />" << std::endl;
     i.debug_ << std::string("<style>\n") + defaultStyle + "</style>" << std::endl;
