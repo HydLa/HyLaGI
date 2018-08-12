@@ -16,15 +16,33 @@ std::string Parser::function_name(){
   Token token = lexer.get_token();
   if(token == LOWER_IDENTIFIER || token == UPPER_IDENTIFIER){
     std::string name = lexer.get_current_token_string();
-    bool alpha = true;
-    for(auto c : name){
-      if(!(('a' <= c && c <= 'z') ||
-         ('A' <= c && c <= 'Z'))){
-        alpha = false;
-        break;
-      }
-      if(alpha) return name;
-    }
+    //bool alpha = true;
+    //for(auto c : name){
+    //  if(!(('a' <= c && c <= 'z') ||
+    //     ('A' <= c && c <= 'Z'))){
+    //    alpha = false;
+    //    break;
+    //  }
+    //  if(alpha) return name;
+    //}
+ 
+    if(name == "sin") return "Sin";
+    if(name == "sinh") return "Sinh";
+    if(name == "asin") return"ArcSin";
+    if(name == "asinh") return"ArcSinh";
+    if(name == "cos") return "Cos";
+    if(name == "cosh") return "Cosh";
+    if(name == "acos") return "ArcCos";
+    if(name == "acosh") return "ArcCosh";
+    if(name == "tan") return "Tan";
+    if(name == "tanh") return "Tanh";
+    if(name == "atan") return "ArcTan";
+    if(name == "atanh") return "ArcTanh";
+    if(name == "log" )return "Log";
+    if(name == "ln") return "Log";
+    if(name == "exp") return "Exp";
+    if(name == "floor") return "Floor";
+    return name;
   }
   lexer.set_current_position(position);
   return std::string();

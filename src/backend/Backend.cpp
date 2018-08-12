@@ -707,12 +707,12 @@ void Backend::visit(boost::shared_ptr<Function> node)
 {
   string name;
   int arg_cnt = node->get_arguments_size();
-  bool converted;
-  name = link_->convert_function(node->get_name(), true, converted);
-  if (!converted)
-  {
-    throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
-  }
+  //bool converted;
+  name = node->get_name();
+  //if (!converted)
+  //{
+  //  throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
+  //}
   link_->put_function(name, arg_cnt);
   for (int i=0; i < arg_cnt;i++)
   {
@@ -1024,9 +1024,9 @@ symbolic_expression::node_sptr Backend::receive_function()
   int arg_count;
   symbolic_expression::node_sptr ret;
   std::string symbol;
-  bool converted;
+  //bool converted;
   link_->get_function(symbol, arg_count);
-  symbol = link_->convert_function(symbol, false, converted);
+  // symbol = link_->convert_function(symbol, false, converted);
 
   if (equal_ignoring_case(symbol, "Sqrt")) //1引数関数
   {
@@ -1127,15 +1127,15 @@ symbolic_expression::node_sptr Backend::receive_function()
   else{
     // その他の関数
     boost::shared_ptr<symbolic_expression::VariadicNode> f;
-    if (converted)
-    {
+    //if (converted)
+    //{
       // 対応している関数
-      f.reset(new symbolic_expression::Function(symbol));
-    }
-    else{
+    f.reset(new symbolic_expression::Function(symbol));
+    //}
+    //else{
       // 謎の関数
-      f.reset(new symbolic_expression::UnsupportedFunction(symbol));
-    }
+      //f.reset(new symbolic_expression::UnsupportedFunction(symbol));
+    //}
 
     for (int arg_it=0; arg_it < arg_count; arg_it++)
     {
