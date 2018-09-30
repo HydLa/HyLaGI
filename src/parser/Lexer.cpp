@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include <iostream>
 
 namespace hydla{
   namespace parser{
@@ -144,6 +145,10 @@ Token Lexer::get_token()
       return SYSTEM;
     case '\"':
       return DOUBLE_QUOTATION;
+      // changed this L147 in Lexer.cpp
+  case '_':
+    std::cout << "underscore detected!!" << std::endl;
+    return SYSTEM;
   }
   // 2 or more charactors
   switch(current){
