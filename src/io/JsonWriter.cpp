@@ -27,8 +27,8 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name, co
   // json_object["guards"] = value(guard_vector[0] + "hello");
   // guardsに配列などで入れたいが、c++とjsonの文法がわからないので、次の方法で対処する。
   
-  // picojson::array guard_array;
-  std::vector<web::json::value> guard_array:
+  picojson::array guard_array;
+  // std::vector<web::json::value> guard_array:
 
   // json_object.insert(make_pair("guards", value(guard_vector[i])));
   for (int i=0; i<guard_vector.size(); i++) {
@@ -36,7 +36,7 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name, co
   }
   // object::iterator it = json_object.begin();
   // json_object.insert(make_pair("guards", picojson::array(guard_array)));
-  json_object["guards"] = web::json::value::array(guard_array);
+  json_object["guards"] = value(guard_array);
   // json_object.insert(make_pair("guards", guard_array[0]));
   // json_object["guards"] = arrvec;
   // json_object["guards"] = guard_array;
