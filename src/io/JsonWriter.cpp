@@ -22,31 +22,13 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name, co
   object json_object;
   json_object["variables"] = for_vs(simulator.get_variable_set());
   json_object["parameters"] = for_pm(simulator.get_parameter_map());
-  // EDIT
-  // json_object["guards"] = value("y- = 0");
-  // json_object["guards"] = value(guard_vector[0] + "hello");
-  // guardsに配列などで入れたいが、c++とjsonの文法がわからないので、次の方法で対処する。
   
+  // EDIT
   picojson::array guard_array;
-  // std::vector<web::json::value> guard_array:
-
-  // json_object.insert(make_pair("guards", value(guard_vector[i])));
   for (int i=0; i<guard_vector.size(); i++) {
     guard_array.push_back(value(guard_vector[i]));
   }
-  // object::iterator it = json_object.begin();
-  // json_object.insert(make_pair("guards", picojson::array(guard_array)));
   json_object["guards"] = value(guard_array);
-  // json_object.insert(make_pair("guards", guard_array[0]));
-  // json_object["guards"] = arrvec;
-  // json_object["guards"] = guard_array;
-  // Range idx(guard_vector.begin(), guard_vector.end());
-  // for (int i=0; i<guard_vector.size(); i++) {
-	// json_object["guard" + std::to_string(i)] = value(guard_vector[i]);
-    // json_object["guards"].append ( value(guard_vector[i]) );
-  // }
-  // json_object["guards"] = value(guard_vector[0]);
-  // for (std::string s : guard_vector) std::cout << s << std::endl;
 
   phase_result_const_sptr_t root = simulator.get_result_root();
   picojson::array children;
