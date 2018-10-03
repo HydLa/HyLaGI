@@ -333,7 +333,12 @@ boost::shared_ptr<Variable> Parser::variable(){
   std::string name;
   // identifier
   position_t position = lexer.get_current_position();
-  if((name = variable_name()) != ""){
+  name = variable_name();
+  if (name.find('_') != std::string::npos) {
+    std::cout<<"ERROR: variable names containing under-scores are invalid ("<<name<<")\n";
+    std::exit(1);
+  }
+  if(name != ""){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){
       lexer.set_current_position(tmp_position);
