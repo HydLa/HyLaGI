@@ -4,6 +4,7 @@
 
 #include "Lexer.h"
 #include "Parser.h"
+#include "ConstraintVisualization.h"
 
 namespace hydla{
   namespace parser{
@@ -165,6 +166,13 @@ node_sptr Parser::conditional_constraint(){
       // constraint
       if((c = constraint())){
         ask->set_guard(ret);
+		// EDIT
+		it = find(guard_vector.begin(), guard_vector.end(), get_infix_string(ask->get_guard())); 
+		if (it == guard_vector.end()) // guard not yet stored in vector
+			guard_vector.push_back(get_infix_string(ask->get_guard()));
+		// for (std::string s : guard_vector) std::cout << s << std::endl;
+		// std::cout << get_infix_string(ask->get_guard()) << std::endl;
+
         ask->set_child(c);
         return ask;
       }else{

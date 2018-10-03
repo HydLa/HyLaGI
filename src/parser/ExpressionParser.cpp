@@ -334,10 +334,19 @@ boost::shared_ptr<Variable> Parser::variable(){
   // identifier
   position_t position = lexer.get_current_position();
   name = variable_name();
+  
+  // int under_score_pos = name.find('_');
+  // while (under_score_pos != std::string::npos) {
+  //   name[under_score_pos] = 'z';
+  //   under_score_pos = name.find('_');
+    // std::cout << "PARSING ERROR; variable names with underscores are invalid: (" << name << ")" << std::endl;
+  // }
+  
   if (name.find('_') != std::string::npos) {
-    std::cout<<"ERROR: variable names containing under-scores are invalid in current HydLa ("<<name<<")\n";
-	std::exit(1);
+    std::cout<<"PARSE-ERROR: variable names containing under-scores are invalid ("<<name<<")\n";
+    std::exit(1);
   }
+
   if(name != "") {
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){

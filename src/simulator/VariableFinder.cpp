@@ -111,6 +111,9 @@ void VariableFinder::visit(boost::shared_ptr<hydla::symbolic_expression::Ask> no
 {
   accept(node->get_guard());
   accept(node->get_child());
+  // EDIT
+  std::cout << "node->get_guard()!!!!!!!!!!!!!!!!!!!: " << node->get_guard() << std::endl;
+  std::exit(1);
 }
 
 
