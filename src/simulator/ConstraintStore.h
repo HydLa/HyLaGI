@@ -26,6 +26,9 @@ public:
   // return if this constraint store is always true
   bool valid() const;
   void set_consistency(bool);
+  
+  void print()const;
+
 private:
   bool is_consistent;
 };

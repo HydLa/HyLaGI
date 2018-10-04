@@ -7,6 +7,7 @@
 #include "AffineTreeVisitor.h"
 #include "Logger.h"
 #include "HydLaError.h"
+#include "IntervalNewtonError.h"
 #include <sstream>
 #include <fstream>
 
@@ -60,7 +61,7 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     while (true)
     {
       double w = (max_width + min_width) / 2;
-      if (max_width <= min_width || w == max_width || w == min_width) throw HYDLA_ERROR("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ");
+      if (max_width <= min_width || w == max_width || w == min_width) throw IntervalNewtonError("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ");
       tmp.lower() = candidate.lower() - w / 2.;
       tmp.upper() = candidate.upper() + w / 2.;
       std::cerr.precision(17);
@@ -295,8 +296,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
         double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
         if(mid_val == INVALID_MID)
         {
-          throw HYDLA_ERROR("No valid intermediate values are found in interval newton methods.\n current_interval: "
-                            + get_string(current_interval) + "\n exp: " + get_infix_string(exp));
+          throw IntervalNewtonError("No valid intermediate values are found in interval newton methods.\n current_interval: "  + get_string(current_interval) + "\n exp: " + get_infix_string(exp));
         }
         m = itvd(mid_val);
       }

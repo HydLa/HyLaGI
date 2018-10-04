@@ -1387,11 +1387,14 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
+    (*
     parsInVM = Fold[Union[#1, getRelativeVars[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2, getParameters]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];
     {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], parsInVM, Reals] ] ]}
+    *)
+    {toReturnForm[LogicalExpand[pm]]}
   ]
 ];

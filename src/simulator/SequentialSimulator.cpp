@@ -2,8 +2,10 @@
 #include "Timer.h"
 #include "PhaseSimulator.h"
 #include "../common/TimeOutError.h"
+#include "../common/HydLaError.h"
 #include "SignalHandler.h"
 #include "Logger.h"
+#include "../interval/IntervalNewtonError.h"
 
 namespace hydla {
 namespace simulator {
@@ -60,16 +62,65 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
   {
     phase_result_sptr_t todo = current->todo_list.front();
     current->todo_list.pop_front();
-    profile_vector_->insert(todo);
-    if (todo->simulation_state == NOT_SIMULATED)
+
+    phase_result_sptr_t todo_clone = boost::make_shared<PhaseResult>();
+    *todo_clone = *todo;
+
+    profile_vector_->insert(todo_clone);
+    if (todo_clone->simulation_state == NOT_SIMULATED)
     {
-      process_one_todo(todo);
+      try
+      {
+        process_one_todo(todo_clone);
+      }
+      catch(const interval::IntervalNewtonError& e)
+      {
+	ConstraintStore constraintsA, constraintsB;
+
+	HYDLA_LOGGER_DEBUG("Invalid Interval Newton Error: ");
+	for(const auto& parameterMap : todo_clone->get_parameter_maps())
+	{
+	  for(const auto& paramRange: parameterMap)
+	  {
+            parameter_t param = paramRange.first;
+	    ValueRange range = paramRange.second;
+            if(param.get_name() == "l")
+	    {
+              const Value m = (range.get_lower_bound().value + range.get_upper_bound().value) / Value(2);
+	      ValueRange rangeA = range, rangeB = range;
+	      rangeA.set_upper_bound(m, true);
+	      //rangeB.set_lower_bound(m, false);
+	      rangeB.set_lower_bound(m, true);
+
+	      ConstraintStore par_consA = rangeA.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
+	      constraintsA.add_constraint_store(par_consA);
+
+	      ConstraintStore par_consB = rangeB.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
+	      constraintsB.add_constraint_store(par_consB);
+	    }
+	    else
+	    {
+	      ConstraintStore par_cons = range.create_range_constraint(node_sptr(new symbolic_expression::Parameter(param.get_name(), param.get_differential_count(), param.get_phase_id())));
+	      constraintsA.add_constraint_store(par_cons);
+	      constraintsB.add_constraint_store(par_cons);
+	    }
+	  }
+	}
+	HYDLA_LOGGER_DEBUG("Par Cons A: ", constraintsA);
+	HYDLA_LOGGER_DEBUG("Par Cons B: ", constraintsB);
+	CheckConsistencyResult branchConstraints{constraintsA, constraintsB};
+	phase_simulator_->push_branch_states(todo, branchConstraints);
+	current->todo_list.push_front(todo);
+
+	continue;
+      }
+      
       if (opts_->dump_in_progress){
         printer.output_one_phase(todo, "------ In Progress ------");
       }
     }
+    dfs(todo_clone);
 
-    dfs(todo);
     if (!opts_->nd_mode || (opts_->stop_at_failure && assertion_failed))
     {
       omit_following_todos(current);

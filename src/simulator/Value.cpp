@@ -22,7 +22,7 @@ Value& Value::operator+=(const Value& rhs){
   return *this;
 }
 
-Value Value::operator+(const Value& rhs){
+Value Value::operator+(const Value& rhs)const{
   Value ret(*this);
   return ret += rhs;
 }
@@ -32,7 +32,7 @@ Value& Value::operator-=(const Value& rhs){
   return *this;
 }
 
-Value Value::operator-(const Value& rhs){
+Value Value::operator-(const Value& rhs)const{
   Value ret(*this);
   return ret -= rhs;
 }
@@ -42,7 +42,7 @@ Value& Value::operator*=(const Value& rhs){
   return *this;
 }
 
-Value Value::operator*(const Value& rhs){
+Value Value::operator*(const Value& rhs)const{
   Value ret(*this);
   return ret *= rhs;
 }
@@ -52,7 +52,7 @@ Value& Value::operator/=(const Value& rhs){
   return *this;
 }
 
-Value Value::operator/(const Value& rhs){
+Value Value::operator/(const Value& rhs)const{
   Value ret(*this);
   return ret /= rhs;
 }
@@ -62,13 +62,13 @@ Value& Value::operator^=(const Value& rhs){
   return *this;
 }
 
-Value Value::operator^(const Value& rhs){
+Value Value::operator^(const Value& rhs)const{
   Value ret(*this);
   return ret ^= rhs;
 }
 
 
-Value Value::operator-()
+Value Value::operator-()const
 {
   Value ret(*this);
   ret.set_node(symbolic_expression::node_sptr(new Negative(ret.get_node())));

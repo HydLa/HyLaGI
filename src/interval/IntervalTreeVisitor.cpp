@@ -376,12 +376,13 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Sy
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
   //HYDLA_LOGGER_DEBUG("Parameter A{");
-  if(parameter_map == nullptr)invalid_node(*node);
+
+  if(parameter_map == nullptr)throw HYDLA_ERROR("invalid node: " + node->get_string());
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
   auto param_it = parameter_map->find(param);
-  if(param_it == parameter_map->end())invalid_node(*node);
+  if(param_it == parameter_map->end())throw HYDLA_ERROR("invalid node: " + node->get_string());
 
   range_t range = param_it->second;;
 

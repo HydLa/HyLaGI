@@ -1426,10 +1426,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
             IntervalNewtonResult new_data;
             new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
 
-            /*state.min_interval =
-              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
+            //const bool cond = !phase->in_following_step() || phase->discrete_guards.count(entry.first);
+            const bool cond = true;
             state.min_interval =
-              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
+              interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, cond);
 
             new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
             new_data.next_stack = state.stack;
@@ -1454,10 +1454,10 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
           IntervalNewtonResult new_data;
           new_data.current_stack_top = std::make_shared<kv::interval<double>>(state.stack.top());
 
-          /*state.min_interval =
-            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, !phase->in_following_step() || phase->discrete_guards.count(entry.first));*/
+          //const bool cond = !phase->in_following_step() || phase->discrete_guards.count(entry.first);
+          const bool cond = true;
           state.min_interval =
-            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, true);
+            interval::calculate_interval_newton(state.stack, state.exp, state.dexp, pm, cond);
 
           new_data.min_interval = std::make_shared<kv::interval<double>>(state.min_interval.value());
           new_data.next_stack = state.stack;

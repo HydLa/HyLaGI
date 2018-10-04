@@ -184,6 +184,51 @@ string PhaseResult::get_string()const
   return  sstr.str();
 }
 
+PhaseResult& PhaseResult::operator=(const PhaseResult& other)
+{
+  phase_type = other.phase_type;
+  id = other.id;
+  step = other.step;
+  
+  current_time = other.current_time;
+  end_time = other.end_time;
+  
+  variable_map = other.variable_map;
+  prev_map = other.prev_map;
+  
+  additional_parameter_constraint = other.additional_parameter_constraint;
+  additional_constraint_store = other.additional_constraint_store;
+  diff_sum = other.diff_sum;
+  discrete_differential_set = other.discrete_differential_set;
+  
+  module_diff = other.module_diff;
+
+  unadopted_ms = other.unadopted_ms;
+  unadopted_mss = other.unadopted_mss;
+  inconsistent_module_sets = other.inconsistent_module_sets;
+  inconsistent_constraints = other.inconsistent_constraints;
+  next_pp_candidate_map = other.next_pp_candidate_map;
+  guard_time_map = other.guard_time_map;
+  always_list = other.always_list;
+
+  simulation_state = other.simulation_state;
+  parent = other.parent;
+  children = other.children;
+  todo_list = other.todo_list;
+
+  discrete_asks = other.discrete_asks;
+  discrete_guards = other.discrete_guards;
+
+  profile = other.profile;
+
+  diff_positive_asks = other.diff_positive_asks;
+  diff_negative_asks = other.diff_negative_asks;
+  parameter_constraint = other.parameter_constraint;
+  parameter_maps = other.parameter_maps;
+  full_information = other.full_information;
+
+  return *this;
+}
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {

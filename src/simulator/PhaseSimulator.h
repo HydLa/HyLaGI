@@ -19,6 +19,7 @@ template <class T> class interval;
 namespace hydla {
 namespace simulator {
 
+class SequentialSimulator;
 class ValueModifier;
 class MinTimeCalculator;
 
@@ -88,6 +89,8 @@ public:
   boost::shared_ptr<RelationGraph> relation_graph_;
 
 private:
+  friend class SequentialSimulator;
+
   struct StateOfIntervalNewton;
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);

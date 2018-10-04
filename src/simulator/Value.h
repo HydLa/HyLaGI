@@ -68,25 +68,25 @@ public:
   
   /// Value同士の加算
   Value& operator+=(const Value &rhs);
-  Value operator+(const Value &rhs);
+  Value operator+(const Value &rhs)const;
 
   /// Value同士の減算
   Value& operator-=(const Value &rhs);
-  Value operator-(const Value &rhs);
+  Value operator-(const Value &rhs)const;
 
   /// Value同士の乗算
   Value& operator*=(const Value &rhs);
-  Value operator*(const Value &rhs);
+  Value operator*(const Value &rhs)const;
 
   /// Value同士の除算
   Value& operator/=(const Value &rhs);
-  Value operator/(const Value &rhs);
+  Value operator/(const Value &rhs)const;
 
   /// negative
-  Value operator-();
+  Value operator-()const;
   
   Value& operator^=(const Value &rhs);
-  Value operator^(const Value &rhs);
+  Value operator^(const Value &rhs)const;
   
   /**
    * データをダンプする

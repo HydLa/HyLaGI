@@ -188,6 +188,8 @@ public:
 
   std::string get_string() const;
 
+  PhaseResult& operator=(const PhaseResult& other);
+
 private:
   void generate_full_information() const;
 

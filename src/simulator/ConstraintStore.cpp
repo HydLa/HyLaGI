@@ -1,4 +1,5 @@
 #include "ConstraintStore.h"
+#include "Logger.h"
 
 using namespace std;
 
@@ -40,6 +41,15 @@ bool ConstraintStore::valid() const
 void ConstraintStore::set_consistency(bool cons)
 {
   is_consistent = cons;
+}
+
+void ConstraintStore::print()const
+{
+  size_t i=0;
+  for(auto it = begin(); it != end(); ++it, ++i)
+  {
+    HYDLA_LOGGER_DEBUG(std::to_string(i)," : ", symbolic_expression::get_infix_string(*it));
+  }
 }
 
 std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store)
