@@ -751,7 +751,8 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
       CheckConsistencyResult check_consistency_result;
       switch (consistency_checker->check_entailment(
         *relation_graph_, check_consistency_result, ask->get_guard(),
-        ask->get_child(), unknown_asks, phase_type, phase->profile))
+        ask->get_child(), unknown_asks, phase_type,
+        phase->in_following_step(), phase->profile))
       {
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
