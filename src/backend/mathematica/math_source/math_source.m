@@ -225,19 +225,31 @@ Module[
 ];
 
 publicMethod[
-  createVariableMap,
+  createVariableMap,                                                 
   cons, vars, assum, pars, current,
   Module[
-    {map, tmpCons=cons},
+    {map, tmpCons, succeded = false},
 
     If[cons === True, Return[{{}}]];
-    If[cons === False, Return[{}]];
+    If[cons === False, Return[{}]];    
+
+    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
+    If[Head[tmpCons] =!= LogicalOr,
+      {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
+    ];
+    simplePrint[tmpCons, succeeded];
+    If[!succeeded,
+      (* try to solve with parameters *)
+      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
+      tmpCons = Reduce[tmpCons, vars, Reals];
+      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
+      tmpCons = LogicalExpand[tmpCons];
+    ];
 
     tmpCons = applyListToOr[tmpCons];
-    tmpCons = tmpCons /. Equal[x_?(!hasVariable[#]&),y_?(!hasVariable[#]&)] -> True;
-    debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
-    tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
-    debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
+    tmpCons = Map[(applyList[#])&, tmpCons];
+    tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
+    debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
     map = ruleOutException[map];
@@ -245,7 +257,6 @@ publicMethod[
     map
   ]
 ];
-
 
 
 createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, timeVariables];
