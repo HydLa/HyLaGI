@@ -106,7 +106,7 @@ publicMethod[
     checkMessage;
     If[cp =!= False && cp =!= True,
       cp = LogicalExpand[Simplify[cp] ];
-5A      cp = toReturnForm[cp];
+      cp = toReturnForm[cp];
     ];
     simplePrint[cp];
     cp
