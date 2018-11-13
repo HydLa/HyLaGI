@@ -225,7 +225,7 @@ Module[
 ];
 
 publicMethod[
-  createVariableMap,
+  createVariableMap,                                                 
   cons, vars, assum, pars, current,
   Module[
     {map, tmpCons, succeded = false},
@@ -241,8 +241,7 @@ publicMethod[
     If[!succeeded,
       (* try to solve with parameters *)
       tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
-      debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
+      tmpCons = Reduce[tmpCons, vars, Reals];
       tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
       tmpCons = LogicalExpand[tmpCons];
     ];
