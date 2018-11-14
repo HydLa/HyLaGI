@@ -225,13 +225,13 @@ Module[
 ];
 
 publicMethod[
-  createVariableMap,                                                 
+  createVariableMap,
   cons, vars, assum, pars, current,
   Module[
     {map, tmpCons, succeded = false},
 
     If[cons === True, Return[{{}}]];
-    If[cons === False, Return[{}]];    
+    If[cons === False, Return[{}]];
 
     tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
     If[Head[tmpCons] =!= LogicalOr,
@@ -240,13 +240,12 @@ publicMethod[
     simplePrint[tmpCons, succeeded];
     If[!succeeded,
       (* try to solve with parameters *)
-      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      tmpCons = Reduce[tmpCons, vars, Reals];
-      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
-      tmpCons = LogicalExpand[tmpCons];
+      tmpCons = consToDoubleList[cons];
+      debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
+      tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
+      debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
+      , tmpCons = applyListToOr[tmpCons];
     ];
-
-    tmpCons = applyListToOr[tmpCons];
     tmpCons = Map[(applyList[#])&, tmpCons];
     tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
     debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
@@ -321,17 +320,15 @@ publicMethod[
   createParameterMaps,
   pCons, pars,
   Module[
-    {map},
-    map = removeUnnecessaryConstraints[pCons, hasParameter];
-    map = Reduce[map, pars, Reals];
-    map = removeUnnecessaryConstraints[map, hasParameter];
-    If[map === True,
+    {consList, map},
+    consList = removeUnnecessaryConstraints[pCons, hasParameter];
+    consList = consToDoubleList[consList];
+    map = Union[Flatten[Map[(createMapForEachCons[#, isParameter, {}, getParameters[pCons]])&, consList], 1]];
+    If[map === {{True}},
         {{}},
-      If[map === False,
+      If[map === {{}},
          {},
-         map = applyListToOr[map];
-         map = Union[Flatten[Map[(createMap[#, isParameter, {}, getParameters[pCons]])&, map], 1]];
-         debugPrint["map after createMap in createParameterMap", map];
+         debugPrint["map after createMapForEachCons in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
          map
       ]
@@ -428,10 +425,10 @@ resolveOrd[cons_, vars_] :=
 
 
 (* 変数varsに関する制約ストアからjudgeFunctionでTrueとなる変数に関するMapを作成 *)
-createMap[cons_, judgeFunction_, vars_, pars_] :=
+createMapForEachCons[consList_, judgeFunction_, vars_, pars_] :=
   Module [
     {resolvedVars},
-    resolvedVars = If[vars === {}, {}, resolveOrd[cons, vars]];
+    resolvedVars = If[vars === {}, {}, resolveOrd[consList, vars]];
     simplePrint[Join[pars, resolvedVars]];
     Map[
       (Fold[
@@ -443,7 +440,7 @@ createMap[cons_, judgeFunction_, vars_, pars_] :=
         {},
         #
       ])&,
-      consToDoubleList[Quiet[Reduce[cons, Join[pars,resolvedVars]], Reduce::useq]]
+      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]
     ]
   ]
 
