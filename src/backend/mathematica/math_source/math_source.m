@@ -242,11 +242,11 @@ publicMethod[
       (* try to solve with parameters *)
       tmpCons = consToDoubleList[cons];
       debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
-      tmpCons = Union[Flatten[Map[(createMap[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
+      tmpCons = Union[Flatten[Map[(createMapForEachCons[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
       debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
       , tmpCons = applyListToOr[tmpCons];
+      tmpCons = Map[(applyList[#])&, tmpCons];
     ];
-    tmpCons = Map[(applyList[#])&, tmpCons];
     tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
     debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
@@ -401,21 +401,22 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
-resolveOrd[cons_, vars_] :=
+resolveVariableOrder[consList_, vars_] :=
   Module[
     {relatedConsMap, resolved = {}, restVars=vars, found},
     For[i=1, i<=Length[vars], i++,
-      relatedConsMap[vars[[i]]] = Select[cons, MemberQ[getVariablesWithDerivatives[#], vars[[i]] ]&];
+      relatedConsMap[vars[[i]]] = Select[consList, MemberQ[getVariablesWithDerivatives[#], vars[[i]] ]&];
     ];
     While[True,
       found =
         Select[
           restVars,
-          Function[var, Fold[(#1||Complement[getVariablesWithDerivatives[#2], Append[resolved, var]]==={})&, False, applyList[relatedConsMap[var]] ]]
+          Function[var, Fold[(#1||Complement[getVariablesWithDerivatives[#2], Append[resolved, var]]==={})&, False, relatedConsMap[var] ]]
         ];
       If[found == {},
          Break[],
          resolved = Join[resolved, found];
+         simplePrint[resolved];
          restVars = Complement[restVars, found];
          found = {}
       ]
@@ -428,8 +429,9 @@ resolveOrd[cons_, vars_] :=
 createMapForEachCons[consList_, judgeFunction_, vars_, pars_] :=
   Module [
     {resolvedVars},
-    resolvedVars = If[vars === {}, {}, resolveOrd[consList, vars]];
+    resolvedVars = If[vars === {}, {}, resolveVariableOrder[consList, vars]];
     simplePrint[Join[pars, resolvedVars]];
+    simplePrint[consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]];
     Map[
       (Fold[
         (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
@@ -440,7 +442,7 @@ createMapForEachCons[consList_, judgeFunction_, vars_, pars_] :=
         {},
         #
       ])&,
-      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]
+      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars], Reals], Reduce::useq]]
     ]
   ]
 
