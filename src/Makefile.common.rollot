@@ -17,8 +17,8 @@ LIBS_STATIC += -lboost_thread -lboost_regex
 
 ifeq ($(UNAME),Linux)
 MATHEMATICA_VERSION := $(shell ls /usr/local/Wolfram/Mathematica | grep -E [1-9]\{1,3\}\(\.[1-9]\{1,3\}\)*)
-INCLUDES += -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++11 -luuid -O
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg

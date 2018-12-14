@@ -13,7 +13,7 @@ typedef boost::shared_ptr<Node> node_sptr;
 
 struct Opts {
   enum EOutputMode { None, Omit, Output, };
-  std::string wstp;
+  std::string mathlink;
   std::string simplify_time;
   bool debug_mode;
   symbolic_expression::node_sptr max_time;
@@ -37,6 +37,7 @@ struct Opts {
   bool html;
   int approximation_step;
   int extra_dummy_num;
+  int partition_num;
   int simplify;
   symbolic_expression::node_sptr assertion;
   int max_phase;

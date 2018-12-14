@@ -110,6 +110,64 @@ Module[
 
 calculateTLinear[f_, pm_, tMin_Real, tMax_Real] := calculateTLinear[f, pm, toRational[tMin], toRational[tMax]];
 
+
+publicMethod[
+  calculateTLinear,
+  f, pm, tMin, tMax,
+  Module[
+    {pRules = {}, pExp = {}, ruleInv = {}, pRename = {}, pTemp = {}, pars, result = 0, midRules, i, itv, iRem = 0, iMid = (tMin + tMax) / 2, frt, par, val, par2, remMid, remWid, remItv, ff},
+    pTemp = createIntervalRules[pm];
+    For[i = 1, i <= Length[pTemp], i++,
+      par = pTemp[[i]][[1]];
+      val = pTemp[[i]][[2]];
+      par2 = pp[par[[1]], par[[2]], par[[3]]];
+      pRename = Append[pRename, par -> par2];
+      (*
+      pExp = Append[pExp, par -> (mid[par] + par2 * wid[par] / 2)];
+      ruleInv = Append[ruleInv, par2 -> ((par - mid[par])*2/wid[par])];
+      *)
+      pExp = Append[pExp, par -> (mid[val] + par2 * wid[val] / 2)];
+      ruleInv = Append[ruleInv, par2 -> ((par - mid[val])*2/wid[val])];
+      pRules = Append[pRules, par2 -> Interval[{-1, 1}]];
+    ];
+    pRules = Append[pRules, t -> Interval[{tMin, tMax}]];
+    pars = getParameters[pm] /. pRename;
+    ff = f /. pExp /. pTemp;
+    midRules = Map[(#[[1]] -> mid[#[[2]]])&, pRules];
+    frt = D[ff, t ] /. pRules;
+    simplePrint[N[frt] ];
+    simplePrint[N[midRules] ];
+    simplePrint[N[ff /. midRules] ];
+
+    simplePrint[pRename];
+    simplePrint[pExp];
+    simplePrint[pRules];
+    simplePrint[pars];
+    
+    For[i = 1, i <= Length[pars], i++,
+      par = pars[[i]];
+      itv = toRational[N[D[ff, pars[[i]] ] / frt /. pRules] ]; (* f∂xi/f∂t *)
+      simplePrint[par]
+      simplePrint[N[D[ff, pars[[i]] ] /. pRules]];
+      iRem += wid[itv];
+      result += -mid[itv] * par;
+    ];
+    iRem = iMid + iRem/2 * Interval[{-1, 1}] - (ff /. midRules)/frt;
+    remMid = toRational[N[Interval[mid[iRem] ] ] ];
+    remItv = N[iRem - remMid];
+    remWid = toRational[Max[Abs[inf[remItv]], Abs[sup[remItv] ] ] ];
+    remMid = mid[remMid];
+    result = Evaluate[result /. ruleInv];
+    simplePrint[N[result]];
+    simplePrint[N[iRem]];
+    simplePrint[N[midpointRadius[remMid, remWid]]];
+
+    {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
+  ]
+];
+
+
+(*
 publicMethod[
   calculateTLinear,
   f, pm, tMin, tMax,
@@ -142,3 +200,5 @@ publicMethod[
     {toReturnForm[result], toReturnForm[midpointRadius[remMid, remWid] ] }
   ]
 ];
+*)
+

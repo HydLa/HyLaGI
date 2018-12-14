@@ -44,7 +44,7 @@ bool empty(itvd x)
 }
 
 // 存在証明
-bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_)
+bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map_t& phase_map_, const std::string& minimumParamName, int minimumPhaseID)
 {
   itvd tmp;
 
@@ -61,7 +61,11 @@ bool show_existence(itvd candidate, node_sptr exp, node_sptr dexp, parameter_map
     while (true)
     {
       double w = (max_width + min_width) / 2;
-      if (max_width <= min_width || w == max_width || w == min_width) throw IntervalNewtonError("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ");
+      if (max_width <= min_width || w == max_width || w == min_width)
+      {
+        //throw IntervalNewtonError("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ");
+        throw IntervalNewtonError("show existence failed for exp:" + get_infix_string(exp) + " dexp: " + get_infix_string(dexp) + ". ", minimumParamName, minimumPhaseID);
+      }
       tmp.lower() = candidate.lower() - w / 2.;
       tmp.upper() = candidate.upper() + w / 2.;
       std::cerr.precision(17);
@@ -264,6 +268,31 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
   std::cout.precision(17);
   std::cerr.precision(17);
 
+  double minimumWidth = 1.e+10;
+  std::string minimumParamName;
+  int minimumPhaseID;
+  
+  {
+    IntervalTreeVisitor visitor;
+    for(const auto& paramRange : phase_map_)
+    {
+      auto currentParameterMap = phase_map_;
+      parameter_t param = paramRange.first;
+      simulator::ValueRange range =  paramRange.second;
+      simulator::ValueRange noRange(range.get_lower_bound().value, range.get_lower_bound().value);
+      currentParameterMap[param] = noRange;
+      itvd current_whole_range = visitor.get_interval_value(exp, &current_interval, &currentParameterMap);
+    
+      const double currentWidth = width(current_whole_range);
+      if(currentWidth < minimumWidth)
+      {
+        minimumWidth = currentWidth;
+        minimumParamName = param.get_name();
+	minimumPhaseID = param.get_phase_id();
+      }
+    }
+  }
+
   while(!candidate_stack.empty())
   {
     current_interval = candidate_stack.top();
@@ -296,7 +325,9 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
         double mid_val = calculate_mid_without_0(current_interval, exp, phase_map_);
         if(mid_val == INVALID_MID)
         {
-          throw IntervalNewtonError("No valid intermediate values are found in interval newton methods.\n current_interval: "  + get_string(current_interval) + "\n exp: " + get_infix_string(exp));
+	  //std::sort(widthParameters.begin(), widthParameters.end(), [](const std::pair<double,std::string>& a,const std::pair<double,std::string>& b){return a.first < b.first;});
+
+          throw IntervalNewtonError("No valid intermediate values are found in interval newton methods.\n current_interval: "  + get_string(current_interval) + "\n exp: " + get_infix_string(exp), minimumParamName, minimumPhaseID);
         }
         m = itvd(mid_val);
       }
@@ -342,7 +373,7 @@ itvd calculate_interval_newton(itv_stack_t &candidate_stack, node_sptr exp, node
     if(!no_zero)
     {
       if(!discard_itv_0 && in(0., current_interval))throw HYDLA_ERROR("invalid interval found for " + get_infix_string(exp));
-      else if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
+      else if(!in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_, minimumParamName, minimumPhaseID))
       {
         HYDLA_LOGGER_DEBUG("FIND");
         HYDLA_LOGGER_DEBUG_VAR(width(current_interval));
@@ -366,6 +397,31 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
 
   std::cout.precision(17);
   std::cerr.precision(17);
+
+  double minimumWidth = 1.e+10;
+  std::string minimumParamName;
+  int minimumPhaseID;
+  
+  {
+    IntervalTreeVisitor visitor;
+    for(const auto& paramRange : phase_map_)
+    {
+      auto currentParameterMap = phase_map_;
+      parameter_t param = paramRange.first;
+      simulator::ValueRange range =  paramRange.second;
+      simulator::ValueRange noRange(range.get_lower_bound().value, range.get_lower_bound().value);
+      currentParameterMap[param] = noRange;
+      itvd current_whole_range = visitor.get_interval_value(exp, &init, &currentParameterMap);
+    
+      const double currentWidth = width(current_whole_range);
+      if(currentWidth < minimumWidth)
+      {
+        minimumWidth = currentWidth;
+        minimumParamName = param.get_name();
+	minimumPhaseID = param.get_phase_id();
+      }
+    }
+  }
 
   candidate_stack.push(init);
 
@@ -430,7 +486,7 @@ std::list<itvd> calculate_interval_newton_nd(itvd init, node_sptr exp, node_sptr
         break;
       }
     }
-    if(!empty(current_interval) && !in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_))
+    if(!empty(current_interval) && !in(0., current_interval) && show_existence(current_interval, exp, dexp, phase_map_, minimumParamName, minimumPhaseID))
     {
       HYDLA_LOGGER_DEBUG("FIND");
       HYDLA_LOGGER_DEBUG_VAR(width(current_interval));

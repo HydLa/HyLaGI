@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/optional.hpp>
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 
@@ -39,6 +40,15 @@ public:
   virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
   
   virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
+
+  boost::optional<double> get_double()const
+  {
+    if(fully_numerized)
+    {
+      return current_double;
+    }
+    return boost::none;
+  }
 
 private:
   void invalid_node(symbolic_expression::Node &node);

@@ -4,6 +4,11 @@
 #include <vector>
 #include <stdexcept>
 #include "Value.h"
+#include "../interval/kv/interval.hpp"
+#include "../interval/kv/rdouble.hpp"
+#include "../interval/kv/dd.hpp"
+#include "../interval/kv/rdd.hpp"
+#include "../interval/kv/constants.hpp"
 
 namespace hydla {
 namespace simulator {
@@ -103,6 +108,7 @@ public:
   }
 
   ValueRange get_numerized_range()const;
+  kv::interval<double> get_numerized_itv()const;
   
   std::ostream& dump(std::ostream& s) const  
   {

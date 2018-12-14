@@ -1144,6 +1144,11 @@ Module[
   ];
 
   debugPrint["replaced to : ", replacedEquations, additionalRules];
+
+  debugPrint[Union[replacedEquations, ini]];
+  debugPrint[tVars];
+  debugPrint[t];
+  
   sol = Check[
       DSolve[Union[replacedEquations, ini], tVars, t],
           overConstrained,
@@ -1187,17 +1192,18 @@ Module[
   debugPrint[tVars];
   debugPrint[t];
   
-  sol = Check[
+  sol = TimeConstrained[Check[
       DSolve[Union[expr, ini], tVars, t],
           overConstrained,
       {DSolve::overdet, DSolve::bvimp}
-  ];
+  ], 10, Null];
   (* simplePrint[pRules]; *)
   simplePrint[sol];
   rootExps = Cases[sol, Sqrt[x_], Infinity];
   (* simplePrint[rootExps]; *)
   isMaybeUnsafe = isMaybeImaginary[rootExps, pRules];
   debugPrint["isMaybeUnsafe : ", isMaybeUnsafe];
+  If[sol == Null, isMaybeUnsafe = True];
   If[isMaybeUnsafe,
     sol2 = solveBySymbolicCoefficient2[expr, ini, vars, derivatives, pRules];
     sol = sol2
@@ -1387,14 +1393,14 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    (*
+      
     parsInVM = Fold[Union[#1, getRelativeVars[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2, getParameters]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];
     {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], parsInVM, Reals] ] ]}
-    *)
-    {toReturnForm[LogicalExpand[pm]]}
+    
+    (* {toReturnForm[LogicalExpand[pm]]} *)
   ]
 ];

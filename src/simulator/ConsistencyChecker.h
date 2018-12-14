@@ -56,6 +56,7 @@ public:
     const constraint_t &node_sptr,
     const asks_t &unknown_asks,
     const PhaseType &phase,
+    bool following_step,
     profile_t &profile
     );
 
