@@ -133,7 +133,9 @@ public:
       i.debug_ << R"(timer elapsed: <span class="timer" style="background-color:#f09b3b">)" << timer.get_elapsed_us() << "</span>[us]<br>" << std::endl;
     }
     else {
-      i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]" << std::endl;
+      if (i.valid_level(LogLevel::Debug)) {
+        i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]" << std::endl;
+      }
     }
   }
 
