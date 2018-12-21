@@ -961,8 +961,7 @@ searchExprsAndVars[searchedExprs_, searchedVars_, exprs_, tVarsMap_] :=
 Module[
   {tVar, tVarsInExpr, unionVars, i, j, k, appendExprs, searchResult},
   inputPrint["searchExprsAndVars", searchedExprs, searchedVars, exprs, tVarsMap];
-  For[i=1, i<=Min[Length[searchedVars], 2], i++,
-    (* 解けない変数が2つ以上含まれるなら候補には入らないはずなので，2とのMinをとる *)
+  For[i=1, i<=Length[searchedVars], i++,
     tVar = searchedVars[[i]];
     For[j=1, j<=Length[exprs], j++,
       tVarsInExpr = tVarsMap[ exprs[[j]] ];
@@ -1011,13 +1010,21 @@ Module[
     ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
-  sol = Quiet[
-    Check[
-      DSolve[Union[expr, ini], tVars, t],
-          overConstrained,
-      {DSolve::overdet, DSolve::bvimp}
-    ],
-  {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
+  inis = Sort[Subsets[ini], (Length[#1] > Length[#2])&];
+  For[i = 1, i <= Length[inis], i++,
+    simplePrint[Union[expr, inis[[i]]]];
+    simplePrint[tVars];
+    sol = Quiet[
+      Check[
+        DSolve[Union[expr, inis[[i]]], tVars, t],
+            overConstrained,
+        {DSolve::overdet, DSolve::bvimp}
+      ],
+    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+    ];
+    If[Length[sol] > 0,
+      Break[]
+    ]
   ];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
