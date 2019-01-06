@@ -880,7 +880,7 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
-  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
+  resultRule = Quiet[Check[solveByDSolveAndSolve[listExpr, getVariables[listExpr] ], {}] ];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
@@ -893,7 +893,7 @@ Module[
       simplePrint[searchResult];
       If[searchResult === unExpandable,
         Break[],
-        rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+        rules = solveByDSolveAndSolve[searchResult[[1]], searchResult[[3]]];
         simplePrint[rules];
         If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
@@ -995,6 +995,21 @@ createPrevRules[var_] := Module[
   ]
 ];
 
+createPrevOnly[var_] := Module[
+  {tRemovedVar, dCount, i, varName, der},
+  tRemovedVar = var /. x_[t] -> x;
+  If[MatchQ[Head[tRemovedVar], Derivative[_]],
+    varName = tRemovedVar[[1]];
+    dCount = Head[tRemovedVar][[1]];
+    ret = {varName};
+    der = Derivative[i][varName];
+    For[i = 1, i < dCount, i++,
+      ret = Append[ret, der];
+    ];
+    ret,
+    {}
+  ]
+];
 
 (* 渡された式をDSolveで解いて，結果のRuleを返す．
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
@@ -1003,11 +1018,11 @@ createPrevRules[var_] := Module[
 solveByDSolve[expr_, vars_] :=
 solveByDSolve[expr, vars] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, i},
+  {ini = {}, inis, sol, derivatives, i},
   tVars = Map[(#[t])&, vars];
   derivatives = getTimeVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
-    ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
+    ini = Union[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
   inis = Sort[Subsets[ini], (Length[#1] > Length[#2])&];
@@ -1020,12 +1035,71 @@ Module[
             overConstrained,
         {DSolve::overdet, DSolve::bvimp}
       ],
-    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
     ];
     If[Length[sol] > 0,
       Break[]
     ]
   ];
+  (* remove solutions with imaginary numbers *)
+  For[i = 1, i <= Length[sol], i++,
+    If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
+      sol = Drop[sol, {i}];
+      --i;
+    ]
+  ];
+  If[Length[sol] > 0, sol, overConstrained]
+];
+
+solveByDSolveAndSolve[expr_, vars_] :=
+solveByDSolveAndSolve[expr, vars] = (* for memoization *)
+Module[
+  {ini, inis, sol = {}, solwithconstant, solofconstant, derivatives, prevs = {}, constants, i, j},
+  tVars = Map[(#[t])&, vars];
+  derivatives = getTimeVariablesWithDerivatives[expr];
+  For[i = 1, i <= Length[derivatives], i++,
+    prevs = Union[prevs, createPrevOnly[derivatives[[i]] ] ]
+  ];
+  simplePrint[prevs];
+  tmp = expr;
+  simplePrint[expr];
+  simplePrint[vars];
+  solwithconstant = Quiet[
+    Check[
+      DSolve[expr, vars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+    ],
+    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+  ];
+  simplePrint[solwithconstant];
+  For[i = 1, i <= Length[solwithconstant], i++,
+    ini = {};
+    constants = Union[Cases[solwithconstant[[i]], C[_], {0, Infinity}]];
+    simplePrint[constants];
+    For[j = 1, j <= Length[prevs], j++,
+      ini = Append[ini, (prevs[[j]][0] /. solwithconstant[[i]]) == makePrevVar[prevs[[j]] ] ]
+    ];
+    inis = Select[Subsets[ini], (Length[#] == Length[constants]) &];
+    simplePrint[inis];
+    For[j = 1, j <= Length[inis], j++,
+      solofconstant = Quiet[
+        Check[
+          Solve[inis[[j]], constants, Reals],
+              overConstrained,
+          {DSolve::overdet, DSolve::bvimp}
+        ],
+        {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      ];
+      simplePrint[solofconstant];
+      If[Length[solofconstant] > 0,
+        sol = Append[sol, Map[#[t]&, (solwithconstant /. solofconstant[[1]] ), {3}]];
+        Break[]
+      ]
+    ];
+  ];
+  If[Length[sol] == 0, Return[overConstrained]];
+  sol = sol[[1]];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
     If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
