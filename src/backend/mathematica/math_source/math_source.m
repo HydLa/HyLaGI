@@ -895,7 +895,11 @@ Module[
         Break[],
         rules = solveByDSolveAndSolve[searchResult[[1]], searchResult[[3]]];
         simplePrint[rules];
-        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
+        If[rules === overConstrained || Length[rules] == 0,
+          rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+          simplePrint[rules];
+          If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ]
+        ];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
         If[Head[rules] === DSolve,
           resultCons = resultCons && And@@searchResult[[1]];
@@ -1080,7 +1084,7 @@ Module[
     For[j = 1, j <= Length[prevs], j++,
       ini = Append[ini, (prevs[[j]][0] /. solwithconstant[[i]]) == makePrevVar[prevs[[j]] ] ]
     ];
-    inis = Select[Subsets[ini], (Length[#] == Length[constants]) &];
+    inis = Subsets[ini,{Length[constants]}];
     simplePrint[inis];
     For[j = 1, j <= Length[inis], j++,
       solofconstant = Quiet[
