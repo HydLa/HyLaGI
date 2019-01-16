@@ -1,18 +1,20 @@
-ON(mintemp) <=> []((temp-<=mintemp) & s-=0
-                => s=1 & timer=0).
-OFF(maxtemp) <=> []((temp->=maxtemp) & s-=1
-                => s=0 & timer=0).
+ON(minTemp)  <=> []((temp- <= minTemp) & set- = 0 => set = 1 & timer = 0).
+OFF(maxTemp) <=> []((temp- >= maxTemp) & set- = 1 => set = 0 & timer = 0).
 
-COOL <=> [](temp'=-1/10*temp).
-HEAT <=> [](s = 1 & timer >= 1 => temp'=5-1/10*temp).
+COOL <=> [](temp' = -1/10*temp).
+HEAT <=> [](set = 1 & timer >= 1 => temp' = 5-1/10*temp).
 
-ROOM(initTemp){
-  temp=initTemp, COOL<<HEAT}.
-THERMO(initSwitch,initTimer){
-  s=initSwitch,timer=initTimer,
-  [](s'=0 & timer' = 1) << (ON(19) & OFF(21))
+ROOM(initTemp) {
+    temp = initTemp,
+    COOL << HEAT
 }.
 
-ROOM(20),THERMO(0,0).
+THERMOSTAT(initSwitch, initTimer, minTemp, maxTemp) {
+    set = initSwitch,
+    timer = initTimer,
+    [](set' = 0 & timer' = 1) << (ON(minTemp), OFF(maxTemp))
+}.
 
-// #hylagi -p 20
+ROOM(20), THERMOSTAT(0,0,19,21).
+
+// #hylagi -p 10
