@@ -1082,7 +1082,7 @@ Module[
     constants = Union[Cases[solwithconstant[[i]], C[_], {0, Infinity}]];
     simplePrint[constants];
     For[j = 1, j <= Length[prevs], j++,
-      ini = Append[ini, (prevs[[j]][0] /. solwithconstant[[i]]) == makePrevVar[prevs[[j]] ] ]
+      ini = Append[ini, Simplify[prevs[[j]][0] /. solwithconstant[[i]] ] == makePrevVar[prevs[[j]] ] ]
     ];
     inis = Subsets[ini,{Length[constants]}];
     simplePrint[inis];
@@ -1097,13 +1097,12 @@ Module[
       ];
       simplePrint[solofconstant];
       If[Length[solofconstant] > 0,
-        sol = Append[sol, Map[#[t]&, (solwithconstant /. solofconstant[[1]] ), {3}]];
+        sol = Union[sol, Map[#[t]&, (solwithconstant[[i]] /. solofconstant ), {3}]];
         Break[]
       ]
     ];
   ];
   If[Length[sol] == 0, Return[overConstrained]];
-  sol = sol[[1]];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
     If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
