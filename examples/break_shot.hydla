@@ -27,4 +27,4 @@ INIT(X[3],Y[3],-(2^(1/2)+eps),10 + 2^(1/2) + eps, 0, 0), INIT(X[4],Y[4],2^(1/2)+
 EPS.
 {(CONST(X[i]), CONST(Y[i]), CONST(X[j]), CONST(Y[j])) << COL(X[i],Y[i],X[j],Y[j]) | i in {1..|X|-1}, j in {i+1..|X|}}. 
 
-//#hylagi --fnd --fdump_in_progress -p6
+//#hylagi -p6

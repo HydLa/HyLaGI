@@ -10,4 +10,4 @@ INIT,  CONST
   <<
  (EDGE(Pi/3, 2), EDGE(Pi/4, -2), EDGE(-Pi/6,3), EDGE(-Pi/4, -4)).
 
-// #hylagi -p 10 --fnd
+// #hylagi -p 17

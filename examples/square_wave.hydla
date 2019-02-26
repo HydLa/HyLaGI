@@ -5,4 +5,4 @@ CHANGE <=> [](timer- = 2 => (timer=0 & f = 10 + - f-)).
 TIMER  <=> [](timer'=1).
 INIT, [](f'=0) << TIMER << CHANGE.
 
-//#hylagi -p10
+//#hylagi -p100

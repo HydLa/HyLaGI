@@ -1,0 +1,3921 @@
+------ Result of Simulation ------
+---------Case 1---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 9---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 90
+---------IP 13---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------4---------
+---------PP 15---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: 165
+y'	: 170
+y''	: 90
+---------IP 18---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+# number of phases reached limit
+
+---------Case 2---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 9---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 90
+---------IP 13---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------4---------
+---------PP 16---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: 165
+y'	: 170
+y''	: 2
+---------IP 19---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 164*t+t^2+(-336)
+mag'	: 0
+timer'	: 1
+y'	: 2*(82+t)
+y''	: 2
+# number of phases reached limit
+
+---------Case 3---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 9---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 90
+---------IP 13---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------4---------
+---------PP 17---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: 165
+y'	: 170
+y''	: -10
+---------IP 20---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: (78+t^2+t*(-40))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-20))
+y''	: -10
+# number of phases reached limit
+
+---------Case 4---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 10---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 2
+---------IP 12---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 76*t+t^2+(-116)
+mag'	: 0
+timer'	: 1
+y'	: 2*(38+t)
+y''	: 2
+---------4---------
+---------PP 24---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: 121
+y'	: 82
+y''	: 90
+---------IP 29---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 280+45*t^2+t*(-188)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-188)
+y''	: 90
+# number of phases reached limit
+
+---------Case 5---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 10---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 2
+---------IP 12---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 76*t+t^2+(-116)
+mag'	: 0
+timer'	: 1
+y'	: 2*(38+t)
+y''	: 2
+---------4---------
+---------PP 25---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: 121
+y'	: 82
+y''	: 2
+---------IP 27---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 76*t+t^2+(-116)
+mag'	: 0
+timer'	: 1
+y'	: 2*(38+t)
+y''	: 2
+# number of phases reached limit
+
+---------Case 6---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 10---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: 40
+y'	: 80
+y''	: 2
+---------IP 12---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 76*t+t^2+(-116)
+mag'	: 0
+timer'	: 1
+y'	: 2*(38+t)
+y''	: 2
+---------4---------
+---------PP 26---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: 121
+y'	: 82
+y''	: -10
+---------IP 28---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: 112*t+(-170)+t^2*(-5)
+mag'	: 0
+timer'	: 1
+y'	: 112+t*(-10)
+y''	: -10
+# number of phases reached limit
+
+---------Case 7---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 11---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: 40
+y'	: 80
+y''	: -10
+---------IP 14---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (28+t^2+t*(-20))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-10))
+y''	: -10
+---------4---------
+---------PP 33---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: 115
+y'	: 70
+y''	: 90
+---------IP 37---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 5*(62+9*t^2+t*(-40))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-200)
+y''	: 90
+# number of phases reached limit
+
+---------Case 8---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 11---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: 40
+y'	: 80
+y''	: -10
+---------IP 14---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (28+t^2+t*(-20))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-10))
+y''	: -10
+---------4---------
+---------PP 34---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: 115
+y'	: 70
+y''	: 2
+---------IP 36---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 64*t+t^2+(-86)
+mag'	: 0
+timer'	: 1
+y'	: 2*(32+t)
+y''	: 2
+# number of phases reached limit
+
+---------Case 9---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 3---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 100
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 90
+---------IP 6---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 100
+timer	: t+(-1)
+y	: 5*(12+9*t^2+t*(-20))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-100)
+y''	: 90
+---------3---------
+---------PP 11---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: 40
+y'	: 80
+y''	: -10
+---------IP 14---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (28+t^2+t*(-20))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-10))
+y''	: -10
+---------4---------
+---------PP 35---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: 115
+y'	: 70
+y''	: -10
+---------IP 38---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: (28+t^2+t*(-20))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-10))
+y''	: -10
+# number of phases reached limit
+
+---------Case 10---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 42---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 90
+---------IP 47---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 192+45*t^2+t*(-188)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-188)
+y''	: 90
+---------4---------
+---------PP 48---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: 33
+y'	: 82
+y''	: 90
+---------IP 52---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 192+45*t^2+t*(-188)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-188)
+y''	: 90
+# number of phases reached limit
+
+---------Case 11---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 42---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 90
+---------IP 47---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 192+45*t^2+t*(-188)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-188)
+y''	: 90
+---------4---------
+---------PP 49---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: 33
+y'	: 82
+y''	: 2
+---------IP 51---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 76*t+t^2+(-204)
+mag'	: 0
+timer'	: 1
+y'	: 2*(38+t)
+y''	: 2
+# number of phases reached limit
+
+---------Case 12---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 42---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 90
+---------IP 47---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 192+45*t^2+t*(-188)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-188)
+y''	: 90
+---------4---------
+---------PP 50---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: 33
+y'	: 82
+y''	: -10
+---------IP 53---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: 112*t+(-258)+t^2*(-5)
+mag'	: 0
+timer'	: 1
+y'	: 112+t*(-10)
+y''	: -10
+# number of phases reached limit
+
+---------Case 13---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 43---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 2
+---------IP 46---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------4---------
+---------PP 57---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: -11
+y'	: -6
+y''	: 90
+---------IP 61---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 412+45*t^2+t*(-276)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-276)
+y''	: 90
+# number of phases reached limit
+
+---------Case 14---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 43---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 2
+---------IP 46---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------4---------
+---------PP 58---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: -11
+y'	: -6
+y''	: 2
+---------IP 62---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+# number of phases reached limit
+
+---------Case 15---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 43---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -4
+y'	: -8
+y''	: 2
+---------IP 46---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------4---------
+---------PP 59---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: -11
+y'	: -6
+y''	: -10
+---------IP 60---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: 24*t+(-38)+t^2*(-5)
+mag'	: 0
+timer'	: 1
+y'	: 24+t*(-10)
+y''	: -10
+# number of phases reached limit
+
+---------Case 16---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 44---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -4
+y'	: -8
+y''	: -10
+---------IP 45---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: 12*t+t^2*(-5)+(-8)
+mag'	: 0
+timer'	: 1
+y'	: 12+t*(-10)
+y''	: -10
+---------4---------
+---------PP 66---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: -17
+y'	: -18
+y''	: 90
+---------IP 69---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 442+45*t^2+t*(-288)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-288)
+y''	: 90
+# number of phases reached limit
+
+---------Case 17---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 44---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -4
+y'	: -8
+y''	: -10
+---------IP 45---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: 12*t+t^2*(-5)+(-8)
+mag'	: 0
+timer'	: 1
+y'	: 12+t*(-10)
+y''	: -10
+---------4---------
+---------PP 67---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: -17
+y'	: -18
+y''	: 2
+---------IP 70---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 46+t^2+t*(-24)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-12))
+y''	: 2
+# number of phases reached limit
+
+---------Case 18---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 4---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 12
+timer	: 0
+y	: 5
+y'	: -10
+y''	: 2
+---------IP 8---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 12
+timer	: t+(-1)
+y	: 16+t^2+t*(-12)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-6))
+y''	: 2
+---------3---------
+---------PP 44---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -4
+y'	: -8
+y''	: -10
+---------IP 45---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: 12*t+t^2*(-5)+(-8)
+mag'	: 0
+timer'	: 1
+y'	: 12+t*(-10)
+y''	: -10
+---------4---------
+---------PP 68---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: -17
+y'	: -18
+y''	: -10
+---------IP 71---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: 12*t+t^2*(-5)+(-8)
+mag'	: 0
+timer'	: 1
+y'	: 12+t*(-10)
+y''	: -10
+# number of phases reached limit
+
+---------Case 19---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 75---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 90
+---------IP 79---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(42+9*t^2+t*(-40))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-200)
+y''	: 90
+---------4---------
+---------PP 81---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: 15
+y'	: 70
+y''	: 90
+---------IP 86---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 5*(42+9*t^2+t*(-40))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-200)
+y''	: 90
+# number of phases reached limit
+
+---------Case 20---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 75---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 90
+---------IP 79---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(42+9*t^2+t*(-40))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-200)
+y''	: 90
+---------4---------
+---------PP 82---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: 15
+y'	: 70
+y''	: 2
+---------IP 84---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 64*t+t^2+(-186)
+mag'	: 0
+timer'	: 1
+y'	: 2*(32+t)
+y''	: 2
+# number of phases reached limit
+
+---------Case 21---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 75---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 100
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 90
+---------IP 79---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 100
+timer	: t+(-2)
+y	: 5*(42+9*t^2+t*(-40))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-200)
+y''	: 90
+---------4---------
+---------PP 83---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: 15
+y'	: 70
+y''	: -10
+---------IP 85---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: (48+t^2+t*(-20))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: -10*(t+(-10))
+y''	: -10
+# number of phases reached limit
+
+---------Case 22---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 76---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 2
+---------IP 80---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 34+t^2+t*(-24)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-12))
+y''	: 2
+---------4---------
+---------PP 90---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: -29
+y'	: -18
+y''	: 90
+---------IP 94---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 430+45*t^2+t*(-288)
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-288)
+y''	: 90
+# number of phases reached limit
+
+---------Case 23---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 76---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 2
+---------IP 80---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 34+t^2+t*(-24)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-12))
+y''	: 2
+---------4---------
+---------PP 91---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: -29
+y'	: -18
+y''	: 2
+---------IP 93---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 34+t^2+t*(-24)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-12))
+y''	: 2
+# number of phases reached limit
+
+---------Case 24---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 76---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 12
+timer	: 0
+y	: -10
+y'	: -20
+y''	: 2
+---------IP 80---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 12
+timer	: t+(-2)
+y	: 34+t^2+t*(-24)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-12))
+y''	: 2
+---------4---------
+---------PP 92---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: -29
+y'	: -18
+y''	: -10
+---------IP 95---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: 12*t+(-20)+t^2*(-5)
+mag'	: 0
+timer'	: 1
+y'	: 12+t*(-10)
+y''	: -10
+# number of phases reached limit
+
+---------Case 25---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 77---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -10
+y'	: -20
+y''	: -10
+---------IP 78---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------4---------
+---------PP 99---------
+unadopted modules: {SWITCHOFF, SWITCHON, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 100
+timer	: 0
+y	: -35
+y'	: -30
+y''	: 90
+---------IP 104---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 100
+timer	: t+(-3)
+y	: 5*(92+9*t^2+t*(-60))
+mag'	: 0
+timer'	: 1
+y'	: 90*t+(-300)
+y''	: 90
+# number of phases reached limit
+
+---------Case 26---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 77---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -10
+y'	: -20
+y''	: -10
+---------IP 78---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------4---------
+---------PP 100---------
+unadopted modules: {SWITCHOFF, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 12
+timer	: 0
+y	: -35
+y'	: -30
+y''	: 2
+---------IP 103---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 12
+timer	: t+(-3)
+y	: 64+t^2+t*(-36)
+mag'	: 0
+timer'	: 1
+y'	: 2*(t+(-18))
+y''	: 2
+# number of phases reached limit
+
+---------Case 27---------
+---------1---------
+---------PP 1---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0
+mag	: 0
+timer	: 0
+y	: 10
+mag'	: 0
+timer'	: 1
+y'	: 0
+y''	: -10
+---------IP 2---------
+unadopted modules: {}
+positive 	: 
+negative 	: 
+t	: 0->1
+mag	: 0
+timer	: t
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------2---------
+---------PP 5---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 1
+mag	: 0
+timer	: 0
+y	: 5
+y'	: -10
+y''	: -10
+---------IP 7---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 1->2
+mag	: 0
+timer	: t+(-1)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------3---------
+---------PP 77---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 2
+mag	: 0
+timer	: 0
+y	: -10
+y'	: -20
+y''	: -10
+---------IP 78---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 2->3
+mag	: 0
+timer	: t+(-2)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+---------4---------
+---------PP 101---------
+unadopted modules: {SWITCHON, SWITCHW, TIMER}
+unsat mod	: {FALL, SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {SWITCHOFF, SWITCHON, SWITCHW, TIMER}
+		  {FALL, SWITCHOFF, SWITCHON, SWITCHW}
+		  {FALL, SWITCHON, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHW}
+		  {FALL, SWITCHOFF, SWITCHON}
+unsat cons	: {mag'=0, mag=0, mag=12, mag=100, y''=-10+mag}
+		  {timer'=1, timer=0, timer=0, timer=0}
+		  {mag=0, mag=12, mag=100, y''=-10+mag}
+		  {mag=12, mag=100, y''=-10+mag}
+		  {mag=0, mag=100, y''=-10+mag}
+		  {mag=0, mag=12, y''=-10+mag}
+positive 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+negative 	: 
+t	: 3
+mag	: 0
+timer	: 0
+y	: -35
+y'	: -30
+y''	: -10
+---------IP 102---------
+unadopted modules: {}
+positive 	: 
+negative 	: timer-=1=>mag=0&timer=0
+		  timer-=1=>mag=12&timer=0
+		  timer-=1=>mag=100&timer=0
+t	: 3->4
+mag	: 0
+timer	: t+(-3)
+y	: (t^2+(-2))*(-5)
+mag'	: 0
+timer'	: 1
+y'	: t*(-10)
+y''	: -10
+# number of phases reached limit
+
+
+
+Simulation Time : 4.527349 s
+Finish Time : 4.530005 s
+

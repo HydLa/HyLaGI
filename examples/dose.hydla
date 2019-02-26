@@ -10,4 +10,4 @@ DOSE<=>[](timer-=interval=>y=y-+dosage/\timer=0).
 
 INIT, CONS, (TIME, RATE)<<DOSE.
 
-// #hylagi -t 8 --fnd
+// #hylagi -p100

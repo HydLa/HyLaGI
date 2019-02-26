@@ -12,4 +12,4 @@ SWITCHW <=> [](timer-=1=>mag=100&timer=0).
 
 INIT,TIMER<<(SWITCHOFF,SWITCHON,SWITCHW)<<TRUE,FALL.
 
-// #hylagi -p8 --fnd
+// #hylagi -p100

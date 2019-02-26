@@ -7,4 +7,4 @@ BOUNCE(y) <=> [](y- = 0 => y' = -y'-).
 
 { INIT(Y[i],i+1), FALL(Y[i]) << BOUNCE(Y[i]) | i in {1..|Y|} }.
 
-//#hylagi -p 6
+//#hylagi -p100

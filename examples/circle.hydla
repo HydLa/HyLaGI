@@ -9,4 +9,4 @@ BOUNCE <=> []((x-)^2 + (y-)^2 = 1 =>
 ).
 INIT, RUN<<BOUNCE.
 
-//#hylagi -p15 --fnd
+//#hylagi -p100

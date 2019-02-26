@@ -393,24 +393,30 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
   timer::Timer call_timer;
-  link_->trace = trace;
+  link_->trace = true;
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
   va_list args;
   va_start(args, ret_fmt);
   try
   {
+		//call_timer.restart();
     for (int i = 0; args_fmt[i] != '\0'; i++)
     {
       void* arg = va_arg(args, void *);
       i += read_args_fmt(args_fmt, i, arg);
     }
+		//cerr << "send " << call_timer.get_elapsed_us() << endl;
+		//call_timer.restart();
     link_->pre_receive();
+		//cerr << "math " << call_timer.get_elapsed_us() << endl;
+		//call_timer.restart();
     for (int i = 0; ret_fmt[i] != '\0'; i++)
     {
       void* ret = va_arg(args, void *);
       i += read_ret_fmt(ret_fmt, i, ret);
     }
+		//cerr << "rece " << call_timer.get_elapsed_us() << endl;
     link_->post_receive();
     va_end(args);
   }catch(...)
@@ -419,7 +425,7 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
     throw;
   }
   HYDLA_LOGGER_DEBUG(name);
-  hydla::logger::Logger::debug_write_timer(call_timer);
+  //hydla::logger::Logger::debug_write_timer(call_timer);
   return 0;
 }
 

@@ -6,4 +6,4 @@ BOUNCE <=> [](y- >= 15 => y' = -(4/5)*y'-).
 
 INIT, FALL << BOUNCE.
 
-// #hylagi --fnd
+// #hylagi

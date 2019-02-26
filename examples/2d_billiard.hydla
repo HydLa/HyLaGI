@@ -19,4 +19,4 @@ INIT(X[1],Y[1],0,0,10,1),
 {(CONST(X[i]), CONST(Y[i]), CONST(X[j]), CONST(Y[j])) << COL(X[i],Y[i],X[j],Y[j],1) | i in {1..|X|-1}, j in {i+1..|X|}}. 
 {CONST(p) << WALL(p,1) | p in X or Y}.
 
-//#hylagi -p8 --fnd
+//#hylagi -p15

@@ -8,4 +8,4 @@ BOUNCE2 <=> [](x- > 3 & y- = 0 => y' = -(4/5) * y'-).
 
 INIT, X_MOVE, FALL << (BOUNCE, BOUNCE2). 
 
-//#hylagi -p 20
+//#hylagi -p100

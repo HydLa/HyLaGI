@@ -6,4 +6,4 @@ DROP     <=> [](f- = 10 => f = 0).
 
 INIT, INCREASE << DROP.
 
-//#hylagi -p 10
+//#hylagi -p 100

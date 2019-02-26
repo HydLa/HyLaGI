@@ -10,4 +10,4 @@ STATE2 <=> [](s = 1 => il' = -(rl+rc*r0/(rc+r0))*il -r0/(l*(rc+r0))*vc + vs/l & 
 
 INIT, TIMER << SWITCH, STATE1, STATE2.
 
-// #hylagi -p8
+// #hylagi -p100

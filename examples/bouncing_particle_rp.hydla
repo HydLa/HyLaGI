@@ -6,4 +6,4 @@ BOUNCE <=> [](ht- = 0 => v = -e * v-).
 
 INIT, FALL << BOUNCE.
 
-//#hylagi -t 5 --fnd
+//#hylagi -p32

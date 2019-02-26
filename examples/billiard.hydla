@@ -18,4 +18,4 @@ WALL_PRIORITIES :=
 INIT(X[1],0,1),
 INITS, COL_PRIORITIES, WALL_PRIORITIES.
 
-//#hylagi -p20
+//#hylagi -p100

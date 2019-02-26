@@ -17,4 +17,4 @@ LAW(1,1,1,10,0),
 SCONST << (SR, SL, SN),
 FORCE(1, 15), FORCE(2, -15), FORCE(0, 0).
 
-// #hylagi -p10 --fignore_warnings
+// #hylagi -p100 --fignore_warnings

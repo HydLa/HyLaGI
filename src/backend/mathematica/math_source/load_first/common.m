@@ -169,15 +169,39 @@ publicMethod[name_, args___, definition_] := (
 );
 
 publicMethod[
-  simplify,
-  arg,
-  Switch[optSimplifyLevel,
-    0, toReturnForm[arg],
-    1, toReturnForm[Simplify[arg]],
-    _, toReturnForm[FullSimplify[arg]]
-  ]
-];
+						 simplifyCount,
+						 p,
+						 Module[
+										{tmp},
+						 tmp=Which[Head[p] === Symbol, 1,
+									 IntegerQ[p], 
+									 If[p == 0, 1, Floor[N[Log[2, Abs[p]]/Log[2, 10]]] + If[p > 0, 1, 2]],
+									 Head[p] === Rational, 
+									 simplifyCount[Numerator[p]] + simplifyCount[Denominator[p]] + 1,
+									 Head[p] === Complex, 
+									 simplifyCount[Re[p]] + simplifyCount[Im[p]] + 1, NumberQ[p], 2,
+									 True, simplifyCount[Head[p]] + 
+									 If[Length[p] == 0, 0, (Plus @@ (simplifyCount /@ (List @@ p)))]];
+										If[Length[tmp] > 0, tmp[[2]], tmp]
+										]
+						 ];
 
+publicMethod[
+	simplify,
+	arg,
+	Module[
+		{tmp},
+		debugPrint["arg",arg];
+		debugPrint["SimplifyCount",simplifyCount[arg][[2]]];
+		Switch[optSimplifyLevel,
+			0, tmp = Timing[arg],
+			1, tmp = Timing[Simplify[arg]],
+			_, tmp = Timing[FullSimplify[arg]]
+		];
+		debugPrint["simplify",tmp[[1]]];
+		toReturnForm[tmp[[2]]]
+	]
+];
 
 toReturnForm[expr_] := 
 Module[
@@ -192,7 +216,7 @@ Module[
    
   ret = ToRadicals[expr];
 
-  (* return Root[] as string. because it's difficult to handle as formulas in C++*)
+  (* return Root[] as string. because its difficult to handle as formulas in C++*)
   If[Head[ret] === Root, Return[ToString[ret] ] ];
 
   ret = Map[toReturnForm, ret];
@@ -265,14 +289,107 @@ getReverseRelop[relop_] := Switch[relop,
                                   LessEqual, GreaterEqual,
                                   GreaterEqual, LessEqual];
 
-variablePrefix = "u";
+	variablePrefix = "u";
+
+	(* ComplexityFunction *)
+
+	(* s1 complexity *)
+	defaultSimpCount[p_] :=
+	Which[Head[p] === Symbol, 1,
+				IntegerQ[p], 
+				If[p == 0, 1, Floor[N[Log[2, Abs[p]]/Log[2, 10]]] + If[p > 0, 1, 2]],
+				Head[p] === Rational, 
+				defaultSimpCount[Numerator[p]] + defaultSimpCount[Denominator[p]] + 1,
+				Head[p] === Complex, 
+				defaultSimpCount[Re[p]] + defaultSimpCount[Im[p]] + 1, NumberQ[p], 2,
+				True, defaultSimpCount[Head[p]] + 
+				If[Length[p] == 0, 0, Plus @@ (defaultSimpCount /@ (List @@ p))]
+				];
+
+	(* s3 complexity *)
+	stringLen[expr_] := StringLength[ToString[InputForm[expr]]];
+
+	optSimpLevel = 1;
+
+	Switch[optSimpLevel,
+				 1, compFunc[expr_] := defaultSimpCount[expr],
+				 2, compFunc[expr_] := LeafCount[expr],
+				 3, compFunc[expr_] := stringLen[expr]
+				 ];
+
+	(********************************************************************************************)
+
+	(* CSE *)
+
+	hasT[expr_] := Count[expr,t,{0,Infinity}] > 0;
+	hasP[expr_] := Count[expr,p[x__],{0,Infinity}] > 0;
+	(* p[x__]はp[_,_,_]でも良い *)
+
+	isConst[expr_] := !(hasT[expr] || hasP[expr]);
+	selectConst[list_] := Select[list,isConst];
+
+	ptable[expr_] :=
+	Module[
+	{subExpr, constSubExpr, makeInfo, exprInfo, retTable},
+	subExpr = Union[Cases[expr, _, Infinity]];
+	constSubExpr = selectConst[subExpr];
+	(makeInfo := {Count[expr, #, Infinity], compFunc[#], #}&);
+	exprInfo = Map[makeInfo, constSubExpr];
+	exprInfo = Cases[exprInfo, {n_ /; n > 1, c_, e_}];
+	ReverseSort[Map[{#[[1]]#[[2]], #[[1]], #[[2]], #[[3]]}&, exprInfo]] (* {スコア、出現数、複雑さ、式}の形にする *)
+				 ];
+
+	(* 部分式を列挙、定数式を抽出、重複をカウント、スコアと式のペアにして、降順にソート、スコアが正のものを返す *)
+	(*
+	 exprのLeafCountをnとする。部分式の大きさの期待値はO(log n)とする。
+	 Length[subExpr] = O(n)、Length[constSubExpr] = O(n)である。
+	 makeInfoはO(n log n)なので、exprInfoの計算にはO(n^2 log n)かかる。
+	 retTableの計算にはO(n log n)、最後の行はO(n)なのでこの関数の計算量はO(n^2 log n)である。
+	 *)
+
+	(* expr : CSEしたい式 *)
+
+	(*cse[expr_] :=
+	Module[
+	{table, cs, cseres},
+	table = ptable[expr];
+	If[Length[table] == 0, Return[{opt -> opt, expr}]];
+	cs = table[[1]][[4]];
+	cseres = expr /. cs -> opt;
+	{opt -> cs, cseres}
+				 ];*)
+
+	cse[expr_] :=
+	Module[
+	{subExprs, constSubExprs, makeInfo, exprInfos, cs},
+	subExprs = Union[Cases[expr, _, Infinity]];
+	constSubExprs = selectConst[subExprs];
+	(makeInfo := {Count[expr,#,Infinity], compFunc[#], #}&);
+	exprInfos = Map[makeInfo, constSubExprs];
+	(*exprInfos = Cases[exprInfos, {n_ /; n > 1, c_, e_}];*)
+	exprInfos = Map[{(#[[1]]-1)(#[[2]]-1), #[[3]]}&, exprInfos];
+	cs = ReverseSort[exprInfos][[1]][[2]];
+	{opt -> cs, expr /. cs -> opt}
+				 ];
+
+	cseSimplify[expr_] :=
+	Module[
+	{cseres},
+	cseres = cse[expr];
+	cseres = Simplify[cseres];
+	cseres[[2]] /. cseres[[1]]
+				 ];
+
 
 (* optSimplifyLevel の値に応じた簡約化関数を呼び出す。optTimeConstraint で指定された秒数が経過した場合、簡約化前の値を返す *)
-Switch[optSimplifyLevel,
+	Switch[optSimplifyLevel,
     0, timeConstrainedSimplify[expr_] := expr,
-    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr],
+		1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr],
     _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr]
-];
+						];
+
+	(*timeConstrainedSimplify[expr_] := If[compFunc[expr] > 500, TimeConstrained[Simplify[expr], optTimeConstraint, expr], TimeConstrained[Simplify[expr], optTimeConstraint, expr]];*)
+	timeConstrainedCseSimplify[expr_] := If[compFunc[expr] > 1000, TimeConstrained[cseSimplify[expr], optTimeConstraint, expr], TimeConstrained[Simplify[expr], optTimeConstraint, expr]];
 
 solveOverRorC[consToSolve_,vars_] :=
   If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]

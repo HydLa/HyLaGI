@@ -1,0 +1,15 @@
+VIN <=> [](vin=sin(a*t)).
+PAR(a,b,c) <=> a<b<c & [](b'=0).
+R(v,i,r) <=> [](v=r*i).
+L(v,i,l) <=> [](v=l*i').
+C(v,i,c) <=> [](c*v'=i).
+INIT <=> v12'=0 & v2'=0 & v5'=0.
+CIRCUIT <=> [](vin+v11+v12=v3 & v3+v6=12 & vo+v2+v7=12 & v4=v5 & v4+vgs=v3 & v4+vds=vo+v2 & i1+i6=i3 & ids=i2+i7 & ids=i4+i5).
+MOS(v,i,g) <=> [](i=g*v).
+VIN,
+PAR(0.5,a,1.5),
+R(v11,-i1,10), C(v12,-i1,5), R(v3,i3,30), R(v6,i6,30), R(vo,-i2,30), C(v2,-i2,5), R(v7,i7,10), R(v4,i4,3), C(v5,i5,10),
+INIT,
+CIRCUIT,
+MOS(vgs,ids,10).
+// #hylagi -t 10 --fnd

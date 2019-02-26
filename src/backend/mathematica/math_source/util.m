@@ -6,10 +6,14 @@ publicMethod[
   applyTime2Expr,
   expr, time,
   Module[
-    {appliedExpr},
+				 {appliedExpr,tmp},
     appliedExpr = (expr /. t -> time);
     If[Element[appliedExpr, Reals] =!= False,
-      toReturnForm[timeConstrainedSimplify[appliedExpr]],
+			 debugPrint["arg",appliedExpr];
+			 (*debugPrint["SimplifyCount",simplifyCount[appliedExpr][[2]]];*)
+			 tmp = Timing[timeConstrainedSimplify[appliedExpr]];
+			 debugPrint["tCS at aT2E",tmp[[1]]];
+			 toReturnForm[tmp[[2]]],
       Message[applyTime2Expr::nrls, appliedExpr]
     ]
   ]
@@ -25,7 +29,14 @@ applyTime2Expr::nrls = "`1` is not a real expression.";
 publicMethod[
   exprTimeShift,
   expr, time,
-  toReturnForm[LogicalExpand[timeConstrainedSimplify[expr /. t -> t - time] ] ]
+	Module[
+				 {tmp},
+				 debugPrint["arg",expr /. t -> t - time];
+				 (*debugPrint["SimplifyCount",simplifyCount[expr /. t -> t - time][[2]]];*)
+				 tmp = Timing[timeConstrainedSimplify[expr /. t -> t - time]];
+				 debugPrint["tCS at eTS",tmp[[1]]];
+  toReturnForm[LogicalExpand[tmp[[2]]] ]
+]
  (* toReturnForm[Simplify[expr /. t -> t - time]]*)
 ];
 
@@ -64,13 +75,18 @@ publicMethod[
   Module[
     {
       rhs,
-      lhs
+				lhs,
+				tmp
       },
     If[!MemberQ[{Less, LessEqual, Equal, UnEqual, Greater, GreaterEqual}, Head[exp]],
       InvalidRelop,
       lhs = exp[[1]];
       rhs = exp[[2]];
-      toReturnForm[timeConstrainedSimplify[lhs - rhs] ]
+			 debugPrint["arg",lhs - rhs];
+			 (*debugPrint["SimplifyCount",simplifyCount[lhs - rhs][[2]]];*)
+			 tmp = Timing[timeConstrainedSimplify[lhs - rhs]];
+			 debugPrint["tCS at rTF",tmp[[1]]];
+      toReturnForm[tmp[[2]]]
     ]
   ]
 ];
@@ -90,6 +106,13 @@ publicMethod[
 publicMethod[
   differentiateWithTime,
   exp,
-  toReturnForm[timeConstrainedSimplify[D[exp, t] ] ]
+	Module[
+				 {tmp},
+				 debugPrint["arg",D[exp,t]];
+				 (*debugPrint["SimplifyCount",simplifyCount[D[exp, t]][[2]]];*)
+				 tmp = Timing[timeConstrainedSimplify[D[exp, t]]];
+				 debugPrint["tCS at dWT",tmp[[1]]];
+				  toReturnForm[tmp[[2]]]
+]
 ];
 

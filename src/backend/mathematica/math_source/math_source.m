@@ -38,16 +38,37 @@ checkConsistencyPoint[] := (
 checkConsistencyPoint[tmpCons_] := (checkConsistencyPoint[tmpCons && constraint  && prevConstraint, initConstraint, pConstraint, assumptions, prevRules, variables, prevVariables, parameters, currentTime]
 );
 
+(* タプルのリストlに対し、その第1(2)成分を射影する *)
+publicMethod[
+						 projFst,
+						 l,
+						 Map[(#[[1]])&,l]
+						 ];
+
+publicMethod[
+						 projSnd,
+						 l,
+						 Map[(#[[2]])&,l]
+						 ];
+
 publicMethod[
   checkConsistencyPoint,
   cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False},
-    initRules = Map[(Rule@@#)&, applyList[init] ];
-    debugPrint["assum: ", assum];
-    initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
-    {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
+				 {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False,tmpa,tmpb},
+				 initRules = Map[(Rule@@#)&, applyList[init] ];
+				 debugPrint["assum: ", assum];
+				 debugPrint["arg",Map[(# /. t->current /. initRules)&,applyList[cons]]];
+				 (*debugPrint["SimplifyCount",Map[(simplifyCount[# /. t->current /. initRules][[2]])&,applyList[cons]]];*)
+				 tmpa = Map[(Timing[Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]]])&, applyList[cons]];
+				 debugPrint["tCS at cCP1",projFst[tmpa][[2]]];
+				 initSubsituted = Apply[And,projSnd[tmpa][[2]]];
+				 {sol, solved} = trySolve[initSubsituted, vars];
+				 debugPrint["arg",Map[(# //. prevRs)&, applyList[(sol /. Element[_,_] -> True)]]];
+															 (*debugPrint["SimplifyCount",Map[(simplifyCount[# //. prevRs][[2]])&, applyList[(sol /. Element[_,_] -> True)]]];*)
+				 tmpb = Map[(Timing[Assuming[assum, timeConstrainedSimplify[# //. prevRs]]])&, applyList[(sol /. Element[_,_] -> True)]];
+																																		debugPrint["tCS at cCP2", projFst[tmpb][[2]]];
+																																		resultConstraint = Apply[And,projSnd[tmpb][[2]]];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
@@ -494,9 +515,13 @@ publicMethod[
   addConstraint,
   co,
   Module[
-    {cons},
-    cons = If[Head[co] === List, And@@co, co];
-    cons = Assuming[assumptions, timeConstrainedSimplify[cons]];
+				 {cons,tmp},
+				 cons = If[Head[co] === List, And@@co, co];
+				 debugPrint["arg",cons];
+				 (*debugPrint["SimplifyCount",simplifyCount[cons][[2]]];*)
+				 tmp = Timing[Assuming[assumptions, timeConstrainedSimplify[cons]]];
+				 debugPrint["tCS at aC",tmp[[1]]];
+				 cons = tmp[[2]];
     constraint = constraint && cons;
   ]
 ];
@@ -706,11 +731,14 @@ publicMethod[
       restPCons,
       parsInCons,
       maxCons,
+				simptCons,
       ret
     },
     (* Mathematica cannot solve some minimization problem with "t < Infinity", such
     as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
-
+		(* simptCons = timeConstrainedSimplify[tCons]; *)
+		simptCons = tCons;
+		
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
     consList = applyList[LogicalExpand[pCons]];
@@ -722,7 +750,8 @@ publicMethod[
     simplePrint[necessaryPCons];
     simplePrint[restPCons];
 
-    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 3],
+		debugPrint["Minimize constraint",{t > startingTime, simptCons, necessaryPCons, maxCons}];
+    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && simptCons && necessaryPCons && maxCons}, {t}], 3],
          onTime = False,
          Minimize::wksol
        ],
@@ -782,7 +811,7 @@ publicMethod[
         Return[{{False}, {toReturnForm[LogicalExpand[andCond] ]}, {False}}]
       ];
     ];
-    (* If it isn't determined, use Reduce *)
+    (* If it isnt determined, use Reduce *)
     caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
     simplePrint[caseEq];
     caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
@@ -884,7 +913,7 @@ Module[
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
-    (* resultRule may equal overconstrained for the constraint such as x'[t] == 0 && x[t] == 0 && x[0] == 0,
+    (* resultRule may equal overconstrained for the constraint such as x[t] == 0 && x[t] == 0 && x[0] == 0,
        therefore we have to check furthermore. *)
     tVars = getTimeVariables[listExpr];
     resultRule = {};
@@ -961,7 +990,8 @@ searchExprsAndVars[searchedExprs_, searchedVars_, exprs_, tVarsMap_] :=
 Module[
   {tVar, tVarsInExpr, unionVars, i, j, k, appendExprs, searchResult},
   inputPrint["searchExprsAndVars", searchedExprs, searchedVars, exprs, tVarsMap];
-  For[i=1, i<=Min[Length[searchedVars], 2], i++,
+  (*For[i=1, i<=Min[Length[searchedVars], 2], i++,*)
+	 For[i=1, i<=Length[searchedVars], i++,
     (* 解けない変数が2つ以上含まれるなら候補には入らないはずなので，2とのMinをとる *)
     tVar = searchedVars[[i]];
     For[j=1, j<=Length[exprs], j++,
@@ -1001,10 +1031,11 @@ createPrevRules[var_] := Module[
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
   @param vars: exprに出現する変数のリスト
 *)
+
 solveByDSolve[expr_, vars_] :=
 solveByDSolve[expr, vars] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, i},
+  {ini = {}, sol, derivatives, i,tmp, f},
   tVars = Map[(#[t])&, vars];
   derivatives = getTimeVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
@@ -1019,16 +1050,22 @@ Module[
     ],
   {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
   ];
+debugPrint["sol[[i]]",sol];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
-    If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
+debugPrint["arg",Map[(Element[#[[2]],Reals])&, sol[[i]]]];
+(*debugPrint["SimplifyCount",Map[(simplifyCount[Element[#[[2]],Reals]][[2]])&, sol[[i]]]];*)
+    tmp = Map[(Timing[timeConstrainedSimplify[If[Length[#] > 1, Element[#[[2]], Reals], 0]]])&, sol[[i]] ];
+debugPrint["tmp",tmp];
+debugPrint["tCS at sBDS", Map[(#[[1]])&,tmp]];
+    If[Count[projSnd[tmp][[2]], False] > 0,
       sol = Drop[sol, {i}];
       --i;
     ]
   ];
   If[Length[sol] > 0, sol, overConstrained]
 ];
-
+	
 alwaysLess[lhs_, rhs_, pCons_] := alwaysLess[lhs, rhs, pCons, parameters];
 
 publicMethod[

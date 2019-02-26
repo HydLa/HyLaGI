@@ -17,4 +17,4 @@ BOX(x1,y1,x2,y2) <=> []((x1 <= bx- /\ bx- <= x2 /\ (by- = y1 \/ by- = y2)
 
 INIT, CONST, (FALL, X_MOVE) << (BOX(5, 6, 6, 14), BOX(1, 9/2, 4, 15), WALL(0), WALL(6), FLOOR(0)). 
 
-// #hylagi -p20
+// #hylagi -p50
