@@ -246,6 +246,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
     {
       buffer = utility::replace(buffer, " ", "");
       opts.guards_to_interval_newton.insert(buffer);
+      //std::cout << "BREAK3 insert guard : " << buffer << std::endl;
     }
   }
   IF_SPECIFIED("step_by_step")
@@ -260,16 +261,22 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 
 int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
-  process_opts(opts, cmdline_options, false);
+  //process_opts(opts, cmdline_options, false);
 
-  // todo : コマンドラインオプションをここで読むのは遅すぎるので何とかする
-  Logger::set_html_mode(opts.html);
-  Logger::initialize();
+  //Logger::set_html_mode(opts.html);
+  //Logger::initialize();
 
+  /*
+<<<<<<< HEAD
   if (opts.debug_mode)
     Logger::instance().set_log_level(Logger::Debug);
   else
     Logger::instance().set_log_level(Logger::Warn);
+=======
+*/
+  //if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
+  //else     Logger::instance().set_log_level(Logger::Warn);
+  //>>>>>>> develop
 
   backend_.reset(new Backend(new MathematicaLink(opts.mathlink, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();

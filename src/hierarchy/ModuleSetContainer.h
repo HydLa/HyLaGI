@@ -4,6 +4,7 @@
 #include <list>
 
 #include "ModuleSet.h"
+#include "Node.h"
 
 namespace hydla {
 namespace hierarchy {
@@ -17,7 +18,21 @@ public:
   ModuleSetContainer() 
   {}
   ModuleSetContainer(ModuleSet m);
-  
+
+  void replace(int x)const
+  {
+    for(const auto& ms : full_module_set_set_)
+    {
+      ms.replace(x);
+    }
+    for(const auto& ms : ms_to_visit_)
+    {
+      ms.replace(x);
+    }
+
+    maximal_module_set_.replace(x);
+  }
+
   virtual ~ModuleSetContainer()
   {}
 
@@ -71,7 +86,7 @@ public:
    */
   virtual void reset(const module_set_set_t &mss);
   
-  protected:
+protected:
   module_set_set_t full_module_set_set_;
   module_set_set_t ms_to_visit_;
   /// a module set which has all modules

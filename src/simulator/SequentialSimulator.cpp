@@ -1,11 +1,11 @@
-#include "SequentialSimulator.h"
-#include "Timer.h"
-#include "PhaseSimulator.h"
-#include "../common/TimeOutError.h"
 #include "../common/HydLaError.h"
-#include "SignalHandler.h"
-#include "Logger.h"
+#include "../common/TimeOutError.h"
 #include "../interval/IntervalNewtonError.h"
+#include "Logger.h"
+#include "PhaseSimulator.h"
+#include "SequentialSimulator.h"
+#include "SignalHandler.h"
+#include "Timer.h"
 
 namespace hydla
 {
@@ -199,6 +199,54 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     }
   }
 
+  {
+    /*
+    auto &nonlinear_solver = phase_simulator_->nonlinear_solver;
+
+    if (false)
+    {
+      bool anyElementErased = false;
+      for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints())
+      {
+        anyElementErased = current->remove_asks(p) || anyElementErased;
+      }
+      for (auto &m : nonlinear_solver.getTempAddedModuleSets())
+      {
+        current->parent->unadopted_ms.erase(m);
+      }
+      if (anyElementErased)
+      {
+        nonlinear_solver.reset();
+        nonlinear_solver.updateNum();
+      }
+    }
+*/
+
+    /*auto &allConstraints = nonlinear_solver.getAllAddedConstraints();
+    if (!allConstraints.empty())
+    {
+      for (simulator::constraint_t p : allConstraints)
+      {
+        current->remove_asks(p);
+      }
+
+      for (auto &m : nonlinear_solver.getTempAddedModuleSets())
+      {
+        current->parent->unadopted_ms.erase(m);
+      }
+      //nonlinear_solver.reset();
+
+      nonlinear_solver.updateNum();
+
+      for (auto &m : nonlinear_solver.getTempAddedModuleSets())
+      {
+        current->parent->unadopted_ms.erase(m);
+      }
+      //nonlinear_solver.reset();
+
+      allConstraints.clear();
+    }*/
+  }
   phase_simulator_->revert_diff(*current);
 }
 

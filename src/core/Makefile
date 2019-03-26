@@ -1,12 +1,13 @@
 TARGET	 := ../../bin/hylagi
 
-LIB_DIRS := backend simulator hierarchy parser common io interval debug symbolic_expression utility
+#LIB_DIRS := backend simulator hierarchy parser common io interval debug symbolic_expression utility
+LIB_DIRS := backend simulator hierarchy parser common io interval symbolic_expression utility
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica
 INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
-INCLUDES +=   -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7
+#INCLUDES +=   -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib

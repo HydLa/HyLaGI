@@ -182,9 +182,12 @@ public:
   ConstraintStore           get_parameter_constraint()const;
   void                      add_parameter_constraint(const constraint_t &cons);
   void                      add_parameter_constraint(const ConstraintStore &cons);
+  void                      remove_parameter_constraint(const constraint_t &cons);
   std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
+
+  bool                      remove_asks(const constraint_t cons);
 
   std::string get_string() const;
 

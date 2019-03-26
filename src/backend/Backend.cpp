@@ -1,18 +1,20 @@
 #include "Backend.h"
+#include "HydLaError.h"
 #include "Timer.h"
+#include <boost/lexical_cast.hpp>
+#include <regex>
+#include <sstream>
 #include <stdarg.h>
 #include <unistd.h>
-#include <sstream>
-#include <regex>
-#include <boost/lexical_cast.hpp>
-#include "HydLaError.h"
 //#include "LinkError.h"
 //#include "MathematicaLink.h"
 
 using namespace std;
 
-namespace hydla {
-namespace backend {
+namespace hydla
+{
+namespace backend
+{
 using namespace simulator;
 using namespace parse_tree;
 using namespace symbolic_expression;
@@ -30,7 +32,7 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs)
   while (*l != '\0' || *r != '\0')
   {
     d = (tolower(*l++) - tolower(*r++));
-    if ( d != 0)
+    if (d != 0)
     {
       return false;
     }
@@ -38,12 +40,8 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs)
   return true;
 }
 
-
-Backend::Backend(Link* link):
-  pure_functions({
-  "hasParameter",
-  "hasParameter"
-})
+Backend::Backend(Link *link) : pure_functions({"hasParameter",
+                                               "hasParameter"})
 {
   link_.reset(link);
 }
@@ -52,7 +50,7 @@ Backend::~Backend()
 {
 }
 
-void Backend::invalid_fmt(const char* fmt, int idx)
+void Backend::invalid_fmt(const char *fmt, int idx)
 {
   std::stringstream sstr;
   sstr << "invalid format \"" << fmt << "\" at " << idx;
@@ -64,29 +62,28 @@ void Backend::reset()
   link_->reset();
 }
 
-int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
+int Backend::read_args_fmt(const char *args_fmt, const int &idx, void *arg)
 {
   int i = idx;
-  switch(args_fmt[i])
+  switch (args_fmt[i])
   {
   case 'i':
   {
-    int* num = (int*)arg;
+    int *num = (int *)arg;
     link_->put_integer(*num);
   }
   break;
 
   case 's':
   {
-    const char* sym = (const char *)arg;
+    const char *sym = (const char *)arg;
     link_->put_symbol(sym);
   }
   break;
 
-
   case 'e':
   {
-    symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr *)arg;
+    symbolic_expression::node_sptr *node = (symbolic_expression::node_sptr *)arg;
     VariableForm form;
     if (!get_form(args_fmt[++i], form))
     {
@@ -98,21 +95,22 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
   }
   break;
-  
+
   case 'd':
   {
     if (args_fmt[++i] == 'b')
     {
-      double *db = (double*)arg;
+      double *db = (double *)arg;
       link_->put_double(*db);
       break;
     }
-    else invalid_fmt(args_fmt, i);
+    else
+      invalid_fmt(args_fmt, i);
   }
   break;
 
   case 'c':
-    switch(args_fmt[++i])
+    switch (args_fmt[++i])
     {
     case 's':
     {
@@ -136,19 +134,19 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
 
   case 'l':
   {
-    if (args_fmt[++i] != 'p')invalid_fmt(args_fmt, i);
-    std::list<parameter_t>* par_list = (std::list<parameter_t> *)arg;
+    if (args_fmt[++i] != 'p')
+      invalid_fmt(args_fmt, i);
+    std::list<parameter_t> *par_list = (std::list<parameter_t> *)arg;
     send_parameter_list(*par_list);
   }
   break;
 
-    
   case 'm':
-    switch(args_fmt[++i])
+    switch (args_fmt[++i])
     {
     case 'v':
     {
-      variable_map_t* vm = (variable_map_t*)arg;
+      variable_map_t *vm = (variable_map_t *)arg;
       bool send_derivative = true;
       char form_char;
       if (args_fmt[++i] == '0')
@@ -171,7 +169,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
     }
     case 'p':
     {
-      parameter_map_t* pm = (parameter_map_t*)arg;
+      parameter_map_t *pm = (parameter_map_t *)arg;
       send_parameter_map(*pm);
       break;
     }
@@ -180,29 +178,29 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     break;
-    
-  case 'p':     
+
+  case 'p':
   {
-    parameter_t* par = (parameter_t *)arg;
+    parameter_t *par = (parameter_t *)arg;
     link_->put_parameter(par_prefix + par->get_name(), par->get_differential_count(), par->get_phase_id());
   }
   break;
 
   case 't':
   {
-    if (args_fmt[++i] != 'l')invalid_fmt(args_fmt, i);
-    else{
+    if (args_fmt[++i] != 'l')
+      invalid_fmt(args_fmt, i);
+    else
+    {
       vector<TimeListElement> *time_list = (vector<TimeListElement> *)arg;
       send_time_list(*time_list);
     }
     break;
   }
 
-  
-
   case 'v':
   {
-    switch(args_fmt[++i])
+    switch (args_fmt[++i])
     {
     case 'l':
     {
@@ -222,7 +220,9 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       if (!get_form(args_fmt[++i], vf))
       {
         invalid_fmt(args_fmt, i);
-      }else{
+      }
+      else
+      {
         variable_set_t *vs = (variable_set_t *)arg;
         link_->put_converted_function("List", vs->size());
         for (auto var : *vs)
@@ -233,7 +233,7 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       break;
     }
     default:
-      variable_t *var = (variable_t*)arg;
+      variable_t *var = (variable_t *)arg;
       VariableForm vf;
       if (!get_form(args_fmt[i], vf))
       {
@@ -246,18 +246,17 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
-
-  default:      
+  default:
     invalid_fmt(args_fmt, i);
     break;
   }
   return i - idx;
 }
 
-int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
+int Backend::read_ret_fmt(const char *ret_fmt, const int &idx, void *ret)
 {
   int i = idx;
-  switch(ret_fmt[i])
+  switch (ret_fmt[i])
   {
   case 'r':
   {
@@ -267,7 +266,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   break;
   case 'i':
   {
-    int* num = (int *)ret;
+    int *num = (int *)ret;
     *num = link_->get_integer();
   }
   break;
@@ -276,28 +275,28 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
   {
     if (ret_fmt[++i] == 'b')
     {
-      double *db = (double*)ret;
+      double *db = (double *)ret;
       *db = link_->get_double();
       break;
     }
-    else invalid_fmt(ret_fmt, i);
+    else
+      invalid_fmt(ret_fmt, i);
   }
 
   case 'e':
   {
-    symbolic_expression::node_sptr* node = (symbolic_expression::node_sptr*)ret;
+    symbolic_expression::node_sptr *node = (symbolic_expression::node_sptr *)ret;
     *node = receive_node();
   }
   break;
-  
+
   case 'b':
   {
-    bool* b = (bool*)ret;
+    bool *b = (bool *)ret;
     receive_bool(*b);
     break;
   }
 
-  
   case 'f':
   {
     find_min_time_result_t *f = (find_min_time_result_t *)ret;
@@ -305,13 +304,12 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     break;
   }
 
-                   
   case 'm':
-    switch(ret_fmt[++i])
+    switch (ret_fmt[++i])
     {
     case 'v':
     {
-      variable_map_t* vm = (variable_map_t*)ret;
+      variable_map_t *vm = (variable_map_t *)ret;
       VariableForm form;
       if (!get_form(ret_fmt[++i], form))
       {
@@ -325,10 +323,11 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     {
       if (ret_fmt[++i] == 's')
       {
-        std::vector<parameter_map_t>* pm = (std::vector<parameter_map_t>*)ret;
+        std::vector<parameter_map_t> *pm = (std::vector<parameter_map_t> *)ret;
         receive_parameter_maps(*pm);
       }
-      else invalid_fmt(ret_fmt, i);
+      else
+        invalid_fmt(ret_fmt, i);
       break;
     }
     default:
@@ -337,47 +336,46 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     }
     break;
   case 'c':
-    switch(ret_fmt[++i])
+    switch (ret_fmt[++i])
     {
     case 'c':
     {
-      check_consistency_result_t* cc = (check_consistency_result_t *)ret;
+      check_consistency_result_t *cc = (check_consistency_result_t *)ret;
       *cc = receive_cc();
       break;
     }
     case 't':
     {
-      CalculateTLinearResult* ct = (CalculateTLinearResult *)ret;
+      CalculateTLinearResult *ct = (CalculateTLinearResult *)ret;
       *ct = receive_ct();
       break;
     }
     case 'v':
     {
       // for cv
-      create_vm_t* cv = (create_vm_t*)ret;
+      create_vm_t *cv = (create_vm_t *)ret;
       *cv = receive_cv();
       break;
     }
     case 'p':
     {
       // for cp
-      compare_min_time_result_t* cp = (compare_min_time_result_t*)ret;
+      compare_min_time_result_t *cp = (compare_min_time_result_t *)ret;
       *cp = receive_compare_min_time_result();
       break;
     }
     case 's':
     {
       // for cs
-      ConstraintStore* cs = (ConstraintStore*)ret;
+      ConstraintStore *cs = (ConstraintStore *)ret;
       *cs = receive_cs();
       break;
     }
     default:
-      invalid_fmt(ret_fmt, i);     
+      invalid_fmt(ret_fmt, i);
       break;
     }
     break;
-
 
   case 'v':
   {
@@ -386,19 +384,19 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
       value_t *val = (value_t *)ret;
       *val = receive_value();
     }
-    else invalid_fmt(ret_fmt, i);
+    else
+      invalid_fmt(ret_fmt, i);
     break;
   }
-    
 
-  default:      
+  default:
     invalid_fmt(ret_fmt, i);
     break;
   }
   return i - idx;
 }
 
-int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
+int Backend::call(const char *name, bool trace, int arg_cnt, const char *args_fmt, const char *ret_fmt, ...)
 {
   HYDLA_LOGGER_DEBUG("BREAK_Backend.cpp: Backend::call function: ", name);
 
@@ -412,13 +410,13 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
   {
     for (int i = 0; args_fmt[i] != '\0'; i++)
     {
-      void* arg = va_arg(args, void *);
+      void *arg = va_arg(args, void *);
       i += read_args_fmt(args_fmt, i, arg);
     }
     link_->pre_receive();
     for (int i = 0; ret_fmt[i] != '\0'; i++)
     {
-      void* ret = va_arg(args, void *);
+      void *ret = va_arg(args, void *);
       i += read_ret_fmt(ret_fmt, i, ret);
     }
     link_->post_receive();
@@ -507,19 +505,20 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
     va_end(args);
     throw;
   }
-  catch(...)
+  catch (...)
   {
     HYDLA_LOGGER_DEBUG("BREAK_Backend.cpp: other error throw...");
     va_end(args);
     throw;
   }
-  HYDLA_LOGGER_DEBUG_VAR(call_timer.get_elapsed_us());
+  HYDLA_LOGGER_DEBUG(name);
+  //hydla::logger::Logger::debug_write_timer(call_timer);
   return 0;
 }
 
 bool Backend::get_form(const char &form_c, VariableForm &form)
 {
-  switch(form_c)
+  switch (form_c)
   {
   case 'p':
     form = VF_PREV;
@@ -541,7 +540,7 @@ bool Backend::get_form(const char &form_c, VariableForm &form)
   }
 }
 
-void Backend::send_time_list(const vector<TimeListElement>& time_list)
+void Backend::send_time_list(const vector<TimeListElement> &time_list)
 {
   link_->put_function("List", time_list.size());
   for (auto elem : time_list)
@@ -551,9 +550,8 @@ void Backend::send_time_list(const vector<TimeListElement>& time_list)
     send_cs(elem.parameter_constraint, VF_NONE);
   }
 }
-  
 
-int Backend::send_node(const symbolic_expression::node_sptr& node, const VariableForm &form)
+int Backend::send_node(const symbolic_expression::node_sptr &node, const VariableForm &form)
 {
   differential_count_ = 0;
   in_prev_ = false;
@@ -562,8 +560,7 @@ int Backend::send_node(const symbolic_expression::node_sptr& node, const Variabl
   return 0;
 }
 
-
-void Backend::send_cs(const ConstraintStore& cs, const VariableForm& vf)
+void Backend::send_cs(const ConstraintStore &cs, const VariableForm &vf)
 {
   link_->put_converted_function("And", cs.size());
   for (auto constraint : cs)
@@ -572,15 +569,15 @@ void Backend::send_cs(const ConstraintStore& cs, const VariableForm& vf)
   }
 }
 
-
-int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf, const bool &send_derivative)
+int Backend::send_variable_map(const variable_map_t &vm, const VariableForm &vf, const bool &send_derivative)
 {
   int size_to_sent = 0;
   for (variable_map_t::const_iterator it = vm.begin(); it != vm.end(); it++)
   {
     const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if (!send_derivative && var.get_differential_count() > 0 )continue;
+    if (!send_derivative && var.get_differential_count() > 0)
+      continue;
     if (range.unique())
     {
       size_to_sent++;
@@ -596,7 +593,8 @@ int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf,
   {
     const variable_t var = it->first;
     const value_range_t &range = it->second;
-    if (!send_derivative && var.get_differential_count() > 0 )continue;
+    if (!send_derivative && var.get_differential_count() > 0)
+      continue;
     if (range.unique())
     {
       link_->put_converted_function("Equal", 2);
@@ -633,55 +631,57 @@ int Backend::send_variable_map(const variable_map_t& vm, const VariableForm& vf,
         }
         send_variable(var, vf);
         send_value(bnd.value, vf);
-      }      
+      }
     }
   }
   return 0;
 }
 
-
-void Backend::send_parameter_list(const list<parameter_t>& par_list)
+void Backend::send_parameter_list(const list<parameter_t> &par_list)
 {
   link_->put_function("List", par_list.size());
   for (auto par : par_list)
   {
-    link_->put_parameter(par_prefix + par.get_name(), par.get_differential_count(), par.get_phase_id());    
+    link_->put_parameter(par_prefix + par.get_name(), par.get_differential_count(), par.get_phase_id());
   }
 }
 
-
-int Backend::send_parameter_map(const parameter_map_t& parameter_map)
+int Backend::send_parameter_map(const parameter_map_t &parameter_map)
 {
   parameter_map_t::const_iterator it = parameter_map.begin();
-  int size=0;
-  for (; it!=parameter_map.end(); ++it)
+  int size = 0;
+  for (; it != parameter_map.end(); ++it)
   {
     const value_range_t &range = it->second;
     if (range.unique())
     {
       size++;
-    }else{
+    }
+    else
+    {
       size += range.get_lower_cnt() + range.get_upper_cnt();
     }
   }
-  
+
   link_->put_converted_function("And", size);
   it = parameter_map.begin();
-  for (; it!=parameter_map.end(); ++it)
+  for (; it != parameter_map.end(); ++it)
   {
     if (it->second.unique())
     {
       const value_t &value = it->second.get_unique_value();
-      const parameter_t& param = it->first;
+      const parameter_t &param = it->first;
       link_->put_function("Equal", 2);
       link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
       send_value(value, VF_PREV);
-    }else{
-      for (uint i=0; i < it->second.get_lower_cnt();i++)
+    }
+    else
+    {
+      for (uint i = 0; i < it->second.get_lower_cnt(); i++)
       {
         const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
         const value_t &value = bnd.value;
-        const parameter_t& param = it->first;
+        const parameter_t &param = it->first;
         if (!bnd.include_bound)
         {
           link_->put_converted_function("Greater", 2);
@@ -693,11 +693,11 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
         link_->put_parameter(par_prefix + param.get_name(), param.get_differential_count(), param.get_phase_id());
         send_value(value, VF_PREV);
       }
-      for (uint i=0; i < it->second.get_upper_cnt();i++)
+      for (uint i = 0; i < it->second.get_upper_cnt(); i++)
       {
         const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
         const value_t &value = bnd.value;
-        const parameter_t& param = it->first;
+        const parameter_t &param = it->first;
         if (!bnd.include_bound)
         {
           link_->put_converted_function("Less", 2);
@@ -714,7 +714,7 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
   return 0;
 }
 
-void Backend::visit(boost::shared_ptr<Ask> node)                   
+void Backend::visit(boost::shared_ptr<Ask> node)
 {
   throw HYDLA_ERROR("ask node cannot be sent to backend");
 }
@@ -724,25 +724,25 @@ void Backend::visit(boost::shared_ptr<Tell> node)
   accept(node->get_child());
 }
 
-#define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)                \
-{                                                                       \
-  link_->put_converted_function(#FUNC_NAME, 2);                         \
-  accept(node->get_lhs());                                              \
-  accept(node->get_rhs());                                              \
-}
-
-#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)          \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
-  {                                                       \
-    link_->put_converted_function(#FUNC_NAME, 1);         \
-    accept(node->get_child());                            \
+#define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)        \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node) \
+  {                                                      \
+    link_->put_converted_function(#FUNC_NAME, 2);        \
+    accept(node->get_lhs());                             \
+    accept(node->get_rhs());                             \
   }
 
-#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)         \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
-  {                                                       \
-    link_->put_symbol(#FUNC_NAME);                        \
+#define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)         \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node) \
+  {                                                      \
+    link_->put_converted_function(#FUNC_NAME, 1);        \
+    accept(node->get_child());                           \
+  }
+
+#define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)        \
+  void Backend::visit(boost::shared_ptr<NODE_NAME> node) \
+  {                                                      \
+    link_->put_symbol(#FUNC_NAME);                       \
   }
 
 DEFINE_VISIT_BINARY(Equal, Equal)
@@ -763,17 +763,16 @@ DEFINE_VISIT_BINARY(Times, Times)
 DEFINE_VISIT_BINARY(Divide, Divide)
 DEFINE_VISIT_BINARY(Power, Power)
 
-  
 /// 算術単項演算子
 
 DEFINE_VISIT_UNARY(Negative, Minus)
-void Backend::visit(boost::shared_ptr<Positive> node)              
+void Backend::visit(boost::shared_ptr<Positive> node)
 {
   accept(node->get_child());
 }
 
 /// 微分
-void Backend::visit(boost::shared_ptr<Differential> node)          
+void Backend::visit(boost::shared_ptr<Differential> node)
 {
   differential_count_++;
   accept(node->get_child());
@@ -781,44 +780,43 @@ void Backend::visit(boost::shared_ptr<Differential> node)
 }
 
 /// 左極限
-void Backend::visit(boost::shared_ptr<Previous> node)              
+void Backend::visit(boost::shared_ptr<Previous> node)
 {
   in_prev_ = true;
   accept(node->get_child());
   in_prev_ = false;
 }
 
-
 /// 否定
-void Backend::visit(boost::shared_ptr<Not> node)              
+void Backend::visit(boost::shared_ptr<Not> node)
 {
   link_->put_function("Not", 1);
   accept(node->get_child());
 }
 
 /// 関数
-void Backend::visit(boost::shared_ptr<Function> node)              
+void Backend::visit(boost::shared_ptr<Function> node)
 {
   string name;
   int arg_cnt = node->get_arguments_size();
-  bool converted;
-  name = link_->convert_function(node->get_name(), true, converted);
-  if (!converted)
-  {
-    throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
-  }
+  //bool converted;
+  name = node->get_name();
+  //if (!converted)
+  //{
+  //  throw HYDLA_ERROR(get_infix_string(node) + " is not suppported in " + link_->backend_name());
+  //}
   link_->put_function(name, arg_cnt);
-  for (int i=0; i < arg_cnt;i++)
+  for (int i = 0; i < arg_cnt; i++)
   {
     accept(node->get_argument(i));
   }
 }
 
-void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)              
+void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)
 {
   link_->put_function(node->get_name().c_str(), 1);
-  link_->put_function("Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
-  for (int i=0; i<node->get_arguments_size();i++)
+  link_->put_function("Evaluate", node->get_arguments_size());  // for "HoldForm" in Mathematica
+  for (int i = 0; i < node->get_arguments_size(); i++)
   {
     accept(node->get_argument(i));
   }
@@ -833,7 +831,7 @@ DEFINE_VISIT_FACTOR(E, E)
 DEFINE_VISIT_FACTOR(ImaginaryUnit, I)
 
 // 変数
-void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
+void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)
 {
   // 変数の送信
   VariableForm va = adapt_variable_form(variable_arg_, in_prev_);
@@ -842,17 +840,17 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)
 }
 
 // 数字
-void Backend::visit(boost::shared_ptr<Number> node)                
+void Backend::visit(boost::shared_ptr<Number> node)
 {
   // link_->put_integer(atoi(node->get_number().c_str())); //数値がでかいとオーバーフローする
   // link_->put_symbol(node->get_number().c_str()); // put_symbolだと送れない
   link_->put_number(node->get_number().c_str());
 }
 
-void Backend::visit(boost::shared_ptr<Float> node)              {
+void Backend::visit(boost::shared_ptr<Float> node)
+{
   link_->put_double(node->get_number());
-}  
-
+}
 
 // 記号定数
 void Backend::visit(boost::shared_ptr<symbolic_expression::Parameter> node)
@@ -861,11 +859,10 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::Parameter> node)
 }
 
 // t
-void Backend::visit(boost::shared_ptr<SymbolicT> node)                
-{    
+void Backend::visit(boost::shared_ptr<SymbolicT> node)
+{
   link_->put_symbol("t");
 }
-
 
 void Backend::visit(boost::shared_ptr<Range> node)
 {
@@ -875,8 +872,7 @@ void Backend::visit(boost::shared_ptr<Range> node)
   accept(node->get_rhs());
 }
 
-
-void Backend::send_value(const value_t &val, const VariableForm& var)
+void Backend::send_value(const value_t &val, const VariableForm &var)
 {
   send_node(val.get_node(), var);
 }
@@ -886,16 +882,17 @@ void Backend::send_variable(const variable_t &var, const VariableForm &variable_
   send_variable(var.get_name(), var.get_differential_count(), variable_arg);
 }
 
-
-void Backend::send_variable(const std::string& name, int diff_count, const VariableForm &variable_arg)
+void Backend::send_variable(const std::string &name, int diff_count, const VariableForm &variable_arg)
 {
   if (variable_arg == VF_PREV)
   {
     link_->put_function(prev_prefix.c_str(), 2);
     link_->put_symbol(par_prefix + name);
     link_->put_integer(diff_count);
-  }else{
-    switch(variable_arg)
+  }
+  else
+  {
+    switch (variable_arg)
     {
     case VF_ZERO:
       link_->put_function("derivativeInit", 2);
@@ -914,32 +911,31 @@ void Backend::send_variable(const std::string& name, int diff_count, const Varia
   }
 }
 
-
 // コマンド文
-void Backend::visit(boost::shared_ptr<symbolic_expression::PrintPP> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::PrintIP> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::Scan> node) {link_->put_symbol("True");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::PrintPP> node) { link_->put_symbol("True"); }
+void Backend::visit(boost::shared_ptr<symbolic_expression::PrintIP> node) { link_->put_symbol("True"); }
+void Backend::visit(boost::shared_ptr<symbolic_expression::Scan> node) { link_->put_symbol("True"); }
 
-void Backend::visit(boost::shared_ptr<symbolic_expression::True> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::False> node) {link_->put_symbol("False");}
+void Backend::visit(boost::shared_ptr<symbolic_expression::True> node) { link_->put_symbol("True"); }
+void Backend::visit(boost::shared_ptr<symbolic_expression::False> node) { link_->put_symbol("False"); }
 
-void Backend::set_range(const value_t &val, value_range_t &range, const int& relop)
+void Backend::set_range(const value_t &val, value_range_t &range, const int &relop)
 {
-  switch(relop)
+  switch (relop)
   {
-  case 0://Equal
+  case 0:  //Equal
     range.set_unique_value(val);
     break;
-  case 1://Less
+  case 1:  //Less
     range.add_upper_bound(val, false);
     break;
-  case 2://Greater
+  case 2:  //Greater
     range.add_lower_bound(val, false);
     break;
-  case 3://LessEqual
+  case 3:  //LessEqual
     range.add_upper_bound(val, true);
     break;
-  case 4://GreaterEqual
+  case 4:  //GreaterEqual
     range.add_lower_bound(val, true);
     break;
   }
@@ -951,7 +947,8 @@ Backend::VariableForm Backend::adapt_variable_form(VariableForm form, bool in_pr
   {
     return VF_PREV;
   }
-  else{
+  else
+  {
     if (form == VF_IGNORE_PREV)
     {
       return VF_NONE;
@@ -965,7 +962,6 @@ Backend::VariableForm Backend::adapt_variable_form(VariableForm form, bool in_pr
 
 void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
 {
-
   boost::shared_ptr<symbolic_expression::ExpressionList> el = boost::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs());
   if (el && el->has_nameless_contents())
   {
@@ -977,8 +973,10 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement
       link_->put_symbol(el->get_list_name());
       accept(node->get_rhs());
       link_->put_integer(differential_count_);
-    }else{
-      switch(variable_arg_)
+    }
+    else
+    {
+      switch (variable_arg_)
       {
       case VF_ZERO:
         link_->put_function("derivativeInit", 2);
@@ -1013,7 +1011,7 @@ ConstraintStore Backend::receive_cs()
   for (int i = 0; i < count; i++)
   {
     symbolic_expression::node_sptr constraint;
-  
+
     constraint = receive_node();
     string constraint_string = get_infix_string(constraint);
     if (constraint_string == "False")
@@ -1028,7 +1026,6 @@ ConstraintStore Backend::receive_cs()
   return cs;
 }
 
-
 CalculateTLinearResult Backend::receive_ct()
 {
   CalculateTLinearResult ct;
@@ -1041,7 +1038,6 @@ CalculateTLinearResult Backend::receive_ct()
   return ct;
 }
 
-
 create_vm_t Backend::receive_cv()
 {
   create_vm_t ret;
@@ -1050,7 +1046,8 @@ create_vm_t Backend::receive_cv()
   link_->get_function(name, cnt);
   for (int i = 0; i < cnt; i++)
   {
-    variable_map_t map; receive_map(map);
+    variable_map_t map;
+    receive_map(map);
     ret.push_back(map);
   }
   return ret;
@@ -1059,7 +1056,7 @@ create_vm_t Backend::receive_cv()
 compare_min_time_result_t Backend::receive_compare_min_time_result()
 {
   std::string name;
-  int list_size; 
+  int list_size;
   link_->get_function(name, list_size);
   compare_min_time_result_t result;
   result.less_cons = receive_cs();
@@ -1068,12 +1065,10 @@ compare_min_time_result_t Backend::receive_compare_min_time_result()
   return result;
 }
 
-
-
 find_min_time_result_t Backend::receive_find_min_time_result()
 {
   std::string name;
-  int find_min_time_size; 
+  int find_min_time_size;
   // List
   link_->get_function(name, find_min_time_size);
   find_min_time_result_t result;
@@ -1094,10 +1089,10 @@ find_min_time_result_t Backend::receive_find_min_time_result()
   return result;
 }
 
-
 std::string Backend::remove_prefix(const std::string &original, const std::string &prefix)
 {
-  if (original.length() <= prefix.length())throw HYDLA_ERROR("invalid name: " + original);
+  if (original.length() <= prefix.length())
+    throw HYDLA_ERROR("invalid name: " + original);
   return original.substr(prefix.length());
 }
 
@@ -1118,13 +1113,13 @@ symbolic_expression::node_sptr Backend::receive_function()
   int arg_count;
   symbolic_expression::node_sptr ret;
   std::string symbol;
-  bool converted;
+  //bool converted;
   link_->get_function(symbol, arg_count);
-  symbol = link_->convert_function(symbol, false, converted);
+  // symbol = link_->convert_function(symbol, false, converted);
 
-  if (equal_ignoring_case(symbol, "Sqrt")) //1引数関数
+  if (equal_ignoring_case(symbol, "Sqrt"))  //1引数関数
   {
-    ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2")))); 
+    ret = symbolic_expression::node_sptr(new Divide(symbolic_expression::node_sptr(new Number("1")), symbolic_expression::node_sptr(new Number("2"))));
     ret = symbolic_expression::node_sptr(new symbolic_expression::Power(receive_node(), ret));
   }
   else if (equal_ignoring_case(symbol, "p"))
@@ -1153,25 +1148,11 @@ symbolic_expression::node_sptr Backend::receive_function()
   {
     ret = symbolic_expression::node_sptr(new symbolic_expression::Negative(receive_node()));
   }
-  else if (equal_ignoring_case(symbol, "Plus")
-          || equal_ignoring_case(symbol, "Subtract")
-          || equal_ignoring_case(symbol, "Times")
-          || equal_ignoring_case(symbol, "Divide")
-          || equal_ignoring_case(symbol, "Power")
-          || equal_ignoring_case(symbol, "Rational")
-          || equal_ignoring_case(symbol, "And")
-          || equal_ignoring_case(symbol, "Or")
-          || equal_ignoring_case(symbol, "Equal")
-          || equal_ignoring_case(symbol, "Unequal")
-          || equal_ignoring_case(symbol, "Less")
-          || equal_ignoring_case(symbol, "LessEqual")
-          || equal_ignoring_case(symbol, "Greater")
-          || equal_ignoring_case(symbol, "GreaterEqual")
-          || equal_ignoring_case(symbol, "Complex"))
-  { // 加減乗除など，二項演算子で書かれる関数
+  else if (equal_ignoring_case(symbol, "Plus") || equal_ignoring_case(symbol, "Subtract") || equal_ignoring_case(symbol, "Times") || equal_ignoring_case(symbol, "Divide") || equal_ignoring_case(symbol, "Power") || equal_ignoring_case(symbol, "Rational") || equal_ignoring_case(symbol, "And") || equal_ignoring_case(symbol, "Or") || equal_ignoring_case(symbol, "Equal") || equal_ignoring_case(symbol, "Unequal") || equal_ignoring_case(symbol, "Less") || equal_ignoring_case(symbol, "LessEqual") || equal_ignoring_case(symbol, "Greater") || equal_ignoring_case(symbol, "GreaterEqual") || equal_ignoring_case(symbol, "Complex"))
+  {  // 加減乗除など，二項演算子で書かれる関数
     symbolic_expression::node_sptr lhs, rhs;
     ret = receive_node();
-    for (int arg_it=1; arg_it < arg_count; arg_it++)
+    for (int arg_it = 1; arg_it < arg_count; arg_it++)
     {
       lhs = ret;
       rhs = receive_node();
@@ -1204,7 +1185,7 @@ symbolic_expression::node_sptr Backend::receive_function()
       else if (equal_ignoring_case(symbol, "GreaterEqual"))
         ret = symbolic_expression::node_sptr(new symbolic_expression::GreaterEqual(lhs, rhs));
       else if (equal_ignoring_case(symbol, "Complex"))
-        ret = symbolic_expression::node_sptr(new symbolic_expression::Plus(lhs, new symbolic_expression::Times(rhs,new symbolic_expression::ImaginaryUnit())));
+        ret = symbolic_expression::node_sptr(new symbolic_expression::Plus(lhs, new symbolic_expression::Times(rhs, new symbolic_expression::ImaginaryUnit())));
     }
   }
   else if (equal_ignoring_case(symbol, "derivative"))
@@ -1216,22 +1197,23 @@ symbolic_expression::node_sptr Backend::receive_function()
     for (int i = 0; i < variable_differential_count; i++)
     {
       ret = symbolic_expression::node_sptr(new symbolic_expression::Differential(ret));
-    } 
+    }
   }
-  else{
+  else
+  {
     // その他の関数
     boost::shared_ptr<symbolic_expression::VariadicNode> f;
-    if (converted)
-    {
-      // 対応している関数
-      f.reset(new symbolic_expression::Function(symbol));
-    }
-    else{
-      // 謎の関数
-      f.reset(new symbolic_expression::UnsupportedFunction(symbol));
-    }
+    //if (converted)
+    //{
+    // 対応している関数
+    f.reset(new symbolic_expression::Function(symbol));
+    //}
+    //else{
+    // 謎の関数
+    //f.reset(new symbolic_expression::UnsupportedFunction(symbol));
+    //}
 
-    for (int arg_it=0; arg_it < arg_count; arg_it++)
+    for (int arg_it = 0; arg_it < arg_count; arg_it++)
     {
       f->add_argument(receive_node());
     }
@@ -1250,55 +1232,54 @@ symbolic_expression::node_sptr Backend::receive_node()
 {
   symbolic_expression::node_sptr ret;
   Link::DataType type = link_->get_type();
-  switch(type)
+  switch (type)
   {
-  case Link::DT_STR: // 文字列
+  case Link::DT_STR:  // 文字列
+  {
+    std::string str = link_->get_string();
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Number(str));
+    break;
+  }
+  case Link::DT_SYM:  // シンボル（記号）
+  {
+    std::string symbol = link_->get_symbol();
+    if (symbol == "undefined")
     {
-      std::string str = link_->get_string();
-      ret = symbolic_expression::node_sptr(new symbolic_expression::Number(str));
-      break;
+      //do nothing
+      return ret;
     }
-  case Link::DT_SYM: // シンボル（記号）
-    {
+    else if (symbol == "t")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
+    else if (symbol == "Pi")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
+    else if (symbol == "E")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::E());
+    else if (symbol == "I")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::ImaginaryUnit());
+    else if (symbol == "inf")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
+    else if (symbol == "True")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::True());
+    else if (symbol == "False")
+      ret = symbolic_expression::node_sptr(new symbolic_expression::False());
+    else if (symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
+      ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(var_prefix.length())));
+    break;
+  }
+  case Link::DT_INT:  // オーバーフローする可能性があるなら文字列使う
+  {
+    std::stringstream sstr;
+    int num = link_->get_integer();
+    sstr << num;
+    ret = symbolic_expression::node_sptr(new symbolic_expression::Number(sstr.str()));
+    break;
+  }
+  case Link::DT_FUNC:  // 合成関数
+    ret = receive_function();
+    break;
 
-      std::string symbol = link_->get_symbol();
-      if (symbol=="undefined")
-      {
-        //do nothing
-        return ret;
-      }
-      else if (symbol=="t")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::SymbolicT());
-      else if (symbol=="Pi")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::Pi());
-      else if (symbol=="E")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::E());
-      else if (symbol=="I")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::ImaginaryUnit());
-      else if (symbol=="inf")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::Infinity());
-      else if (symbol=="True")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::True());
-      else if (symbol=="False")
-        ret = symbolic_expression::node_sptr(new symbolic_expression::False());
-      else if (symbol.length() > var_prefix.length() && symbol.substr(0, var_prefix.length()) == var_prefix)
-        ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(symbol.substr(var_prefix.length())));
-      break;
-    }
-  case Link::DT_INT: // オーバーフローする可能性があるなら文字列使う
-    {
-      std::stringstream sstr;
-      int num = link_->get_integer();
-      sstr << num;
-      ret = symbolic_expression::node_sptr(new symbolic_expression::Number(sstr.str() ) );
-      break;
-    }
-  case Link::DT_FUNC: // 合成関数
-      ret = receive_function();
-      break;
-
-    default:
-      break;
+  default:
+    break;
   }
 
   if (ret == NULL)
@@ -1308,7 +1289,6 @@ symbolic_expression::node_sptr Backend::receive_node()
   return ret;
 }
 
-
 void Backend::invalid_ret()
 {
   throw HYDLA_ERROR("invalid return value. \ninput:\n" + link_->get_input_print() + "\n\ntrace:\n" + link_->get_debug_print());
@@ -1317,15 +1297,18 @@ void Backend::invalid_ret()
 void Backend::receive_bool(bool &b)
 {
   std::string s_name = link_->get_symbol();
-  if (s_name == "True") b = true;
+  if (s_name == "True")
+    b = true;
   else
   {
-    if (s_name == "False") b = false;
-    else throw HYDLA_ERROR("invalid return value");
+    if (s_name == "False")
+      b = false;
+    else
+      throw HYDLA_ERROR("invalid return value");
   }
 }
 
-int Backend::receive_map(variable_map_t& map)
+int Backend::receive_map(variable_map_t &map)
 {
   value_t symbolic_value;
   std::string f_name;
@@ -1334,8 +1317,8 @@ int Backend::receive_map(variable_map_t& map)
   for (int i = 0; i < and_size; i++)
   {
     //{{変数名，微分回数}, 関係演算子コード，数式}で来るはず
-    link_->get_function(f_name, size); //List
-    link_->get_function(f_name, size); //List
+    link_->get_function(f_name, size);  //List
+    link_->get_function(f_name, size);  //List
     std::string variable_name = link_->get_symbol();
     int d_cnt = link_->get_integer();
     // 関係演算子のコード
@@ -1344,7 +1327,8 @@ int Backend::receive_map(variable_map_t& map)
     symbolic_value = value_t(receive_node());
 
     // TODO:次の一行消す
-    if (variable_name == "t")continue;
+    if (variable_name == "t")
+      continue;
     variable_t variable(variable_name.substr(var_prefix.length()), d_cnt);
 
     value_range_t tmp_range = map[variable];
@@ -1353,17 +1337,13 @@ int Backend::receive_map(variable_map_t& map)
     {
       throw HYDLA_ERROR("invalid value");
     }
-    map[variable] = tmp_range;  
+    map[variable] = tmp_range;
   }
   return 0;
 }
 
-
-
-
-int Backend::receive_parameter_maps(vector<parameter_map_t>& maps)
+int Backend::receive_parameter_maps(vector<parameter_map_t> &maps)
 {
-
   string func_name;
   int map_size;
   link_->get_function(func_name, map_size);
@@ -1376,8 +1356,8 @@ int Backend::receive_parameter_maps(vector<parameter_map_t>& maps)
     {
       string str_buf;
       int int_buf;
-      link_->get_function(str_buf, int_buf); // List
-      link_->get_function(str_buf, int_buf); // parameter
+      link_->get_function(str_buf, int_buf);  // List
+      link_->get_function(str_buf, int_buf);  // parameter
       if (str_buf == "p")
       {
         std::string name = remove_prefix(link_->get_symbol(), par_prefix);
@@ -1421,5 +1401,5 @@ MidpointRadius Backend::receive_midpoint_radius()
   return mr;
 }
 
-}
-}
+}  // namespace backend
+}  // namespace hydla

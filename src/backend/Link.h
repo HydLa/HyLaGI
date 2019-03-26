@@ -49,6 +49,19 @@ class Link
   virtual void post_receive() = 0;
 
   virtual std::string backend_name() = 0;
+  //std::string convert_function(const std::string& orig, bool hydla2back)
+  //{
+  //  bool converted;
+  //  return convert_function(orig, hydla2back, converted);
+  //}
+
+  //std::string convert_function(const std::string& orig, bool hydla2back, bool &converted)
+  //{
+  //  converted = true;
+  //  return orig;
+  //}
+  
+  /*
   std::string convert_function(const std::string& orig, bool hydla2back)
   {
     bool converted;
@@ -88,10 +101,11 @@ class Link
     }
     return ret;
   }
+  */
 
   void put_converted_function(const std::string &orig, int arg_cnt)
   {
-    put_function(convert_function(orig, true), arg_cnt);
+    put_function(orig, arg_cnt);
   }
 
   virtual std::string get_input_print() = 0;

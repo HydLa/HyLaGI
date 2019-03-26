@@ -13,10 +13,10 @@ using namespace boost;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
 
-
-namespace hydla { 
-namespace symbolic_expression {
-
+namespace hydla
+{
+namespace symbolic_expression
+{
 std::ostream& operator<<(std::ostream& s, const Node& node)
 {
   return node.dump(s);
@@ -32,21 +32,31 @@ bool Node::is_same_struct(const Node& n, bool exactly_same) const
   return typeid(*this) == typeid(n);
 }
 
+bool Node::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n);
+}
+
 bool UnaryNode::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          child_->is_same_struct(*static_cast<const UnaryNode*>(&n)->child_.get(), 
-                                 exactly_same);
+         child_->is_same_struct(*static_cast<const UnaryNode*>(&n)->child_.get(),
+                                exactly_same);
+}
+
+bool UnaryNode::has_sub_tree(const Node& n) const
+{
+  return is_same_struct(n, true) || child_->has_sub_tree(n);
 }
 
 bool BinaryNode::is_exactly_same(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-    lhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->lhs_.get(), exactly_same) &&
-    rhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->rhs_.get(), exactly_same);
+         lhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->lhs_.get(), exactly_same) &&
+         rhs_->is_same_struct(*static_cast<const BinaryNode*>(&n)->rhs_.get(), exactly_same);
 }
 
-void BinaryNode::create_child_node_list(child_node_list_t& cnl, 
+void BinaryNode::create_child_node_list(child_node_list_t& cnl,
                                         const Node* n) const
 {
   const BinaryNode* binnode = dynamic_cast<const BinaryNode*>(n);
@@ -56,13 +66,13 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
     const Node* lhs = binnode->lhs_.get();
     const Node* rhs = binnode->rhs_.get();
 
-
     // 左辺ノード
     if (typeid(*n) == typeid(*lhs))
     {
       create_child_node_list(cnl, lhs);
     }
-    else {
+    else
+    {
       cnl.push_back(make_pair(lhs, false));
     }
 
@@ -71,7 +81,8 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
     {
       create_child_node_list(cnl, rhs);
     }
-    else {
+    else
+    {
       cnl.push_back(make_pair(rhs, false));
     }
   }
@@ -79,11 +90,11 @@ void BinaryNode::create_child_node_list(child_node_list_t& cnl,
 
 struct BinaryNode::CheckInclude
 {
-  CheckInclude(const Node* n) :
-    node(n)
-  {}
+  CheckInclude(const Node* n) : node(n)
+  {
+  }
 
-  template<typename T>
+  template <typename T>
   bool operator()(T& it)
   {
     if (!it.second && node->is_same_struct(*it.first, false))
@@ -93,7 +104,7 @@ struct BinaryNode::CheckInclude
     }
     return false;
   }
-  
+
   const Node* node;
 };
 
@@ -110,18 +121,19 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
 
     child_node_list_t this_node;
     child_node_list_t target_node;
-    create_child_node_list(this_node,   this);
+    create_child_node_list(this_node, this);
     create_child_node_list(target_node, static_cast<const BinaryNode*>(&n));
-    if (this_node.size() != target_node.size()) return false;
+    if (this_node.size() != target_node.size())
+      return false;
 
-    child_node_list_t::const_iterator it  = this_node.begin();
+    child_node_list_t::const_iterator it = this_node.begin();
     child_node_list_t::const_iterator end = this_node.end();
     for (; it != end; ++it)
     {
-      if (std::find_if(target_node.begin(), 
-                      target_node.end(), 
-                      CheckInclude(it->first)) == target_node.end())
-                      {
+      if (std::find_if(target_node.begin(),
+                       target_node.end(),
+                       CheckInclude(it->first)) == target_node.end())
+      {
         return false;
       }
     }
@@ -131,7 +143,7 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
   return false;
 }
 
-    /*
+/*
     const Node& n_lhs = *(static_cast<const BinaryNode*>(&n))->lhs_.get();
     const Node& n_rhs = *(static_cast<const BinaryNode*>(&n))->rhs_.get();
 
@@ -187,6 +199,16 @@ bool BinaryNode::is_same_struct(const Node& n, bool exactly_same) const
     }
     */
 
+bool BinaryNode::has_sub_tree(const Node& n) const
+{
+  if (is_same_struct(n, true))
+  {
+    return true;
+  }
+
+  return lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
 bool Ask::is_same_struct(const Node& n, bool exactly_same) const
 {
   return is_exactly_same(n, exactly_same);
@@ -235,16 +257,14 @@ bool Weaker::is_same_struct(const Node& n, bool exactly_same) const
 bool Number::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-    number_ == static_cast<const Number*>(&n)->number_;          
+         number_ == static_cast<const Number*>(&n)->number_;
 }
-
 
 bool Float::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-    number_ == static_cast<const Float*>(&n)->number_;          
+         number_ == static_cast<const Float*>(&n)->number_;
 }
-
 
 bool True::is_same_struct(const Node& n, bool exactly_same) const
 {
@@ -264,57 +284,172 @@ bool EachElement::is_same_struct(const Node& n, bool exactly_same) const
 bool Print::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const Print*>(&n)->string_;
+         string_ == static_cast<const Print*>(&n)->string_;
 }
 bool PrintPP::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const PrintPP*>(&n)->string_;
+         string_ == static_cast<const PrintPP*>(&n)->string_;
 }
 bool PrintIP::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const PrintIP*>(&n)->string_;
+         string_ == static_cast<const PrintIP*>(&n)->string_;
 }
 bool Scan::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const Scan*>(&n)->string_;
+         string_ == static_cast<const Scan*>(&n)->string_;
 }
 bool Exit::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const Exit*>(&n)->string_;
+         string_ == static_cast<const Exit*>(&n)->string_;
 }
 bool Abort::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          string_ == static_cast<const Abort*>(&n)->string_;
+         string_ == static_cast<const Abort*>(&n)->string_;
 }
 
 bool Variable::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          name_ == static_cast<const Variable*>(&n)->name_;          
+         name_ == static_cast<const Variable*>(&n)->name_;
 }
-
 
 bool Parameter::is_same_struct(const Node& n, bool exactly_same) const
 {
   return typeid(*this) == typeid(n) &&
-          name_ == static_cast<const Parameter*>(&n)->name_;          
+         name_ == static_cast<const Parameter*>(&n)->name_;
 }
 
-std::ostream& ProgramListCaller::dump(std::ostream& s) const 
+bool Ask::has_sub_tree(const Node& n) const
 {
-  actual_args_t::const_iterator it  = actual_args_.begin();
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Less::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool LessEqual::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Greater::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool GreaterEqual::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Subtract::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Divide::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Power::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Weaker::has_sub_tree(const Node& n) const
+{
+  return is_exactly_same(n, true) || lhs_->has_sub_tree(n) || rhs_->has_sub_tree(n);
+}
+
+bool Number::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         number_ == static_cast<const Number*>(&n)->number_;
+}
+
+bool Float::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         number_ == static_cast<const Float*>(&n)->number_;
+}
+
+bool True::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n);
+}
+
+bool False::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n);
+}
+bool EachElement::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n);
+}
+
+//Print
+bool Print::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const Print*>(&n)->string_;
+}
+bool PrintPP::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const PrintPP*>(&n)->string_;
+}
+bool PrintIP::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const PrintIP*>(&n)->string_;
+}
+bool Scan::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const Scan*>(&n)->string_;
+}
+bool Exit::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const Exit*>(&n)->string_;
+}
+bool Abort::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         string_ == static_cast<const Abort*>(&n)->string_;
+}
+
+bool Variable::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         name_ == static_cast<const Variable*>(&n)->name_;
+}
+
+bool Parameter::has_sub_tree(const Node& n) const
+{
+  return typeid(*this) == typeid(n) &&
+         name_ == static_cast<const Parameter*>(&n)->name_;
+}
+
+std::ostream& ProgramListCaller::dump(std::ostream& s) const
+{
+  actual_args_t::const_iterator it = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "program_list_call<" 
+  s << "program_list_call<"
     << name_
     << "(";
 
-  if (it != end) s << **(it++);
+  if (it != end)
+    s << **(it++);
   while (it != end)
   {
     s << "," << **(it++);
@@ -323,7 +458,7 @@ std::ostream& ProgramListCaller::dump(std::ostream& s) const
   s << ")>";
   if (child_)
   {
-    s <<  "["
+    s << "["
       << *child_
       << "]";
   }
@@ -331,16 +466,17 @@ std::ostream& ProgramListCaller::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& ExpressionListCaller::dump(std::ostream& s) const 
+std::ostream& ExpressionListCaller::dump(std::ostream& s) const
 {
-  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator it = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "expression_list_call<" 
+  s << "expression_list_call<"
     << name_
     << "(";
 
-  if (it != end) s << **(it++);
+  if (it != end)
+    s << **(it++);
   while (it != end)
   {
     s << "," << **(it++);
@@ -349,7 +485,7 @@ std::ostream& ExpressionListCaller::dump(std::ostream& s) const
   s << ")>";
   if (child_)
   {
-    s <<  "["
+    s << "["
       << *child_
       << "]";
   }
@@ -357,16 +493,17 @@ std::ostream& ExpressionListCaller::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& ConstraintCaller::dump(std::ostream& s) const 
+std::ostream& ConstraintCaller::dump(std::ostream& s) const
 {
-  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator it = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "ConstraintCall<" 
+  s << "ConstraintCall<"
     << name_
     << "(";
 
-  if (it != end) s << **(it++);
+  if (it != end)
+    s << **(it++);
   while (it != end)
   {
     s << "," << **(it++);
@@ -375,7 +512,7 @@ std::ostream& ConstraintCaller::dump(std::ostream& s) const
   s << ")>";
   if (child_)
   {
-    s <<  "["
+    s << "["
       << *child_
       << "]";
   }
@@ -383,16 +520,17 @@ std::ostream& ConstraintCaller::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& ProgramCaller::dump(std::ostream& s) const 
+std::ostream& ProgramCaller::dump(std::ostream& s) const
 {
-  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator it = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "ProgramCall<" 
+  s << "ProgramCall<"
     << name_
     << "(";
 
-  if (it != end) s << **(it++);
+  if (it != end)
+    s << **(it++);
   while (it != end)
   {
     s << "," << **(it++);
@@ -401,23 +539,24 @@ std::ostream& ProgramCaller::dump(std::ostream& s) const
   s << ")>";
   if (child_)
   {
-    s <<  "["
+    s << "["
       << *child_
       << "]";
   }
 
   return s;
 }
-std::ostream& Caller::dump(std::ostream& s) const 
+std::ostream& Caller::dump(std::ostream& s) const
 {
-  actual_args_t::const_iterator it  = actual_args_.begin();
+  actual_args_t::const_iterator it = actual_args_.begin();
   actual_args_t::const_iterator end = actual_args_.end();
 
-  s << "call<" 
+  s << "call<"
     << name_
     << "(";
 
-  if (it != end) s << **(it++);
+  if (it != end)
+    s << **(it++);
   while (it != end)
   {
     s << "," << **(it++);
@@ -426,7 +565,7 @@ std::ostream& Caller::dump(std::ostream& s) const
   s << ")>";
   if (child_)
   {
-    s <<  "["
+    s << "["
       << *child_
       << "]";
   }
@@ -434,15 +573,16 @@ std::ostream& Caller::dump(std::ostream& s) const
   return s;
 }
 
-std::ostream& Definition::dump(std::ostream& s) const 
+std::ostream& Definition::dump(std::ostream& s) const
 {
-  bound_variables_t::const_iterator it  = bound_variables_.begin();
+  bound_variables_t::const_iterator it = bound_variables_.begin();
   bound_variables_t::const_iterator end = bound_variables_.end();
 
   s << name_
     << "(";
 
-  if (it != end) s << *(it++);
+  if (it != end)
+    s << *(it++);
   while (it != end)
   {
     s << "," << *(it++);
@@ -454,7 +594,7 @@ std::ostream& Definition::dump(std::ostream& s) const
 
 node_sptr Range::clone()
 {
-  node_type_sptr n(new Range(get_lhs()->clone(),get_rhs()->clone()));
+  node_type_sptr n(new Range(get_lhs()->clone(), get_rhs()->clone()));
   n->set_header(get_header());
   return n;
 }
@@ -462,7 +602,7 @@ node_sptr Range::clone()
 node_sptr ExpressionList::clone()
 {
   node_type_sptr n(new ExpressionList(list_name_));
-  for (unsigned int i=0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
@@ -485,7 +625,7 @@ node_sptr ConditionalExpressionList::clone()
 {
   node_type_sptr n(new ConditionalExpressionList(list_name_));
   n->set_expression(expression_);
-  for (unsigned int i = 0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
@@ -495,7 +635,7 @@ node_sptr ConditionalExpressionList::clone()
 node_sptr ProgramList::clone()
 {
   node_type_sptr n(new ProgramList(list_name_));
-  for (unsigned int i = 0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
@@ -506,7 +646,7 @@ node_sptr ConditionalProgramList::clone()
 {
   node_type_sptr n(new ConditionalProgramList(list_name_));
   n->set_program(program_);
-  for (unsigned int i = 0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
@@ -516,29 +656,27 @@ node_sptr ConditionalProgramList::clone()
 node_sptr Function::clone()
 {
   node_type_sptr n(new Function(name_));
-  for (unsigned int i = 0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
-
 
 node_sptr UnsupportedFunction::clone()
 {
   node_type_sptr n(new UnsupportedFunction(name_));
-  for (unsigned int i = 0;i<arguments_.size();i++)
+  for (unsigned int i = 0; i < arguments_.size(); i++)
   {
     n->add_argument(arguments_[i]->clone());
   }
   return n;
 }
 
-
-void VariadicNode::accept(node_sptr own, 
-                   BaseNodeVisitor* visitor) 
+void VariadicNode::accept(node_sptr own,
+                          BaseNodeVisitor* visitor)
 {
-  assert(this == own.get()); 
+  assert(this == own.get());
   visitor->visit(boost::dynamic_pointer_cast<VariadicNode>(own));
 }
 
@@ -555,7 +693,8 @@ std::ostream& ConditionalProgramList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_program() << "]";
   s << "[";
-  if (arguments_.size() > 0)s << *arguments_[0];
+  if (arguments_.size() > 0)
+    s << *arguments_[0];
   for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
@@ -566,46 +705,44 @@ std::ostream& ConditionalExpressionList::dump(std::ostream& s) const
   Node::dump(s);
   s << "[" << *get_expression() << "]";
   s << "[";
-  if (arguments_.size() > 0)s << *arguments_[0];
+  if (arguments_.size() > 0)
+    s << *arguments_[0];
   for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
 
-std::ostream& VariadicNode::dump(std::ostream& s) const 
+std::ostream& VariadicNode::dump(std::ostream& s) const
 {
   Node::dump(s);
   s << "[" << get_name() << "]";
   s << "[";
-  if (arguments_.size() > 0)s << *arguments_[0];
+  if (arguments_.size() > 0)
+    s << *arguments_[0];
   for (int i = 1; i < arguments_.size(); i++) s << ", " << *arguments_[i];
   s << "]";
   return s;
 }
-
 
 void VariadicNode::add_argument(node_sptr node)
 {
   arguments_.push_back(node);
 }
 
-
 void VariadicNode::set_argument(node_sptr node, int i)
 {
   arguments_[i] = node;
 }
 
-void VariadicNode::add_argument(Node *node)
+void VariadicNode::add_argument(Node* node)
 {
   arguments_.push_back(node_sptr(node));
 }
 
-
-void VariadicNode::set_argument(Node *node, int i)
+void VariadicNode::set_argument(Node* node, int i)
 {
   arguments_[i].reset(node);
 }
-
 
 int VariadicNode::get_arguments_size()
 {
@@ -623,10 +760,11 @@ node_sptr Caller::clone()
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
-  
-  if (child_) n->child_ = child_->clone();
-  
+  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+
+  if (child_)
+    n->child_ = child_->clone();
+
   return n;
 }
 
@@ -636,10 +774,11 @@ node_sptr ProgramCaller::clone()
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
-  
-  if (child_) n->child_ = child_->clone();
-  
+  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+
+  if (child_)
+    n->child_ = child_->clone();
+
   return n;
 }
 node_sptr ConstraintCaller::clone()
@@ -648,10 +787,11 @@ node_sptr ConstraintCaller::clone()
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
-  
-  if (child_) n->child_ = child_->clone();
-  
+  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+
+  if (child_)
+    n->child_ = child_->clone();
+
   return n;
 }
 node_sptr ExpressionListCaller::clone()
@@ -660,10 +800,11 @@ node_sptr ExpressionListCaller::clone()
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
-  
-  if (child_) n->child_ = child_->clone();
-  
+  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+
+  if (child_)
+    n->child_ = child_->clone();
+
   return n;
 }
 node_sptr ProgramListCaller::clone()
@@ -672,10 +813,11 @@ node_sptr ProgramListCaller::clone()
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(),  n->actual_args_.begin());
-  
-  if (child_) n->child_ = child_->clone();
-  
+  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+
+  if (child_)
+    n->child_ = child_->clone();
+
   return n;
 }
 node_sptr Definition::clone()
@@ -684,14 +826,13 @@ node_sptr Definition::clone()
   n->name_ = name_;
 
   n->bound_variables_.resize(bound_variables_.size());
-  copy(bound_variables_.begin(), bound_variables_.end(),  n->bound_variables_.begin());
+  copy(bound_variables_.begin(), bound_variables_.end(), n->bound_variables_.begin());
   n->child_ = child_->clone();
 
   return n;
 }
 
-Parameter::Parameter(const simulator::Parameter &p):
-  Parameter(p.get_name(), p.get_differential_count(), p.get_phase_id())
+Parameter::Parameter(const simulator::Parameter& p) : Parameter(p.get_name(), p.get_differential_count(), p.get_phase_id())
 {
 }
 
@@ -699,11 +840,11 @@ Parameter::Parameter(const simulator::Parameter &p):
  * 各ノードのaccept関数定義
  */
 
-#define DEFINE_ACCEPT_FUNC(CLASS, VISITOR) \
-  void CLASS::accept(node_sptr own, \
-                     VISITOR* visitor) \
-  { \
-    assert(this == own.get()); \
+#define DEFINE_ACCEPT_FUNC(CLASS, VISITOR)                   \
+  void CLASS::accept(node_sptr own,                          \
+                     VISITOR* visitor)                       \
+  {                                                          \
+    assert(this == own.get());                               \
     visitor->visit(boost::dynamic_pointer_cast<CLASS>(own)); \
   }
 
@@ -729,7 +870,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListCaller)
 
- //制約式
+//制約式
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
 
 //Tell制約
@@ -838,5 +979,5 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(False)
 
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ImaginaryUnit)
-} //namespace symbolic_expression
-} //namespace hydla
+}  //namespace symbolic_expression
+}  //namespace hydla

@@ -1,16 +1,17 @@
+#include "Logger.h"
 #include "ModuleSetContainer.h"
 #include <iostream>
 
-namespace hydla {
-namespace hierarchy {
-
+namespace hydla
+{
+namespace hierarchy
+{
 std::ostream& operator<<(std::ostream& s, const ModuleSetContainer& m)
 {
   return m.dump(s);
 }
 
-ModuleSetContainer::ModuleSetContainer(ModuleSet m) :
-  maximal_module_set_(m)
+ModuleSetContainer::ModuleSetContainer(ModuleSet m) : maximal_module_set_(m)
 {
   full_module_set_set_.insert(m);
 }
@@ -26,7 +27,7 @@ ModuleSet ModuleSetContainer::get_module_set() const
 }
 
 ModuleSetContainer::module_set_set_t ModuleSetContainer::get_full_ms_list()
-const
+    const
 {
   return full_module_set_set_;
 }
@@ -36,7 +37,7 @@ void ModuleSetContainer::reset()
   reset(full_module_set_set_);
 }
 
-void ModuleSetContainer::reset(const module_set_set_t &mss)
+void ModuleSetContainer::reset(const module_set_set_t& mss)
 {
   ms_to_visit_ = mss;
 }
@@ -44,6 +45,15 @@ void ModuleSetContainer::reset(const module_set_set_t &mss)
 ModuleSet ModuleSetContainer::unadopted_module_set()
 {
   ModuleSet ret = maximal_module_set_;
+  HYDLA_LOGGER_DEBUG("BREAK unadopted_modeule_set ");
+  for (const auto& m : ret)
+  {
+    HYDLA_LOGGER_DEBUG("BREAK unadopted_modeule_set - maximal_module_set_: ", get_infix_string(m.second));
+  }
+  for (const auto& m : get_module_set())
+  {
+    HYDLA_LOGGER_DEBUG("BREAK unadopted_modeule_set - get_module_set(): ", get_infix_string(m.second));
+  }
   ret.erase(get_module_set());
   return ret;
 }
@@ -52,7 +62,8 @@ void ModuleSetContainer::generate_new_ms(const module_set_set_t& mms, const Modu
 {
   for (auto m : ms_to_visit_)
   {
-    if (m.including(ms)) ms_to_visit_.erase(m);
+    if (m.including(ms))
+      ms_to_visit_.erase(m);
   }
 }
 
@@ -71,9 +82,10 @@ void ModuleSetContainer::remove_included_ms_by_current_ms()
     {
       lit = ms_to_visit_.erase(lit);
     }
-    else lit++;
+    else
+      lit++;
   }
 }
 
-} // namespace hierarchy
-} // namespace hydla
+}  // namespace hierarchy
+}  // namespace hydla

@@ -21,4 +21,4 @@ BOUNCE <=> []( y- = sin(x-) => cont = 0 &
 
 INIT, CONST, (FALL, CONSTX), [](cont = 1) << BOUNCE.
 
-//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1
+//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=Sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1

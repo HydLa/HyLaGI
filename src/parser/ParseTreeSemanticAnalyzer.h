@@ -114,7 +114,7 @@ private:
   virtual void visit(boost::shared_ptr<symbolic_expression::Abort> node);
 
   //Parameter
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node){assert(0);}
+  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node){/*assert(0);*/}
   //Infinity
   virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
   //SymbolicT

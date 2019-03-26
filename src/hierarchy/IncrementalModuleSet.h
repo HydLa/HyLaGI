@@ -46,6 +46,9 @@ public:
    */
   void add_weak(IncrementalModuleSet&);
 
+  void remove(const ModuleSet&);
+  void remove(const module_t&);
+
   /**
    * 集合の集合(このクラス)の名前
    */ 

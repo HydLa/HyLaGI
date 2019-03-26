@@ -62,6 +62,9 @@ public:
    */
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
 
+  //returns whether this has sub_tree
+  virtual bool has_sub_tree(const Node& sub_tree) const;
+
   /**
    * ノードの型の名前
    */
@@ -139,6 +142,7 @@ public:
   virtual node_sptr clone() = 0;
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   node_type_sptr clone(node_type_sptr n)
   {
@@ -227,6 +231,7 @@ public:
   virtual void accept(node_sptr own, BaseNodeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone() = 0;
 
@@ -354,6 +359,7 @@ protected:
   virtual void accept(node_sptr own, TreeVisitor* visitor);             \
                                                                         \
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;  \
+  virtual bool has_sub_tree(const Node& sub_tree) const;                \
                                                                         \
   virtual node_sptr clone()                                             \
     {                                                                   \
@@ -714,6 +720,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -941,6 +948,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -992,6 +1000,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1035,6 +1044,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
   
   virtual node_sptr clone()
   {
@@ -1057,6 +1067,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
   
   virtual node_sptr clone()
   {
@@ -1087,6 +1098,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
   
   virtual node_sptr clone()
   {
@@ -1137,6 +1149,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1279,6 +1292,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1364,6 +1378,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1396,6 +1411,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1428,6 +1444,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1460,6 +1477,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {
@@ -1513,6 +1531,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor* visitor);
 
   virtual bool is_same_struct(const Node& n, bool exactly_same) const;
+  virtual bool has_sub_tree(const Node& sub_tree) const;
 
   virtual node_sptr clone()
   {

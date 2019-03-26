@@ -46,7 +46,9 @@ publicMethod[
     initRules = Map[(Rule@@#)&, applyList[init] ];
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
+    debugPrint["trySolve input: ", {initSubsituted, vars}];
     {sol, solved} = trySolve[initSubsituted, vars];
+    debugPrint["trySolve output: ", {sol, solved}];
     resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
     simplePrint[solved, resultConstraint];
     If[solved,

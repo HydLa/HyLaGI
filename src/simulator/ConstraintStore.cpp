@@ -7,12 +7,11 @@ namespace hydla
 {
 namespace simulator
 {
-
-ConstraintStore::ConstraintStore():is_consistent(true)
+ConstraintStore::ConstraintStore() : is_consistent(true)
 {
 }
 
-ConstraintStore::ConstraintStore(constraint_t cons):is_consistent(true)
+ConstraintStore::ConstraintStore(constraint_t cons) : is_consistent(true)
 {
   insert(cons);
 }
@@ -21,11 +20,30 @@ void ConstraintStore::add_constraint(const constraint_t &constraint)
 {
   insert(constraint);
 }
+
+void ConstraintStore::remove_constraint(const constraint_t &eraseGuard)
+{
+  const bool debugLog = true;
+  for (auto it = begin(); it != end();)
+  {
+    const bool result = (*it)->is_same_struct(*eraseGuard, false);
+    if (debugLog)
+      HYDLA_LOGGER_DEBUG("BREAK remove_constraint - ", get_infix_string(*it), " : ", result ? "true" : "false");
+    if (result)
+    {
+      it = erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+}
+
 void ConstraintStore::add_constraint_store(const ConstraintStore &store)
 {
   insert(store.begin(), store.end());
 }
-
 
 bool ConstraintStore::consistent() const
 {
@@ -43,12 +61,12 @@ void ConstraintStore::set_consistency(bool cons)
   is_consistent = cons;
 }
 
-void ConstraintStore::print()const
+void ConstraintStore::print() const
 {
-  size_t i=0;
-  for(auto it = begin(); it != end(); ++it, ++i)
+  size_t i = 0;
+  for (auto it = begin(); it != end(); ++it, ++i)
   {
-    HYDLA_LOGGER_DEBUG(std::to_string(i)," : ", symbolic_expression::get_infix_string(*it));
+    HYDLA_LOGGER_DEBUG(std::to_string(i), " : ", symbolic_expression::get_infix_string(*it));
   }
 }
 
@@ -56,15 +74,15 @@ std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store)
 {
   bool first = true;
   ost << "{";
-  for(auto constraint : store)
+  for (auto constraint : store)
   {
-    if(!first)ost << ", ";
+    if (!first)
+      ost << ", ";
     ost << symbolic_expression::get_infix_string(constraint);
     first = false;
   }
   ost << "}";
   return ost;
 }
-
 }
 }

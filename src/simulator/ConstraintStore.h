@@ -22,6 +22,8 @@ public:
   void add_constraint(const constraint_t &constraint);
   void add_constraint_store(const ConstraintStore &store);
 
+  void remove_constraint(const constraint_t &constraint);
+
   bool consistent() const;
   // return if this constraint store is always true
   bool valid() const;

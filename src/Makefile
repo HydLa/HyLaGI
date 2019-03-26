@@ -1,5 +1,5 @@
 main_projects := core 
-lib_projects  := common parser math_source_converter hierarchy simulator backend io interval symbolic_expression utility debug
+lib_projects  := common parser math_source_converter hierarchy simulator backend io interval symbolic_expression utility 
 test_projects := unit_tests
 
 projects := $(main_projects) $(test_projects) $(lib_projects)

@@ -5,43 +5,43 @@
 #include "Utility.h"
 #include "LinkError.h"
 
-namespace hydla{
-namespace backend{
-namespace mathematica{
-
+namespace hydla
+{
+namespace backend
+{
+namespace mathematica
+{
 const std::string MathematicaLink::par_prefix = "p";
 
-
-MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level, bool solve_over_reals) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_warnings, const std::string &simplify_time, const int simplify_level, bool solve_over_reals) : env_(0), link_(0)
 {
-
-  if((env_ = MLInitialize(0)) == (MLENV)0)throw LinkError("math", "can not link",0);
+  if ((env_ = MLInitialize(0)) == (MLENV)0)
+    throw LinkError("math", "can not link", 0);
   int err;
   link_ = MLOpenString(env_, mathlink_name.c_str(), &err);
-  if(link_ == (MLINK)0 || err != MLEOK) throw LinkError("math", "can not link",1);
-  if(!MLActivate(link_)) throw LinkError("math", "can not link",2);
-
+  if (link_ == (MLINK)0 || err != MLEOK)
+    throw LinkError("math", "can not link", 1);
+  if (!MLActivate(link_))
+    throw LinkError("math", "can not link", 2);
 
   // 出力する画面の横幅の設定
   MLPutFunction("SetOptions", 2);
-  MLPutSymbol("$Output"); 
+  MLPutSymbol("$Output");
   MLPutFunction("Rule", 2);
-  MLPutSymbol("PageWidth"); 
-  MLPutSymbol("Infinity"); 
+  MLPutSymbol("PageWidth");
+  MLPutSymbol("Infinity");
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
 
-
   // 警告無視
   MLPutFunction("Set", 2);
-  MLPutSymbol("optIgnoreWarnings"); 
+  MLPutSymbol("optIgnoreWarnings");
   MLPutSymbol(ignore_warnings ? "True" : "False");
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
 
-  
   MLPutFunction("Set", 2);
   MLPutSymbol("optTimeConstraint");
   MLPutFunction("ToExpression", 1);
@@ -65,18 +65,18 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   MLNewPacket();
 
   MLPutFunction("ToExpression", 1);
-  MLPutString(math_source());  
+  MLPutString(math_source());
   MLEndPacket();
   skip_pkt_until(RETURNPKT);
   MLNewPacket();
-  
-  
+
+  /*
   typedef function_map_t::value_type f_value_t;
   //HydLaとMathematicaの関数名の対応関係を作っておく．
   function_map_.insert(f_value_t("sin", "Sin"));
   function_map_.insert(f_value_t("sinh", "Sinh"));
   function_map_.insert(f_value_t("Asin", "ArcSin"));
-  function_map_.insert(f_value_t("Asinh","ArcSinh"));
+  function_map_.insert(f_value_t("Asinh", "ArcSinh"));
   function_map_.insert(f_value_t("cos", "Cos"));
   function_map_.insert(f_value_t("cosh", "Cosh"));
   function_map_.insert(f_value_t("Acos", "ArcCos"));
@@ -87,6 +87,7 @@ MathematicaLink::MathematicaLink(const std::string &mathlink_name, bool ignore_w
   function_map_.insert(f_value_t("Atanh", "ArcTanh"));
   function_map_.insert(f_value_t("log", "Log"));
   function_map_.insert(f_value_t("ln", "Log"));
+  */
   on_next_ = false;
 }
 
@@ -101,56 +102,65 @@ void MathematicaLink::reset()
 
 void MathematicaLink::clean()
 {
-  if(link_) {
+  if (link_)
+  {
     MLPutFunction("Exit", 0);
     MLEndPacket();
     MLClose(link_);
     link_ = 0;
   }
-  if(env_)  {
+  if (env_)
+  {
     MLDeinitialize(env_);
     env_ = 0;
   }
 }
 
-
 void MathematicaLink::skip_pkt_until(int pkt_name)
 {
   int p;
-  while ((p = MLNextPacket()) && p != pkt_name) {
+  while ((p = MLNextPacket()) && p != pkt_name)
+  {
     MLNewPacket();
   }
 }
 
-
-bool MathematicaLink::receive_to_return_packet(){
+bool MathematicaLink::receive_to_return_packet()
+{
   bool at_end = false;
   debug_print_.clear();
   input_print_.clear();
   // 結果を受け取る（受け取るまで待ち続ける）
-  while(true){
+  while (true)
+  {
     int pkt = MLNextPacket();
-    switch(pkt){
+    switch (pkt)
+    {
     case RETURNPKT:
       MLGetType();
       on_next_ = true;
       at_end = true;
       break;
-    case MESSAGEPKT: // Mathematica メッセージ識別子（symbol::string）
+    case MESSAGEPKT:  // Mathematica メッセージ識別子（symbol::string）
     {
       std::string str = get_string();
       break;
     }
-    case TEXTPKT: // Print[]で生成されるようなMathematica からのテキスト出力
+    case TEXTPKT:  // Print[]で生成されるようなMathematica からのテキスト出力
     {
       std::string str = get_string();
       str = utility::replace(str, "\\012", "\n");
       str = utility::replace(str, "\\011", "\t");
-      if(input_print_.empty()){
+      if (input_print_.empty())
+      {
         input_print_ = str;
-        if(trace)HYDLA_LOGGER_DEBUG("input: \n", str);
-      }else{
-        if(trace)HYDLA_LOGGER_DEBUG("trace: ", str);
+        if (trace)
+          HYDLA_LOGGER_DEBUG("input: \n", str);
+      }
+      else
+      {
+        if (trace)
+          HYDLA_LOGGER_DEBUG("trace: ", str);
         debug_print_ += str + "\n";
       }
       break;
@@ -159,7 +169,7 @@ bool MathematicaLink::receive_to_return_packet(){
       break;
     case SYNTAXPKT:
       break;
-    case INPUTNAMEPKT: // 次の入力に割り当てられる名前（通常 In[n]:=）
+    case INPUTNAMEPKT:  // 次の入力に割り当てられる名前（通常 In[n]:=）
     {
       std::string str = get_string();
       break;
@@ -183,139 +193,152 @@ bool MathematicaLink::receive_to_return_packet(){
       throw LinkError("math", "receive unknownpkt", pkt);
       break;
     }
-    if(at_end)break;
+    if (at_end)
+      break;
     MLNewPacket();
   }
   return true;
 }
 
-
-void MathematicaLink::_check(){
+void MathematicaLink::_check()
+{
   int pkt;
   // 結果を受け取る（受け取るまで待ち続ける）
   std::cout << "in _check()" << std::endl;
-  while(true){
-    if((pkt = MLNextPacket()) == ILLEGALPKT){
+  while (true)
+  {
+    if ((pkt = MLNextPacket()) == ILLEGALPKT)
+    {
       std::cout << "illegal packet" << std::endl;
       break;
     }
     std::cout << "not illegal:" << pkt << std::endl;
-    switch(pkt){
+    switch (pkt)
+    {
     case RETURNPKT:
       check();
       break;
 
-    case MESSAGEPKT: // Mathematica メッセージ識別子（symbol::string）
+    case MESSAGEPKT:  // Mathematica メッセージ識別子（symbol::string）
       std::cout << "messagepkt" << std::endl;
       std::cout << "#message:" << get_string() << std::endl;
       break;
-    case TEXTPKT: // Print[]で生成されるようなMathematica からのテキスト出力
+    case TEXTPKT:  // Print[]で生成されるようなMathematica からのテキスト出力
       std::cout << "textpkt" << std::endl;
       std::cout << "#text:" << get_string() << std::endl;
       break;
     case SYNTAXPKT:
       std::cout << "syntaxpkt" << std::endl;
       break;
-    case INPUTNAMEPKT: // 次の入力に割り当てられる名前（通常 In[n]:=）
+    case INPUTNAMEPKT:  // 次の入力に割り当てられる名前（通常 In[n]:=）
       std::cout << "inputnamepkt" << std::endl;
       std::cout << "#inputname:" << get_string() << std::endl;
       break;
     default:
       std::cout << "unknown_outer" << std::endl;
-    } 
+    }
     MLNewPacket();
     std::cout << "new packet" << std::endl;
   }
   std::cout << "while end" << std::endl;
   std::cout << std::endl;
-
 }
 
-void MathematicaLink::check(){
+void MathematicaLink::check()
+{
   // Returnパケット以降のチェック
   std::cout << "in check()" << std::endl;
-  switch(MLGetType()){ // 現行オブジェクトの型を得る
-  case MLTKSTR: // 文字列
+  switch (MLGetType())
+  {              // 現行オブジェクトの型を得る
+  case MLTKSTR:  // 文字列
     strCase();
     break;
-  case MLTKSYM: // シンボル（記号）
+  case MLTKSYM:  // シンボル（記号）
     symCase();
     break;
-  case MLTKINT: // 整数
+  case MLTKINT:  // 整数
     intCase();
     break;
-  case MLTKOLDINT: // 古いバージョンのMathlinkライブラリの整数
+  case MLTKOLDINT:  // 古いバージョンのMathlinkライブラリの整数
     std::cout << "oldint" << std::endl;
     break;
-  case MLTKERR: // エラー
+  case MLTKERR:  // エラー
     std::cout << "err" << std::endl;
     break;
-  case MLTKFUNC: // 合成関数
+  case MLTKFUNC:  // 合成関数
     funcCase();
     break;
-  case MLTKREAL: // 近似実数
+  case MLTKREAL:  // 近似実数
     std::cout << "real" << std::endl;
     break;
   case MLTKOLDREAL:
     std::cout << "oldreal" << std::endl;
     break;
   case MLTKOLDSTR:
-    std::cout <<"oldstr" << std::endl;
+    std::cout << "oldstr" << std::endl;
     break;
   case MLTKOLDSYM:
     std::cout << "oldsym" << std::endl;
     break;
   default:
-    std::cout <<"unknown_token" << std::endl;
+    std::cout << "unknown_token" << std::endl;
   }
   std::cout << std::endl;
 }
 
-void MathematicaLink::strCase(){
+void MathematicaLink::strCase()
+{
   std::cout << "str" << std::endl;
   std::cout << "#string:\"" << get_string() << "\"" << std::endl;
 }
 
-void MathematicaLink::symCase(){
+void MathematicaLink::symCase()
+{
   std::cout << "symbol" << std::endl;
   std::cout << "#symname:" << get_string() << std::endl;
 }
 
-void MathematicaLink::intCase(){
+void MathematicaLink::intCase()
+{
   std::cout << "int" << std::endl;
   int n;
-  if(! MLGetInteger(&n)){
+  if (!MLGetInteger(&n))
+  {
     std::cout << "MLGetInteger:unable to read the int from ml" << std::endl;
   }
   std::cout << "#n:" << n << std::endl;
 }
 
-void MathematicaLink::funcCase(){
+void MathematicaLink::funcCase()
+{
   std::cout << "func" << std::endl;
   int funcarg;
-  if(! MLGetArgCount(&funcarg)){
+  if (!MLGetArgCount(&funcarg))
+  {
     std::cout << "#funcCase:MLGetArgCount:unable to get the number of arguments from ml" << std::endl;
   }
   std::cout << "#funcarg:" << funcarg << std::endl;
-  switch(MLGetNext()){ //
-  case MLTKFUNC: // 関数（Derivative[1][f]におけるDerivative[1]のように）
+  switch (MLGetNext())
+  {               //
+  case MLTKFUNC:  // 関数（Derivative[1][f]におけるDerivative[1]のように）
     std::cout << "#funcCase:case MLTKFUNC" << std::endl;
     funcCase();
     break;
-  case MLTKSYM: // シンボル（記号）
+  case MLTKSYM:  // シンボル（記号）
     std::cout << "#funcCase:case MLTKSYM" << std::endl;
     {
-      const char* s;
+      const char *s;
       MLGetSymbol(&s);
       std::cout << "#funcname:" << s << std::endl;
       MLReleaseString(s);
     }
     break;
-  default:
-    ;
+  default:;
   }
-  for(int i=0; i<funcarg; i++){
-    switch (MLGetNext()){
+  for (int i = 0; i < funcarg; i++)
+  {
+    switch (MLGetNext())
+    {
     case MLTKSTR:
       strCase();
       break;
@@ -328,13 +351,13 @@ void MathematicaLink::funcCase(){
     case MLTKFUNC:
       funcCase();
       break;
-    case MLTKOLDINT: // 古いバージョンのMathlinkライブラリの整数
+    case MLTKOLDINT:  // 古いバージョンのMathlinkライブラリの整数
       std::cout << "#funcCase:oldint" << std::endl;
       break;
-    case MLTKERR: // エラー
+    case MLTKERR:  // エラー
       std::cout << "#funcCase:err" << std::endl;
       break;
-    case MLTKREAL: // 近似実数
+    case MLTKREAL:  // 近似実数
       std::cout << "#funcCase:real" << std::endl;
       break;
     case MLTKOLDREAL:
@@ -347,7 +370,7 @@ void MathematicaLink::funcCase(){
       std::cout << "#funcCase:oldsym" << std::endl;
       break;
     default:
-      std::cout << "#funcCase:unknown_token" << std::endl;      
+      std::cout << "#funcCase:unknown_token" << std::endl;
     }
   }
 }
@@ -361,15 +384,16 @@ void MathematicaLink::pre_receive()
   receive_to_return_packet();
   get_next();
   int ret_code = get_integer();
-  if(ret_code == 0) {
+  if (ret_code == 0)
+  {
     throw LinkError(backend_name(), "input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print(), 0, "");
   }
-  if(ret_code == -1) {
+  if (ret_code == -1)
+  {
     throw timeout::TimeOutError("input:\n" + get_input_print() + "\n\ntrace:\n" + get_debug_print());
   }
 }
 
-  
 void MathematicaLink::get_function(std::string &name, int &cnt)
 {
   cnt = get_arg_count();
@@ -379,11 +403,12 @@ void MathematicaLink::get_function(std::string &name, int &cnt)
 std::string MathematicaLink::get_symbol()
 {
   const char *s;
-  if(!on_next_)
+  if (!on_next_)
   {
     get_next();
   }
-  if(!MLGetSymbol(&s)){
+  if (!MLGetSymbol(&s))
+  {
     throw LinkError("math", "get_symbol", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   std::string ret = s;
@@ -392,31 +417,33 @@ std::string MathematicaLink::get_symbol()
   on_next_ = false;
   return ret;
 }
-  
+
 std::string MathematicaLink::get_string()
 {
-  const char*s;
-  if(!on_next_)
+  const char *s;
+  if (!on_next_)
   {
     get_next();
   }
-  if(!MLGetString(&s)) {
+  if (!MLGetString(&s))
+  {
     throw LinkError("math", "get_string", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   std::string ret = s;
   MLReleaseString(s);
   on_next_ = false;
-  return ret; 
+  return ret;
 }
-    
+
 int MathematicaLink::get_integer()
 {
   int i;
-  if(!on_next_)
+  if (!on_next_)
   {
     get_next();
   }
-  if(!MLGetInteger(&i)) {
+  if (!MLGetInteger(&i))
+  {
     throw LinkError("math", "get_integer", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   on_next_ = false;
@@ -426,11 +453,12 @@ int MathematicaLink::get_integer()
 double MathematicaLink::get_double()
 {
   double d;
-  if(!on_next_)
+  if (!on_next_)
   {
     get_next();
   }
-  if(!MLGetDouble(&d)) {
+  if (!MLGetDouble(&d))
+  {
     throw LinkError("math", "get_double", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   on_next_ = false;
@@ -440,11 +468,12 @@ double MathematicaLink::get_double()
 int MathematicaLink::get_arg_count()
 {
   int c;
-  if(!on_next_)
+  if (!on_next_)
   {
-    get_next(); 
+    get_next();
   }
-  if(!MLGetArgCount(&c)){
+  if (!MLGetArgCount(&c))
+  {
     throw LinkError("math", "get_arg_count", MLError(), "input:\n" + input_print_ + "\n\ntrace:\n" + debug_print_);
   }
   on_next_ = false;
@@ -456,10 +485,10 @@ void MathematicaLink::post_receive()
   MLNewPacket();
 }
 
-
-MathematicaLink::DataType MathematicaLink::get_type(){
+MathematicaLink::DataType MathematicaLink::get_type()
+{
   int tk_type;
-  if(!on_next_)
+  if (!on_next_)
   {
     on_next_ = true;
     tk_type = MLGetNext();
@@ -468,7 +497,7 @@ MathematicaLink::DataType MathematicaLink::get_type(){
   {
     tk_type = MLGetType();
   }
-  switch(tk_type)
+  switch (tk_type)
   {
   case MLTKFUNC:
     return DT_FUNC;
@@ -484,10 +513,11 @@ MathematicaLink::DataType MathematicaLink::get_type(){
   }
 }
 
-MathematicaLink::DataType MathematicaLink::get_next(){
+MathematicaLink::DataType MathematicaLink::get_next()
+{
   int tk_type = MLGetNext();
   on_next_ = false;
-  switch(tk_type)
+  switch (tk_type)
   {
   case MLTKFUNC:
     return DT_FUNC;
@@ -503,8 +533,7 @@ MathematicaLink::DataType MathematicaLink::get_next(){
   }
 }
 
-
-void MathematicaLink::put_parameter(const std::string& name, int diff_count, int id)
+void MathematicaLink::put_parameter(const std::string &name, int diff_count, int id)
 {
   put_function(par_prefix.c_str(), 3);
   put_symbol(name.c_str());
@@ -512,10 +541,9 @@ void MathematicaLink::put_parameter(const std::string& name, int diff_count, int
   put_integer(id);
 }
 
-
 std::string MathematicaLink::get_token_name(int tk_type)
 {
-  switch(tk_type)
+  switch (tk_type)
   {
   case MLTKFUNC:
     return "MLTKFUNC";
@@ -529,7 +557,6 @@ std::string MathematicaLink::get_token_name(int tk_type)
     return "unknown token";
   }
 }
-
 }
 }
 }

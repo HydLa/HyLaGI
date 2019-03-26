@@ -10,6 +10,7 @@
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
 #include "RelationGraph.h"
+#include "NonlinearSolver.h"
 
 namespace kv
 {
@@ -178,6 +179,8 @@ private:
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
   int                                   upper_bound_of_itv_newton = 100;
+
+  interval::NonlinearSolver nonlinear_solver;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;

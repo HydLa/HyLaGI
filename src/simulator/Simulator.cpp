@@ -16,17 +16,20 @@
 using namespace std;
 using namespace hydla::backend;
 
-namespace hydla {
-namespace simulator {
-
+namespace hydla
+{
+namespace simulator
+{
 bool PhaseComparator::operator()(const phase_result_sptr_t &lhs, const phase_result_sptr_t &rhs) const
 {
-  if (lhs == nullptr) return true;
-  if (rhs == nullptr) return false;
+  if (lhs == nullptr)
+    return true;
+  if (rhs == nullptr)
+    return false;
   return (rhs->id > lhs->id);
 }
 
-Simulator::Simulator(Opts& opts): opts_(&opts), exit_status(EXIT_SUCCESS)
+Simulator::Simulator(Opts &opts) : opts_(&opts), exit_status(EXIT_SUCCESS)
 {
   affine_transformer_ = interval::AffineApproximator::get_instance();
   affine_transformer_->set_simulator(this);
@@ -47,7 +50,7 @@ void Simulator::set_backend(backend_sptr_t back)
   backend = back;
 }
 
-void Simulator::initialize(const parse_tree_sptr& parse_tree)
+void Simulator::initialize(const parse_tree_sptr &parse_tree)
 {
   auto detail = logger::Detail("call_timer.get_elapsed_us()");
 
@@ -76,6 +79,28 @@ void Simulator::initialize(const parse_tree_sptr& parse_tree)
   }
 
   profile_vector_.reset(new entire_profile_t());
+
+  {
+    /*
+    auto mss = module_set_container_->get_full_ms_list();
+    for (auto &ms : mss)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK MSS : ", ms.get_infix_string());
+      ms.dump(std::cout);
+      for (auto &s : ms)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK MSS : ", s.first);
+      }
+    }
+    */
+    auto ms = module_set_container_->get_max_module_set();
+    for (auto &s : ms)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK MSS : ", s.first, " : ", *s.second);
+    }
+    //HYDLA_LOGGER_DEBUG("BREAK MSS : ", ms.get_infix_string());
+    //ms.dump(std::cout);
+  }
 }
 
 void Simulator::reset_result_root()
@@ -86,8 +111,8 @@ void Simulator::reset_result_root()
   result_root_->end_time = value_t("0");
 }
 
-void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
-{    
+void Simulator::init_module_set_container(const parse_tree_sptr &parse_tree)
+{
   if (opts_->static_generation_of_module_sets)
   {
     if (opts_->nd_mode)
@@ -108,14 +133,14 @@ void Simulator::init_module_set_container(const parse_tree_sptr& parse_tree)
   }
 }
 
-void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
+void Simulator::init_variable_map(const parse_tree_sptr &parse_tree)
 {
   for (auto entry : parse_tree->get_variable_map())
   {
     for (int d = 0; d <= entry.second; ++d)
     {
       variable_t v;
-      v.name               = entry.first;
+      v.name = entry.first;
       v.differential_count = d;
       variable_set_.insert(v);
       original_map_[v] = ValueRange();
@@ -123,7 +148,7 @@ void Simulator::init_variable_map(const parse_tree_sptr& parse_tree)
   }
 }
 
-parameter_t Simulator::introduce_parameter(const variable_t &var,const PhaseResult &phase, const ValueRange &range)
+parameter_t Simulator::introduce_parameter(const variable_t &var, const PhaseResult &phase, const ValueRange &range)
 {
   parameter_t param(var, phase);
   return introduce_parameter(param, range);
@@ -154,7 +179,7 @@ phase_result_sptr_t Simulator::make_initial_todo()
   return todo;
 }
 
-phase_list_t Simulator::process_one_todo(phase_result_sptr_t& todo)
+phase_list_t Simulator::process_one_todo(phase_result_sptr_t &todo)
 {
   if (opts_->max_phase >= 0 && todo->step >= opts_->max_phase)
   {
@@ -202,5 +227,5 @@ int Simulator::get_exit_status()
   return exit_status;
 }
 
-} // namespace simulator
-} // namespace hydla
+}  // namespace simulator
+}  // namespace hydla

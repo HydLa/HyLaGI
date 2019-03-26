@@ -289,7 +289,7 @@ void TreeInfixPrinter::visit(boost::shared_ptr<Function> node)
 
 void TreeInfixPrinter::visit(boost::shared_ptr<UnsupportedFunction> node)
 {
-  (*output_stream_) << "\"" << node->get_name() << "\"[";
+  (*output_stream_) << node->get_name() << "[";
   int i=0;
   while (true)
   {

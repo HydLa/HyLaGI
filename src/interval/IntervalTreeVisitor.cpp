@@ -8,20 +8,16 @@ namespace hydla
 {
 namespace interval
 {
-
 using namespace hydla::symbolic_expression;
 
 itvd IntervalTreeVisitor::pi = kv::constants<itvd>::pi();
 itvd IntervalTreeVisitor::e = kv::constants<itvd>::e();
 
-
-
 IntervalTreeVisitor::IntervalTreeVisitor()
 {
 }
 
-
-itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, parameter_map_t *map)
+itvd IntervalTreeVisitor::get_interval_value(const node_sptr &node, itvd *t, parameter_map_t *map)
 {
   time_interval = t;
   parameter_map = map;
@@ -31,12 +27,11 @@ itvd IntervalTreeVisitor::get_interval_value(const node_sptr& node, itvd *t, par
     //HYDLA_LOGGER_DEBUG_VAR("PARAM : " + it->first.get_name() + " -> " + it->second.get_string());
   }
   accept(node);
-  if(current_value.is_integer)
+  if (current_value.is_integer)
     return itvd(current_value.integer);
   else
     return current_value.interval_value;
 }
-
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
@@ -96,23 +91,23 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
   IntervalOrInteger rhs = current_value;
 
   itvd base;
-  if(lhs.is_integer)
+  if (lhs.is_integer)
     base = itvd(lhs.integer);
   else
     base = lhs.interval_value;
   // TODO: avoid string comparison
-  if(rhs.is_integer)
+  if (rhs.is_integer)
   {
     current_value.interval_value = pow(base, rhs.integer);
   }
-  else if(get_infix_string(node->get_rhs()) == "1/2")
+  else if (get_infix_string(node->get_rhs()) == "1/2")
   {
     current_value.interval_value = sqrt(base);
   }
-  else if(get_infix_string(node->get_rhs()) == "-1/2")
+  else if (get_infix_string(node->get_rhs()) == "-1/2")
   {
     //HYDLA_LOGGER_DEBUG_VAR(base);
-    current_value.interval_value = 1/sqrt(base);
+    current_value.interval_value = 1 / sqrt(base);
   }
   else
   {
@@ -141,7 +136,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Po
 
   //HYDLA_LOGGER_DEBUG("Pos B}");
 }
-
 
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
@@ -176,7 +170,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nu
     // HYDLA_LOGGER_NODE_VALUE;
     return;
   }
-  catch(const boost::bad_lexical_cast &e)
+  catch (const boost::bad_lexical_cast &e)
   {
     // do nothing
   }
@@ -202,15 +196,16 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
   //HYDLA_LOGGER_DEBUG("Func A{ : ", get_infix_string(node));
   std::string name = node->get_name();
   itvd arg;
-  if(name == "sin")
+  if (name == "Sin")
+  //if (name == "sin")
   {
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
-    
-    if(current_value.is_integer)
+
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -223,36 +218,16 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     current_value.is_integer = false;
     //HYDLA_LOGGER_DEBUG("Func B1 Sin : ", current_value.interval_value);
   }
-  else if(name == "cos")
+  else if (name == "Cos")
+  //else if (name == "cos")
   {
-    if(node->get_arguments_size() != 1)
-    {
-      invalid_node(*node); 
-    }
-    accept(node->get_argument(0));
-
-    if(current_value.is_integer)
-    {
-      arg = itvd(current_value.integer);
-    }
-    else
-    {
-      arg = current_value.interval_value;
-    }
-    
-    current_value.interval_value = cos(arg);
-    current_value.is_integer = false;
-    //HYDLA_LOGGER_DEBUG("Func B2 Cos : ", current_value.interval_value);
-  }
-  else if(name == "tan")
-  {
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
 
-    if(current_value.is_integer)
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -260,22 +235,45 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     {
       arg = current_value.interval_value;
     }
-    
+
+    current_value.interval_value = cos(arg);
+    current_value.is_integer = false;
+    //HYDLA_LOGGER_DEBUG("Func B2 Cos : ", current_value.interval_value);
+  }
+  else if (name == "Tan")
+  //else if (name == "tan")
+  {
+    if (node->get_arguments_size() != 1)
+    {
+      invalid_node(*node);
+    }
+    accept(node->get_argument(0));
+
+    if (current_value.is_integer)
+    {
+      arg = itvd(current_value.integer);
+    }
+    else
+    {
+      arg = current_value.interval_value;
+    }
+
     current_value.interval_value = tan(arg);
     current_value.is_integer = false;
 
     //HYDLA_LOGGER_DEBUG("Func B3 Tan : ", current_value.interval_value);
   }
-  else if(name == "log")
+  else if (name == "Log")
+  //else if (name == "log")
   {
     //HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
 
-    if(current_value.is_integer)
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -283,20 +281,21 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     {
       arg = current_value.interval_value;
     }
-    
+
     current_value.interval_value = log(arg);
     current_value.is_integer = false;
     //HYDLA_LOGGER_DEBUG("Func B4 Log : ", current_value.interval_value);
   }
-  else if(name == "sinh")
+  else if (name == "Sinh")
+  //else if (name == "sinh")
   {
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
 
-    if(current_value.is_integer)
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -304,21 +303,22 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     {
       arg = current_value.interval_value;
     }
-    
+
     current_value.interval_value = sinh(arg);
     current_value.is_integer = false;
 
     //HYDLA_LOGGER_DEBUG("Func B5 Sinh : ", current_value.interval_value);
   }
-  else if(name == "cosh")
+  else if (name == "Cosh")
+  //else if (name == "cosh")
   {
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
 
-    if(current_value.is_integer)
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -326,21 +326,22 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     {
       arg = current_value.interval_value;
     }
-    
+
     current_value.interval_value = cosh(arg);
     current_value.is_integer = false;
 
     //HYDLA_LOGGER_DEBUG("Func B6 Cosh : ", current_value.interval_value);
   }
-  else if(name == "tanh")
+  else if (name == "Tanh")
+  //else if (name == "tanh")
   {
-    if(node->get_arguments_size() != 1)
+    if (node->get_arguments_size() != 1)
     {
       invalid_node(*node);
     }
     accept(node->get_argument(0));
 
-    if(current_value.is_integer)
+    if (current_value.is_integer)
     {
       arg = itvd(current_value.integer);
     }
@@ -348,7 +349,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
     {
       arg = current_value.interval_value;
     }
-    
+
     current_value.interval_value = tanh(arg);
     current_value.is_integer = false;
 
@@ -366,7 +367,8 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Fu
 void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
 {
   //HYDLA_LOGGER_DEBUG("SymbolicT A{");
-  if(time_interval == nullptr)invalid_node(*node);
+  if (time_interval == nullptr)
+    invalid_node(*node);
   current_value.interval_value = *time_interval;
   current_value.is_integer = false;
   //HYDLA_LOGGER_DEBUG("SymbolicT B} : ", current_value.interval_value);
@@ -377,16 +379,19 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
 {
   //HYDLA_LOGGER_DEBUG("Parameter A{");
 
-  if(parameter_map == nullptr)throw HYDLA_ERROR("invalid node: " + node->get_string());
+  if (parameter_map == nullptr)
+    throw HYDLA_ERROR("invalid node: " + node->get_string());
   parameter_t param(node->get_name(),
                     node->get_differential_count(),
                     node->get_phase_id());
   auto param_it = parameter_map->find(param);
-  if(param_it == parameter_map->end())throw HYDLA_ERROR("invalid node: " + node->get_string());
+  if (param_it == parameter_map->end())
+    throw HYDLA_ERROR("invalid node: " + node->get_string());
 
-  range_t range = param_it->second;;
+  range_t range = param_it->second;
+  ;
 
-  if(range.unique())
+  if (range.unique())
   {
     accept(range.get_unique_value().get_node());
   }
@@ -395,7 +400,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
     value_t lower_value = (range.get_lower_bound()).value;
     accept(lower_value.get_node());
     itvd lower_itvd;
-    if(current_value.is_integer)
+    if (current_value.is_integer)
       lower_itvd = itvd(current_value.integer);
     else
       lower_itvd = current_value.interval_value;
@@ -403,7 +408,7 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
     value_t uppper_value = (range.get_upper_bound()).value;
     accept(uppper_value.get_node());
     itvd upper_itvd;
-    if(current_value.is_integer)
+    if (current_value.is_integer)
       upper_itvd = itvd(current_value.integer);
     else
       upper_itvd = current_value.interval_value;
@@ -415,7 +420,6 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pa
   //HYDLA_LOGGER_DEBUG("Parameter B} : ", current_value.interval_value);
 }
 
-
 void IntervalTreeVisitor::invalid_node(symbolic_expression::Node &node)
 {
   throw HYDLA_ERROR("invalid node: " + node.get_string());
@@ -426,14 +430,12 @@ void IntervalTreeVisitor::debug_print(std::string str, itvd x)
   std::cout << str << x << "\n";
 }
 
-
-#define DEFINE_INVALID_NODE(NODE_NAME)                                \
-  void IntervalTreeVisitor::visit(boost::shared_ptr<NODE_NAME> node)  \
-{                                                                \
-  HYDLA_LOGGER_DEBUG("");                                        \
-  invalid_node(*node);                                           \
-}
-
+#define DEFINE_INVALID_NODE(NODE_NAME)                               \
+  void IntervalTreeVisitor::visit(boost::shared_ptr<NODE_NAME> node) \
+  {                                                                  \
+    HYDLA_LOGGER_DEBUG("");                                          \
+    invalid_node(*node);                                             \
+  }
 
 DEFINE_INVALID_NODE(Variable)
 DEFINE_INVALID_NODE(Differential)
@@ -501,6 +503,5 @@ DEFINE_INVALID_NODE(SumOfList)
 DEFINE_INVALID_NODE(MulOfList)
 DEFINE_INVALID_NODE(SizeOfList)
 
-
-} // namespace interval
-} // namespace hydla
+}  // namespace interval
+}  // namespace hydla

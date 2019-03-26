@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <boost/iostreams/filtering_stream.hpp>
+#include "Timer.h"
 
 namespace hydla {
 namespace logger {
@@ -126,6 +127,16 @@ public:
     }
   }
 
+  static void debug_write_timer(const hydla::timer::Timer& timer) {
+    hydla::logger::Logger& i = hydla::logger::Logger::instance();
+    if (i.html_mode) {
+      i.debug_ << R"(timer elapsed: <span class="timer" style="background-color:#f09b3b">)" << timer.get_elapsed_us() << "</span>[us]<br>" << std::endl;
+    }
+    else {
+      i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]" << std::endl;
+    }
+  }
+
   static bool is_html_mode() {
     hydla::logger::Logger& i = hydla::logger::Logger::instance();
     return i.html_mode;
@@ -146,8 +157,19 @@ public:
 
     std::string defaultStyle(R"(
 html {
-  background: #EEE;
-  padding: 1em;
+  height: 100%;
+}
+body {
+  margin: 0;
+  height: 100%;
+}
+.ps__rail-y {
+  opacity: 1.0!important;
+  width: 15px!important;
+  background-size:100% 100% !important;
+}
+.ps__thumb-y {
+  width: 10px!important;
 }
 details {
   background: #FFF;
@@ -163,11 +185,36 @@ summary {
   padding: 3px;
   margin: 0 0px 5px -2px;
 }
-)");
+.bottomButton {
+  position: fixed;
+  z-index: 99;
+  font-size: 18px;
+  border: none;
+  outline: none;
+  background-color: #333;
+  color: #f2f2f2;
+  cursor: pointer;
+  padding: 15px;
+}
+.bottomButton:hover {
+  background: #ddd;
+  color: black;
+}
+#expandButton {
+  bottom: 20px;
+  right: 30px;
+}
+#closeButton {
+  bottom: 72px;
+  right: 30px;
+})");
 
     i.debug_ << "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\" />" << std::endl;
     i.debug_ << std::string("<style>\n") + defaultStyle + "</style>" << std::endl;
     i.debug_ << "</head>\n<body>" << std::endl;
+    i.debug_ << R"*(<button onclick="openAll()" class="bottomButton" id="expandButton">Expand all</button>)*" << std::endl;
+    i.debug_ << R"*(<button onclick="closeAll()" class="bottomButton" id="closeButton">Close all</button>)*" << std::endl;
+    i.debug_ << R"(<div class="article">)" << std::endl;
   }
 
 private:
@@ -237,7 +284,7 @@ class Detail
 public:
   Detail(const std::string& summary) {
     if (Logger::is_html_mode()) {
-      Logger::debug_write_row(std::string("<details><summary>") + summary + "</summary>\n<div style=\"padding-left:1em\">\n");
+      Logger::debug_write_row(std::string(R"*(<details ontoggle="reloadMakers()"><summary>)*") + summary + "</summary>\n<div style=\"padding-left:1em\">\n");
     }
   }
 

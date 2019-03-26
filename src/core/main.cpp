@@ -1,36 +1,35 @@
-#include <iostream>
 #include <exception>
-#include <string>
 #include <fstream>
+#include <iostream>
 #include <regex>
+#include <string>
 
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
 
 // core
-#include "version.h"
 #include "ProgramOptions.h"
+#include "version.h"
 
 // common
 #include "Timer.h"
 
 // constraint hierarchy
-#include "ModuleSetContainerCreator.h"
 #include "IncrementalModuleSet.h"
+#include "ModuleSetContainerCreator.h"
 
-#include "SequentialSimulator.h"
+#include "AffineTreeVisitor.h"
 #include "Logger.h"
+#include "Parser.h"
+#include "SequentialSimulator.h"
 #include "SignalHandler.h"
 #include "Utility.h"
-#include "AffineTreeVisitor.h"
-#include "Parser.h"
 
 #include <boost/regex.hpp>
 
 // debug
-#include "debug_main.h"
-
+//#include "debug_main.h"
 
 // namespace
 using namespace boost;
@@ -40,7 +39,7 @@ using namespace hydla::timer;
 using namespace hydla::parser;
 using namespace hydla::symbolic_expression;
 using namespace hydla::parse_tree;
-using namespace hydla::debug;
+//using namespace hydla::debug;
 using namespace hydla::hierarchy;
 using namespace std;
 
@@ -51,9 +50,9 @@ int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
 bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& p);
 bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
-void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
+void add_vars_from_string(string var_string, set<string>& set_to_add, string warning_prefix);
 bool process_opts(Opts& opts, ProgramOptions& p, bool use_default);
-void add_vars_from_string(string vars_list_string, set<string> &set_to_add, string warning_prefix);
+void add_vars_from_string(string vars_list_string, set<string>& set_to_add, string warning_prefix);
 
 extern ProgramOptions cmdline_options;
 extern simulator::SequentialSimulator* simulator_;
@@ -63,7 +62,7 @@ extern string input_file_name;
 /**
  * エントリポイント
  */
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
 #ifdef _MSC_VER
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -75,12 +74,13 @@ int main(int argc, char* argv[])
 int hydla_main(int argc, char* argv[])
 {
   cmdline_options.parse(argc, argv);
-  
+
   signal(SIGINT, signal_handler::interrupt_handler);
   signal(SIGTERM, signal_handler::term_handler);
 
-  if(dump_in_advance(cmdline_options))return 0;
-  
+  if (dump_in_advance(cmdline_options))
+    return 0;
+
   Timer main_timer;
 
   // ParseTreeの構築
@@ -88,18 +88,22 @@ int hydla_main(int argc, char* argv[])
   // そうでなければ標準入力から受け取る
   boost::shared_ptr<ParseTree> pt(new ParseTree);
   string input;
-  if(cmdline_options.count("input-file")) {
+  if (cmdline_options.count("input-file"))
+  {
     input_file_name = cmdline_options.get<string>("input-file");
     ifstream in(input_file_name.c_str());
-    if (!in) {
+    if (!in)
+    {
       throw runtime_error(string("cannot open \"") + input_file_name + "\"");
     }
-    input = string(std::istreambuf_iterator<char>(in), 
+    input = string(std::istreambuf_iterator<char>(in),
                    std::istreambuf_iterator<char>());
     input_file_name = utility::extract_file_name(input_file_name);
-  } else {
+  }
+  else
+  {
     input_file_name = "unknown";
-    input = string(std::istreambuf_iterator<char>(cin), 
+    input = string(std::istreambuf_iterator<char>(cin),
                    std::istreambuf_iterator<char>());
   }
 
@@ -109,21 +113,22 @@ int hydla_main(int argc, char* argv[])
     input = std::regex_replace(input, r, " ");
     input = std::regex_replace(input, std::regex("\n"), "\n\n");
   }
-  
+
   input = utility::cr_to_lf(input);
   string comment = utility::remove_comment(input);
   ProgramOptions options_in_source;
   const string option_header = "#hylagi";
   string option_string;
   string::size_type option_pos = comment.find(option_header);
-  if(option_pos != string::npos)
+  if (option_pos != string::npos)
   {
     option_pos += option_header.length();
     string::size_type pos = comment.find('\n', option_pos + 1);
-    option_string = comment.substr(option_pos, pos==string::npos?string::npos:pos - option_pos);
+    option_string = comment.substr(option_pos, pos == string::npos ? string::npos : pos - option_pos);
   }
   options_in_source.parse(option_string);
-  if(dump_in_advance(options_in_source))return 0;
+  if (dump_in_advance(options_in_source))
+    return 0;
   process_opts(opts, options_in_source, true);
 
   Logger::set_html_mode(opts.html);
@@ -134,15 +139,13 @@ int hydla_main(int argc, char* argv[])
 
     class MacroDefinition
     {
-    public:
-
+     public:
       MacroDefinition(const std::string& name, const std::string& argments, const std::string& definition)
-        : m_name(name)
-        , m_argments(splitArgments(argments))
-        , m_definition(definition)
-      {}
+          : m_name(name), m_argments(splitArgments(argments)), m_definition(definition)
+      {
+      }
 
-      void apply(std::string& input, std::string::size_type offset)const
+      void apply(std::string& input, std::string::size_type offset) const
       {
         if (debugPrint)
         {
@@ -246,8 +249,7 @@ int hydla_main(int argc, char* argv[])
         }
       }
 
-    private:
-
+     private:
       static std::vector<std::string> splitArgments(const std::string& argments)
       {
         const auto left = argments.find_first_of('(');
@@ -255,7 +257,7 @@ int hydla_main(int argc, char* argv[])
 
         if (left == string::npos || right == string::npos || !(left + 1 < right))
         {
-          return{};
+          return {};
         }
 
         std::vector<std::string> result;
@@ -285,7 +287,6 @@ int hydla_main(int argc, char* argv[])
                 }
               }
               break;
-
             }
             if (rawStr[next] == ',' && nestDepth == 0)
             {
@@ -311,10 +312,9 @@ int hydla_main(int argc, char* argv[])
         }
 
         return result;
-
       }
 
-      std::string appliedDefinition(const std::vector<std::string>& argments)const
+      std::string appliedDefinition(const std::vector<std::string>& argments) const
       {
         if (m_argments.size() != argments.size())
         {
@@ -408,7 +408,7 @@ int hydla_main(int argc, char* argv[])
       std::cout << "result ->\n";
     }
   }
-  
+
   // コメント中の変数省略指定を調べる
   opts.output_mode = Opts::None;
 
@@ -423,7 +423,7 @@ int hydla_main(int argc, char* argv[])
     isOmit = true;
     opts.output_mode = Opts::Omit;
   }
-  else 
+  else
   {
     // #output を検索
     output_pos = comment.find(output_comment);
@@ -457,17 +457,28 @@ int hydla_main(int argc, char* argv[])
   //   cout << affine.to_affine() << endl;
   //   return 0;
   // }
-  
-  
+
+  std::cout << "testabs: " << abs(-0.25) << std::endl;
+
+  process_opts(opts, cmdline_options, false);
+
+  Logger::set_html_mode(opts.html);
+  Logger::initialize();
+  if (opts.debug_mode)
+    Logger::instance().set_log_level(Logger::Debug);
+  else
+    Logger::instance().set_log_level(Logger::Warn);
+
   pt->parse_string(input);
 
-  if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
+  if (cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
   {
     HYDLA_LOGGER_STANDARD("successfully parsed");
     return 0;
   }
 
-  if(cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
+  /*
+  if (cmdline_options.count("debug_constraint") || options_in_source.count("debug_constraint"))
   {
     cout << "debug constraint" << endl;
     Debug db;
@@ -476,8 +487,25 @@ int hydla_main(int argc, char* argv[])
     Debug::dump_debug(&db, input, pt, msc);
     return 0;
   }
-  
-  if(dump(pt, cmdline_options) || dump(pt, options_in_source)) {
+  */
+
+  {
+    opts.dump_module_set = false;
+    opts.dump_module_priority = false;
+
+    if (cmdline_options.count("dump_module_set_graph") > 0 || options_in_source.count("dump_module_set_graph") > 0)
+    {
+      opts.dump_module_set = true;
+    }
+
+    if (cmdline_options.count("dump_module_priority_graph") > 0 || options_in_source.count("dump_module_priority_graph") > 0)
+    {
+      opts.dump_module_priority = true;
+    }
+  }
+
+  if (dump(pt, cmdline_options) || dump(pt, options_in_source))
+  {
     return 0;
   }
 
@@ -498,23 +526,26 @@ int hydla_main(int argc, char* argv[])
  */
 bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 {
-
-  if(po.count("dump_parse_tree")>0) {
+  if (po.count("dump_parse_tree") > 0)
+  {
     pt->to_graphviz(cout);
     return true;
   }
 
-  if(po.count("dump_parse_tree_json")>0) {
+  if (po.count("dump_parse_tree_json") > 0)
+  {
     pt->dump_in_json(cout);
     return true;
   }
 
-  if(po.count("debug_constraint")>0) {
+  if (po.count("debug_constraint") > 0)
+  {
     //dump_debug(cout);
     //cout << "hoge";
     return true;
   }
 
+  /*
   if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
     boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
@@ -528,19 +559,21 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
     msc->dump_priority_data_for_graphviz(cout);
     return true;
   }
+  */
 
   return false;
 }
 
-
 bool dump_in_advance(ProgramOptions& po)
 {
-  if(po.count("help")) {     // ヘルプ表示して終了
+  if (po.count("help"))
+  {  // ヘルプ表示して終了
     po.help_msg(cout);
     return true;
   }
 
-  if(po.count("version")) {  // バージョン表示して終了
+  if (po.count("version"))
+  {  // バージョン表示して終了
     cout << Version::description() << endl;
     return true;
   }

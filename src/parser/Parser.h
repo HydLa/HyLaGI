@@ -158,5 +158,8 @@ private:
   std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition> > tmp_program_list_definitions;
 };
 
+node_sptr double_to_node(double num);
+
+
 }// namespace parser
 }// namespace hydla

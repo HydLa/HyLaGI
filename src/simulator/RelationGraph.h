@@ -254,10 +254,13 @@ public:
 
   GuardNode *get_guard_node(const constraint_t &guard);
 
+  void remove(const constraint_t& guard);
+
+  void add(module_t &mod);
 private:
   typedef std::map<Variable, VariableNode*> variable_map_t;  
   
-  void add(module_t &mod);
+  //void add(module_t &mod);
 
   void get_related_constraints_core(const Variable &var, ConstraintStore &constraints, module_set_t &module_set);
   

@@ -24,6 +24,7 @@ public:
                     hydla::symbolic_expression::node_sptr> module_t;
   typedef std::set<module_t>                      module_list_t;
   typedef module_list_t::const_iterator           module_list_const_iterator;
+  typedef module_list_t::iterator           module_list_iterator;
 
   struct ModuleComp
   {
@@ -38,6 +39,83 @@ public:
   ModuleSet(ModuleSet& lhs, ModuleSet& rhs);
 
   ~ModuleSet();
+
+  void replace(int x)const
+  {
+   bool flagA=false, flagB=false, flagC=false;
+
+   for(auto it = module_list_.begin(); it != module_list_.end();)
+   {
+     if(it->first == "1<=a&a<=2")
+     {
+       it = module_list_.erase(it);
+       flagA=true;
+     }
+     else if(it->first == "a=0")
+     {
+       it = module_list_.erase(it);
+       flagB=true;
+     }
+     else if(it->first == "b=0")
+     {
+       it = module_list_.erase(it);
+       flagC=true;
+     }
+     else
+     {
+       ++it;
+     }
+   }
+  /*
+    for(auto& m : module_list_)
+    {
+	if (m.first == "1<=a&a<=2")
+	    {
+	      using hydla::symbolic_expression::LogicalAnd;
+	      using hydla::symbolic_expression::LessEqual;
+	      using hydla::symbolic_expression::Equal;
+	      using hydla::symbolic_expression::Variable;
+	      using hydla::symbolic_expression::Number;
+	      using hydla::symbolic_expression::Constraint;
+
+	      using hydla::symbolic_expression::node_sptr;
+	      
+	      m.second =
+		  boost::shared_ptr<Constraint>(new Constraint(
+		      boost::shared_ptr<Equal>(new Equal(
+			  boost::shared_ptr<Variable>(new Variable("a")),
+			  boost::shared_ptr<Number>(new Number("2"))))));
+	    }
+    }
+    */
+
+using hydla::symbolic_expression::LogicalAnd;
+              using hydla::symbolic_expression::LessEqual;
+              using hydla::symbolic_expression::Equal;
+              using hydla::symbolic_expression::Variable;
+              using hydla::symbolic_expression::Number;
+              using hydla::symbolic_expression::Constraint;
+
+              using hydla::symbolic_expression::node_sptr;
+	if(flagB)
+	{
+
+        module_list_.insert(module_t("a=2",
+		  boost::shared_ptr<Constraint>(new Constraint(
+		      boost::shared_ptr<Equal>(new Equal(
+			  boost::shared_ptr<Variable>(new Variable("a")),
+			  boost::shared_ptr<Number>(new Number(std::to_string(x)))))))));
+			  }
+	if(flagC)
+	{
+        module_list_.insert(module_t("b=1",
+		  boost::shared_ptr<Constraint>(new Constraint(
+		      boost::shared_ptr<Equal>(new Equal(
+			  boost::shared_ptr<Variable>(new Variable("b")),
+			  boost::shared_ptr<Number>(new Number(std::to_string(x)))))))));
+			  }
+
+  }
 
   /**
    * 集合(このクラス)の名前
@@ -61,6 +139,22 @@ public:
    * 集合の最後の次の要素
    */
   module_list_const_iterator end() const 
+  {
+   return module_list_.end();
+  }
+
+  /**
+   * 集合の最初の要素
+   */
+  module_list_iterator begin()
+  {
+    return module_list_.begin();
+  }
+
+ /**
+   * 集合の最後の次の要素
+   */
+  module_list_iterator end()
   {
    return module_list_.end();
   }
@@ -143,7 +237,7 @@ public:
   friend std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
 
 private:
-  module_list_t module_list_;
+  mutable module_list_t module_list_;
 };
 
 std::ostream& operator<<(std::ostream& s, const ModuleSet& m);

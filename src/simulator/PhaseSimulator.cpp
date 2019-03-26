@@ -7,15 +7,15 @@
 #include "Logger.h"
 #include "Timer.h"
 
-#include "PrevReplacer.h"
-#include "VariableReplacer.h"
-#include "VariableFinder.h"
-#include "PrevSearcher.h"
-#include "HydLaError.h"
 #include "AlwaysFinder.h"
 #include "EpsilonMode.h"
-#include "ValueModifier.h"
 #include "GuardMapApplier.h"
+#include "HydLaError.h"
+#include "PrevReplacer.h"
+#include "PrevSearcher.h"
+#include "ValueModifier.h"
+#include "VariableFinder.h"
+#include "VariableReplacer.h"
 
 #include "MinTimeCalculator.h"
 
@@ -23,10 +23,12 @@
 
 #include "TreeInfixPrinter.h"
 
+#include "AffineApproximator.h"
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
 #include "kv/interval.hpp"
-#include "AffineApproximator.h"
+
+#include "IncrementalModuleSet.h"
 
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
@@ -56,9 +58,12 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
   timer::Timer phase_timer;
   module_set_container->reset();
+
   todo->inconsistent_module_sets.clear();
   todo->inconsistent_constraints.clear();
   aborting = false;
+
+  std::vector<node_sptr> temp_removed_constraints;
 
   if (todo->parent == result_root.get())
   {
@@ -98,8 +103,19 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       {
         always_finder.find_always(module.second, &always_set, &non_always, &diff_positives, &nonalways_asks);
       }
-      for (auto constraint : non_always) relation_graph_->set_expanded_atomic(constraint, false);
-      for (auto ask : nonalways_asks) relation_graph_->set_expanded_atomic(ask, false);
+
+      for (auto constraint : non_always)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK non_always set_expanded_atomic(constraint) false: ", get_infix_string(constraint));
+        relation_graph_->set_expanded_atomic(constraint, false);
+        temp_removed_constraints.push_back(constraint);
+      }
+      for (auto ask : nonalways_asks)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK non_always set_expanded_atomic(ask) false: ", get_infix_string(ask));
+        relation_graph_->set_expanded_atomic(ask, false);
+        temp_removed_constraints.push_back(ask);
+      }
     }
 
     if (todo->phase_type == INTERVAL_PHASE)
@@ -108,10 +124,186 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     }
   }
 
+  static int currentNum = 0;
+  if (todo->phase_type == POINT_PHASE)
+  {
+    if (todo->parent != result_root.get())
+    {
+      //nonlinear_solver.reset();
+      //nonlinear_solver.addPP();
+      //++currentNum;
+      //nonlinear_solver.reset();
+      //nonlinear_solver.addIP(currentNum);
+    }
+    //nonlinear_solver.reset();
+    //nonlinear_solver.dump();
+    //nonlinear_solver.addPP();
+    /*for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints())
+    {
+      todo->remove_asks(p);
+    }
+    for (auto &m : nonlinear_solver.getTempAddedModuleSets())
+    {
+      todo->parent->unadopted_ms.erase(m);
+    }*/
+  }
+  else
+  {
+    /*if (false)
+    {
+      static bool isfirst = true;
+      if (isfirst)
+      {
+        isfirst = false;
+        nonlinear_solver.addIP(2);
+
+        for (auto ms : nonlinear_solver.getTempAddedModuleSets())
+        {
+          for (auto m : ms)
+          {
+            relation_graph_->set_expanded_recursive(m.second, true);
+          }
+        }
+        ConstraintStore constraints;
+        for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints())
+        {
+          constraints.add_constraint(p);
+        }
+        //todo->diff_sum.add_constraint_store(constraints);
+      }
+    }*/
+
+    static bool isfirst = true;
+
+    if (true)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK Replace Modules begin");
+      //if (currentNum % 2 == 0)
+      {
+        for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints())
+        {
+          todo->remove_asks(p);
+        }
+        for (auto &m : nonlinear_solver.getTempAddedModuleSets())
+        {
+          todo->parent->unadopted_ms.erase(m);
+        }
+        nonlinear_solver.reset();
+      }
+
+      //++currentNum;
+      //const std::string currentPositionVal = (*variable_map_)[Variable("position1", 0)].get_string();
+      const std::string currentPositionVal = todo->prev_map[Variable("position1", 0)].get_string();
+      HYDLA_LOGGER_DEBUG("BREAK currentPositionVal: ", currentPositionVal);
+      nonlinear_solver.updateNum(std::stoi(currentPositionVal));
+
+      HYDLA_LOGGER_DEBUG("BREAK Replace Modules addIP");
+      //else
+      {
+        nonlinear_solver.addIP();
+
+        HYDLA_LOGGER_DEBUG("BREAK Replace tempAddedModuleSets: ", nonlinear_solver.getTempAddedModuleSets().size());
+        HYDLA_LOGGER_DEBUG("BREAK Replace tempAddedConstraints: ", nonlinear_solver.getTempAddedConstraints().size());
+
+        HYDLA_LOGGER_DEBUG("BREAK Replace Modules set_expanded_recursive");
+        for (auto ms : nonlinear_solver.getTempAddedModuleSets())
+        {
+          for (auto m : ms)
+          {
+            relation_graph_->set_expanded_recursive(m.second, true);
+          }
+        }
+        HYDLA_LOGGER_DEBUG("BREAK Replace Modules set_expanded_atomic");
+        for (auto ms : nonlinear_solver.getTempAddedModuleSets())
+        {
+          for (auto m : ms)
+          {
+            HYDLA_LOGGER_DEBUG("BREAK Replace Modules set_expanded_atomic about: ", get_infix_string(m.second));
+            for (auto it = temp_removed_constraints.begin(); it != temp_removed_constraints.end();)
+            {
+              const bool exists = m.second->has_sub_tree(**it);
+              HYDLA_LOGGER_DEBUG("BREAK Replace Modules set_expanded_atomic  with: ", get_infix_string(*it), " is ", (exists ? "true" : "false"));
+              if (exists)
+              {
+                HYDLA_LOGGER_DEBUG("BREAK always set_expanded_atomic(module) true: ", get_infix_string(*it));
+                relation_graph_->set_expanded_atomic(*it, true);
+                it = temp_removed_constraints.erase(it);
+              }
+              else
+              {
+                ++it;
+              }
+            }
+          }
+        }
+        //for (auto constraint : non_always) relation_graph_->set_expanded_atomic(constraint, false);
+        //for (auto ask : nonalways_asks) relation_graph_->set_expanded_atomic(ask, false);
+        HYDLA_LOGGER_DEBUG("BREAK Replace Modules add_constraint_store");
+        ConstraintStore constraints;
+        for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints())
+        {
+          constraints.add_constraint(p);
+        }
+        todo->diff_sum.add_constraint_store(constraints);
+      }
+      HYDLA_LOGGER_DEBUG("BREAK Replace Modules end");
+    }
+
+    isfirst = false;
+
+    /*
+    if (false)
+    {
+      ++currentNum;
+      for (simulator::constraint_t p : nonlinear_solver.getTempAddedConstraints(currentNum))
+      {
+        auto &asks = todo->discrete_asks;
+        for (auto it = asks.begin(); it != asks.end();)
+        {
+          const bool result = it->first->has_sub_tree(*p);
+          HYDLA_LOGGER_DEBUG("BREAK remove constraint: ", get_infix_string(p), ", discrete_ask:  ", get_infix_string(it->first), "  => ", result ? "true" : "false");
+          if (result)
+          {
+            it = asks.erase(it);
+          }
+          else
+          {
+            ++it;
+          }
+        }
+      }
+      for (auto &m : nonlinear_solver.getTempAddedModuleSets(currentNum))
+      {
+        todo->parent->unadopted_ms.erase(m);
+      }
+      nonlinear_solver.reset(currentNum);
+
+      //todo->discrete_asks
+      //todo->discrete_guards
+
+      //todo->module_diff;
+
+      nonlinear_solver.addIP(currentNum);
+      //nonlinear_solver.dump();
+
+      //if (opts_->dump_module_set)
+      {
+        auto pp = dynamic_cast<IncrementalModuleSet *>(module_set_container.get());
+        pp->dump_module_sets_for_graphviz(cout);
+        HYDLA_LOGGER_DEBUG("BREAK - dump_module_sets_for_graphviz");
+        exit(EXIT_SUCCESS);
+      }
+    }
+    */
+  }
+
   if (todo->phase_type == POINT_PHASE)
     backend_->call("setCurrentTime", true, 1, "vln", "", &todo->current_time);
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST process_todo");
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
+  HYDLA_LOGGER_DEBUG("BREAK TEST process_todo");
+
   if (phase_list.empty())
   {
     todo->simulation_state = INCONSISTENCY;
@@ -120,8 +312,36 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
   }
   else
   {
+    using hydla::symbolic_expression::Always;
+    using hydla::symbolic_expression::Ask;
+    using hydla::symbolic_expression::Constraint;
+    using hydla::symbolic_expression::ConstraintCaller;
+    using hydla::symbolic_expression::Differential;
+    using hydla::symbolic_expression::Equal;
+    using hydla::symbolic_expression::LogicalAnd;
+    using hydla::symbolic_expression::Node;
+    using hydla::symbolic_expression::Number;
+    using hydla::symbolic_expression::Previous;
+    using hydla::symbolic_expression::Variable;
+
+    /*simulator::constraint_t removeConstraint =
+        static_cast<boost::shared_ptr<Node>>(
+            boost::shared_ptr<Constraint>(new Constraint(
+                boost::shared_ptr<Always>(new Always(
+                    boost::shared_ptr<Equal>(new Equal(
+                        boost::shared_ptr<Differential>(new Differential(boost::shared_ptr<Variable>(new Variable("p")))),
+                        boost::shared_ptr<Number>(new Number("0")))))))));
+			*/
+    simulator::constraint_t removeConstraint =
+        static_cast<boost::shared_ptr<Node>>(
+            boost::shared_ptr<Equal>(new Equal(
+                boost::shared_ptr<Differential>(new Differential(boost::shared_ptr<Variable>(new Variable("p")))),
+                boost::shared_ptr<Number>(new Number("0")))));
+
     for (auto phase : phase_list)
     {
+      //phase->prev_map.erase(Variable("p", 1));
+      //phase->remove_parameter_constraint(removeConstraint);
       make_next_todo(phase);
 
       // warn against unreferenced variables
@@ -139,6 +359,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         break;
     }
   }
+  HYDLA_LOGGER_DEBUG("BREAK TEST process_todo");
 
   todo->profile["PhaseResult"] += phase_timer.get_elapsed_us();
   return phase_list;
@@ -160,9 +381,14 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   list<phase_result_sptr_t> result_list;
   timer::Timer preprocess_timer;
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   backend_->call("resetConstraint", false, 0, "", "");
   HYDLA_LOGGER_DEBUG_VAR(*todo);
   consistency_checker->set_prev_map(&todo->prev_map);
+
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   // add assumptions
   // TODO: If the discrete_guard is not approximated, this process may be redundant
   if (todo->phase_type == INTERVAL_PHASE)
@@ -191,12 +417,17 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     }
   }
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   for (auto guard : todo->discrete_guards)
   {
     constraint_t cons = guard;
+    HYDLA_LOGGER_DEBUG("BREAK make_results_from_todo discrete guard: ", get_infix_string(guard));
     backend_->call("makeEquation", false, 1, "en", "e", &cons, &cons);
     backend_->call("addAssumption", true, 1, "ep", "", &cons);
   }
+
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
 
   ConstraintStore parameter_cons = todo->get_parameter_constraint();
   HYDLA_LOGGER_DEBUG_VAR(parameter_cons);
@@ -208,6 +439,8 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
 
   todo->profile["Preprocess"] += preprocess_timer.get_elapsed_us();
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   asks_t nonprev_trigger_asks;
   if (todo->phase_type == POINT_PHASE)
   {
@@ -216,7 +449,9 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
       if (trigger.second)
       {
         ask_t ask = trigger.first;
+        HYDLA_LOGGER_DEBUG("BREAK TEST ask: ", get_infix_string(ask));
         bool entailed = relation_graph_->get_entailed(ask);
+        HYDLA_LOGGER_DEBUG("BREAK TEST get_entailed ok");
 
         if (relation_graph_->entail_if_prev(ask, !entailed))
         {
@@ -248,11 +483,20 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     }
   }
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   while (module_set_container->has_next())
   {
     // TODO: unadopted_ms も差分をとるようにして使いたい
     // 大体の例題ではトップレベルからでも効率が悪化しないので，そこまで重要ではなさそう
     module_set_t unadopted_ms = module_set_container->unadopted_module_set();
+
+    HYDLA_LOGGER_DEBUG("BREAK make_results_from_todo unadopted_ms: ", unadopted_ms.size());
+    for (auto m : unadopted_ms)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK make_results_from_todo unadopted module: ", get_infix_string(m.second));
+    }
+
     string module_sim_string = "\"ModuleSet" + unadopted_ms.get_name() + "\"";
     timer::Timer ms_timer;
     auto tmp_result_list = simulate_ms(unadopted_ms, todo, nonprev_trigger_asks);
@@ -264,6 +508,8 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
       break;
   }
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
+
   if (todo->profile["# of CheckConsistency"])
   {
     todo->profile["Average of CheckConsistency"] = todo->profile["CheckConsistency"] / todo->profile["# of CheckConsistency"];
@@ -272,6 +518,8 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   {
     todo->profile["Average of CheckEntailment"] = todo->profile["CheckEntailment"] / todo->profile["# of CheckEntailment"];
   }
+
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_results_from_todo");
 
   return result_list;
 }
@@ -330,11 +578,14 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t &unadop
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
+  HYDLA_LOGGER_DEBUG("BREAK current relation_graph_", relation_graph_);
+
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
 
   ConstraintStore local_diff_sum = phase->diff_sum;
   for (auto diff : module_diff)
   {
+    HYDLA_LOGGER_DEBUG("BREAK simlate_ms module_diff - ", diff.first.first, " : ", get_infix_string(diff.first.second), " -> ", diff.second);
     relation_graph_->set_adopted(diff.first, diff.second);
     local_diff_sum.add_constraint(diff.first.second);
   }
@@ -344,6 +595,23 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t &unadop
 
   asks_t ms_local_positives, ms_local_negatives;
   ConstraintStore ms_local_always;
+
+  {
+    for (const auto &val : trigger_asks)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK simlate_ms trigger_ask - ", *val);
+    }
+    HYDLA_LOGGER_DEBUG("BREAK simlate_ms local_diff_sum - ", local_diff_sum);
+    for (const auto &val : ms_local_positives)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK simlate_ms ms_local_positive - ", val);
+    }
+    for (const auto &val : ms_local_negatives)
+    {
+      HYDLA_LOGGER_DEBUG("BREAK simlate_ms ms_local_negative - ", val);
+    }
+    HYDLA_LOGGER_DEBUG("BREAK simlate_ms ms_local_always - ", ms_local_always);
+  }
 
   consistency_checker->clear_inconsistent_constraints();
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always, ConstraintStore());
@@ -590,18 +858,196 @@ void PhaseSimulator::initialize(variable_set_t &v,
   variable_map_ = &m;
   phase_sum_ = 1;
   time_id = 0;
+  {
+    //msc->replace(1);
+  }
   module_set_container = msc;
+
+  auto pp = dynamic_cast<IncrementalModuleSet *>(msc.get());
+
+  {
+    variable_t v;
+    v.name = "position1";
+    v.differential_count = 0;
+
+    variable_set_->insert(v);
+    (*variable_map_)[v] = ValueRange();
+  }
+  /*
+  {
+    variable_t v;
+    v.name = "p";
+    v.differential_count = 1;
+
+    variable_set_->insert(v);
+    (*variable_map_)[v] = ValueRange();
+  }
+  */
+  /*{
+  using hydla::symbolic_expression::Constraint;
+  using hydla::symbolic_expression::ConstraintCaller;
+  using hydla::symbolic_expression::Always;
+  using hydla::symbolic_expression::Equal;
+  using hydla::symbolic_expression::Variable;
+  using hydla::symbolic_expression::Number;
+  using hydla::symbolic_expression::LogicalAnd;
+  using hydla::symbolic_expression::Ask;
+  using hydla::symbolic_expression::Previous;
+  using hydla::symbolic_expression::Differential;
+
+  //[](p' = 0)
+  constraint_t constraintA =
+      static_cast<boost::shared_ptr<Node>>(
+          boost::shared_ptr<Constraint>(new Constraint(
+              boost::shared_ptr<Always>(new Always(
+                  boost::shared_ptr<Equal>(new Equal(
+                      boost::shared_ptr<Differential>(new Differential(boost::shared_ptr<Variable>(new Variable("p")))),
+                      boost::shared_ptr<Number>(new Number("0")))))))));
+
+  //p- = 10 & x- = 5 => p = 11
+  constraint_t constraintB =
+      static_cast<boost::shared_ptr<Node>>(
+          boost::shared_ptr<Constraint>(new Constraint(
+              boost::shared_ptr<Always>(new Always(
+                  boost::shared_ptr<Ask>(new Ask(
+                      boost::shared_ptr<LogicalAnd>(new LogicalAnd(
+                          boost::shared_ptr<Equal>(new Equal(
+                              boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("p")))),
+                              boost::shared_ptr<Number>(new Number("10")))),
+                          boost::shared_ptr<Equal>(new Equal(
+                              boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("x")))),
+                              boost::shared_ptr<Number>(new Number("5")))))),
+                      boost::shared_ptr<Equal>(new Equal(
+                          boost::shared_ptr<Variable>(new Variable("p")),
+                          boost::shared_ptr<Number>(new Number("11")))))))))));
+
+  //p = 10
+  constraint_t constraintC =
+      static_cast<boost::shared_ptr<Node>>(
+          boost::shared_ptr<Constraint>(new Constraint(
+              boost::shared_ptr<Equal>(new Equal(
+                  boost::shared_ptr<Variable>(new Variable("p")),
+                  boost::shared_ptr<Number>(new Number("10")))))));
+  //relation_graph_->add_guard(constraintA);
+  //
+  //msc->add_required_parallel();
+  //IncrementalModuleSet;
+  //auto pp = dynamic_cast<IncrementalModuleSet *>(module_set_container.get());
+  ModuleSet msA("testA", constraintA);
+  ModuleSet msB("testB", constraintB);
+  ModuleSet msC("testC", constraintC);
+
+  IncrementalModuleSet imsA(msA);
+  IncrementalModuleSet imsB(msB);
+  IncrementalModuleSet imsC(msC);
+  imsA.add_weak(imsB);
+  imsC.add_parallel(imsA);
+  //if (pp)
+  {
+    pp->add_parallel(imsC);
+  }
+  }*/
+
   result_root = root;
 
   simulator::module_set_t ms = module_set_container->get_max_module_set();
 
+  //ms.replace();
+  //HYDLA_LOGGER_DEBUG("\n--- BREAK initial module set ---\n", ms.get_infix_string());
+  //for (auto &m : ms)
+  for (auto it = ms.begin(); it != ms.end(); ++it)
+  {
+    {
+      HYDLA_LOGGER_DEBUG("BREAK initial module - ", it->first, " : ", it->second->get_string());
+    }
+  }
+
   relation_graph_.reset(new RelationGraph(ms));
+
+  if (true)
+  {
+    nonlinear_solver.init(module_set_container.get(), relation_graph_.get(), *variable_map_, opts_);
+  }
+
+  /*
+  for (int i = 5; i >= 2; --i)
+  {
+    nonlinear_solver.add(i);
+    nonlinear_solver.reset();
+  }
+  nonlinear_solver.add(1);
+  */
+
+  /*
+  {
+    pp->remove(msB);
+    auto removeGuard1 = static_cast<boost::shared_ptr<Node>>(
+        boost::shared_ptr<Equal>(new Equal(
+            boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("p")))),
+            boost::shared_ptr<Number>(new Number("10")))));
+    auto removeGuard2 = static_cast<boost::shared_ptr<Node>>(
+        boost::shared_ptr<Equal>(new Equal(
+            boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("x")))),
+            boost::shared_ptr<Number>(new Number("5")))));
+    //for (const auto &keyval : msB)
+    {
+      //relation_graph_->remove(keyval.second);
+      relation_graph_->remove(removeGuard1);
+      relation_graph_->remove(removeGuard2);
+    }
+  }
+  */
+
+  /*
+  {
+    using hydla::symbolic_expression::Constraint;
+    using hydla::symbolic_expression::Always;
+    using hydla::symbolic_expression::Equal;
+    using hydla::symbolic_expression::Variable;
+    using hydla::symbolic_expression::Number;
+    using hydla::symbolic_expression::LogicalAnd;
+    using hydla::symbolic_expression::Ask;
+    using hydla::symbolic_expression::Previous;
+    constraint_t constraintA =
+        static_cast<boost::shared_ptr<Node>>(
+            boost::shared_ptr<Constraint>(new Constraint(
+                boost::shared_ptr<Always>(new Always(
+                    boost::shared_ptr<Ask>(new Ask(
+                        boost::shared_ptr<LogicalAnd>(new LogicalAnd(
+                            boost::shared_ptr<Equal>(new Equal(
+                                boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("p")))),
+                                boost::shared_ptr<Number>(new Number("10")))),
+                            boost::shared_ptr<Equal>(new Equal(
+                                boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("x")))),
+                                boost::shared_ptr<Number>(new Number("5")))))),
+                        boost::shared_ptr<Equal>(new Equal(
+                            boost::shared_ptr<Previous>(new Previous(boost::shared_ptr<Variable>(new Variable("p")))),
+                            boost::shared_ptr<Number>(new Number("11")))))))))));
+    relation_graph_->add_guard(constraintA);
+  }
+  */
 
   if (opts_->dump_relation)
   {
     relation_graph_->dump_graph(cout);
     exit(EXIT_SUCCESS);
   }
+
+  if (opts_->dump_module_set)
+  {
+    pp->dump_module_sets_for_graphviz(cout);
+    HYDLA_LOGGER_DEBUG("BREAK - dump_module_sets_for_graphviz");
+    exit(EXIT_SUCCESS);
+  }
+
+  if (opts_->dump_module_priority)
+  {
+    pp->dump_priority_data_for_graphviz(cout);
+    HYDLA_LOGGER_DEBUG("BREAK - dump_priority_data_for_graphviz");
+    exit(EXIT_SUCCESS);
+  }
+
+  //exit(EXIT_SUCCESS);
 
   for (auto variable : *variable_set_)
   {
@@ -709,6 +1155,9 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase, asks_t &trigg
     HYDLA_LOGGER_DEBUG("BREAK variable name : ", variable.get_name());
   }
 
+  HYDLA_LOGGER_DEBUG("BREAK current diff_sum : ", diff_sum);
+  HYDLA_LOGGER_DEBUG("BREAK current expanded_always : ", expanded_always);
+
   do
   {
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
@@ -740,6 +1189,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase, asks_t &trigg
         if (phase->parent->discrete_differential_set.count(variable))
         {
           auto each_adjacents = relation_graph_->get_adjacent_asks2var_and_derivatives(variable, phase_type == POINT_PHASE);
+          for (const auto &adj : each_adjacents)
+          {
+            HYDLA_LOGGER_DEBUG("Each_Adjacent about [", variable.get_name(), "] : ", get_infix_string(adj));
+          }
           adjacents.insert(each_adjacents.begin(), each_adjacents.end());
         }
       }
@@ -766,11 +1219,19 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase, asks_t &trigg
         continue;
       }
 
-      HYDLA_LOGGER_DEBUG("BREAK1 A");
+      HYDLA_LOGGER_DEBUG("BREAK1 A about : ", get_infix_string(ask));
       CheckConsistencyResult check_consistency_result;
       switch (consistency_checker->check_entailment(
+          //<<<<<<< HEAD
           *relation_graph_, check_consistency_result, ask->get_guard(),
           ask->get_child(), unknown_asks, phase_type, phase->in_following_step(), phase->profile))
+      /*
+=======
+        *relation_graph_, check_consistency_result, ask->get_guard(),
+        ask->get_child(), unknown_asks, phase_type,
+        phase->parent && phase->parent->parent, phase->profile))
+>>>>>>> develop
+*/
       {
       case BRANCH_PAR:
         HYDLA_LOGGER_DEBUG("%% entailablity depends on conditions of parameters\n");
@@ -1274,7 +1735,12 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         // TODO: avoid string comparison
         if (opts_->guards_to_interval_newton.count(get_infix_string(g)))
         {
+          HYDLA_LOGGER_DEBUG("BREAK find_min_time_step_by_step found guard: ", get_infix_string(g));
           by_newton = true;
+        }
+        else
+        {
+          HYDLA_LOGGER_DEBUG("BREAK find_min_time_step_by_step couldn't find guard: ", get_infix_string(g));
         }
       }
 
@@ -1802,8 +2268,12 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
     //HYDLA_LOGGER_DEBUG("Print variable map: ", phase->variable_map);
     //HYDLA_LOGGER_DEBUG("Print original vm: ", original_vm);
 
+    HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
     if (phase->in_following_step())
     {
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
       variable_map_t &vm_to_take_over = phase->parent->parent->variable_map;
       for (auto var_entry : vm_to_take_over)
       {
@@ -1818,9 +2288,17 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
         }
       }
     }
+
+    HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
     check_break_points(phase, original_vm);
+
+    HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
     if (!aborting)
     {
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
       if (phase->in_following_step())
       {
         phase->next_pp_candidate_map = phase->parent->next_pp_candidate_map;
@@ -1848,7 +2326,13 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
         }
       }
 
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
       next_pp_candidate_map_t &candidate_map = phase->next_pp_candidate_map;
+      for (auto entry : candidate_map)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK AA initial discrete_asks: ", get_infix_string(entry.first));
+      }
 
       variable_set_t diff_variables;
       {
@@ -1860,6 +2344,8 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
         }
       }
       guard_time_map_t guard_time_map;
+
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
 
       // 各変数に関する最小時刻をask単位で更新する．
       MinTimeCalculator min_time_calculator(relation_graph_.get(), backend_.get());
@@ -1886,6 +2372,12 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
           asks.insert(entry.first);
         }
       }
+
+      for (const auto &ask : asks)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK current ask - ", get_infix_string(ask));
+      }
+
       std::map<std::string, HistoryData> atomic_guard_min_time_interval_map;
       timer::Timer find_min_time_timer;
       if (opts_->interval && !max_time.infinite())
@@ -1893,6 +2385,13 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
         upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time, false).upper();
       }
 
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+      /*
+      for (auto ask : asks)
+      {
+        HYDLA_LOGGER_DEBUG("BREAK make_next_todo asks: ", get_infix_string(ask.first));
+      }
+      */
       for (auto ask : asks)
       {
         candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase, atomic_guard_min_time_interval_map);
@@ -1907,6 +2406,9 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
       pp_time_result_t time_result;
       // 各askに関する最小時刻を比較して最小のものを選ぶ．
       timer::Timer compare_min_time_timer;
+
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
       for (auto entry : candidate_map)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
@@ -1914,6 +2416,7 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
         {
           HYDLA_LOGGER_DEBUG_VAR(candidate.time);
         }
+        HYDLA_LOGGER_DEBUG("BREAK AA current discrete_asks: ", get_infix_string(entry.first));
       }
       for (auto entry : break_point_list)
       {
@@ -1932,15 +2435,31 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
           HYDLA_LOGGER_DEBUG("#epsilon DC after : ", entry.parameter_constraint);
         }
       }
-*/
+      */
+
+      /*
+        for (const FindMinTimeCandidate &temp : candidate_map[ask])
+        {
+          for (constraint_t pConstraint : temp.discrete_guards)
+          {
+            HYDLA_LOGGER_DEBUG("BREAK FindMinTimeCandidate discrete_guards : ", get_infix_string(pConstraint));
+          }
+        }
+	*/
+
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
 
       if (time_result.empty())
       {
+        HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
         phase->simulation_state = simulator::TIME_LIMIT;
         phase->end_time = max_time;
       }
       else
       {
+        HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
         auto time_it = time_result.begin();
         while (true)
         {
@@ -1948,6 +2467,9 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
           phase->set_parameter_constraint(candidate.parameter_constraint);
           phase->end_time = phase->current_time + candidate.time;
           backend_->call("simplify", false, 1, "vln", "vl", &phase->end_time, &phase->end_time);
+
+          HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
           if (candidate.time.undefined() || candidate.time.infinite())
           {
             phase->simulation_state = TIME_LIMIT;
@@ -1957,6 +2479,11 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
+            /*for (auto ask : next_todo->discrete_asks)
+            {
+              HYDLA_LOGGER_DEBUG("BREAK make_next_todo discrete_asks: ", get_infix_string(ask.first));
+            }*/
+
             if (opts_->interval)
             {
               // verify the time of the next discrete change
@@ -2039,14 +2566,26 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
             HYDLA_LOGGER_DEBUG("Print original_vm: ", original_vm);
 
             next_todo->prev_map = value_modifier->substitute_time(candidate.time, original_vm);
+
+            HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+
+            /*for (auto ask : next_todo->discrete_asks)
+            {
+              //todo->prev_map = todo->parent->variable_map;
+              HYDLA_LOGGER_DEBUG("BREAK discrete_asks: ", get_infix_string(ask.first));
+              next_todo->prev_map[Variable("p", 0)] = ValueRange(Value(2));
+            }*/
+
             phase->profile["ApplyTime2Expr"] += apply_time_timer.get_elapsed_us();
             next_todo->current_time = phase->end_time;
             if (opts_->eager_approximation)
               approximate_phase(next_todo, phase->prev_map);
             phase->simulation_state = SIMULATED;
             phase->todo_list.push_back(next_todo);
-          }
 
+            HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
+          }
+          HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
           if (++time_it == time_result.end())
             break;
           //prepare new PhaseResult
@@ -2057,18 +2596,26 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase)
           phase->parent->children.push_back(phase);
           phase->parent->todo_list.push_back(phase);
           phase->todo_list.clear();
+          HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
           if (!(candidate.time.undefined() || candidate.time.infinite()))
           {
+            HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
             // prepare new todo
             next_todo.reset(new PhaseResult(*next_todo));
             next_todo->id = ++phase_sum_;
           }
+          HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
         }
+        HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
       }
+      HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
     }
+    HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
   }
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
   revert_diff(*phase);
 
+  HYDLA_LOGGER_DEBUG("BREAK TEST make_next_todo");
   phase->profile["MakeNextTodo"] = next_todo_timer.get_elapsed_us();
 }
 
@@ -2230,6 +2777,7 @@ void PhaseSimulator::revert_diff(const PhaseResult &phase)
 
 void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &negative_asks, const ConstraintStore &always_list, const module_diff_t &module_diff)
 {
+  HYDLA_LOGGER_DEBUG("BREAK TEST revert_diff begin");
   for (auto diff : module_diff)
   {
     relation_graph_->set_adopted(diff.first, !diff.second);
@@ -2246,6 +2794,7 @@ void PhaseSimulator::revert_diff(const asks_t &positive_asks, const asks_t &nega
   {
     relation_graph_->set_expanded_atomic(always, false);
   }
+  HYDLA_LOGGER_DEBUG("BREAK TEST revert_diff end");
 }
 
 list<itvd> PhaseSimulator::calculate_interval_newton_nd(const constraint_t &time_guard, parameter_map_t &pm)
