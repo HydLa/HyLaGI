@@ -24,7 +24,7 @@ trySolve[cons_, vars_] :=
     simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
       sol = Quiet[solveOverRorC[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
-      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && Length[s[[1]]] > 0 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
+      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && Length[sol[[1]]] > 0 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     If[solved =!= True, sol = And@@consToSolve];
     {trivialCons && sol && inequalities, solved}
