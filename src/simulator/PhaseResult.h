@@ -187,6 +187,7 @@ public:
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 
   std::string get_string() const;
+	std::string get_vm_string() const;
 
 private:
   void generate_full_information() const;

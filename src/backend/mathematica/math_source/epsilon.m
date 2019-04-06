@@ -36,7 +36,7 @@ publicMethod[checkEdgeGuardWt, guard, relatedVm, relatedPm, startTime, endTime,
 
 (* phaseの包含を判定する *)
 publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
-             Module[{ret,i,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+             Module[{ret,i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
                     ret = True;
 
                     tmpLargeVm = largeVm /. p -> pL;
@@ -48,6 +48,8 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
                         If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]], Return[False];];
 												
                         (* correct expr : large.2 == small.2 *)
+												tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
+												simplePrint[tmp];
                         allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]];
                     ];
                     allExpr = Simplify[allExpr];

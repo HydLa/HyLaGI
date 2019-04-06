@@ -184,6 +184,13 @@ string PhaseResult::get_string()const
   return  sstr.str();
 }
 
+string PhaseResult::get_vm_string()const
+{
+	std::stringstream sstr;
+	sstr << (*this).variable_map;
+	return sstr.str();
+}
+
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
