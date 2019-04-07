@@ -60,8 +60,6 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
 				for(auto automaton : result_automata){					
 					cout << "---------Case Automaton" << automaton_count << "---------" << endl;
 					automaton.exec(*(this->opts_), cout);
-					cout << "---------parameter condition(Case Automaton" << automaton_count++ << ")---------" << endl;
-					
 					cout << "# number of phases reached limit" << endl;
 				}
 			}

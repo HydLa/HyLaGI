@@ -184,6 +184,25 @@ string PhaseResult::get_string()const
   return  sstr.str();
 }
 
+string PhaseResult::get_time_string()const
+{
+	std::stringstream sstr;
+	sstr << "t <=>";
+	if(!(*this).current_time.undefined()){
+    sstr << (*this).current_time;
+  }else{
+		sstr << "-1";
+	}
+	sstr << "->";
+  if(!(*this).end_time.undefined())
+  {
+    sstr << (*this).end_time;
+  }else{
+		sstr << "-1";
+	}
+	return sstr.str();
+}
+
 string PhaseResult::get_vm_string()const
 {
 	std::stringstream sstr;

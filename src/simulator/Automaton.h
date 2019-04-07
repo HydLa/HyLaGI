@@ -27,6 +27,7 @@ public:
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
   int peripheries;
+	bool node_time_write;
 	bool node_vm_write;
   bool edge_guard_write;
 
