@@ -191,6 +191,12 @@ string PhaseResult::get_vm_string()const
 	return sstr.str();
 }
 
+string PhaseResult::get_pc_string()const
+{
+	std::stringstream sstr;
+	sstr << (*this).get_parameter_constraint();
+	return sstr.str();
+}
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)
 {
