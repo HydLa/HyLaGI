@@ -189,6 +189,7 @@ public:
   std::string get_string() const;
 	std::string get_time_string() const;
 	std::string get_vm_string() const;
+	std::string get_pm_string() const;
 	std::string get_pc_string() const;
 
 private:

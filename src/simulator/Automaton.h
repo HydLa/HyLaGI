@@ -29,6 +29,7 @@ public:
   int peripheries;
 	bool node_time_write;
 	bool node_vm_write;
+	bool node_pm_write;
   bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);

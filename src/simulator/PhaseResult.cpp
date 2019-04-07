@@ -210,6 +210,13 @@ string PhaseResult::get_vm_string()const
 	return sstr.str();
 }
 
+string PhaseResult::get_pm_string()const
+{
+	std::stringstream sstr;
+	sstr << (*this).prev_map;
+	return sstr.str();
+}
+
 string PhaseResult::get_pc_string()const
 {
 	std::stringstream sstr;

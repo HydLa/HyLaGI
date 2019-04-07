@@ -21,6 +21,7 @@ AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id)
   this->peripheries = 0;
 	this->node_time_write = true;
 	this->node_vm_write = true;
+	this->node_pm_write = true;
   this->edge_guard_write = false;
 }
 
@@ -50,6 +51,7 @@ void AutomatonNode::dump(ostream& ost)
 	string name = this->name;
 	if(this->node_time_write) name += "\n" + (*this->phase).get_time_string();
 	if(this->node_vm_write) name += "\n" + (*this->phase).get_vm_string();
+	if(this->node_pm_write) name += "\nprev map\n" + (*this->phase).get_pm_string();
 
   if(this->peripheries > 0){
     ost << "\"" << name << "\"" << " " << "[color=\"" << this->color << "\",peripheries=" << this->peripheries << "];" << endl;
@@ -61,6 +63,7 @@ void AutomatonNode::dump(ostream& ost)
 			string nextname = (*it).first->name;
 			if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
 			if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
+			if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
 
       if(this->color == (*it).first->color){
         ost << "\"" << name << "\"" << " -> " << "\"" << nextname << "\"" << "[color=\"" << this->color << "\",label=\"" << get_infix_string((*it).second) << "\"];" << endl;
@@ -73,6 +76,7 @@ void AutomatonNode::dump(ostream& ost)
 			string nextname = (*it).first->name;
 			if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
 			if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
+			if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
 
       if(this->color == (*it).first->color){
         ost << "\"" << name << "\"" << " -> " << "\"" << nextname << "\"" << "[color=\"" << this->color << "\"];" << endl;
