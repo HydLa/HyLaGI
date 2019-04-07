@@ -239,7 +239,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     {
       simulator_ = new LTLModelChecker(opts);
     }
-  else if(opts.ha_convert_mode)
+  else if(opts.ha_convert_mode or opts.ha_simulator_mode)
     {
       simulator_ = new HybridAutomatonConverter(opts);
     }
@@ -252,7 +252,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   simulator_->set_phase_simulator(new PhaseSimulator(simulator_, opts));
   simulator_->initialize(parse_tree);
   simulator_->simulate();
-  if(!opts.ha_convert_mode)
+  if(not(opts.ha_convert_mode or opts.ha_simulator_mode))
   {
     output_result(*simulator_, opts);
   }

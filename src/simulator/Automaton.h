@@ -5,6 +5,7 @@
 #include <string>
 #include "../symbolic_expression/Node.h"
 #include "PhaseResult.h"
+#include "../common/Opts.h"
 
 namespace hydla {
 namespace simulator {
@@ -50,6 +51,7 @@ public:
   std::list<AutomatonNode *> get_all_nodes();
   AutomatonNode* exist_node(std::string name);
   bool exist_edge(AutomatonNode *base, AutomatonNode *end);
+	void exec(const Opts& opts, std::ostream &ost = std::cout);
 
 /*
   void trace();

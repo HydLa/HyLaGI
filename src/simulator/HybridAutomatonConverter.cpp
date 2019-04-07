@@ -41,6 +41,14 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
         cout << "===== Automaton" << automaton_count++ << " =====" << endl;
         automaton.dump(cout);
       }
+			automaton_count = 1;
+			if(this->opts_->ha_simulator_mode){
+				for(auto automaton : result_automata){
+					cout << "------ Result of Simulation ------\n---------parameter condition(global)---------" << endl;
+					cout << "---------Case Automaton" << automaton_count++ << "---------" << endl;
+					automaton.exec(*(this->opts_), cout);
+				}
+			}
     }
   catch(const std::runtime_error &se)
     {

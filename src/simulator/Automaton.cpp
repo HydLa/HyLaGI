@@ -183,6 +183,17 @@ bool Automaton::exist_edge(AutomatonNode *base, AutomatonNode *end){
   return false;
 }
 
+void Automaton::exec(const Opts& opts, ostream& ost){
+	for(int i = 1; i <= opts.max_phase; i++){
+		if(i&1){
+			ost << "---------" << (i+1)/2 << "---------" << endl;
+			ost << "---------PP " << i << "---------" << endl;
+		}else{
+			ost << "---------IP " << i << "---------" << endl;
+		}
+	}
+}
+
 /*
 void AutomatonNode::trace(){
   std::cout << "// this is trace of " << this->name << "." << std::endl;
