@@ -1,0 +1,10 @@
+INIT <=> fuel = 1 & timer = 0 & 2 < exT < 4 & 1 < voT < 10.
+CONS <=> [](exT' = 0 & voT' = 0).
+TIME <=> [](timer' = 1).
+BURN <=> [](fuel = 1 => h'' = 1).
+FALL <=> [](fuel = 0 =>h'' = -2).
+VOID <=> [](timer- >= voT => fuel = 0).
+FULL <=> [](timer- < voT => fuel = 1).
+COMP <=> [](timer- >= voT + exT => timer = 0).
+
+INIT, CONS, BURN, FALL, VOID, FULL, TIME << COMP.
