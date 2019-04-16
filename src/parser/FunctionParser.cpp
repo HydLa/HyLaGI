@@ -39,6 +39,8 @@ std::string Parser::function_name(){
     if(name == "atan") return "ArcTan";
     if(name == "atanh") return "ArcTanh";
     if(name == "log" )return "Log";
+    if(name == "log2" )return "Log2";
+    if(name == "log10" )return "Log10";
     if(name == "ln") return "Log";
     if(name == "exp") return "Exp";
     if(name == "floor") return "Floor";

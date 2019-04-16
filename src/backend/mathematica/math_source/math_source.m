@@ -1064,10 +1064,10 @@ Module[
   For[i = 1, i <= Length[derivatives], i++,
     prevs = Union[prevs, createPrevOnly[derivatives[[i]] ] ]
   ];
-  simplePrint[prevs];
+  (*simplePrint[prevs];*)
   tmp = expr;
-  simplePrint[expr];
-  simplePrint[vars];
+  (*simplePrint[expr];*)
+  (*simplePrint[vars];*)
   solwithconstant = Quiet[
     Check[
       DSolve[expr, vars, t],
@@ -1076,16 +1076,16 @@ Module[
     ],
     {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
   ];
-  simplePrint[solwithconstant];
+  (*simplePrint[solwithconstant];*)
   For[i = 1, i <= Length[solwithconstant], i++,
     ini = {};
     constants = Union[Cases[solwithconstant[[i]], C[_], {0, Infinity}]];
-    simplePrint[constants];
+    (*simplePrint[constants];*)
     For[j = 1, j <= Length[prevs], j++,
       ini = Append[ini, Simplify[prevs[[j]][0] /. solwithconstant[[i]] ] == makePrevVar[prevs[[j]] ] ]
     ];
     inis = Subsets[ini,{Length[constants]}];
-    simplePrint[inis];
+    (*simplePrint[inis];*)
     For[j = 1, j <= Length[inis], j++,
       solofconstant = Quiet[
         Check[
@@ -1095,7 +1095,7 @@ Module[
         ],
         {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
       ];
-      simplePrint[solofconstant];
+      (*simplePrint[solofconstant];*)
       If[Length[solofconstant] > 0,
         sol = Union[sol, Map[#[t]&, (solwithconstant[[i]] /. solofconstant ), {3}]];
         Break[]
