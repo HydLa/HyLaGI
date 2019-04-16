@@ -207,6 +207,8 @@ void Automaton::exec(const Opts& opts, ostream& ost){
 		}else{
 			ost << "---------IP " << i << "---------" << endl;
 		}
+
+		ost << current_node->phase->get_mod_string() << endl;
 	}
 }
 /*
