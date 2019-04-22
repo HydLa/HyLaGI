@@ -225,7 +225,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   
   backend->call("resetConstraintForVariable", false, 0, "", "");
 
-  string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
+  string fmt = (phase==POINT_PHASE)?"mvn":"mvt";
   backend->call("addConstraint", true, 1, fmt.c_str(), "", &vm);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
