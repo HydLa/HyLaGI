@@ -3,6 +3,7 @@
 #include "Simulator.h"
 #include "Backend.h"
 #include "HydLaError.h"
+#include "VariableFinder.h"
 
 #include <sstream>
 
@@ -175,6 +176,28 @@ std::vector<parameter_map_t> PhaseResult::get_parameter_maps()const
 void PhaseResult::set_full_information(FullInformation &info)
 {
   full_information = info;
+}
+
+std::map<std::set<std::string>,module_set_t> PhaseResult::calc_map_v2cons()const{
+	std::map<std::set<std::string>,module_set_t> res;
+	auto unsatmodset = (this->inconsistent_module_sets).begin();
+	for(auto unsatconsset : this->inconsistent_constraints){
+		std::set<string> vars;
+		for(auto unsatcons : unsatconsset){
+			VariableFinder finder;
+			finder.visit_node(unsatcons);
+			for(auto var : finder.get_all_variable_set()){
+				std::stringstream sstr;
+				sstr << var;
+				vars.insert(sstr.str());
+			}
+		}
+		if(not(res.count(vars) and res[vars].size() <= unsatmodset->size())){
+			res[vars] = *unsatmodset;
+		}
+		++unsatmodset;
+	}
+	return res;
 }
 
 string PhaseResult::get_string()const

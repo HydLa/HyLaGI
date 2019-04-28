@@ -151,6 +151,8 @@ private:
 
   void add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange current_range);
 
+	void print_possible_causes(std::map<std::set<std::string>,module_set_t> map);
+
   Simulator* simulator_;
 
   const Opts *opts_;

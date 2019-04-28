@@ -28,6 +28,8 @@
 #include "kv/interval.hpp"
 #include "AffineApproximator.h"
 
+#include "SymbolicTrajPrinter.h"
+
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
 namespace hydla
@@ -117,6 +119,12 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->simulation_state = INCONSISTENCY;
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
+
+		cout << "Execution stuck!" << endl;
+		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
+		cout << endl;
+		auto unsatv2unsatcons = todo->calc_map_v2cons();
+		print_possible_causes(unsatv2unsatcons);
   }
   else
   {
@@ -2088,6 +2096,28 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   phase->set_parameter_constraint(new_store);
 
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+}
+
+void PhaseSimulator::print_possible_causes(map<set<string>,module_set_t> map){
+	cout << "Possible causes..." << endl;
+	for(auto pvms : map){
+		cout << "* {";
+		bool first = true;
+		for(auto v : pvms.first){
+			if(first) cout << v;
+			else cout << ", " << v;
+			first = false;
+		}
+		cout << "} in {";
+		first = true;
+		for(auto ms : pvms.second){
+			if(first) cout << ms.first;
+			else cout << ", " << ms.first;
+			first = false;
+		}
+		cout << "}" << endl;
+	}
+	cout << endl;
 }
 
 } // namespace simulator
