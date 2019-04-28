@@ -100,5 +100,22 @@ public:
    bool operator()(const Variable x,const Variable y) const { return x < y; }
 };
 
+typedef std::set<Variable, VariableComparator> variable_set_t;
+
+// HACK: this function must be replaced with std::set::merge
+variable_set_t vsmerge(variable_set_t &a, variable_set_t &b){
+  bool swapped = false;
+  if(a.size() > b.size()){
+    a.swap(b);
+    swapped = true;
+  }
+  variable_set_t res = b;
+  for(auto x : a){
+    ans.insert(x);
+  }
+  if(swapped) a.swap(b);
+  return res;
+}
+
 } // namespace simulator
 } // namespace hydla 

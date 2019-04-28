@@ -2098,9 +2098,9 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 }
 
-void PhaseSimulator::print_possible_causes(map<set<string>,module_set_t> map){
+void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t> &mp){
 	cout << "Possible causes..." << endl;
-	for(auto pvms : map){
+	for(auto pvms : mp){
 		cout << "* {";
 		bool first = true;
 		for(auto v : pvms.first){

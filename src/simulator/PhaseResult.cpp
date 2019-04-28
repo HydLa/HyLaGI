@@ -178,21 +178,17 @@ void PhaseResult::set_full_information(FullInformation &info)
   full_information = info;
 }
 
-std::map<std::set<std::string>,module_set_t> PhaseResult::calc_map_v2cons()const{
-	std::map<std::set<std::string>,module_set_t> res;
+std::map<variable_set_t,module_set_t> PhaseResult::calc_map_v2cons()const{
+	std::map<variable_set_t,module_set_t> res;
 	auto unsatmodset = (this->inconsistent_module_sets).begin();
 	for(auto unsatconsset : this->inconsistent_constraints){
-		std::set<string> vars;
+		variable_set_t vars;
 		for(auto unsatcons : unsatconsset){
 			VariableFinder finder;
 			finder.visit_node(unsatcons);
-			for(auto var : finder.get_all_variable_set()){
-				std::stringstream sstr;
-				sstr << var;
-				vars.insert(sstr.str());
-			}
+			vars = vsmerge(vars, finder.get_all_variable_set());
 		}
-		if(not(res.count(vars) and res[vars].size() <= unsatmodset->size())){
+		if(res.count(vars) == 0 or res[vars].size() > unsatmodset->size()){
 			res[vars] = *unsatmodset;
 		}
 		++unsatmodset;
