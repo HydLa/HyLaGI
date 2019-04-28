@@ -4,6 +4,7 @@
 #include "Backend.h"
 #include "HydLaError.h"
 #include "VariableFinder.h"
+#include "Variable.h"
 
 #include <sstream>
 
@@ -186,7 +187,11 @@ std::map<variable_set_t,module_set_t> PhaseResult::calc_map_v2cons()const{
 		for(auto unsatcons : unsatconsset){
 			VariableFinder finder;
 			finder.visit_node(unsatcons);
-			vars = vsmerge(vars, finder.get_all_variable_set());
+
+			// HACK: use std::set::merge
+			for(auto v : finder.get_all_variable_set()){
+				vars.insert(v);
+			}
 		}
 		if(res.count(vars) == 0 or res[vars].size() > unsatmodset->size()){
 			res[vars] = *unsatmodset;
