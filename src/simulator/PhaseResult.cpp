@@ -232,42 +232,41 @@ string PhaseResult::get_mod_string()const
 
 string PhaseResult::get_time_string()const
 {
-	std::stringstream sstr;
-	sstr << "t <=>";
-	if(!(*this).current_time.undefined()){
+  std::stringstream sstr;
+  sstr << "t <=>";
+  if(!(*this).current_time.undefined()){
     sstr << (*this).current_time;
   }else{
-		sstr << "-1";
-	}
-	sstr << "->";
-  if(!(*this).end_time.undefined())
-  {
+    sstr << "-1";
+  }
+  sstr << "->";
+  if(!(*this).end_time.undefined()){
     sstr << (*this).end_time;
   }else{
-		sstr << "-1";
-	}
-	return sstr.str();
+    sstr << "-1";
+  }
+  return sstr.str();
 }
 
 string PhaseResult::get_vm_string()const
 {
-	std::stringstream sstr;
-	sstr << (*this).variable_map;
-	return sstr.str();
+  std::stringstream sstr;
+  sstr << (*this).variable_map;
+  return sstr.str();
 }
-
+  
 string PhaseResult::get_pm_string()const
 {
-	std::stringstream sstr;
-	sstr << (*this).prev_map;
-	return sstr.str();
+  std::stringstream sstr;
+  sstr << (*this).prev_map;
+  return sstr.str();
 }
-
+  
 string PhaseResult::get_pc_string()const
 {
-	std::stringstream sstr;
-	sstr << (*this).get_parameter_constraint();
-	return sstr.str();
+  std::stringstream sstr;
+  sstr << (*this).get_parameter_constraint();
+  return sstr.str();
 }
 
 ostream& operator<<(std::ostream& s, const PhaseResult& phase)

@@ -27,9 +27,9 @@ public:
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
   int peripheries;
-	bool node_time_write;
-	bool node_vm_write;
-	bool node_pm_write;
+  bool node_time_write;
+  bool node_vm_write;
+  bool node_pm_write;
   bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
@@ -53,7 +53,7 @@ public:
   std::list<AutomatonNode *> get_all_nodes();
   AutomatonNode* exist_node(std::string name);
   bool exist_edge(AutomatonNode *base, AutomatonNode *end);
-	void exec(const Opts& opts, std::ostream &ost = std::cout);
+  void exec(const Opts& opts, std::ostream &ost = std::cout);
 
 /*
   void trace();

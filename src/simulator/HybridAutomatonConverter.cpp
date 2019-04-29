@@ -36,33 +36,33 @@ phase_result_sptr_t HybridAutomatonConverter::simulate()
       HA_node_list_t created_nodes;
       HA_translate(result_root_, init, created_nodes);
       
-			int automaton_count = 1;
-      for(auto automaton: result_automata)
-      {
+      int automaton_count = 1;
+      for(auto automaton: result_automata){
         cout << "===== Automaton" << automaton_count++ << " =====" << endl;
         automaton.dump(cout);
       }
-			
-			automaton_count = 1;
-			if(this->opts_->ha_simulator_mode){
-				backend_sptr_t backend_;
-				stringstream sstr;
-				sstr << "------ Result of Simulation ------\n";
-				hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, this->opts_->interval);
-				
-				parameter_map_t par_map = this->get_parameter_map();
-				if(!par_map.empty()){
-					sstr << "---------parameter condition(global)---------" << endl;
-					Printer.output_parameter_map(par_map);
-				}
-				cout << sstr.str();
+      
+      automaton_count = 1;
+      if(this->opts_->ha_simulator_mode){
+        backend_sptr_t backend_;
+        stringstream sstr;
+        sstr << "------ Result of Simulation ------\n";
+        hydla::io::SymbolicTrajPrinter Printer(backend_, sstr, this->opts_->interval);
+        
+        parameter_map_t par_map = this->get_parameter_map();
+        if(!par_map.empty()){
+          sstr << "---------parameter condition(global)---------" << endl;
+          Printer.output_parameter_map(par_map);
+        }
+        cout << sstr.str();
+        
+        for(auto automaton : result_automata){
+          cout << "---------Case Automaton" << automaton_count << "---------" << endl;
+          automaton.exec(*(this->opts_), cout);
 
-				for(auto automaton : result_automata){					
-					cout << "---------Case Automaton" << automaton_count << "---------" << endl;
-					automaton.exec(*(this->opts_), cout);
-					cout << "# number of phases reached limit" << endl;
-				}
-			}
+          cout << "# number of phases reached limit" << endl;
+        }
+      }
     }
   catch(const std::runtime_error &se)
     {

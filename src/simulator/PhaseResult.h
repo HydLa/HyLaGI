@@ -187,11 +187,11 @@ public:
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
 
   std::string get_string() const;
-	std::string get_mod_string() const;
-	std::string get_time_string() const;
-	std::string get_vm_string() const;
-	std::string get_pm_string() const;
-	std::string get_pc_string() const;
+  std::string get_mod_string() const;
+  std::string get_time_string() const;
+  std::string get_vm_string() const;
+  std::string get_pm_string() const;
+  std::string get_pc_string() const;
 
 private:
   void generate_full_information() const;

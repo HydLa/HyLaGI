@@ -1,0 +1,1201 @@
+make[1]: Entering directory '/home/yunosuke/HyLaGI/src'
+make --directory=common
+make --directory=parser
+make --directory=math_source_converter
+make --directory=hierarchy
+make --directory=simulator
+make --directory=io
+make --directory=interval
+make --directory=symbolic_expression
+make --directory=utility
+make --directory=debug
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/math_source_converter'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/common'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/hierarchy'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/parser'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/symbolic_expression'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/io'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/utility'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/interval'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/simulator'
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/debug'
+clang++   -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M main.cpp | \
+sed  's,\(main\.o\) *:,./\1 main.d:  ,' >main.d.tmp
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M SignalHandler.cpp | \
+sed  's,\(SignalHandler\.o\) *:,./\1 SignalHandler.d:  ,' >SignalHandler.d.tmp
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Logger.cpp | \
+sed  's,\(Logger\.o\) *:,./\1 Logger.d:  ,' >Logger.d.tmp
+clang++ -I.  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Utility.cpp | \
+sed  's,\(Utility\.o\) *:,./\1 Utility.d:  ,' >Utility.d.tmp
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Timer.cpp | \
+sed  's,\(Timer\.o\) *:,./\1 Timer.d:  ,' >Timer.d.tmp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M IncrementalModuleSet.cpp | \
+sed  's,\(IncrementalModuleSet\.o\) *:,./\1 IncrementalModuleSet.d:  ,' >IncrementalModuleSet.d.tmp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ModuleSetContainer.cpp | \
+sed  's,\(ModuleSetContainer\.o\) *:,./\1 ModuleSetContainer.d:  ,' >ModuleSetContainer.d.tmp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M TreeInfixPrinter.cpp | \
+sed  's,\(TreeInfixPrinter\.o\) *:,./\1 TreeInfixPrinter.d:  ,' >TreeInfixPrinter.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M json_parser.cpp | \
+sed  's,\(json_parser\.o\) *:,./\1 json_parser.d:  ,' >json_parser.d.tmp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ModuleSetGraph.cpp | \
+sed  's,\(ModuleSetGraph\.o\) *:,./\1 ModuleSetGraph.d:  ,' >ModuleSetGraph.d.tmp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Node.cpp | \
+sed  's,\(Node\.o\) *:,./\1 Node.d:  ,' >Node.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M JsonWriter.cpp | \
+sed  's,\(JsonWriter\.o\) *:,./\1 JsonWriter.d:  ,' >JsonWriter.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M debug_main.cpp | \
+sed  's,\(debug_main\.o\) *:,./\1 debug_main.d:  ,' >debug_main.d.tmp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ModuleSetList.cpp | \
+sed  's,\(ModuleSetList\.o\) *:,./\1 ModuleSetList.d:  ,' >ModuleSetList.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M CsvProfilePrinter.cpp | \
+sed  's,\(CsvProfilePrinter\.o\) *:,./\1 CsvProfilePrinter.d:  ,' >CsvProfilePrinter.d.tmp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M DefaultTreeVisitor.cpp | \
+sed  's,\(DefaultTreeVisitor\.o\) *:,./\1 DefaultTreeVisitor.d:  ,' >DefaultTreeVisitor.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M StdProfilePrinter.cpp | \
+sed  's,\(StdProfilePrinter\.o\) *:,./\1 StdProfilePrinter.d:  ,' >StdProfilePrinter.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M AffineTreeVisitor.cpp | \
+sed  's,\(AffineTreeVisitor\.o\) *:,./\1 AffineTreeVisitor.d:  ,' >AffineTreeVisitor.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M solve_sym.cpp | \
+sed  's,\(solve_sym\.o\) *:,./\1 solve_sym.d:  ,' >solve_sym.d.tmp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ModuleSet.cpp | \
+sed  's,\(ModuleSet\.o\) *:,./\1 ModuleSet.d:  ,' >ModuleSet.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M SymbolicTrajPrinter.cpp | \
+sed  's,\(SymbolicTrajPrinter\.o\) *:,./\1 SymbolicTrajPrinter.d:  ,' >SymbolicTrajPrinter.d.tmp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M BaseNodeVisitor.cpp | \
+sed  's,\(BaseNodeVisitor\.o\) *:,./\1 BaseNodeVisitor.d:  ,' >BaseNodeVisitor.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M AffineApproximator.cpp | \
+sed  's,\(AffineApproximator\.o\) *:,./\1 AffineApproximator.d:  ,' >AffineApproximator.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ExpressionParser.cpp | \
+sed  's,\(ExpressionParser\.o\) *:,./\1 ExpressionParser.d:  ,' >ExpressionParser.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M MathematicaTrajPrinter.cpp | \
+sed  's,\(MathematicaTrajPrinter\.o\) *:,./\1 MathematicaTrajPrinter.d:  ,' >MathematicaTrajPrinter.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M IntervalNewton.cpp | \
+sed  's,\(IntervalNewton\.o\) *:,./\1 IntervalNewton.d:  ,' >IntervalNewton.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ConstraintParser.cpp | \
+sed  's,\(ConstraintParser\.o\) *:,./\1 ConstraintParser.d:  ,' >ConstraintParser.d.tmp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M TreeVisitorForAtomicConstraint.cpp | \
+sed  's,\(TreeVisitorForAtomicConstraint\.o\) *:,./\1 TreeVisitorForAtomicConstraint.d:  ,' >TreeVisitorForAtomicConstraint.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Constants.cpp | \
+sed  's,\(Constants\.o\) *:,./\1 Constants.d:  ,' >Constants.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ListParser.cpp | \
+sed  's,\(ListParser\.o\) *:,./\1 ListParser.d:  ,' >ListParser.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M IntervalOrInteger.cpp | \
+sed  's,\(IntervalOrInteger\.o\) *:,./\1 IntervalOrInteger.d:  ,' >IntervalOrInteger.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M FunctionParser.cpp | \
+sed  's,\(FunctionParser\.o\) *:,./\1 FunctionParser.d:  ,' >FunctionParser.d.tmp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M JsonReader.cpp | \
+sed  's,\(JsonReader\.o\) *:,./\1 JsonReader.d:  ,' >JsonReader.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M AffineOrInteger.cpp | \
+sed  's,\(AffineOrInteger\.o\) *:,./\1 AffineOrInteger.d:  ,' >AffineOrInteger.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ParseTreeGraphvizDumper.cpp | \
+sed  's,\(ParseTreeGraphvizDumper\.o\) *:,./\1 ParseTreeGraphvizDumper.d:  ,' >ParseTreeGraphvizDumper.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M AffineMixedValue.cpp | \
+sed  's,\(AffineMixedValue\.o\) *:,./\1 AffineMixedValue.d:  ,' >AffineMixedValue.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Lexer.cpp | \
+sed  's,\(Lexer\.o\) *:,./\1 Lexer.d:  ,' >Lexer.d.tmp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O  -M IntervalTreeVisitor.cpp | \
+sed  's,\(IntervalTreeVisitor\.o\) *:,./\1 IntervalTreeVisitor.d:  ,' >IntervalTreeVisitor.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M PropertyNode.cpp | \
+sed  's,\(PropertyNode\.o\) *:,./\1 PropertyNode.d:  ,' >PropertyNode.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M BuiltInParser.cpp | \
+sed  's,\(BuiltInParser\.o\) *:,./\1 BuiltInParser.d:  ,' >BuiltInParser.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M PhaseResult.cpp | \
+sed  's,\(PhaseResult\.o\) *:,./\1 PhaseResult.d:  ,' >PhaseResult.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ParseTree.cpp | \
+sed  's,\(ParseTree\.o\) *:,./\1 ParseTree.d:  ,' >ParseTree.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ValueModifier.cpp | \
+sed  's,\(ValueModifier\.o\) *:,./\1 ValueModifier.d:  ,' >ValueModifier.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ParseTreeSemanticAnalyzer.cpp | \
+sed  's,\(ParseTreeSemanticAnalyzer\.o\) *:,./\1 ParseTreeSemanticAnalyzer.d:  ,' >ParseTreeSemanticAnalyzer.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Automaton.cpp | \
+sed  's,\(Automaton\.o\) *:,./\1 Automaton.d:  ,' >Automaton.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M GuardNode.cpp | \
+sed  's,\(GuardNode\.o\) *:,./\1 GuardNode.d:  ,' >GuardNode.d.tmp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M HydLaParser.cpp | \
+sed  's,\(HydLaParser\.o\) *:,./\1 HydLaParser.d:  ,' >HydLaParser.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ValueRange.cpp | \
+sed  's,\(ValueRange\.o\) *:,./\1 ValueRange.d:  ,' >ValueRange.d.tmp
+clang: clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ListExpander.cpp | \
+sed  's,\(ListExpander\.o\) *:,./\1 ListExpander.d:  ,' >ListExpander.d.tmp
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clangwarning: : clang-luuid: 'linker' input unused [-Wunused-command-line-argument]warningclang: 
+: clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M AlwaysFinder.cpp | \
+sed  's,\(AlwaysFinder\.o\) *:,./\1 AlwaysFinder.d:  ,' >AlwaysFinder.d.tmp
+: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: warning
+-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ParseTreeJsonDumper.cpp | \
+sed  's,\(ParseTreeJsonDumper\.o\) *:,./\1 ParseTreeJsonDumper.d:  ,' >ParseTreeJsonDumper.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M EpsilonMode.cpp | \
+sed  's,\(EpsilonMode\.o\) *:,./\1 EpsilonMode.d:  ,' >EpsilonMode.d.tmp
+clang: clangwarning: -luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+warningclang: : -luuid: 'linker' input unused [-Wunused-command-line-argument]clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M AnalysisResultChecker.cpp | \
+sed  's,\(AnalysisResultChecker\.o\) *:,./\1 AnalysisResultChecker.d:  ,' >AnalysisResultChecker.d.tmp
+clang: clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ConstraintStore.cpp | \
+sed  's,\(ConstraintStore\.o\) *:,./\1 ConstraintStore.d:  ,' >ConstraintStore.d.tmp
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]clang
+
+: clangwarning: warning: clangclang-luuid: 'linker' input unused [-Wunused-command-line-argument]: : 
+clangwarningwarning: : : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]warning
+: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clang: clangwarningwarning: : clang: -luuid: 'linker' input unused [-Wunused-command-line-argument]warning-lpython2.7: 'linker' input unused [-Wunused-command-line-argument]: : 
+: 
+warning-luuid: 'linker' input unused [-Wunused-command-line-argument]-lpython2.7: 'linker' input unused [-Wunused-command-line-argument]warningclangclang
+
+: : : : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]warningclangwarning
+
+: clang: clangwarning: : clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M RelationGraph.cpp | \
+sed  's,\(RelationGraph\.o\) *:,./\1 RelationGraph.d:  ,' >RelationGraph.d.tmp
+-luuid: 'linker' input unused [-Wunused-command-line-argument]warning
+: : -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Parameter.cpp | \
+sed  's,\(Parameter\.o\) *:,./\1 Parameter.d:  ,' >Parameter.d.tmp
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang: clangwarning: : warningclang-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+: clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M PrevReplacer.cpp | \
+sed  's,\(PrevReplacer\.o\) *:,./\1 PrevReplacer.d:  ,' >PrevReplacer.d.tmp
+argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]warning
+: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M MinTimeCalculator.cpp | \
+sed  's,\(MinTimeCalculator\.o\) *:,./\1 MinTimeCalculator.d:  ,' >MinTimeCalculator.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ValueNumerizer.cpp | \
+sed  's,\(ValueNumerizer\.o\) *:,./\1 ValueNumerizer.d:  ,' >ValueNumerizer.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M HybridAutomatonConverter.cpp | \
+sed  's,\(HybridAutomatonConverter\.o\) *:,./\1 HybridAutomatonConverter.d:  ,' >HybridAutomatonConverter.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M PhaseSimulator.cpp | \
+sed  's,\(PhaseSimulator\.o\) *:,./\1 PhaseSimulator.d:  ,' >PhaseSimulator.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M VariableReplacer.cpp | \
+sed  's,\(VariableReplacer\.o\) *:,./\1 VariableReplacer.d:  ,' >VariableReplacer.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M LTLModelChecker.cpp | \
+sed  's,\(LTLModelChecker\.o\) *:,./\1 LTLModelChecker.d:  ,' >LTLModelChecker.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M GuardMapApplier.cpp | \
+sed  's,\(GuardMapApplier\.o\) *:,./\1 GuardMapApplier.d:  ,' >GuardMapApplier.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M LTLNode.cpp | \
+sed  's,\(LTLNode\.o\) *:,./\1 LTLNode.d:  ,' >LTLNode.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ContinuityMapMaker.cpp | \
+sed  's,\(ContinuityMapMaker\.o\) *:,./\1 ContinuityMapMaker.d:  ,' >ContinuityMapMaker.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M VariableFinder.cpp | \
+sed  's,\(VariableFinder\.o\) *:,./\1 VariableFinder.d:  ,' >VariableFinder.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M ConsistencyChecker.cpp | \
+sed  's,\(ConsistencyChecker\.o\) *:,./\1 ConsistencyChecker.d:  ,' >ConsistencyChecker.d.tmp
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M SequentialSimulator.cpp | \
+sed  's,\(SequentialSimulator\.o\) *:,./\1 SequentialSimulator.d:  ,' >SequentialSimulator.d.tmp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Simulator.cpp | \
+sed  's,\(Simulator\.o\) *:,./\1 Simulator.d:  ,' >Simulator.d.tmp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: clang-luuid: 'linker' input unused [-Wunused-command-line-argument]: clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Value.cpp | \
+sed  's,\(Value\.o\) *:,./\1 Value.d:  ,' >Value.d.tmp
+
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: clang-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clangwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clang: warning: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]
+: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clang: warning: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  SignalHandler.d.tmp SignalHandler.d
+mv  AnalysisResultChecker.d.tmp AnalysisResultChecker.d
+mv  main.d.tmp main.d
+make[2]: Warning: File 'main.d' has modification time 14 s in the future
+clang++   -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o main.o main.cpp
+mv  Utility.d.tmp Utility.d
+mv  Timer.d.tmp Timer.d
+make[2]: Warning: File 'Utility.d' has modification time 14 s in the future
+mv  Lexer.d.tmp Lexer.d
+clang++ -I.  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Utility.o Utility.cpp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  DefaultTreeVisitor.d.tmp DefaultTreeVisitor.d
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  ExpressionParser.d.tmp ExpressionParser.d
+mv  TreeVisitorForAtomicConstraint.d.tmp TreeVisitorForAtomicConstraint.d
+mv  ConstraintStore.d.tmp ConstraintStore.d
+mv  TreeInfixPrinter.d.tmp TreeInfixPrinter.d
+mv  BaseNodeVisitor.d.tmp BaseNodeVisitor.d
+mv  ConstraintParser.d.tmp ConstraintParser.d
+mv  ListParser.d.tmp ListParser.d
+mv  FunctionParser.d.tmp FunctionParser.d
+mv  ParseTreeJsonDumper.d.tmp ParseTreeJsonDumper.d
+mv  BuiltInParser.d.tmp BuiltInParser.d
+mv  HydLaParser.d.tmp HydLaParser.d
+mv  ParseTreeGraphvizDumper.d.tmp ParseTreeGraphvizDumper.d
+mv  IntervalOrInteger.d.tmp IntervalOrInteger.d
+mv  ListExpander.d.tmp ListExpander.d
+mv  ModuleSetContainer.d.tmp ModuleSetContainer.d
+mv  AffineOrInteger.d.tmp AffineOrInteger.d
+mv  GuardNode.d.tmp GuardNode.d
+mv  PropertyNode.d.tmp PropertyNode.d
+mv  ModuleSet.d.tmp ModuleSet.d
+mv  Parameter.d.tmp Parameter.d
+mv  StdProfilePrinter.d.tmp StdProfilePrinter.d
+mv  AlwaysFinder.d.tmp AlwaysFinder.d
+mv  CsvProfilePrinter.d.tmp CsvProfilePrinter.d
+mv  MathematicaTrajPrinter.d.tmp MathematicaTrajPrinter.d
+mv  ValueRange.d.tmp ValueRange.d
+mv  ModuleSetList.d.tmp ModuleSetList.d
+mv  Node.d.tmp Node.d
+make[2]: Warning: File 'TreeInfixPrinter.d' has modification time 13 s in the future
+mv  ParseTreeSemanticAnalyzer.d.tmp ParseTreeSemanticAnalyzer.d
+mv  VariableFinder.d.tmp VariableFinder.d
+mv  ContinuityMapMaker.d.tmp ContinuityMapMaker.d
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o TreeVisitorForAtomicConstraint.o TreeVisitorForAtomicConstraint.cpp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o BaseNodeVisitor.o BaseNodeVisitor.cpp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o DefaultTreeVisitor.o DefaultTreeVisitor.cpp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Node.o Node.cpp
+clang++ -I. -I../common -I../parser/error -I../simulator/ -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o TreeInfixPrinter.o TreeInfixPrinter.cpp
+clangclangclangclang: : : : warningwarning: warningwarning: -luuid: 'linker' input unused [-Wunused-command-line-argument]: : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  Value.d.tmp Value.d
+mv  Logger.d.tmp Logger.d
+make[2]: Warning: File 'SignalHandler.d' has modification time 13 s in the future
+mv  json_parser.d.tmp json_parser.d
+clang++   -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O   -L/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -o msc   ./main.o -Wl,-Bstatic -lboost_thread -lboost_regex -Wl,-Bdynamic  -lpthread
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Timer.o Timer.cpp
+mv  VariableReplacer.d.tmp VariableReplacer.d
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Logger.o Logger.cpp
+clang++ -I. -I../utility  -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o SignalHandler.o SignalHandler.cpp
+clangclangclang: : : warningwarning: : warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+mv  ParseTree.d.tmp ParseTree.d
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/math_source_converter'
+make --directory=backend
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/backend'
+make[2]: Warning: File 'ExpressionParser.d' has modification time 13 s in the future
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M Backend.cpp | \
+sed  's,\(Backend\.o\) *:,./\1 Backend.d:  ,' >Backend.d.tmp
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M mathematica/MathematicaLink.cpp | \
+sed  's,\(MathematicaLink\.o\) *:,mathematica/\1 mathematica/MathematicaLink.d:  ,' >mathematica/MathematicaLink.d.tmp
+cat mathematica/math_source/load_first/*.m mathematica/math_source/*.m | \
+	../math_source_converter/msc math_source > \
+	mathematica/math_source.cpp
+mv  AffineMixedValue.d.tmp AffineMixedValue.d
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O  -M mathematica/math_source.cpp | \
+sed  's,\(math_source\.o\) *:,mathematica/\1 mathematica/math_source.d:  ,' >mathematica/math_source.d.tmp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  Constants.d.tmp Constants.d
+mv  RelationGraph.d.tmp RelationGraph.d
+mv  solve_sym.d.tmp solve_sym.d
+mv  debug_main.d.tmp debug_main.d
+mv  mathematica/math_source.d.tmp mathematica/math_source.d
+make[2]: Warning: File 'json_parser.d' has modification time 13 s in the future
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ParseTreeJsonDumper.o ParseTreeJsonDumper.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ListExpander.o ListExpander.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o HydLaParser.o HydLaParser.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ParseTreeSemanticAnalyzer.o ParseTreeSemanticAnalyzer.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ParseTree.o ParseTree.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o BuiltInParser.o BuiltInParser.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Lexer.o Lexer.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ParseTreeGraphvizDumper.o ParseTreeGraphvizDumper.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o FunctionParser.o FunctionParser.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ListParser.o ListParser.cpp
+mv  IncrementalModuleSet.d.tmp IncrementalModuleSet.d
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ConstraintParser.o ConstraintParser.cpp
+clang++ -I. -I../common -I./error -I../symbolic_expression -I../utility -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ExpressionParser.o ExpressionParser.cpp
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  IntervalTreeVisitor.d.tmp IntervalTreeVisitor.d
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]warning
+: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  ValueNumerizer.d.tmp ValueNumerizer.d
+mv  ConsistencyChecker.d.tmp ConsistencyChecker.d
+mv  PhaseResult.d.tmp PhaseResult.d
+mv  ValueModifier.d.tmp ValueModifier.d
+mv  PrevReplacer.d.tmp PrevReplacer.d
+mv  GuardMapApplier.d.tmp GuardMapApplier.d
+mv  MinTimeCalculator.d.tmp MinTimeCalculator.d
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o solve_sym.o solve_sym.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o debug_main.o debug_main.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../backend/mathematica -I../symbolic_expression -I../parser/error -I../backend/reduce -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7 -I../io  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o json_parser.o json_parser.cpp
+clangclang: : warningwarning: : -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]-lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clangclang: : warningwarning: : argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+mv  IntervalNewton.d.tmp IntervalNewton.d
+mv  LTLNode.d.tmp LTLNode.d
+solve_sym.cpp:1:9: warning: #pragma once in main file [-Wpragma-once-outside-header]
+#pragma once
+        ^
+debug_main.cpp:1:9: warning: #pragma once in main file [-Wpragma-once-outside-header]
+#pragma once
+        ^
+mv  PhaseSimulator.d.tmp PhaseSimulator.d
+mv  Simulator.d.tmp Simulator.d
+mv  ModuleSetGraph.d.tmp ModuleSetGraph.d
+mv  JsonReader.d.tmp JsonReader.d
+json_parser.cpp:1:9: warning: #pragma once in main file [-Wpragma-once-outside-header]
+#pragma once
+        ^
+mv  JsonWriter.d.tmp JsonWriter.d
+make[2]: Warning: File 'IncrementalModuleSet.d' has modification time 13 s in the future
+mv  AffineApproximator.d.tmp AffineApproximator.d
+mv  EpsilonMode.d.tmp EpsilonMode.d
+ar  cru libhydla_utility.a   ./Utility.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_utility.a
+mv  LTLModelChecker.d.tmp LTLModelChecker.d
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/utility'
+mv  Automaton.d.tmp Automaton.d
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ModuleSet.o ModuleSet.cpp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ModuleSetList.o ModuleSetList.cpp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ModuleSetGraph.o ModuleSetGraph.cpp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ModuleSetContainer.o ModuleSetContainer.cpp
+clang++ -I. -I../parser -I../symbolic_expression -I/usr/local/include/boost  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o IncrementalModuleSet.o IncrementalModuleSet.cpp
+clangclang: : warning: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: clang: : warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]warning
+: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  AffineTreeVisitor.d.tmp AffineTreeVisitor.d
+mv  SymbolicTrajPrinter.d.tmp SymbolicTrajPrinter.d
+make[2]: Warning: File 'AffineTreeVisitor.d' has modification time 14 s in the future
+make[2]: Warning: File 'JsonWriter.d' has modification time 13 s in the future
+mv  SequentialSimulator.d.tmp SequentialSimulator.d
+mv  HybridAutomatonConverter.d.tmp HybridAutomatonConverter.d
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o IntervalTreeVisitor.o IntervalTreeVisitor.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o AffineMixedValue.o AffineMixedValue.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o AffineOrInteger.o AffineOrInteger.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o IntervalOrInteger.o IntervalOrInteger.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o IntervalNewton.o IntervalNewton.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o AffineApproximator.o AffineApproximator.cpp
+clang++ -I. -I../parser -I../simulator -I../common -I../hierarchy -I../simulator/symbolic_simulator -I../backend -I../symbolic_expression -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/  -DAFFINE_SIMPLE=1 -Wall -std=c++2a -luuid -O -c -o AffineTreeVisitor.o AffineTreeVisitor.cpp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: clangwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o JsonReader.o JsonReader.cpp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Constants.o Constants.cpp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o MathematicaTrajPrinter.o MathematicaTrajPrinter.cpp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o SymbolicTrajPrinter.o SymbolicTrajPrinter.cpp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o StdProfilePrinter.o StdProfilePrinter.cpp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o CsvProfilePrinter.o CsvProfilePrinter.cpp
+clang++ -I. -I../common -I../parser -I../simulator -I../hierarchy -I../backend -I../symbolic_expression -I../parser/error -I../utility -I../interval/  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o JsonWriter.o JsonWriter.cpp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclangclang: : : warningwarning: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clangclang: : warning: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+make[2]: Warning: File 'PropertyNode.d' has modification time 12 s in the future
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Value.o Value.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Simulator.o Simulator.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o SequentialSimulator.o SequentialSimulator.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ConsistencyChecker.o ConsistencyChecker.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o VariableFinder.o VariableFinder.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ContinuityMapMaker.o ContinuityMapMaker.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o LTLNode.o LTLNode.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o LTLModelChecker.o LTLModelChecker.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o VariableReplacer.o VariableReplacer.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o PhaseSimulator.o PhaseSimulator.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o GuardMapApplier.o GuardMapApplier.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o HybridAutomatonConverter.o HybridAutomatonConverter.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ValueNumerizer.o ValueNumerizer.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o MinTimeCalculator.o MinTimeCalculator.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o PrevReplacer.o PrevReplacer.cpp
+clangclangclangclang: : : : warningwarning: warning: warning-luuid: 'linker' input unused [-Wunused-command-line-argument]: -luuid: 'linker' input unused [-Wunused-command-line-argument]: 
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Parameter.o Parameter.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o RelationGraph.o RelationGraph.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ConstraintStore.o ConstraintStore.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o AnalysisResultChecker.o AnalysisResultChecker.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o EpsilonMode.o EpsilonMode.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o AlwaysFinder.o AlwaysFinder.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ValueRange.o ValueRange.cpp
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o GuardNode.o GuardNode.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Automaton.o Automaton.cpp
+clang: clangwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o ValueModifier.o ValueModifier.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o PhaseResult.o PhaseResult.cpp
+clang++ -I. -I../parser -I../hierarchy -I../common -I./symbolic_simulator -I./hybrid_automata -I../io -I../solver -I../backend -I../backend/mathematica -I../backend/reduce -I../interval -I../symbolic_expression -I../utility -I../parser/error  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o PropertyNode.o PropertyNode.cpp
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clang: clangwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]
+warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+mv  mathematica/MathematicaLink.d.tmp mathematica/MathematicaLink.d
+mv  Backend.d.tmp Backend.d
+make[2]: Warning: File 'Backend.d' has modification time 14 s in the future
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o mathematica/math_source.o mathematica/math_source.cpp
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o mathematica/MathematicaLink.o mathematica/MathematicaLink.cpp
+clang++ -I. -I./mathematica -I../parser -I../hierarchy -I../simulator -I../common -I../simulator/symbolic_simulator -I../symbolic_expression -I../parser/error -I../utility -I../interval  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/   -Wall -std=c++2a -luuid -O -c -o Backend.o Backend.cpp
+clangclangclang: : : warningwarning: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+In file included from IntervalTreeVisitor.cpp:1:
+In file included from ./IntervalTreeVisitor.h:5:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+In file included from IntervalOrInteger.cpp:1:
+In file included from ./IntervalOrInteger.h:4:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from IntervalNewton.cpp:4:
+In file included from ./IntervalNewton.h:6:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from IntervalTreeVisitor.cpp:1:
+In file included from ./IntervalTreeVisitor.h:6:
+In file included from ./kv/dd.hpp:16:
+./kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+In file included from IntervalOrInteger.cpp:1:
+In file included from ./IntervalOrInteger.h:5:
+In file included from ./kv/dd.hpp:16:
+./kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+./kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+./kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+./kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+./kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from IntervalNewton.cpp:4:
+In file included from ./IntervalNewton.h:7:
+In file included from ./kv/dd.hpp:16:
+./kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+./kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+./kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+./kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+ar  cru libhydla_common.a   ./Timer.o ./Logger.o ./SignalHandler.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_common.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/common'
+In file included from ValueRange.cpp:2:
+In file included from ../interval/IntervalTreeVisitor.h:5:
+In file included from ../interval/kv/rdouble.hpp:14:
+In file included from ../interval/kv/rdouble-hwround.hpp:11:
+../interval/kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+../interval/kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+../interval/kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+../interval/kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from ValueRange.cpp:2:
+In file included from ../interval/IntervalTreeVisitor.h:6:
+In file included from ../interval/kv/dd.hpp:16:
+../interval/kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+../interval/kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+../interval/kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+solve_sym.cpp:27:17: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+      char *a = "a";
+                ^
+7 warnings generated.
+In file included from AffineOrInteger.cpp:1:
+In file included from ./AffineOrInteger.h:3:
+In file included from ./kv/affine.hpp:22:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from AffineOrInteger.cpp:1:
+In file included from ./AffineOrInteger.h:3:
+./kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+./kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+In file included from AffineMixedValue.cpp:1:
+In file included from ./AffineMixedValue.h:3:
+In file included from ./kv/affine.hpp:22:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from AffineMixedValue.cpp:1:
+In file included from ./AffineMixedValue.h:3:
+./kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+./kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+Value.cpp:85:18: warning: expression with side effects will be evaluated despite being used as an operand to 'typeid' [-Wpotentially-evaluated-expression]
+  return (typeid(*node_) == typeid(Infinity));
+                 ^
+6 warnings generated.
+7 warnings generated.
+In file included from AffineMixedValue.cpp:1:
+In file included from ./AffineMixedValue.h:3:
+In file included from ./kv/affine.hpp:21:
+./kv/interval.hpp:1073:15: warning: unused variable 'tmp' [-Wunused-variable]
+                T x_i, x_f, tmp;
+                            ^
+./kv/interval.hpp:1128:19: note: in instantiation of member function 'kv::interval<double>::exp_point' requested here
+                return interval(exp_point(I.lower()).lower(), exp_point(I.upper()).upper());
+                                ^
+AffineMixedValue.cpp:263:24: note: in instantiation of member function 'kv::exp' requested here
+        ret.interval = exp(rhs.interval * log(interval));
+                       ^
+1 warning generated.
+In file included from AffineApproximator.cpp:1:
+In file included from ./AffineApproximator.h:4:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+In file included from ./kv/affine.hpp:22:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from AffineApproximator.cpp:1:
+In file included from ./AffineApproximator.h:4:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+./kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+./kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+In file included from SymbolicTrajPrinter.cpp:10:
+In file included from ../interval/IntervalTreeVisitor.h:5:
+In file included from ../interval/kv/rdouble.hpp:14:
+In file included from ../interval/kv/rdouble-hwround.hpp:11:
+../interval/kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+../interval/kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+../interval/kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+../interval/kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from SymbolicTrajPrinter.cpp:10:
+In file included from ../interval/IntervalTreeVisitor.h:6:
+In file included from ../interval/kv/dd.hpp:16:
+../interval/kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+../interval/kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+../interval/kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from PhaseSimulator.cpp:26:
+In file included from ../interval/IntervalNewton.h:6:
+In file included from ../interval/kv/rdouble.hpp:14:
+In file included from ../interval/kv/rdouble-hwround.hpp:11:
+../interval/kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+../interval/kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+../interval/kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+../interval/kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from PhaseSimulator.cpp:26:
+In file included from ../interval/IntervalNewton.h:7:
+In file included from ../interval/kv/dd.hpp:16:
+../interval/kv/conv-dd.hpp:56:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-dd.hpp:123:14: warning: variable 'emin2' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:141:15: note: uninitialized use occurs here
+                        if (emin > emin2) {
+                                   ^~~~~
+../interval/kv/conv-dd.hpp:123:14: note: remove the condition if it is always true
+                        for (i=0; i<=52; i++) {
+                                  ^~~~~
+../interval/kv/conv-dd.hpp:112:19: note: initialize the variable 'emin2' to silence this warning
+                int emax2, emin2, s;
+                                ^
+                                 = 0
+../interval/kv/conv-dd.hpp:462:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from IntervalTreeVisitor.cpp:1:
+In file included from ./IntervalTreeVisitor.h:4:
+./kv/interval.hpp:1073:15: warning: unused variable 'tmp' [-Wunused-variable]
+                T x_i, x_f, tmp;
+                            ^
+./kv/interval.hpp:1128:19: note: in instantiation of member function 'kv::interval<double>::exp_point' requested here
+                return interval(exp_point(I.lower()).lower(), exp_point(I.upper()).upper());
+                                ^
+./kv/interval.hpp:1031:10: note: in instantiation of member function 'kv::exp' requested here
+                return exp(y * log(x));
+                       ^
+IntervalTreeVisitor.cpp:109:36: note: in instantiation of member function 'kv::pow' requested here
+    current_value.interval_value = pow(base, rhs.interval_value);
+                                   ^
+1 warning generated.
+In file included from AffineTreeVisitor.cpp:1:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+In file included from ./kv/affine.hpp:22:
+In file included from ./kv/rdouble.hpp:14:
+In file included from ./kv/rdouble-hwround.hpp:11:
+./kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+./kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+./kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+./kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+./kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+./kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+In file included from AffineTreeVisitor.cpp:1:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+./kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+./kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+AffineApproximator.cpp:112:24: warning: unused variable 'itv' [-Wunused-variable]
+  kv::interval<double> itv = to_interval(affine_value);
+                       ^
+ar  cru libhydla_hierarchy.a   ./ModuleSet.o ./ModuleSetList.o ./ModuleSetGraph.o ./ModuleSetContainer.o ./IncrementalModuleSet.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_hierarchy.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/hierarchy'
+In file included from IntervalNewton.cpp:6:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+./kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+./kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+1 warning generated.
+ar  cru libhydla_parser.a   ./ParseTreeJsonDumper.o ./ListExpander.o ./HydLaParser.o ./ParseTreeSemanticAnalyzer.o ./ParseTree.o ./BuiltInParser.o ./Lexer.o ./ParseTreeGraphvizDumper.o ./FunctionParser.o ./ListParser.o ./ConstraintParser.o ./ExpressionParser.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+7 warnings generated.
+ranlib libhydla_parser.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/parser'
+In file included from PhaseSimulator.cpp:29:
+In file included from ../interval/AffineApproximator.h:4:
+In file included from ../interval/AffineTreeVisitor.h:6:
+In file included from ../interval/AffineMixedValue.h:3:
+../interval/kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+../interval/kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+In file included from Simulator.cpp:7:
+In file included from ../interval/AffineApproximator.h:4:
+In file included from ../interval/AffineTreeVisitor.h:6:
+In file included from ../interval/AffineMixedValue.h:3:
+In file included from ../interval/kv/affine.hpp:22:
+In file included from ../interval/kv/rdouble.hpp:14:
+In file included from ../interval/kv/rdouble-hwround.hpp:11:
+../interval/kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+../interval/kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+7 warnings generated.
+../interval/kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+../interval/kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from Simulator.cpp:7:
+In file included from ../interval/AffineApproximator.h:4:
+In file included from ../interval/AffineTreeVisitor.h:6:
+In file included from ../interval/AffineMixedValue.h:3:
+../interval/kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+../interval/kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+ar  cru libhydla_io.a   ./JsonReader.o ./Constants.o ./MathematicaTrajPrinter.o ./SymbolicTrajPrinter.o ./StdProfilePrinter.o ./CsvProfilePrinter.o ./JsonWriter.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_io.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/io'
+PhaseSimulator.cpp:1320:12: warning: unused variable 'needUpdate' [-Wunused-variable]
+      bool needUpdate = true;
+           ^
+In file included from AffineTreeVisitor.cpp:1:
+In file included from ./AffineTreeVisitor.h:6:
+In file included from ./AffineMixedValue.h:3:
+In file included from ./kv/affine.hpp:21:
+./kv/interval.hpp:1073:15: warning: unused variable 'tmp' [-Wunused-variable]
+                T x_i, x_f, tmp;
+                            ^
+./kv/interval.hpp:1757:10: note: in instantiation of member function 'kv::interval<double>::exp_point' requested here
+                        tmp = exp_point(x);
+                              ^
+./kv/interval.hpp:1766:19: note: in instantiation of member function 'kv::interval<double>::sinh_point' requested here
+                return interval(sinh_point(I.lower()).lower(), sinh_point(I.upper()).upper());
+                                ^
+AffineTreeVisitor.cpp:231:61: note: in instantiation of member function 'kv::sinh' requested here
+    if(current_val_.type == INTEGER)current_val_.interval = sinh(itvd(current_val_.integer));
+                                                            ^
+8 warnings generated.
+ar  cru libhydla_symbolic_expression.a   ./TreeVisitorForAtomicConstraint.o ./BaseNodeVisitor.o ./DefaultTreeVisitor.o ./Node.o ./TreeInfixPrinter.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_symbolic_expression.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/symbolic_expression'
+7 warnings generated.
+9 warnings generated.
+7 warnings generated.
+ar  cru libhydla_interval.a   ./IntervalTreeVisitor.o ./AffineMixedValue.o ./AffineOrInteger.o ./IntervalOrInteger.o ./IntervalNewton.o ./AffineApproximator.o ./AffineTreeVisitor.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_interval.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/interval'
+ar  cru libhydla_backend.a   mathematica/math_source.o mathematica/MathematicaLink.o mathematica/math_source.o ./Backend.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_backend.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/backend'
+2 warnings generated.
+ar  cru libhydla_debug.a   ./solve_sym.o ./debug_main.o ./json_parser.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_debug.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/debug'
+6 warnings generated.
+10 warnings generated.
+ar  cru libhydla_simulator.a   ./Value.o ./Simulator.o ./SequentialSimulator.o ./ConsistencyChecker.o ./VariableFinder.o ./ContinuityMapMaker.o ./LTLNode.o ./LTLModelChecker.o ./VariableReplacer.o ./PhaseSimulator.o ./GuardMapApplier.o ./HybridAutomatonConverter.o ./ValueNumerizer.o ./MinTimeCalculator.o ./PrevReplacer.o ./Parameter.o ./RelationGraph.o ./ConstraintStore.o ./AnalysisResultChecker.o ./EpsilonMode.o ./AlwaysFinder.o ./ValueRange.o ./GuardNode.o ./Automaton.o ./ValueModifier.o ./PhaseResult.o ./PropertyNode.o
+ar: `u' modifier ignored since `D' is the default (see `U')
+ranlib libhydla_simulator.a
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/simulator'
+make --directory=core
+make[2]: Entering directory '/home/yunosuke/HyLaGI/src/core'
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O  -M main.cpp | \
+sed  's,\(main\.o\) *:,./\1 main.d:  ,' >main.d.tmp
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O  -M version.cpp | \
+sed  's,\(version\.o\) *:,./\1 version.d:  ,' >version.d.tmp
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O  -M symbolic_simulate.cpp | \
+sed  's,\(symbolic_simulate\.o\) *:,./\1 symbolic_simulate.d:  ,' >symbolic_simulate.d.tmp
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O  -M ProgramOptions.cpp | \
+sed  's,\(ProgramOptions\.o\) *:,./\1 ProgramOptions.d:  ,' >ProgramOptions.d.tmp
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+mv  version.d.tmp version.d
+mv  ProgramOptions.d.tmp ProgramOptions.d
+mv  symbolic_simulate.d.tmp symbolic_simulate.d
+mv  main.d.tmp main.d
+make[2]: Warning: File 'main.d' has modification time 14 s in the future
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O -c -o ProgramOptions.o ProgramOptions.cpp
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O -c -o symbolic_simulate.o symbolic_simulate.cpp
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O -c -o version.o version.cpp
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O -c -o main.o main.cpp
+clangclang: : warningwarning: : -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]-lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+
+clangclang: : warningwarning: : -luuid: 'linker' input unused [-Wunused-command-line-argument]-luuid: 'linker' input unused [-Wunused-command-line-argument]
+
+clangclang: : warningwarning: : argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+
+clang: warning: -lpython2.7: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -luuid: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-L/usr/lib/python2.7/config' [-Wunused-command-line-argument]
+In file included from main.cpp:26:
+In file included from ../interval/AffineTreeVisitor.h:6:
+In file included from ../interval/AffineMixedValue.h:3:
+In file included from ../interval/kv/affine.hpp:22:
+In file included from ../interval/kv/rdouble.hpp:14:
+In file included from ../interval/kv/rdouble-hwround.hpp:11:
+../interval/kv/conv-double.hpp:55:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j;
+                       ^
+../interval/kv/conv-double.hpp:90:13: warning: variable 'emin' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:105:7: note: uninitialized use occurs here
+                if (emin > 0) {
+                    ^~~~
+../interval/kv/conv-double.hpp:90:13: note: remove the condition if it is always true
+                for (i=0; i<=52; i++) {
+                          ^~~~~
+../interval/kv/conv-double.hpp:84:17: note: initialize the variable 'emin' to silence this warning
+                int emax, emin;
+                              ^
+                               = 0
+../interval/kv/conv-double.hpp:580:10: warning: unused variable 'dtmp' [-Wunused-variable]
+                double dtmp;
+                       ^
+../interval/kv/conv-double.hpp:393:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, tmp;
+                       ^
+In file included from main.cpp:26:
+In file included from ../interval/AffineTreeVisitor.h:6:
+In file included from ../interval/AffineMixedValue.h:3:
+../interval/kv/affine.hpp:771:10: warning: unused variable 'j' [-Wunused-variable]
+                int i, j, xs, ys;
+                       ^
+../interval/kv/affine.hpp:1707:12: warning: unused variable 'j' [-Wunused-variable]
+    int i, j;
+           ^
+6 warnings generated.
+clang++ -I. -I../backend -I../simulator -I../hierarchy -I../parser -I../common -I../io -I../interval -I../debug -I../symbolic_expression -I../utility -I/usr/local/include/boost -I../backend/mathematica -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7  -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -DCOMMIT_ID=\"ba098150\"  -Wall -std=c++2a -luuid -O -L. -L../backend -L../simulator -L../hierarchy -L../parser -L../common -L../io -L../interval -L../debug -L../symbolic_expression -L../utility -L/usr/local/lib  -L/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -o ../../bin/hylagi   ./ProgramOptions.o ./symbolic_simulate.o ./version.o ./main.o -Wl,-Bstatic -lboost_program_options -lboost_thread -lboost_regex -Wl,-Bdynamic -lhydla_backend -lhydla_simulator -lhydla_hierarchy -lhydla_parser -lhydla_common -lhydla_io -lhydla_interval -lhydla_debug -lhydla_symbolic_expression -lhydla_utility -lhydla_backend -lhydla_simulator -lhydla_hierarchy -lhydla_parser -lhydla_common -lhydla_io -lhydla_interval -lhydla_debug -lhydla_symbolic_expression -lhydla_utility  -lWSTP64i4 -lm -lrt -lpthread
+make[2]: warning:  Clock skew detected.  Your build may be incomplete.
+make[2]: Leaving directory '/home/yunosuke/HyLaGI/src/core'
+make[1]: Leaving directory '/home/yunosuke/HyLaGI/src'

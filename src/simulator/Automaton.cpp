@@ -19,9 +19,9 @@ AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id)
   this->phase = phase;
   this->color =  "#000000";
   this->peripheries = 0;
-	this->node_time_write = true;
-	this->node_vm_write = true;
-	this->node_pm_write = true;
+  this->node_time_write = true;
+  this->node_vm_write = true;
+  this->node_pm_write = true;
   this->edge_guard_write = false;
 }
 
@@ -48,10 +48,10 @@ void AutomatonNode::set_peripheries(int num){
 
 void AutomatonNode::dump(ostream& ost)
 {
-	string name = this->name;
-	if(this->node_time_write) name += "\n" + (*this->phase).get_time_string();
-	if(this->node_vm_write) name += "\n" + (*this->phase).get_vm_string();
-	if(this->node_pm_write) name += "\nprev map\n" + (*this->phase).get_pm_string();
+  string name = this->name;
+  if(this->node_time_write) name += "\n" + (*this->phase).get_time_string();
+  if(this->node_vm_write) name += "\n" + (*this->phase).get_vm_string();
+  if(this->node_pm_write) name += "\nprev map\n" + (*this->phase).get_pm_string();
 
   if(this->peripheries > 0){
     ost << "\"" << name << "\"" << " " << "[color=\"" << this->color << "\",peripheries=" << this->peripheries << "];" << endl;
@@ -60,10 +60,10 @@ void AutomatonNode::dump(ostream& ost)
   }
   if(this->edge_guard_write){
     for(auto it = edges.begin();it != edges.end();it++){
-			string nextname = (*it).first->name;
-			if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
-			if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
-			if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
+      string nextname = (*it).first->name;
+      if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
+      if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
+      if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
 
       if(this->color == (*it).first->color){
         ost << "\"" << name << "\"" << " -> " << "\"" << nextname << "\"" << "[color=\"" << this->color << "\",label=\"" << get_infix_string((*it).second) << "\"];" << endl;
@@ -73,11 +73,11 @@ void AutomatonNode::dump(ostream& ost)
     }
   }else{
     for(auto it = edges.begin();it != edges.end();it++){
-			string nextname = (*it).first->name;
-			if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
-			if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
-			if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
-
+      string nextname = (*it).first->name;
+      if((*it).first->node_time_write) nextname += "\n" + (*(*it).first->phase).get_time_string();
+      if((*it).first->node_vm_write) nextname += "\n" + (*(*it).first->phase).get_vm_string();
+      if((*it).first->node_pm_write) nextname += "\nprev map\n" + (*(*it).first->phase).get_pm_string();
+      
       if(this->color == (*it).first->color){
         ost << "\"" << name << "\"" << " -> " << "\"" << nextname << "\"" << "[color=\"" << this->color << "\"];" << endl;
       }else{
@@ -192,24 +192,24 @@ bool Automaton::exist_edge(AutomatonNode *base, AutomatonNode *end){
 }
 
 void Automaton::exec(const Opts& opts, ostream& ost){
-	AutomatonNode* current_node = initial_node;
-	//current_node->dump(ost);
-		value_t current_time, end_time;
-		current_time = end_time = current_node->phase->current_time;
-		variable_map_t variable_map = current_node->phase->variable_map;
-	
-	for(int i = 1; i <= opts.max_phase; i++){
-		current_node = current_node->edges[0].first;
-
-		if(i&1){
-			ost << "---------" << (i+1)/2 << "---------" << endl;
-			ost << "---------PP " << i << "---------" << endl;
-		}else{
-			ost << "---------IP " << i << "---------" << endl;
-		}
-
-		ost << current_node->phase->get_mod_string() << endl;
-	}
+  AutomatonNode* current_node = initial_node;
+  //current_node->dump(ost);
+  value_t current_time, end_time;
+  current_time = end_time = current_node->phase->current_time;
+  variable_map_t variable_map = current_node->phase->variable_map;
+  
+  for(int i = 1; i <= opts.max_phase; i++){
+    current_node = current_node->edges[0].first;
+    
+    if(i&1){
+      ost << "---------" << (i+1)/2 << "---------" << endl;
+      ost << "---------PP " << i << "---------" << endl;
+    }else{
+      ost << "---------IP " << i << "---------" << endl;
+    }
+    
+    ost << current_node->phase->get_mod_string() << endl;
+  }
 }
 /*
 void AutomatonNode::trace(){
