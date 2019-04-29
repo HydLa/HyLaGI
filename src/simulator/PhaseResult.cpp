@@ -184,50 +184,42 @@ string PhaseResult::get_string()const
   return  sstr.str();
 }
 
-string PhaseResult::get_mod_string()const
-{
-	bool first;
-	std::stringstream sstr;
-	sstr << "unadopted modules: " << (*this).unadopted_ms.get_name() << endl;
-  if(!(*this).inconsistent_module_sets.empty())
-  {
-    for(auto module_set : (*this).inconsistent_module_sets)
-    {
+string PhaseResult::get_mod_string()const{
+  bool first;
+  std::stringstream sstr;
+  sstr << "unadopted modules: " << (*this).unadopted_ms.get_name() << endl;
+  if(!(*this).inconsistent_module_sets.empty()){
+    for(auto module_set : (*this).inconsistent_module_sets){
       sstr << "unsat mod\t: " << module_set.get_name() << endl;
     }
   }
-  if(!(*this).inconsistent_constraints.empty())
-  {
+  if(!(*this).inconsistent_constraints.empty()){
     sstr << "unsat cons\t: ";
     first = true;
-    for(auto constraint: (*this).inconsistent_constraints)
-    {
+    for(auto constraint: (*this).inconsistent_constraints){
       if(!first) sstr << ", ";
       sstr << constraint;
       first = false;
     }
-		sstr << endl;
+    sstr << endl;
   }
-
   sstr << "positive\t: ";
-	first = true;
-  for(auto ask : (*this).get_diff_positive_asks())
-  {
-		if(!first) sstr << ", ";
+  first = true;
+  for(auto ask : (*this).get_diff_positive_asks()){
+    if(!first) sstr << ", ";
     sstr << get_infix_string(ask);
-		first = false;
+    first = false;
   }
-	sstr << endl;
+  sstr << endl;
   sstr << "negative\t: ";
-	first = true;
-  for(auto ask: (*this).get_diff_negative_asks())
-  {
-		if(!first) sstr << ", ";
+  first = true;
+  for(auto ask: (*this).get_diff_negative_asks()){
+    if(!first) sstr << ", ";
     sstr << get_infix_string(ask);
-		first = false;
+    first = false;
   }
-	sstr << endl;
-	return sstr.str();
+  sstr << endl;
+  return sstr.str();
 }
 
 string PhaseResult::get_time_string()const
