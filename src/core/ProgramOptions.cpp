@@ -59,7 +59,7 @@ void ProgramOptions::init_descriptions()
       )
 
      ("dsolve",
-     value<int>()->default_value(1),
+     value<int>()->default_value(0),
      "the method of differential equation in exDSolve\n"
      "  0 - Try to get initial value problem directly\n"
      "  1 - Try to get initial value problem via constant\n"
