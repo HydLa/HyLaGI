@@ -146,7 +146,9 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       if (warning_var_str.length() > 0){
         HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
         if(phase->current_time.get_string() == "0" and phase->end_time.get_string() == "0"){
-          cout << "WARNING: " << warning_var_str << "is uninitialized!" << endl << endl;
+          cout << "WARNING: " << warning_var_str << "is not initialized!" << endl;
+        }else{
+          update_condition(warning_var, phase->unadopted_ms);
         }
       }
 
@@ -2140,6 +2142,18 @@ void PhaseSimulator::update_condition(const variable_set_t &vs, const module_set
       completely_unboundness_condition[v] = tmp;
     }
   }
+}
+
+void PhaseSimulator::print_completely_unboundness_condition(){
+  for(auto pvms : completely_unboundness_condition){
+    cout << "WARNING: " << pvms.first << " is completely unbound";
+    if(pvms.second.size() == 0){
+      cout << " in default constraint" << endl;
+    }else{
+      cout << " in exeptional constarint" << endl;
+    }
+  }
+  cout << endl;
 }
 
 } // namespace simulator

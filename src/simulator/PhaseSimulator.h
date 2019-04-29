@@ -87,6 +87,8 @@ public:
 
   boost::shared_ptr<RelationGraph> relation_graph_;
 
+  void print_completely_unboundness_condition();
+
 private:
   struct StateOfIntervalNewton;
 
