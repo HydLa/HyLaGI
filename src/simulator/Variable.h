@@ -6,7 +6,7 @@
 
 namespace hydla {
 namespace simulator {
-
+	
 class Variable
 {
 public:
@@ -99,6 +99,6 @@ class VariableComparator {
 public:
    bool operator()(const Variable x,const Variable y) const { return x < y; }
 };
-
+ 
 } // namespace simulator
 } // namespace hydla 

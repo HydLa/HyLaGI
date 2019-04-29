@@ -87,6 +87,8 @@ public:
 
   boost::shared_ptr<RelationGraph> relation_graph_;
 
+  void print_completely_unboundness_condition();
+
 private:
   struct StateOfIntervalNewton;
 
@@ -151,6 +153,10 @@ private:
 
   void add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange current_range);
 
+  void print_possible_causes(const std::map<variable_set_t,module_set_t> &map);
+
+  void update_condition(const variable_set_t &vs, const module_set_t &ms);
+  
   Simulator* simulator_;
 
   const Opts *opts_;
@@ -177,6 +183,9 @@ private:
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
+
+  // record minimum module_set_t which each variable is completely unbounded
+  std::map<variable_t,module_set_t> completely_unboundness_condition;
 };
 
 } // namespace simulator

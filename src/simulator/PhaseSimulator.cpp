@@ -28,6 +28,8 @@
 #include "kv/interval.hpp"
 #include "AffineApproximator.h"
 
+#include "SymbolicTrajPrinter.h"
+
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
 namespace hydla
@@ -117,6 +119,12 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->simulation_state = INCONSISTENCY;
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
+
+		cout << "Execution stuck!" << endl;
+		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
+		cout << endl;
+		auto unsatv2unsatcons = todo->calc_map_v2cons();
+		print_possible_causes(unsatv2unsatcons);
   }
   else
   {
@@ -126,13 +134,23 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 
       // warn against unreferenced variables
       std::string warning_var_str = "";
+      variable_set_t warning_var;
       for (auto var: *variable_set_)
       {
 
-        if (var.get_differential_count() == 0 &&
-           !phase->variable_map.count(var))warning_var_str += var.get_string() + " ";
+        if (var.get_differential_count() == 0 && !phase->variable_map.count(var)){
+          warning_var_str += var.get_string() + " ";
+          warning_var.insert(var);
+        }
       }
-      if (warning_var_str.length() > 0)HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
+      if (warning_var_str.length() > 0){
+        HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
+        if(phase->current_time.get_string() == "0" and phase->end_time.get_string() == "0"){
+          cout << "WARNING: " << warning_var_str << "is not initialized!" << endl;
+        }else{
+          update_condition(warning_var, phase->unadopted_ms);
+        }
+      }
 
       if (aborting)break;
     }
@@ -2088,6 +2106,54 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   phase->set_parameter_constraint(new_store);
 
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+}
+
+void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t> &mp){
+	cout << "Possible causes..." << endl;
+	for(auto pvms : mp){
+		cout << "* {";
+		bool first = true;
+		for(auto v : pvms.first){
+			if(first) cout << v;
+			else cout << ", " << v;
+			first = false;
+		}
+		cout << "} in {";
+		first = true;
+		for(auto ms : pvms.second){
+			if(first) cout << ms.first;
+			else cout << ", " << ms.first;
+			first = false;
+		}
+		cout << "}" << endl;
+	}
+	cout << endl;
+}
+
+void PhaseSimulator::update_condition(const variable_set_t &vs, const module_set_t &ms){
+  for(auto v : vs){
+    if(completely_unboundness_condition.count(v) == 0){
+      completely_unboundness_condition[v] = ms;
+    }else{
+      module_set_t tmp;
+      for(auto m : completely_unboundness_condition[v]){
+        if(ms.count(m) == 1) tmp.insert(m);
+      }
+      completely_unboundness_condition[v] = tmp;
+    }
+  }
+}
+
+void PhaseSimulator::print_completely_unboundness_condition(){
+  for(auto pvms : completely_unboundness_condition){
+    cout << "WARNING: " << pvms.first << " is completely unbound";
+    if(pvms.second.size() == 0){
+      cout << " in default constraint" << endl;
+    }else{
+      cout << " in exeptional constarint" << endl;
+    }
+  }
+  cout << endl;
 }
 
 } // namespace simulator
