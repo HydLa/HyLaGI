@@ -880,7 +880,7 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
-  resultRule = Quiet[Check[solveByDSolveAndSolve[listExpr, getVariables[listExpr] ], {}] ];
+  resultRule = Quiet[Check[dsolve[listExpr, getVariables[listExpr] ], {}] ];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
@@ -893,13 +893,9 @@ Module[
       simplePrint[searchResult];
       If[searchResult === unExpandable,
         Break[],
-        rules = solveByDSolveAndSolve[searchResult[[1]], searchResult[[3]]];
+        rules = dsolve[searchResult[[1]], searchResult[[3]]];
         simplePrint[rules];
-        If[rules === overConstrained || Length[rules] == 0,
-          rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
-          simplePrint[rules];
-          If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ]
-        ];
+        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained]];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
         If[Head[rules] === DSolve,
           resultCons = resultCons && And@@searchResult[[1]];

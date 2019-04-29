@@ -12,7 +12,7 @@ namespace mathematica{
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level, bool solve_over_reals) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level, const int dsolve_method, bool solve_over_reals) : env_(0), link_(0)
 {
 
   if((env_ = WSInitialize(0)) == (WSENV)0)throw LinkError("math", "can not link",0);
@@ -53,6 +53,13 @@ MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warni
   WSPutFunction("Set", 2);
   WSPutSymbol("optSimplifyLevel");
   WSPutInteger(simplify_level);
+  WSEndPacket();
+  skip_pkt_until(RETURNPKT);
+  WSNewPacket();
+
+  WSPutFunction("Set", 2);
+  WSPutSymbol("optDSolveMethod");
+  WSPutInteger(dsolve_method);
   WSEndPacket();
   skip_pkt_until(RETURNPKT);
   WSNewPacket();

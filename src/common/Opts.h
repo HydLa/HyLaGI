@@ -38,6 +38,7 @@ struct Opts {
   int approximation_step;
   int extra_dummy_num;
   int simplify;
+  int dsolve;
   symbolic_expression::node_sptr assertion;
   int max_phase;
   EOutputMode output_mode;

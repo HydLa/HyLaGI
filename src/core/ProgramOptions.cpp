@@ -58,6 +58,13 @@ void ProgramOptions::init_descriptions()
      "  2 or others - use \"FullSimplify\""
       )
 
+     ("dsolve",
+     value<int>()->default_value(1),
+     "the method of differential equation in exDSolve\n"
+     "  0 - Try to get initial value problem directly\n"
+     "  1 - Try to get initial value problem via constant\n"
+      )
+
     ("tm",
      value<std::string>()->default_value("n"),
      "time measurement:\n"

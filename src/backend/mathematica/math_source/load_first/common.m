@@ -274,6 +274,11 @@ Switch[optSimplifyLevel,
     _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr]
 ];
 
+Switch[optDSolveMethod,
+    0, dsolve[expr_, vars_] := solveByDSolve[expr, vars],
+    _, dsolve[expr_, vars_] := solveByDSolveAndSolve[expr, vars]
+];
+
 solveOverRorC[consToSolve_,vars_] :=
   If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
 
