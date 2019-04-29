@@ -142,6 +142,14 @@ public:
 
   friend std::ostream& operator<<(std::ostream &s, const ModuleSet::module_t& m);
 
+  size_t count(const module_t &m)const{
+    return module_list_.count(m);
+  }
+
+  void insert(const module_t &m){
+    module_list_.insert(m);
+  }
+
 private:
   module_list_t module_list_;
 };

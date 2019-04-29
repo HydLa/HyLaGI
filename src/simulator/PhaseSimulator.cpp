@@ -134,11 +134,14 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 
       // warn against unreferenced variables
       std::string warning_var_str = "";
+      variable_set_t warning_var;
       for (auto var: *variable_set_)
       {
 
-        if (var.get_differential_count() == 0 &&
-           !phase->variable_map.count(var))warning_var_str += var.get_string() + " ";
+        if (var.get_differential_count() == 0 && !phase->variable_map.count(var)){
+          warning_var_str += var.get_string() + " ";
+          warning_var.insert(var);
+        }
       }
       if (warning_var_str.length() > 0){
         HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
@@ -2123,6 +2126,20 @@ void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t
 		cout << "}" << endl;
 	}
 	cout << endl;
+}
+
+void PhaseSimulator::update_condition(const variable_set_t &vs, const module_set_t &ms){
+  for(auto v : vs){
+    if(completely_unboundness_condition.count(v) == 0){
+      completely_unboundness_condition[v] = ms;
+    }else{
+      module_set_t tmp;
+      for(auto m : completely_unboundness_condition[v]){
+        if(ms.count(m) == 1) tmp.insert(m);
+      }
+      completely_unboundness_condition[v] = tmp;
+    }
+  }
 }
 
 } // namespace simulator
