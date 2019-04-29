@@ -185,7 +185,7 @@ public:
   std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
-	std::map<variable_set_t,module_set_t> calc_map_v2cons()const; 
+  std::map<variable_set_t,module_set_t> calc_map_v2cons()const; 
 
   std::string get_string() const;
 	std::string get_vm_string() const;

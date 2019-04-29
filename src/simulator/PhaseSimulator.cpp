@@ -140,7 +140,12 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
         if (var.get_differential_count() == 0 &&
            !phase->variable_map.count(var))warning_var_str += var.get_string() + " ";
       }
-      if (warning_var_str.length() > 0)HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
+      if (warning_var_str.length() > 0){
+        HYDLA_LOGGER_WARN(warning_var_str, " is completely unbound at phase... \n", *phase);
+        if(phase->current_time.get_string() == "0" and phase->end_time.get_string() == "0"){
+          cout << "WARNING: " << warning_var_str << "is uninitialized!" << endl << endl;
+        }
+      }
 
       if (aborting)break;
     }

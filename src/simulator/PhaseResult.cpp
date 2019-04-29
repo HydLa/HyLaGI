@@ -180,25 +180,25 @@ void PhaseResult::set_full_information(FullInformation &info)
 }
 
 std::map<variable_set_t,module_set_t> PhaseResult::calc_map_v2cons()const{
-	std::map<variable_set_t,module_set_t> res;
-	auto unsatmodset = (this->inconsistent_module_sets).begin();
-	for(auto unsatconsset : this->inconsistent_constraints){
-		variable_set_t vars;
-		for(auto unsatcons : unsatconsset){
-			VariableFinder finder;
-			finder.visit_node(unsatcons);
-
-			// HACK: use std::set::merge
-			for(auto v : finder.get_all_variable_set()){
-				vars.insert(v);
-			}
-		}
-		if(res.count(vars) == 0 or res[vars].size() > unsatmodset->size()){
-			res[vars] = *unsatmodset;
-		}
-		++unsatmodset;
-	}
-	return res;
+  std::map<variable_set_t,module_set_t> res;
+  auto unsatmodset = (this->inconsistent_module_sets).begin();
+  for(auto unsatconsset : this->inconsistent_constraints){
+    variable_set_t vars;
+    for(auto unsatcons : unsatconsset){
+      VariableFinder finder;
+      finder.visit_node(unsatcons);
+      
+      // HACK: use std::set::merge
+      for(auto v : finder.get_all_variable_set()){
+        vars.insert(v);
+      }
+    }
+    if(res.count(vars) == 0 or res[vars].size() > unsatmodset->size()){
+      res[vars] = *unsatmodset;
+    }
+    ++unsatmodset;
+  }
+  return res;
 }
 
 string PhaseResult::get_string()const
