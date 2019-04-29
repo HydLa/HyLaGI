@@ -95,25 +95,25 @@ asks_t PhaseResult::get_diff_positive_asks()const
 
 void PhaseResult::add_diff_positive_asks(const asks_t &asks)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_positive_asks.insert(asks.begin(), asks.end());
 }
 
 void PhaseResult::add_diff_negative_asks(const asks_t &asks)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_negative_asks.insert(asks.begin(), asks.end());
 }
 
 void PhaseResult::add_diff_positive_ask(const ask_t &ask)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_positive_asks.insert(ask);
 }
 
 void PhaseResult::add_diff_negative_ask(const ask_t &ask)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_negative_asks.insert(ask);
 }
 
@@ -132,20 +132,20 @@ asks_t PhaseResult::get_all_negative_asks()const
 void PhaseResult::set_parameter_constraint(const ConstraintStore &cons)
 {
   parameter_constraint = cons;
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 void PhaseResult::add_parameter_constraint(const constraint_t &cons)
 {
   parameter_constraint.add_constraint(cons);
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 
 void PhaseResult::add_parameter_constraint(const ConstraintStore &cons)
 {
   parameter_constraint.add_constraint_store(cons);
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 

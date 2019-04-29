@@ -1,9 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
 
 #include "Variable.h"
 #include "ValueRange.h"
@@ -195,8 +195,8 @@ private:
 
   asks_t                   diff_positive_asks, diff_negative_asks;
   mutable ConstraintStore                      parameter_constraint;
-  mutable boost::optional<std::vector<parameter_map_t> >     parameter_maps;
-  mutable boost::optional<FullInformation>             full_information;
+  mutable std::optional<std::vector<parameter_map_t> >     parameter_maps;
+  mutable std::optional<FullInformation>             full_information;
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);

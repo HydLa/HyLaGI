@@ -1171,7 +1171,7 @@ find_min_time_result_t PhaseSimulator::find_min_time(const constraint_t &guard, 
 
 struct PhaseSimulator::StateOfIntervalNewton{
   interval::itv_stack_t  stack;
-  boost::optional<itvd>  min_interval = boost::none;
+  optional<itvd>  min_interval = nullopt;
   node_sptr guard;
   node_sptr exp;
   node_sptr dexp;
@@ -1470,7 +1470,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
         auto newton_it = newton_guard_state_map.find(guard);
         if (newton_it != newton_guard_state_map.end())
         {
-          newton_it->second.min_interval = boost::none;
+          newton_it->second.min_interval = nullopt;
 
           const int atomic_guard_index = std::distance(newton_guard_state_map.begin(), newton_it);
           ++current_atomic_guard_index_history_stack_index[atomic_guard_index];
