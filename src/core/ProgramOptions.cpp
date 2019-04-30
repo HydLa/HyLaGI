@@ -30,7 +30,7 @@ pair<string, string> reg_toggle(const string& s)
 
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options",
+  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options\n(default value is written in \"()\")\n('n' means \"no\" not a natural number)",
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "display help message (this option)")
