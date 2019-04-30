@@ -34,7 +34,7 @@ void ProgramOptions::init_descriptions()
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "display help message (this option)")
-    ("version", "display version")
+    ("version,v", "display version")
 
     ("parse_only", "only try to parse given program")
     ("dump_parse_tree", "only output parse tree")
