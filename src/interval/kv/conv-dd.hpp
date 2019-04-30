@@ -109,7 +109,7 @@ struct conv_dd {
 		// get x2 to buf2 and add it to buf
 
 		bool buf2[1023 - (-1074) + 1];
-		int emax2, emin2, s;
+		int emax2, emin2 = 0, s;
 		int carry, tmp;
 
 		sign2 = get_sign_double(x2);

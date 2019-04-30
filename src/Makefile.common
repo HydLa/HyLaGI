@@ -20,14 +20,14 @@ MATHEMATICA_VERSIONS := $(shell ls /usr/local/Wolfram/Mathematica | grep -E [1-9
 INCLUDES += $(foreach v, $(MATHEMATICA_VERSIONS), -I/usr/local/Wolfram/Mathematica/$(v)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/)
 LDFLAGS	 += $(foreach v, $(MATHEMATICA_VERSIONS), -L/usr/local/Wolfram/Mathematica/$(v)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/)
 
-CXX_OPT  += -Wall -std=c++2a -luuid -O
+CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-unused-command-line-argument -Wno-unused-variable
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 endif
 ifeq ($(UNAME),Darwin)
 INCLUDES += -I/Applications/Mathematica.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 LDFLAGS  += -L/Applications/Mathematica.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++2a -framework Foundation
+CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 
 ARFLAGS  := cru

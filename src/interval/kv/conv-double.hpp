@@ -81,7 +81,7 @@ struct conv_double {
 
 		bool buf[1023 - (-1074) + 1];
 		int offset = 1074;
-		int emax, emin;
+		int emax, emin = 0;
 		double dtmp, dtmp2;
 
 		dtmp = absx;

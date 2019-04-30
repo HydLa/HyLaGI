@@ -109,7 +109,7 @@ value_t AffineApproximator::translate_into_symbolic_value(const affine_t& affine
   // reset rounding mode
   kv::hwround::roundnear();
 
-  kv::interval<double> itv = to_interval(affine_value);
+  // kv::interval<double> itv = to_interval(affine_value);
   return ret;
 }
 

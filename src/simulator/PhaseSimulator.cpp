@@ -1317,7 +1317,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(const constrai
     {
       const int atomic_guard_index = std::distance(newton_guard_state_map.begin(), it);
       auto& entry = *it;
-      bool needUpdate = true;
+      // bool needUpdate = true;
       StateOfIntervalNewton &state = entry.second;
       const std::string atomic_guard_str = get_infix_string(entry.first);
 
