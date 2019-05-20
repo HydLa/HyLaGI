@@ -1025,17 +1025,22 @@ Module[
     ini = Union[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
-  inis = Sort[Subsets[ini], (Length[#1] > Length[#2])&];
-  For[i = 1, i <= Length[inis], i++,
-    simplePrint[Union[expr, inis[[i]]]];
-    simplePrint[tVars];
-    sol = Quiet[
-      Check[
-        DSolve[Union[expr, inis[[i]]], tVars, t],
-            overConstrained,
-        {DSolve::overdet, DSolve::bvimp}
-      ],
-      {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+  For[i = Length[ini], i >= 1, i--,
+    inis = Sort[Subsets[ini, {i}], (Length[#1] > Length[#2])&];
+    For[j = 1, j <= Length[inis], j++,
+      (*simplePrint[Union[expr, inis[[j]]]];*)
+      (*simplePrint[tVars];*)
+      sol = Quiet[
+        Check[
+          DSolve[Union[expr, inis[[j]]], tVars, t],
+              overConstrained,
+          {DSolve::overdet, DSolve::bvimp}
+        ],
+        {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      ];
+      If[Length[sol] > 0,
+        Break[]
+      ]
     ];
     If[Length[sol] > 0,
       Break[]
