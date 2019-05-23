@@ -1025,8 +1025,8 @@ Module[
     ini = Union[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
-  For[i = Length[ini], i >= 1, i--,
-    inis = Sort[Subsets[ini, {i}], (Length[#1] > Length[#2])&];
+  For[i = Length[ini], i >= 0, i--,
+    inis = Subsets[ini, {i}];
     For[j = 1, j <= Length[inis], j++,
       (*simplePrint[Union[expr, inis[[j]]]];*)
       (*simplePrint[tVars];*)
