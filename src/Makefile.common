@@ -14,11 +14,11 @@ LIBS += -lpthread
 UNAME := $(shell uname)
 
 LIBS_STATIC += -lboost_thread -lboost_regex
+MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
 
 ifeq ($(UNAME),Linux)
-MATHEMATICA_VERSIONS := $(shell ls /usr/local/Wolfram/Mathematica | grep -E [1-9]\{1,3\}\(\.[1-9]\{1,3\}\)* | sort -n)
-INCLUDES += $(foreach v, $(MATHEMATICA_VERSIONS), -I/usr/local/Wolfram/Mathematica/$(v)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/)
-LDFLAGS	 += $(foreach v, $(MATHEMATICA_VERSIONS), -L/usr/local/Wolfram/Mathematica/$(v)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/)
+INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
@@ -37,15 +37,18 @@ SRC_DIR  += .
 SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
 OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
 	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
-	    $(subst .cpp,.o,$(filter %.cpp,$(SRC)))
+			$(subst .cpp,.o,$(filter %.cpp,$(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
 
+COMPILE_COMMANDS_SRC := $(OBJECT:.o=.o.json)
+COMPILE_COMMANDS_JSON := compile_commands.json
+
 .PHONY : all
-all: $(DEP_PROJECTS) $(TARGET)
+all: $(DEP_PROJECTS) $(TARGET) $(COMPILE_COMMANDS_JSON)
 
 .PHONY : clean
 clean:
-	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES)
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES) $(COMPILE_COMMANDS_SRC) $(COMPILE_COMMANDS_JSON)
 
 $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
@@ -57,6 +60,8 @@ else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
 endif
 
+$(COMPILE_COMMANDS_JSON): $(OBJECT)
+	cat $(COMPILE_COMMANDS_SRC) |  $(SED) -e '1s/^/[\n/' -e '$$s/,$$/\n]/' > $(COMPILE_COMMANDS_JSON)
 #$(DEP_OBJECTS):
 #	$(MAKE) --directory=$(dir $@)
 
@@ -67,8 +72,8 @@ endif
 .c.o:
 	$(CC) $(CXXFLAGS) -c -o $@ $<
 
-.cc.o .cpp.o: 
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+.cc.o .cpp.o:
+	$(CXX) $(CXXFLAGS) -MJ $@.json -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \

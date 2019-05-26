@@ -4,6 +4,8 @@
 *.dot
 *.png
 *.csv
+*.o.json
+compile_commands.json
 bin/
 *.txt
 src/math_source_converter/msc
