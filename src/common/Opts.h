@@ -35,6 +35,7 @@ struct Opts {
   bool eager_approximation;
   bool solve_over_reals;
   bool html;
+  bool min_time_using_relaxation;
   int approximation_step;
   int extra_dummy_num;
   int simplify;

@@ -21,6 +21,7 @@ namespace simulator {
 
 class ValueModifier;
 class MinTimeCalculator;
+class MinTimeCalculatorUsingRelaxation;
 
 struct CompareMinTimeResult
 {
@@ -180,6 +181,7 @@ private:
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
   int                                   upper_bound_of_itv_newton = 100;
+  MinTimeCalculatorUsingRelaxation*     min_time_calculator_using_relaxation_;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;

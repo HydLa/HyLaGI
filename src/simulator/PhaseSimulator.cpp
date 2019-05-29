@@ -6,6 +6,7 @@
 
 #include "Logger.h"
 #include "Timer.h"
+#include "Backend.h"
 
 #include "PrevReplacer.h"
 #include "VariableReplacer.h"
@@ -17,11 +18,10 @@
 #include "ValueModifier.h"
 #include "GuardMapApplier.h"
 
-#include "MinTimeCalculator.h"
-
-#include "Backend.h"
 
 #include "TreeInfixPrinter.h"
+#include "MinTimeCalculator.h"
+#include "MinTimeCalculatorUsingRelaxation.h"
 
 #include "IntervalNewton.h"
 #include "IntervalTreeVisitor.h"
@@ -622,6 +622,15 @@ void PhaseSimulator::initialize(variable_set_t &v,
     {
       vars_to_approximate.insert(variable);
     }
+  }
+
+  if(opts_->min_time_using_relaxation) {
+    asks_t asks = relation_graph_->get_all_asks();
+    ConstraintStore guards;
+    for(auto ask : asks){
+      guards.add_constraint(ask->get_guard());
+    }
+    min_time_calculator_using_relaxation_ = new MinTimeCalculatorUsingRelaxation(backend_.get(), guards);
   }
 
   FullInformation root_information;

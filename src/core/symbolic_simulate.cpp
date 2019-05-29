@@ -220,6 +220,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
   IF_SPECIFIED("dsolve")opts.dsolve = po.get<int>("dsolve");
   IF_SPECIFIED("solve_over_reals")opts.solve_over_reals = po.count("solve_over_reals") > 0 && po.get<char>("solve_over_reals") == 'y';
   IF_SPECIFIED("html")opts.html = po.count("html") > 0 && po.get<char>("html") == 'y';
+  IF_SPECIFIED("min_time_using_relaxation") opts.min_time_using_relaxation = po.count("min_time_using_relaxation") > 0 && po.get<char>("min_time_using_relaxation") == 'y';
 }
 
 
