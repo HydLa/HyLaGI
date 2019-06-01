@@ -10,63 +10,23 @@ using namespace backend;
 
 MinTimeCalculatorUsingRelaxation::MinTimeCalculatorUsingRelaxation(){};
 MinTimeCalculatorUsingRelaxation::~MinTimeCalculatorUsingRelaxation(){};
-MinTimeCalculatorUsingRelaxation::MinTimeCalculatorUsingRelaxation(Backend *b, ConstraintStore guards): backend(b)
+MinTimeCalculatorUsingRelaxation::MinTimeCalculatorUsingRelaxation(Backend *b, std::vector<ask_t> all_asks): backend_(b), all_asks_(all_asks)
 {
-  b->call("initEndPoints", true, 1, "cs", "", &guards, "");
-}
-/*
-find_min_time_result_t MinTimeCalculatorUsingRelaxation::calculate_min_time(guard_time_map_t *g, const constraint_t &guard, bool negated, value_t time_limit, const constraint_t &time_bound, value_t starting_time)
-{
-  guard_time_map = g;
-  GuardNode *node = relation_graph->get_guard_node(guard);
-  node->accept(this);
-  if(negated)current_cons.reset(new symbolic_expression::Not(current_cons));
-
-  if(time_bound.get() != nullptr)current_cons.reset(new symbolic_expression::LogicalAnd(current_cons, time_bound));
-
-  find_min_time_result_t find_min_time_result;
-
-  if(starting_time.undefined()){
-    backend->call("minimizeTime", true, 2, "envlt", "f",
-                  &current_cons, &time_limit, &find_min_time_result);
-  }else{
-    backend->call("minimizeTime", true, 3, "envltvlt", "f",
-                  &current_cons, &starting_time, &time_limit, &find_min_time_result);
+  std::vector<ConstraintStore> guards;
+  for (auto ask : all_asks) {
+    std::cout << get_infix_string(ask) << std::endl;
+    guards.push_back(ask->get_guard());
   }
-  return find_min_time_result;
+  b->call("calculateRelaxedGuardsInit", true, 1, "cscl", "", &guards);
 }
-*/
+std::pair<find_min_time_result_t, ask_t> MinTimeCalculatorUsingRelaxation::find_min_time_using_relaxation(variable_map_t vm, value_t time_limit) {
 
-void MinTimeCalculatorUsingRelaxation::visit(AtomicGuardNode *atomic)
-{
-  current_cons = (*guard_time_map)[atomic->atomic_guard.constraint];
+  find_min_time_result_t candidates;
+  backend_->call("findMinTimeWithRelaxation", true, 2, "mvtvlt", "f", &vm, &time_limit, &candidates);
+  std::pair<find_min_time_result_t, ask_t> ret;
+  ret.first = candidates;
+  ret.second = all_asks_[candidates.front().guard_indices.front()-1];
+  return ret;
 }
-
-void MinTimeCalculatorUsingRelaxation::visit(OrGuardNode *or_node)
-{
-  or_node->lhs->accept(this);
-  constraint_t lhs = current_cons;
-  or_node->rhs->accept(this);
-  constraint_t rhs = current_cons;
-  current_cons.reset(new symbolic_expression::LogicalOr(lhs, rhs));
-}
-
-void MinTimeCalculatorUsingRelaxation::visit(AndGuardNode *and_node)
-{
-  and_node->lhs->accept(this);
-  constraint_t lhs = current_cons;
-  and_node->rhs->accept(this);
-  constraint_t rhs = current_cons;
-  current_cons.reset(new symbolic_expression::LogicalAnd(lhs, rhs));
-}
-
-
-void MinTimeCalculatorUsingRelaxation::visit(NotGuardNode *not_node)
-{
-  not_node->child->accept(this);
-  current_cons.reset(new symbolic_expression::Not(current_cons));
-}
-
-
 }
 }

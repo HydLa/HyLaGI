@@ -115,8 +115,14 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
       }
       else
       {
-        ConstraintStore *cs = (ConstraintStore *)arg;
-        send_cs(*cs, form);
+        if(args_fmt[i+1] == 'l'){
+          i++;
+          std::vector<ConstraintStore>* lcs = (vector<ConstraintStore> *) arg;
+          send_cs_list(*lcs, form);
+        }else{
+          ConstraintStore *cs = (ConstraintStore *)arg;
+          send_cs(*cs, form);
+        }
       }
     }
     break;
@@ -475,6 +481,14 @@ void Backend::send_cs(const ConstraintStore& cs, const VariableForm& vf)
   for (auto constraint : cs)
   {
     send_node(constraint, vf);
+  }
+}
+void Backend::send_cs_list(const vector<ConstraintStore>& lcs, const VariableForm& vf){
+  link_->put_function("List", lcs.size());
+  for (auto cs : lcs)
+  {
+    link_->put_function("And", cs.size());
+    send_cs(cs, vf);
   }
 }
 
@@ -978,6 +992,7 @@ compare_min_time_result_t Backend::receive_compare_min_time_result()
 
 find_min_time_result_t Backend::receive_find_min_time_result()
 {
+  std::cout << "enter" << std::endl;
   std::string name;
   int find_min_time_size; 
   // List
@@ -997,6 +1012,7 @@ find_min_time_result_t Backend::receive_find_min_time_result()
     candidate.guard_indices.push_back(link_->get_integer());
     result.push_back(candidate);
   }
+  std::cout << "end" << std::endl;
   return result;
 }
 

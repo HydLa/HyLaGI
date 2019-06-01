@@ -127,6 +127,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   void send_value(const simulator::value_t& val, const VariableForm &vf);
   void send_time_list(const std::vector<simulator::TimeListElement> &list);
   void send_cs(const simulator::ConstraintStore &cs, const VariableForm& vf);
+  void send_cs_list(const std::vector<simulator::ConstraintStore> &cs, const VariableForm& vf);
 
   int receive_map(variable_map_t &vm);
   void receive_bool(bool &b);

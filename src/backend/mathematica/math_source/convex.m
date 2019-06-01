@@ -1,10 +1,3 @@
-pointToPointsAcc = <||>;
-pointToPoints = <||>;
-
-clearPointToPoint[] :=
-  pointToPointsAcc = <||>;
-  pointToPoints = <||>;
-
 getEdges::NotHandledRelop = "予期せぬオペレータ`1`です"
 getEdges[cons_, vars_] :=
   Module[
@@ -34,6 +27,8 @@ getEdges[cons_, vars_] :=
       edges = Union[edges, If[Length[edge] > 1, edge, {}]];
       edge = Flatten[Fold[Function[{a, b}, Append[a, Fold[Append[#1, {{#2[[1]], b[[1]]}, #2[[2]]&&b[[2]]}]&, {}, endPoints[vars[[2]]] ]]], {}, endPoints[vars[[1]]] ], 1];
       edges = Union[edges, If[Length[edge] > 1, edge, {}]];
+      edges = Map[({{#[[1]][[2]], #[[1]][[1]]}, #[[2]]})&, edges];
+      simplePrint[edges];
       edges
     ]
   ];
@@ -182,6 +177,10 @@ isIntersectingTriAndSeg[p1_, p2_, t1_, t2_, t3_, permitTouch_] :=
 isTriContainsPoint[p_, t1_, t2_, t3_, permitTouch_] :=
   Module[
     {s1, s2, s3},
+    simplePrint[p];
+    simplePrint[t1];
+    simplePrint[t2];
+    simplePrint[t3];
     s1 = isClockWise[p, t1, t2];
     s2 = isClockWise[p, t2, t3];
     s3 = isClockWise[p, t3, t1];
@@ -199,23 +198,24 @@ addPointToConvexWithChecking[convexStack_, point_, startPoints_] :=
     lowerYConvexStack = convexStack[[2]];
     (*simplePrint["start"];*)
     (*simplePrint[point];*)
-    (*simplePrint[upperYConvexStack];*)
-    (*simplePrint[lowerYConvexStack];*)
+    simplePrint[upperYConvexStack];
+    simplePrint[lowerYConvexStack];
     tmp = {};
     (* 最後尾が更新されるので、上/下包を更新 *)
     While[First[upperYConvexStack][[4]] == True || isClockWise[First[upperYConvexStack][[1]], Last[upperYConvexStack][[1]], point] === -1,
       tmp = Append[tmp, Last[upperYConvexStack]];
       upperYConvexStack = Most[upperYConvexStack];
     ];
-    upperYConvexStack[[Length[upperYConvexStack]]][[3]] = _;
-    tmp2 = Last[upperYConvexStack];
+    simplePrint[tmp];
     If[tmp =!= {},
+      upperYConvexStack[[Length[upperYConvexStack]]][[3]] = _;
+      tmp2 = Last[upperYConvexStack];
       tmp2[[2]] = _;
       tmp2[[3]] = Last[tmp][[1]];
       tmp[[Length[tmp]]][[2]] = tmp2[[1]];
       tmp[[1]][[3]] = lowerYConvexStack[[2]][[1]];
+      lowerYConvexStack = Join[{tmp2}, Reverse[tmp], Rest[lowerYConvexStack]];
     ];
-    lowerYConvexStack = Join[{tmp2}, Reverse[tmp], Rest[lowerYConvexStack]];
     (*simplePrint[upperYConvexStack];*)
     (*simplePrint[lowerYConvexStack];*)
     upperYConvexStack = addPointToUpperConvex[upperYConvexStack, point];
@@ -245,6 +245,7 @@ addPointToConvexWithChecking[convexStack_, point_, startPoints_] :=
 convexFull[points_] :=
   Module[
     {i, tmpList, lowerX, upperX, lowerYPoints, upperYPoints, lowerYConvexStack, upperYConvexStack, convexStack},
+    If[Length[points] < 2, Return[{{}, {}}]];
     lowerX = First[points];
     upperX = Last[points];
     tmpList = Rest[Most[points]];
@@ -292,7 +293,6 @@ mergeConvexStack[convexStack] :=
 endPointToConstrant[point0_, point1_, reop_] :=
   Module[
     {x0, x1, y0, y1, a},
-    (*simplePrint[point0, point1];*)
     x0 = point0[[1]];
     y0 = point0[[2]];
     x1 = point1[[1]];
@@ -300,7 +300,7 @@ endPointToConstrant[point0_, point1_, reop_] :=
     Quiet[Check[
       a = (y1-y0) / (x1-x0);
       Switch[reop,
-        0, uy[t]-y0 = a*(ux[t]-x0) && x0 <= ux[t] <= x1,
+        0, uy[t]-y0 == a*(ux[t]-x0) && x0 <= ux[t] <= x1,
         1, uy[t]-y0 >= a*(ux[t]-x0),
         -1, uy[t]-y0 <= a*(ux[t]-x0)
       ],
@@ -317,8 +317,11 @@ translateConvexPointsIntoConstraint[convexStack_] :=
   Module[
     {i, retCons, lowerYConvexStack, upperYConvexStack},
     (*simplePrint[convexStack];*)
+    If[Length[convexStack] === 0, Return[False]];
     upperYConvexStack = Select[convexStack[[1]], (#[[4]]==False)&];
     lowerYConvexStack = Select[convexStack[[2]], (#[[4]]==False)&];
+    simplePrint[upperYConvexStack];
+    simplePrint[lowerYConvexStack];
     retCons = True;
     For[i=1,i<Length[upperYConvexStack],i++,
       retCons = retCons && endPointToConstrant[upperYConvexStack[[i]][[1]], upperYConvexStack[[i+1]][[1]], -1];
@@ -349,11 +352,10 @@ getSurfaceEdges[convexStack_, pointToPoints_] :=
   *)
 
 (*pointToPointsを初期化, gListをpointsに変換*)
-calculateRelaxedGuardsInit[gList_] :=
+calculateRelaxedGuardsInit[gList_, vars_] :=
   Module[
-    {i, edges, edgeFrom, edgeTo, points, vars},
+    {i, edges, edgeFrom, edgeTo, points},
     (*simplePrint[vars];*)
-    vars = getVariablesWithDerivatives[gList];
     If[Head[pointToPointsAcc[gList]] === Missing,
       edges = Fold[Append[#1, getEdges[#2, vars]]&, {}, gList];
       (*(*simplePrint[edges];*)*)
@@ -439,14 +441,16 @@ calculateRelaxedGuards[points_, shiftedStartCons_] :=
     (*simplePrint[remainingEdges];*)
     (* 残りの点を、左の凸法にマージを試みる*)
     tmp = {};
-    For[i=1,i<=Length[remainingEdges],i++,
-      (*simplePrint[remainingEdges];*)
-      {lowerXConvexStack, succeeded} = addPointToConvexWithChecking[lowerXConvexStack, remainingEdges[[i]][[2]], startPoints];
-      (*simplePrint[lowerXConvexStack];*)
-      (*simplePrint[succeeded];*)
-      If[!succeeded,
-        tmp = Union[tmp, {remainingEdges[[i]]}],
-        lowerXPoints = Append[lowerXPoints, remainingEdges[[i]][[2]]];
+    If[lowerXConvexStack =!= {{},{}},
+      For[i=1,i<=Length[remainingEdges],i++,
+        (*simplePrint[remainingEdges];*)
+        {lowerXConvexStack, succeeded} = addPointToConvexWithChecking[lowerXConvexStack, remainingEdges[[i]][[2]], startPoints];
+        (*simplePrint[lowerXConvexStack];*)
+        simplePrint[succeeded];
+        If[!succeeded,
+          tmp = Union[tmp, {remainingEdges[[i]]}],
+          lowerXPoints = Append[lowerXPoints, remainingEdges[[i]][[2]]];
+        ];
       ];
     ];
     (*simplePrint[tmp];*)
@@ -458,32 +462,34 @@ calculateRelaxedGuards[points_, shiftedStartCons_] :=
       ];
     ];
     remainingEdges = Sort[remainingEdges, (#1[[2]] > #2[[2]])&];
-    (*simplePrint[remainingEdges];*)
-    For[i=1,i<=Length[remainingEdges],i++,
-      {upperXConvexStack, succeeded} = addPointToConvexWithChecking[upperXConvexStack, remainingEdges[[i]][[1]], startPoints];
-      (*simplePrint[upperXConvexStack];*)
-      (*simplePrint[succeeded];*)
-      If[!succeeded,
-        tmp = Union[tmp, {remainingEdges[[i]]}],
-        tmp = Complement[tmp, {remainingEdges[[i]]}];
-        upperXPoints = Prepend[upperXPoints, remainingEdges[[i]][[1]]]
+    simplePrint[remainingEdges];
+    If[upperXConvexStack =!= {{}, {}},
+      For[i=1,i<=Length[remainingEdges],i++,
+        {upperXConvexStack, succeeded} = addPointToConvexWithChecking[upperXConvexStack, remainingEdges[[i]][[1]], startPoints];
+        simplePrint[upperXConvexStack];
+        simplePrint[succeeded];
+        If[!succeeded,
+          tmp = Union[tmp, {remainingEdges[[i]]}],
+          tmp = Complement[tmp, {remainingEdges[[i]]}];
+          upperXPoints = Prepend[upperXPoints, remainingEdges[[i]][[1]]];
+        ];
       ];
     ];
-    (*simplePrint[upperXConvexStack];*)
-    (*simplePrint[lowerXConvexStack];*)
-    (*simplePrint[tmp];*)
+    (*simplePrint[upperXConvexStack];
+    simplePrint[lowerXConvexStack];
+    simplePrint[tmp];*)
     convexConstraints = {};
     For[i=1,i<=Length[tmp],i++,
-      convexConstraints = Append[convexConstraints, {endPointToConstrant[tmp[[i]][[1]], tmp[[i]][[2]], 0], {}, {}}];
+      convexConstraints = Append[convexConstraints, {endPointToConstrant[tmp[[i]][[1]], tmp[[i]][[2]], 0], {}, tmp[[i]]}];
     ];
     (*simplePrint[convexConstraints];*)
     convexConstraints = Fold[(Append[#1, {translateConvexPointsIntoConstraint[#2[[1]]], #2[[1]], #2[[2]]}])&, convexConstraints, {{{upperXConvexStack[[2]], upperXConvexStack[[1]]}, upperXPoints}, {lowerXConvexStack, lowerXPoints}}];
-    (*simplePrint[Map[#[[1]]&, Select[lowerXConvexStack[[1]], (#[[4]] == False)&]]];*)
-    (*simplePrint[Map[#[[1]]&, Select[lowerXConvexStack[[2]], (#[[4]] == False)&]]];*)
-    (*simplePrint[Map[#[[1]]&, Select[upperXConvexStack[[1]], (#[[4]] == False)&]]];*)
-    (*simplePrint[Map[#[[1]]&, Select[upperXConvexStack[[2]], (#[[4]] == False)&]]];*)
-    (*simplePrint[convexConstraints]*)
-    convexConstraints
+    simplePrint[Map[#[[1]]&, Select[lowerXConvexStack[[1]], (#[[4]] == False)&]]];
+    simplePrint[Map[#[[1]]&, Select[lowerXConvexStack[[2]], (#[[4]] == False)&]]];
+    simplePrint[Map[#[[1]]&, Select[upperXConvexStack[[1]], (#[[4]] == False)&]]];
+    simplePrint[Map[#[[1]]&, Select[upperXConvexStack[[2]], (#[[4]] == False)&]]];
+    simplePrint[convexConstraints];
+    Select[convexConstraints, (#[[1]] =!= False && #[[1]] =!= True)&]
   ];
 
 (* 2ステップ以降は、初期位置が凸包の表面にいるので、わざわざ包含判定をせずに簡単にできる *)
@@ -514,12 +520,13 @@ calculateRelaxedGuardsFollowingStep[points_, splitX_] :=
 
 checkGuardSatisfiability::nonContinuousStartPosition := "初期位置が線分ではありません: `1`";
 (* findMinTimeの結果が、凸包の表面上のガードを満たすかの検証(緩和問題の解 = 元の問題の解かを検証) *)
-checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_] :=
+checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_, ps_] :=
   Module[
     {i, j, vars, pars, tmp, startOnePoint, checkingConvex, checkingConvexLine, checkingEdges, checkingPoints, ret},
     (* 上下左右の凸法から独立した凸包は、必ず真の解 *)
+    simplePrint[ps];
     If[convexStack =={},
-      Return[{}]
+      Return[{{ps, pCons}}]
     ];
     (* FindInstanceは、不等式を満たす適当な点を求める *)
     vars = getVariables[shiftedStartCons];
@@ -527,10 +534,15 @@ checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_] :=
     If[pars =!= {},
       startOnePoint = shiftedStartCons /. Map[(FindInstance[#, getParameters[#]])&, ApplyList[pCons]];
       startOnePoint = {startOnePoint[[1]][[2]], startOnePoint[[2]][[2]]},
-      startOnePoint = {shiftedStartCons[[1]][[2]], shiftedStartCons[[1]][[2]]}
+      startOnePoint = {shiftedStartCons[[1]][[2]], shiftedStartCons[[2]][[2]]}
     ];
     (* 凸包との衝突点(線)が、上方か下方かを特定 *)
     (* TODO 端点*)
+    simplePrint[convexStack];
+    simplePrint[Last[convexStack[[1]]][[1]]];
+    simplePrint[First[convexStack[[1]]][[1]]];
+    simplePrint[startOnePoint];
+    simplePrint[isClockWise[Last[convexStack[[1]]][[1]], First[convexStack[[1]]][[1]], startOnePoint]];
     checkingConvex = If[isClockWise[Last[convexStack[[1]]][[1]], First[convexStack[[1]]][[1]], startOnePoint] == 1, convexStack[[1]], Reverse[convexStack[[2]]]];
     For[i=1,i<Length[checkingConvex],i++,
       j = i+1;
@@ -548,6 +560,7 @@ checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_] :=
     For[i=1,i<=Length[checkingConvexLine],i++,
       Module[
         {points, edges},
+        simplePrint[pointToPoints];
         points = pointToPoints[checkingConvexLine[[i]]];
         simplePrint[points];
         If[Head[points] =!= Missing,
@@ -579,4 +592,58 @@ checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_] :=
     simplePrint[checkingPoints];
     simplePrint[checkingEdges];
     ret
-  ]
+  ];
+
+minimizeTimePrivate[tCons_, pCons_, startingTime_, maxTime_] :=
+  Module[
+    {
+      minT,
+      resultList,
+      onTime = True,
+      necessaryPCons,
+      consList,
+      restPCons,
+      parsInCons,
+      maxCons,
+      ret
+    },
+    (* Mathematica cannot solve some minimization problem with "t < Infinity", such
+    as "Minimize[{t, t > 0 && 10*t*Cos[(Pi*p[pangle, 0, 1])/180] > 10 && Inequality[10, Less, p[pangle, 0, 1], Less, 30] && t < Infinity}, {t}]" *)
+
+    maxCons = If[maxTime === Infinity, True, t < maxTime];
+
+    consList = applyList[LogicalExpand[pCons]];
+    parsInCons = Union[getRelativeVars[getParameters[tCons && maxCons], consList, getParameters]];
+    (*debugPrint["parsInCons", parsInCons];*)
+    necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
+    restPCons = And@@Complement[consList, necessaryPCons];
+    necessaryPCons = And@@necessaryPCons;
+    (*simplePrint[necessaryPCons];*)
+    (*simplePrint[restPCons];*)
+
+    simplePrint[t > startingTime && tCons && necessaryPCons && maxCons];
+    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
+         onTime = False,
+         Minimize::wksol
+       ],
+       {Minimize::wksol, Minimize::infeas}
+    ];
+    (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
+    (*debugPrint["minT after Minimize:", minT];*)
+    If[minT === $Aborted || Head[minT] === Minimize,
+      Message[findMinTime::minimizeFailure, minT],
+      minT = First[minT];
+      If[minT === Infinity,
+        {},
+        ret = makeListFromPiecewise[minT, necessaryPCons];
+        ret = Map[({#[[1]], #[[2]] && restPCons})&, ret];
+        (* 時刻が0となる場合は弾く．*)
+        ret = Select[ret, (#[[1]] =!= 0)&];
+        ret = Select[ret, (#[[2]] =!= False)&];
+
+        (* 整形して結果を返す *)
+        resultList = Map[({#[[1]], If[onTime, 1, 0], {LogicalExpand[#[[2]] ]}, -1})&, ret];
+        resultList
+      ]
+    ]
+  ];

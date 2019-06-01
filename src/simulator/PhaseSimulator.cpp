@@ -624,15 +624,6 @@ void PhaseSimulator::initialize(variable_set_t &v,
     }
   }
 
-  if(opts_->min_time_using_relaxation) {
-    asks_t asks = relation_graph_->get_all_asks();
-    ConstraintStore guards;
-    for(auto ask : asks){
-      guards.add_constraint(ask->get_guard());
-    }
-    min_time_calculator_using_relaxation_ = new MinTimeCalculatorUsingRelaxation(backend_.get(), guards);
-  }
-
   FullInformation root_information;
   root_information.negative_asks = relation_graph_->get_all_asks();
   result_root->set_full_information(root_information);
@@ -645,6 +636,13 @@ void PhaseSimulator::initialize(variable_set_t &v,
 
   backend_->set_variable_set(*variable_set_);
   value_modifier.reset(new ValueModifier(*backend_));
+
+  if(opts_->min_time_using_relaxation) {
+    asks_t asks = relation_graph_->get_all_asks();
+    vector<ask_t> vec_asks(asks.begin(), asks.end());
+    min_time_calculator_using_relaxation_ = new MinTimeCalculatorUsingRelaxation(backend_.get(), vec_asks);
+  }
+
 }
 
 void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
@@ -1722,9 +1720,17 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         upper_bound_of_itv_newton = evaluate_interval(phase, max_time - phase->current_time, false).upper();
       }
 
-      for (auto ask : asks)
-      {
-        candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase, atomic_guard_min_time_interval_map);
+      //if(false){
+      if(opts_->min_time_using_relaxation){
+        std::pair<find_min_time_result_t, ask_t> ret;
+        ret = min_time_calculator_using_relaxation_->find_min_time_using_relaxation(original_vm, time_limit);
+        candidate_map[ret.second] = ret.first;
+
+      }else{
+        for (auto ask : asks)
+        {
+          candidate_map[ask] = find_min_time(ask->get_guard(), min_time_calculator, guard_time_map, original_vm, time_limit, relation_graph_->get_entailed(ask), phase, atomic_guard_min_time_interval_map);
+        }
       }
 
       for (auto &entry : break_point_list)
@@ -1733,9 +1739,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
         entry.second = find_min_time(break_point.condition, min_time_calculator, guard_time_map, original_vm, time_limit, false, phase, atomic_guard_min_time_interval_map);
       }
       phase->profile["FindMinTime"] += find_min_time_timer.get_elapsed_us();
-      pp_time_result_t time_result;
       // 各askに関する最小時刻を比較して最小のものを選ぶ．
       timer::Timer compare_min_time_timer;
+      pp_time_result_t time_result;
       for (auto entry : candidate_map)
       {
         time_result = compare_min_time(time_result, entry.second, entry.first);
@@ -1786,6 +1792,9 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
+            for (auto i : next_todo->discrete_asks) {
+              std::cout << get_infix_string(i.first) << std::endl;
+            }
             if (opts_->interval) 
             {
               // verify the time of the next discrete change
