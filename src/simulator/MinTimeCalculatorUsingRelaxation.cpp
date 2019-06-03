@@ -14,7 +14,6 @@ MinTimeCalculatorUsingRelaxation::MinTimeCalculatorUsingRelaxation(Backend *b, s
 {
   std::vector<ConstraintStore> guards;
   for (auto ask : all_asks) {
-    std::cout << get_infix_string(ask) << std::endl;
     guards.push_back(ask->get_guard());
   }
   b->call("calculateRelaxedGuardsInit", true, 1, "cscl", "", &guards);

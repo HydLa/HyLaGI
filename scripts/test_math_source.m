@@ -10,4 +10,7 @@ SetOptions[$Output, PageWidth->Infinity];
 << "./approx.m";
 << "./epsilon.m";
 << "./static_analysis.m";
+<< "./findMinTimeWithRelaxation.m";
+<< "./convex.m";
 << "util.m";
+SetDirectory["../../../"];

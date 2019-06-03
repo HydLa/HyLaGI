@@ -75,12 +75,14 @@ publicMethod[
     pq = priorityQueue[];
     sol = {}; 
     shiftedStartCons = And@@Map[((#1 /. x_[t] -> x) /. t -> 0)&, vm];
-    shiftedStartCons = Exists[getParameters[pCons], shiftedStartCons && pCons];
+    shiftedStartCons = Resolve[Exists[{p[px,0,1]}, shiftedStartCons && pCons], {ux, uy}, Reals];
+    simplePrint[shiftedStartCons];
     points = ppa[{}][[2]];
     {tm, crgResult} = Timing[calculateRelaxedGuards[points, shiftedStartCons]];
     crgTm = crgTm + tm;
     simplePrint[crgResult];
     For[i=1,i<=Length[crgResult],i++,
+      simplePrint["============="];
       simplePrint[crgResult[[i]]];
       tCons = ((crgResult[[i]][[1]] /. x_[t] -> x) //. tRemovedRules) && 0<t;
       simplePrint[tCons];
@@ -90,26 +92,25 @@ publicMethod[
       If[minResult === {}, Continue[]];
       If[minResult[[1]] === Infinity, Continue[]];
       For[j=1,j<=Length[minResult],j++,
+        simplePrint["~~~~~~~~~~~~~"];
         shiftedStartCons = And@@Map[(# /. x_[t] -> x //. t -> minResult[[j]][[1]])&, vm];
         (*TODO minResultの戻り値のパラメタが複数(OR)だったら、それもForする必要あり*)
         {tm, cgsResult} = Timing[checkGuardSatisfiability[shiftedStartCons, minResult[[j]][[3]][[1]], crgResult[[i]][[2]], crgResult[[i]][[3]]]];
         simplePrint[cgsResult];
         cgsTm = cgsTm + tm;
-        unsatPCons = minResult[[j]][[3]][[1]];
         For[k=1,k<=Length[cgsResult],k++,
-          unsatPCons = unsatPCons && Not[cgsResult[[k]][[2]]];
-          EnQueue[pq, {minResult[[j]][[1]], _, _, cgsResult[[k]][[2]], cgsResult[[k]][[1]]}]
+          EnQueue[pq, {minResult[[j]][[1]], crgResult[[i]][[3]], shiftedStartCons, cgsResult[[k]][[2]], cgsResult[[k]][[1]], cgsResult[[k]][[3]]}]
         ];
-        EnQueue[pq, {minResult[[j]][[1]], crgResult[[i]][[3]], shiftedStartCons, unsatPCons, {}}]
       ]
     ];
     While[Size[pq]>0,
+      simplePrint["+++++++++++++++"];
       elem = DeQueue[pq];
       simplePrint[elem];
       If[elem[[4]] === False,
         Continue[];
-      ]
-      If[elem[[5]] =!= {},
+      ];
+      If[elem[[6]],
         sol = Append[sol, {elem[[1]], elem[[4]], elem[[5]]}];
         newpq = priorityQueue[];
         While[Size[pq]>0,
@@ -118,12 +119,17 @@ publicMethod[
           EnQueue[newpq, tmp];
         ];
         pq = newpq;
+        simplePrint[elem];
         Continue[];
       ];
-      {tm, crgResult} = Timing[calculateRelaxedGuardsFollowingStep[elem[[2]], FindInstance[elem[[3]][[1]], ux][[1]][[1]][[2]]]];
+      simplePrint[elem[[3]]];
+      simplePrint[FindInstance[elem[[4]], getParameters[elem[[4]]]]];
+      simplePrint[elem[[5]]];
+      {tm, crgResult} = Timing[calculateRelaxedGuardsFollowingStep[elem[[2]], elem[[3]] /. FindInstance[elem[[4]], getParameters[elem[[4]]]], elem[[5]]]];
       crgTm = crgTm + tm;
       simplePrint[crgResult];
       For[i=1,i<=Length[crgResult],i++,
+        simplePrint["============="];
         tCons = ((crgResult[[i]][[1]] /. x_[t] -> x) //. tRemovedRules) && elem[[1]]<t;
         {tm, minResult} = Timing[minimizeTimePrivate[tCons, elem[[4]], 0, Infinity]];
         simplePrint[minResult];
@@ -131,6 +137,7 @@ publicMethod[
         If[minResult === {}, Continue[]];
         If[minResult[[1]] === Infinity, Continue[]];
         For[j=1,j<=Length[minResult],j++,
+          simplePrint["============="];
           shiftedStartCons = And@@Map[(# /. x_[t] -> x //. t -> minResult[[j]][[1]])&, vm];
           (*TODO minResultの戻り値のパラメタが複数(OR)だったら、それもForする必要あり*)
           {tm, cgsResult} = Timing[checkGuardSatisfiability[shiftedStartCons, minResult[[j]][[3]][[1]], crgResult[[i]][[2]], crgResult[[i]][[3]]]];
@@ -138,10 +145,8 @@ publicMethod[
           cgsTm = cgsTm + tm;
           unsatPCons = minResult[[j]][[3]][[1]];
           For[k=1,k<=Length[cgsResult],k++,
-            unsatPCons = unsatPCons && Not[cgsResult[[k]][[2]]];
-            EnQueue[pq, {minResult[[j]][[1]], _, _, cgsResult[[k]][[2]], cgsResult[[k]][[1]]}]
+            EnQueue[pq, {minResult[[j]][[1]], crgResult[[i]][[3]], shiftedStartCons, cgsResult[[k]][[2]], cgsResult[[k]][[1]], cgsResult[[k]][[3]]}]
           ];
-          EnQueue[pq, {minResult[[j]][[1]], crgResult[[i]][[3]], shiftedStartCons, unsatPCons, {}}]
         ];
       ];
     ];

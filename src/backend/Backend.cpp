@@ -992,7 +992,6 @@ compare_min_time_result_t Backend::receive_compare_min_time_result()
 
 find_min_time_result_t Backend::receive_find_min_time_result()
 {
-  std::cout << "enter" << std::endl;
   std::string name;
   int find_min_time_size; 
   // List
@@ -1012,7 +1011,6 @@ find_min_time_result_t Backend::receive_find_min_time_result()
     candidate.guard_indices.push_back(link_->get_integer());
     result.push_back(candidate);
   }
-  std::cout << "end" << std::endl;
   return result;
 }
 

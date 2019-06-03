@@ -17,12 +17,13 @@ getEdges[cons_, vars_] :=
           Greater, Append[endPoints[var], {Cases[consList[[i]], _?NumericQ][[1]], False}],
           LessEqual, Append[endPoints[var], {Cases[consList[[i]], _?NumericQ][[1]], True}],
           GreaterEqual, Append[endPoints[var], {Cases[consList[[i]], _?NumericQ][[1]], True}],
+          Inequality, Append[Append[endPoints[var], {Cases[consList[[i]], _?NumericQ][[1]], True}], {Cases[consList[[i]], _?NumericQ][[2]], True}],
           _, Message[getEdges::NotHandledRelop, Head[consList[[i]]]]; endPoints[var]
         ];
       (*xとyの端点を直積*)
     ];
     If[Length[endPoints[vars[[1]]]]==1 && Length[endPoints[vars[[2]]]]==1,
-      edges = Union[edges, {{{{endPoints[vars[[1]]][[1]][[1]],endPoints[vars[[2]]][[1]][[1]]}, True},{{endPoints[vars[[1]]][[1]][[1]],endPoints[vars[[2]]][[1]][[1]]}, True}}}],
+      edges = Union[edges, {{{endPoints[vars[[1]]][[1]][[1]],endPoints[vars[[2]]][[1]][[1]]}, True},{{endPoints[vars[[1]]][[1]][[1]],endPoints[vars[[2]]][[1]][[1]]}, True}}],
       edge = Flatten[Fold[Function[{a, b}, Append[a, Fold[Append[#1, {{b[[1]], #2[[1]]}, b[[2]]&&#2[[2]]}]&, {}, endPoints[vars[[1]]] ]]], {}, endPoints[vars[[2]]] ], 1];
       edges = Union[edges, If[Length[edge] > 1, edge, {}]];
       edge = Flatten[Fold[Function[{a, b}, Append[a, Fold[Append[#1, {{#2[[1]], b[[1]]}, #2[[2]]&&b[[2]]}]&, {}, endPoints[vars[[2]]] ]]], {}, endPoints[vars[[1]]] ], 1];
@@ -168,6 +169,7 @@ isIntersectingTriAndSeg[p1_, p2_, t1_, t2_, t3_, permitTouch_] :=
     (* 直線が分離軸 *)
     s7 = isSameSide[t1, t2, p1, p2];
     s8 = isSameSide[t2, t3, p1, p2];
+    simplePrint["qun"];
     If[permitTouch,
       s1<0&&s2<0 || s3<0&&s4<0 || s5<0&&s6<0 || s7<0&&s8<0,
       s1<=0&&s2<=0 || s3<=0&&s4<=0 || s5<=0&&s6<=0 || s7<=0&&s8<=0
@@ -201,6 +203,7 @@ addPointToConvexWithChecking[convexStack_, point_, startPoints_] :=
     simplePrint[upperYConvexStack];
     simplePrint[lowerYConvexStack];
     tmp = {};
+    If[Length[upperYConvexStack] <= 1, Return[{convexStack, False}]];
     (* 最後尾が更新されるので、上/下包を更新 *)
     While[First[upperYConvexStack][[4]] == True || isClockWise[First[upperYConvexStack][[1]], Last[upperYConvexStack][[1]], point] === -1,
       tmp = Append[tmp, Last[upperYConvexStack]];
@@ -225,13 +228,15 @@ addPointToConvexWithChecking[convexStack_, point_, startPoints_] :=
     upperYEnd = Last[Most[upperYConvexStack]];
     lowerYEnd = First[Rest[lowerYConvexStack]];
     (*simplePrint["end"];*)
-    If[Length[startPoints] == 1,
+    (*If[Length[startPoints] == 1,*)
+    (*TODO 非決定*)
+    If[True,
       If[isTriContainsPoint[startPoints[[1]], point, upperYEnd[[1]], lowerYEnd[[1]], True],
         Return[{convexStack, False}]
       ],
       For[i=1,i<=Length[startPoints],i++,
         (* TODO startPointsはOrdered? *)
-        If[isIntersectingTriAndSeg[startPoint[[i]], startPoint[[Mod[i+1, Length[startPoints]]]], point, upperYEnd[[1]], lowerYEnd[[1]], True],
+        If[isIntersectingTriAndSeg[startPoints[[i]], startPoints[[Mod[i+1, Length[startPoints]]+1]], point, upperYEnd[[1]], lowerYEnd[[1]], True],
           Return[{convexStack, False}]
         ]
       ]
@@ -306,8 +311,8 @@ endPointToConstrant[point0_, point1_, reop_] :=
       ],
       Switch[reop,
         0, x0 <= ux[t] <= x1,
-        1, ux[t] <= x0,
-        -1, ux[t] >= x0
+        1, ux[t] >= x0,
+        -1, ux[t] <= x0
       ]
     ]]
   ]
@@ -317,11 +322,12 @@ translateConvexPointsIntoConstraint[convexStack_] :=
   Module[
     {i, retCons, lowerYConvexStack, upperYConvexStack},
     (*simplePrint[convexStack];*)
-    If[Length[convexStack] === 0, Return[False]];
     upperYConvexStack = Select[convexStack[[1]], (#[[4]]==False)&];
     lowerYConvexStack = Select[convexStack[[2]], (#[[4]]==False)&];
+    If[Length[upperYConvexStack] === 0, Return[False]];
     simplePrint[upperYConvexStack];
     simplePrint[lowerYConvexStack];
+    (*retCons = First[upperYConvexStack][[1]][[1]] <= ux[t] <= Last[upperYConvexStack][[1]][[1]];*)
     retCons = True;
     For[i=1,i<Length[upperYConvexStack],i++,
       retCons = retCons && endPointToConstrant[upperYConvexStack[[i]][[1]], upperYConvexStack[[i+1]][[1]], -1];
@@ -396,11 +402,13 @@ calculateRelaxedGuards[points_, shiftedStartCons_] :=
       convexStack :: {{convexStackElem}, {convexStackElem}}
     *)
     {i, tmp, edges, vars, startPoints, lowerXPoints, upperXPoints, floatingPoints, lowerXConvexStack, upperXConvexStack, convexConstraints},
-    vars = Map[(#1[[1]])&, shiftedStartCons];
+    vars = getVariables[shiftedStartCons];
     edges = getEdges[shiftedStartCons, vars];
     (*simplePrint[edges];*)
-    startPoints = Fold[Union[#1, {#2[[1]][[1]], #2[[2]][[1]]}]&, {}, edges];
+    simplePrint[edges];
+    startPoints = Map[(#[[1]])&, edges];
     startPoints = Sort[startPoints];
+    simplePrint[startPoints];
     (*二次元のみ対応*)
     If[Length[vars] > 2
     , Return[{}]
@@ -425,8 +433,8 @@ calculateRelaxedGuards[points_, shiftedStartCons_] :=
     (*(*simplePrint[lowerXConvexIndexes];*)*)
     (*(*simplePrint[upperXConvexIndexes];*)*)
     *)
-    (*simplePrint[lowerXConvexStack];*)
-    (*simplePrint[upperXConvexStack];*)
+    simplePrint[lowerXConvexStack];
+    simplePrint[upperXConvexStack];
     (*simplePrint[Map[#[[1]]&, Select[Flatten[lowerXConvexStack, 1], (#[[4]] == False)&]]];*)
     (*simplePrint[Map[#[[1]]&, Select[Flatten[upperXConvexStack, 1], (#[[4]] == False)&]]];*)
     remainingEdges = {};
@@ -494,19 +502,33 @@ calculateRelaxedGuards[points_, shiftedStartCons_] :=
 
 (* 2ステップ以降は、初期位置が凸包の表面にいるので、わざわざ包含判定をせずに簡単にできる *)
 (* TODO 凸包の面積を2等分するように分けるとかして、探索木をバランスさせたい *)
-calculateRelaxedGuardsFollowingStep[points_, splitX_] := 
+calculateRelaxedGuardsFollowingStep[points_, splitX_, satEdge_] := 
   Module[
-    {i, tmp, lowerXPoints, upperXPoints, lowerXConvexStack, toRightPoints, upperXConvexStack, convexConstraints},
+    {i, j, tmp, lowerXPoints, upperXPoints, lowerXConvexStack, toLeftPoints, toRightPoints, upperXConvexStack, convexConstraints},
+    simplePrint[splitX];
+    simplePrint[satEdge];
     lowerXPoints = Select[points, (#[[1]] < splitX)&];
     upperXPoints = Complement[points, lowerXPoints];
-    toLeftPoints = {};
-    For[i=1,i<=Length[upperXPoints],i++,
-      tmp = pointToPoints[upperXPoints[[i]]];
+    simplePrint[lowerXPoints];
+    simplePrint[upperXPoints];
+    toLeftPoints = toRightPoints = {};
+    For[i=1,i<=Length[lowerXPoints],i++,
+      tmp = pointToPoints[lowerXPoints[[i]]];
       If[Head[tmp] =!= Missing,
-        toLeftPoints = Union[toLeftPoints, Select[tmp, (MemberQ[lowerXPoints, #])&]];
+        tmp = Select[tmp, (MemberQ[upperXPoints, #])&];
+        For[j=1,j<=Length[tmp],j++,
+          If[!MemberQ[satEdge, tmp[[j]]],
+            toRightPoints = Append[toRightPoints, tmp[[j]]],
+            toLeftPoints = Append[toLeftPoints,lowerXPoints[[i]]];
+          ];
+        ];
       ];
     ];
+    simplePrint[toRightPoints];
+    simplePrint[toLeftPoints];
     toLeftPoints = Sort[toLeftPoints, (#1[[1]] < #2[[1]])&];
+    toRightPoints = Sort[toRightPoints, (#1[[1]] < #2[[1]])&];
+    lowerXPoints = Join[lowerXPoints, toRightPoints];
     upperXPoints = Join[toLeftPoints, upperXPoints];
     simplePrint[lowerXPoints];
     simplePrint[upperXPoints];
@@ -522,39 +544,50 @@ checkGuardSatisfiability::nonContinuousStartPosition := "初期位置が線分�
 (* findMinTimeの結果が、凸包の表面上のガードを満たすかの検証(緩和問題の解 = 元の問題の解かを検証) *)
 checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_, ps_] :=
   Module[
-    {i, j, vars, pars, tmp, startOnePoint, checkingConvex, checkingConvexLine, checkingEdges, checkingPoints, ret},
+    {i, j, clk, isHor=False, vars, pars, tmp, startOnePoint, checkingConvex, checkingConvexLine, checkingEdges, checkingPoints, ret, unsatP=pCons},
     (* 上下左右の凸法から独立した凸包は、必ず真の解 *)
     simplePrint[ps];
-    If[convexStack =={},
-      Return[{{ps, pCons}}]
-    ];
+    simplePrint[shiftedStartCons];
+    simplePrint[pCons];
     (* FindInstanceは、不等式を満たす適当な点を求める *)
     vars = getVariables[shiftedStartCons];
     pars = getParameters[pCons];
     If[pars =!= {},
-      startOnePoint = shiftedStartCons /. Map[(FindInstance[#, getParameters[#]])&, ApplyList[pCons]];
-      startOnePoint = {startOnePoint[[1]][[2]], startOnePoint[[2]][[2]]},
+      startOnePoint = shiftedStartCons /. Map[(FindInstance[#, getParameters[#], Reals])&, applyList[pCons]];
+      simplePrint[startOnePoint];
+      startOnePoint = {startOnePoint[[1]][[1]][[1]][[2]], startOnePoint[[1]][[1]][[2]][[2]]},
       startOnePoint = {shiftedStartCons[[1]][[2]], shiftedStartCons[[2]][[2]]}
     ];
+    If[convexStack =={},
+      checkingConvexLine = ps;
+      Goto[point];
+    ];
+    simplePrint[startOnePoint];
     (* 凸包との衝突点(線)が、上方か下方かを特定 *)
     (* TODO 端点*)
     simplePrint[convexStack];
     simplePrint[Last[convexStack[[1]]][[1]]];
     simplePrint[First[convexStack[[1]]][[1]]];
     simplePrint[startOnePoint];
+    clk = isClockWise[Last[convexStack[[1]]][[1]], First[convexStack[[1]]][[1]], startOnePoint];
     simplePrint[isClockWise[Last[convexStack[[1]]][[1]], First[convexStack[[1]]][[1]], startOnePoint]];
     checkingConvex = If[isClockWise[Last[convexStack[[1]]][[1]], First[convexStack[[1]]][[1]], startOnePoint] == 1, convexStack[[1]], Reverse[convexStack[[2]]]];
     For[i=1,i<Length[checkingConvex],i++,
-      j = i+1;
       (* 凸包上の衝突した辺を特定. 上下は特定しているので、x座標の比較で十分 *)
+      For[j=i+1,j<=Length[checkingConvex],j++,
+        If[checkingConvex[[j]][[4]] === False, Break[]];
+      ];
       If[checkingConvex[[i]][[1]][[1]] <= startOnePoint[[1]] <= checkingConvex[[j]][[1]][[1]],
-        checkingConvexLine = Map[(#1[[1]])&, checkingConvex[[i;;j]]];
-      ]
+        isHor = checkingConvex[[i]][[1]][[1]] === checkingConvex[[j]][[1]][[1]];
+        checkingConvexLine = Map[(#[[1]])&, checkingConvex[[i;;j]]];
+        Break[];
+      ];
     ];
     simplePrint[checkingConvexLine];
     If[checkingConvexLine == {},
       Return[{}];
     ];
+    Label[point];
     checkingPoints = checkingEdges = {};
     (* 不等式で表されているガードを取得 *)
     For[i=1,i<=Length[checkingConvexLine],i++,
@@ -564,7 +597,7 @@ checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_, ps_] :=
         points = pointToPoints[checkingConvexLine[[i]]];
         simplePrint[points];
         If[Head[points] =!= Missing,
-          edges = Map[({checkingConvexLine[[i]], #})&, Select[points, (MemberQ[checkingConvexLine, #] && checkingConvexLine[[i]][[1]]<#[[1]])&]];
+          edges = Map[({checkingConvexLine[[i]], #})&, Select[points, (MemberQ[checkingConvexLine, #] && checkingConvexLine[[i]][[1]]<=#[[1]])&]];
           If[edges == {},
             checkingPoints = Append[checkingPoints, checkingConvexLine[[i]]],
             checkingEdges = Union[checkingEdges, edges]
@@ -576,21 +609,32 @@ checkGuardSatisfiability[shiftedStartCons_, pCons_, convexStack_, ps_] :=
     ret = {};
     (* TODO 2分探索したい *)
     For[i=1,i<=Length[checkingPoints],i++,
-      tmp = Reduce[shiftedStartCons[[1]] && pCons && ux == checkingPoints[[i]][[1]], Union[vars, pars]];
+      simplePrint[checkingPoints[[i]]];
+      simplePrint[shiftedStartCons[[1]] && pCons && ux==checkingPoints[[i]][[1]]];
+      If[isHor,
+        tmp = Reduce[shiftedStartCons[[2]] && pCons && uy == checkingPoints[[i]][[2]], Union[vars, pars]],
+        tmp = Reduce[shiftedStartCons[[1]] && pCons && ux == checkingPoints[[i]][[1]], Union[vars, pars]];
+      ];
       simplePrint[tmp];
       If[tmp =!= False,
         ret = Append[ret, {checkingPoints[[i]], And@@Select[applyList[tmp], (hasParameter[#])&]}];
-      ]
+      ];
     ];
     For[i=1,i<=Length[checkingEdges],i++,
-      tmp = Reduce[shiftedStartCons[[1]] && pCons && checkingEdges[[i]][[1]][[1]] <= ux && ux <= checkingEdges[[i]][[2]][[1]], Union[vars, pars]];
+      simplePrint[shiftedStartCons[[1]] && pCons && checkingEdges[[i]][[1]][[1]] <= ux && ux <= checkingEdges[[i]][[1]][[2]]];
+      If[isHor,
+        tmp = Reduce[shiftedStartCons[[2]] && pCons && checkingEdges[[i]][[1]][[2]] <= uy && uy <= checkingEdges[[i]][[2]][[2]], Union[vars, pars]],
+        tmp = Reduce[shiftedStartCons[[1]] && pCons && checkingEdges[[i]][[1]][[1]] <= ux && ux <= checkingEdges[[i]][[2]][[1]], Union[vars, pars]];
+      ];
       simplePrint[tmp];
       If[tmp =!= False,
-        ret = Append[ret, {checkingEdges[[i]], And@@Select[applyList[tmp], (hasParameter[#])&]}];
-      ]
+        unsatP = unsatP && Not[And@@Select[applyList[tmp], (hasParameter[#])&]];
+        ret = Append[ret, {checkingEdges[[i]], And@@Select[applyList[tmp], (hasParameter[#])&], True}];
+      ];
     ];
     simplePrint[checkingPoints];
     simplePrint[checkingEdges];
+    ret = Append[ret, {{First[checkingConvexLine], Last[checkingConvexLine]}, unsatP, False}];
     ret
   ];
 

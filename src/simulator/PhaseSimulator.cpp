@@ -1792,9 +1792,6 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
           {
             next_todo->id = ++phase_sum_;
             next_todo->discrete_asks = candidate.discrete_asks;
-            for (auto i : next_todo->discrete_asks) {
-              std::cout << get_infix_string(i.first) << std::endl;
-            }
             if (opts_->interval) 
             {
               // verify the time of the next discrete change
