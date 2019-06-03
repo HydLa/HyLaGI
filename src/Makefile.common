@@ -13,22 +13,18 @@ LIBS += -lpthread
 
 UNAME := $(shell uname)
 
-ifeq ($(UNAME),Darwin)
-LIBS_STATIC += -lboost_thread-mt -lboost_regex-mt
-else
-LIBS_STATIC += -lboost_thread-mt -lboost_regex
-endif
+LIBS_STATIC += -lboost_thread -lboost_regex
 
 ifeq ($(UNAME),Linux)
-INCLUDES += -I/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/9.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/
+INCLUDES += -I/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+LDFLAGS	 += -L/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++11 -O
+CXX_OPT  += -Wall -std=c++11 -ldl -luuid -O
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
 endif
 ifeq ($(UNAME),Darwin)
-INCLUDES += -I/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-LDFLAGS  += -L/Applications/Mathematica.app/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+INCLUDES += -I/Applications/Mathematica.app/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+LDFLAGS  += -L/Applications/Mathematica.app/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++11 -framework Foundation
 endif

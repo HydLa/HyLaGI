@@ -14,8 +14,8 @@ LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) 
 
 ARCH := $(shell getconf LONG_BIT)
 
-MATH_FLAGS_32 := -lML32i3
-MATH_FLAGS_64 := -lML64i3
+MATH_FLAGS_32 := -lWSTP32i4
+MATH_FLAGS_64 := -lWSTP64i4
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
@@ -24,7 +24,7 @@ LIBS     += $(MATH_FLAGS_$(ARCH)) -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
 LIBS_STATIC += -lboost_program_options-mt
-LIBS     += -lMLi3 -lm -lstdc++.6.0.9
+LIBS     += -lWSTPi4 -lm -lstdc++.6.0.9
 endif
 
 CXX_OPT  += 
