@@ -442,7 +442,7 @@ createMapForEachCons[consList_, judgeFunction_, vars_, pars_] :=
         {},
         #
       ])&,
-      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars], Reals], Reduce::useq]]
+      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]
     ]
   ]
 
