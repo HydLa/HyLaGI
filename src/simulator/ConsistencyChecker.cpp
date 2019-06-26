@@ -296,7 +296,7 @@ CheckConsistencyResult &result,
   if(!tmp_result.consistent_store.consistent())
   {
     result.consistent_store.set_consistency(false);
-    HYDLA_LOGGER_DEBUG(""); inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
+    inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
     inconsistent_constraints.push_back(constraints);
   }
   else
@@ -389,7 +389,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     }
   }
 
-vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
+  vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(auto ask : relation_graph.get_active_asks())HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
   for(int i = 0; i < related_constraints_list.size(); i++)
@@ -397,6 +397,7 @@ vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_
     HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
                        "]: ", related_constraints_list[i]);
     check_consistency_foreach(related_constraints_list[i], relation_graph, result, phase, profile, following_step);
+    if(!result.consistent_store.consistent()) break;
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 
