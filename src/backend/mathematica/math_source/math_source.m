@@ -461,7 +461,11 @@ Fold[
   andExprs
 ];
 
-
+publicMethod[
+  resetAssumption,
+  assumptions = True;
+];
+       
 publicMethod[
   resetConstraint,
   constraint = True;
