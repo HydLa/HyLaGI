@@ -1,11 +1,10 @@
-// TODO example
 // #hylagi -p10 -e1
 
-INIT <=> t=0 & i=0 & i'=0 .
-TIMER <=> [](t'=1).
-IMP1 <=> []((t- <= 1) => v=0).
-IMP2 <=> []((1 < t- < 1+eps) => v=1/eps).
-IMP3 <=> []((t- >= 1+eps) => v=0).
+INIT <=> timer=0 & i=0 & i'=0 .
+TIMER <=> [](timer'=1).
+IMP1 <=> []((timer <= 1) => v=0).
+IMP2 <=> []((1 < timer < 1+eps) => v=1/eps).
+IMP3 <=> []((timer >= 1+eps) => v=0).
 EPS <=> 0 < eps < 0.1 & [](eps'=0).
 //RL回路
 //V=RI+L(dI/dt)
