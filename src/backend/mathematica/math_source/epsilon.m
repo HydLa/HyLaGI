@@ -119,7 +119,7 @@ publicMethod[
              limitEpsilon,
              arg,
              debugPrint["limitEpsilon arg",arg];
-             toReturnForm[Limit[arg, p[peps, 0, 1] -> 0]]
+             toReturnForm[Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}]]
              ];
 
 publicMethod[
@@ -142,8 +142,8 @@ publicMethod[
                     debugPrint["checkEpsilon arg",arg];
                     ret = 0;
                     If[arg =!= Infinity,
-                       direplus = Limit[arg, p[peps, 0, 1] -> 0,Direction->-1];
-                       direminus = Limit[arg, p[peps, 0, 1] -> 0,Direction->1];
+                       direplus = Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}, Direction->-1];
+                       direminus = Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}, Direction->1];
                        flag = timeConstrainedSimplify[direplus - direminus];
                        If[flag === 0,
                           ret = 1,

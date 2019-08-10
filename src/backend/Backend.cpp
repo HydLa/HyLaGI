@@ -393,7 +393,7 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
 int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...)
 {
   timer::Timer call_timer;
-  link_->trace = trace;
+  link_->trace = true;
   link_->pre_send();
   link_->put_converted_function(name, arg_cnt);
   va_list args;
