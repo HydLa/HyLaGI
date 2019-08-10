@@ -8,3 +8,4 @@ FULL <=> [](timer- < voT => fuel = 1).
 COMP <=> [](timer- >= voT + exT => timer = 0).
 
 INIT, CONS, BURN, FALL, VOID, FULL, TIME << COMP.
+//#hylagi --fha

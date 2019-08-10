@@ -19,7 +19,7 @@ AutomatonNode::AutomatonNode(phase_result_sptr_t phase, std::string name,int id)
   this->phase = phase;
   this->color =  "#000000";
   this->peripheries = 0;
-	this->node_vm_write = false;
+  this->node_vm_write = true;
   this->edge_guard_write = false;
 }
 
