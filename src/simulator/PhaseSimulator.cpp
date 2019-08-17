@@ -120,7 +120,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
 
-		cout << "Execution stuck!" << endl;
+		cout << "Execution stuck! (unsatisfiable constraints)" << endl;
 		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
 		cout << endl;
 		auto unsatv2unsatcons = todo->calc_map_v2cons();
@@ -2133,25 +2133,25 @@ void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t
 
 void PhaseSimulator::update_condition(const variable_set_t &vs, const module_set_t &ms){
   for(auto v : vs){
-    if(completely_unboundness_condition.count(v) == 0){
-      completely_unboundness_condition[v] = ms;
+    if(completely_unconstrained_condition.count(v) == 0){
+      completely_unconstrained_condition[v] = ms;
     }else{
       module_set_t tmp;
-      for(auto m : completely_unboundness_condition[v]){
+      for(auto m : completely_unconstrained_condition[v]){
         if(ms.count(m) == 1) tmp.insert(m);
       }
-      completely_unboundness_condition[v] = tmp;
+      completely_unconstrained_condition[v] = tmp;
     }
   }
 }
 
-void PhaseSimulator::print_completely_unboundness_condition(){
-  for(auto pvms : completely_unboundness_condition){
-    cout << "WARNING: " << pvms.first << " is completely unbound";
+void PhaseSimulator::print_completely_unconstrained_condition(){
+  for(auto pvms : completely_unconstrained_condition){
+    cout << "WARNING: " << pvms.first << " is completely unconstrained";
     if(pvms.second.size() == 0){
-      cout << " in default constraint" << endl;
+      cout << " in a default constraint" << endl;
     }else{
-      cout << " in exeptional constarint" << endl;
+      cout << " in a non-default constarint" << endl;
     }
   }
   cout << endl;

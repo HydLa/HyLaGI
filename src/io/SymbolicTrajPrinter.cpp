@@ -92,7 +92,7 @@ void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, 
 {
   if (!phase.inconsistent_module_sets.empty())
   {
-    stream << "unsat mod\t: ";
+    stream << "unsat modules\t: ";
     bool first = true;
     for (auto module_set : phase.inconsistent_module_sets)
     {
@@ -103,7 +103,7 @@ void SymbolicTrajPrinter::output_inconsistent_constraints(std::ostream &stream, 
   }
   if (!phase.inconsistent_constraints.empty())
   {
-    stream << "unsat cons\t: ";
+    stream << "unsat constraints\t: ";
     bool first = true;
     for (auto constraint: phase.inconsistent_constraints)
     {

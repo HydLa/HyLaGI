@@ -255,7 +255,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
   simulator_->simulate();
   if(!opts.ha_convert_mode)
   {
-    simulator_->phase_simulator_->print_completely_unboundness_condition();
+    simulator_->phase_simulator_->print_completely_unconstrained_condition();
     output_result(*simulator_, opts);
   }
   int simulation_status = simulator_->get_exit_status();
