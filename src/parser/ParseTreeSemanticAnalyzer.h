@@ -235,6 +235,8 @@ private:
 
 
     formal_arg_map_t formal_arg_map;
+
+    std::set<std::string> exists_variable_set;
   };
 
   /// Stateをつむためのスタック
@@ -284,6 +286,9 @@ private:
   ListExpander list_expander_;
 
   parse_tree::ParseTree *parse_tree_;
+
+  //
+  std::map<std::string, int> exists_variable_cnt_map;
 
   /**
    * 指定したノードを呼び出し、

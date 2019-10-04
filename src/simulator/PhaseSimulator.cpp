@@ -138,7 +138,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       for (auto var: *variable_set_)
       {
 
-        if (var.get_differential_count() == 0 && !phase->variable_map.count(var)){
+        if (var.get_differential_count() == 0 && !phase->variable_map.count(var) && var.get_name().back() != '$'){
           warning_var_str += var.get_string() + " ";
           warning_var.insert(var);
         }
