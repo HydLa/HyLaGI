@@ -295,7 +295,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Exists> node) {
 
   // 子ノードの探索
   todo_stack_.push(state);
-  todo_stack_.top().in_always = false;
+  // todo_stack_.top().in_always = false;
   dispatch<Exists, &Exists::get_child, &Exists::set_child>(node.get());
 
   todo_stack_.pop();
@@ -476,7 +476,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node) {
     } else {
       int cnt = exists_variable_cnt_map[name] + 1;
       std::string new_name = name + std::to_string(cnt) + "$";
-      parse_tree_->register_variable(new_name, state.differential_count);
+      // parse_tree_->register_variable(new_name, state.differential_count);
       new_child_ = node_sptr(new Variable(new_name));
     }
   }

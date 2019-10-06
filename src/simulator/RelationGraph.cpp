@@ -357,6 +357,35 @@ void RelationGraph::collect_node(VariableNode *node,
   }
 }
 
+// 後件existsの制約に新しい変数をbindして複製する
+void RelationGraph::clone_exists_constraint(ask_t parent, constraint_t conseq) {
+  auto it = ask_node_map.find(parent);
+  if (it == ask_node_map.end())
+    throw HYDLA_ERROR("AskNode for " + get_infix_string(parent) +
+                      " is not found");
+  AskNode *parent_asknode = (*it).second;
+  exists_asknodes_.push_back(parent_asknode);
+
+  current_module = parent_asknode->module;
+  parent_ask = parent_asknode;
+  visit_mode = ADDING;
+
+  accept(conseq);
+  for (auto child : parent_asknode->children) {
+    child->expanded = true;
+  }
+}
+
+void RelationGraph::disable_exists_nonalways() {
+  for(auto asknode: exists_asknodes_) {
+    for(auto child: asknode->children){
+      if(!child->always) {
+        child->expanded = false;
+      }
+    }
+  }
+}
+
 void RelationGraph::set_adopted(const module_t &mod, bool adopted) {
   if (!module_tell_nodes_map.count(mod))
     throw HYDLA_ERROR("module " + mod.first + " is not found");
@@ -566,6 +595,16 @@ asks_t RelationGraph::get_all_asks() {
   asks_t asks;
   for (auto ask_node : ask_nodes) {
     asks.insert(ask_node->ask);
+  }
+  return asks;
+}
+
+asks_t RelationGraph::get_expanded_asks() {
+  asks_t asks;
+  for (auto ask_node : ask_nodes) {
+    if(ask_node->expanded){
+      asks.insert(ask_node->ask);
+    }
   }
   return asks;
 }
