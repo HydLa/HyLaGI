@@ -222,6 +222,8 @@ private:
 
   // record minimum module_set_t which each variable is completely unconstrained
   std::map<variable_t, module_set_t> completely_unconstrained_condition;
+
+  parser::ParseTreeSemanticAnalyzer *analyzer_;
 };
 
 } // namespace simulator

@@ -78,8 +78,10 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr &n) {
     todo_stack_.push(state);
 
     accept(n);
-    if (new_child_)
+    if (new_child_) {
       n = new_child_;
+      new_child_.reset();
+    }
 
     for (auto def : list_expander_.get_called_expression_list_definition())
       unused_expression_list_definition.erase(def);
@@ -99,7 +101,7 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr &n) {
       HYDLA_LOGGER_WARN("Program list ", def->get_name(),
                         " is defined but not called.");
 
-    assert(todo_stack_.size() == 1);
+    // assert(todo_stack_.size() == 1);
   }
 }
 
@@ -132,46 +134,56 @@ symbolic_expression::node_sptr ParseTreeSemanticAnalyzer::apply_definition(
     boost::shared_ptr<symbolic_expression::Caller> caller,
     boost::shared_ptr<Definition> definition) {
   State &state = todo_stack_.top();
+  bool in_exists = state.in_exists;
 
-  definition = boost::dynamic_pointer_cast<Definition>(definition->clone());
+  boost::shared_ptr<Definition> cloned_definition = boost::dynamic_pointer_cast<Definition>(definition->clone());
+
+  State new_state(state);
+  new_state.formal_arg_map.clear();
+
+  assert(cloned_definition->bound_variable_size() == caller->actual_arg_size());
+
+  Definition::bound_variables_iterator bv_it =
+      cloned_definition->bound_variable_begin();
+  Definition::bound_variables_iterator bv_end =
+      cloned_definition->bound_variable_end();
+  Caller::actual_args_iterator aa_it = caller->actual_arg_begin();
+  for (; bv_it != bv_end; ++bv_it, ++aa_it) {
+    // 実引数に対しpreprocess適用
+    std::cout << "before:" << std::endl;
+    std::cout << *bv_it << "<-" << (*aa_it)->get_string() << std::endl;
+    accept(*aa_it);
+    if (new_child_) {
+      *aa_it = new_child_;
+      new_child_.reset();
+    }else{
+    }
+
+    // 仮引数と実引数の対応付け
+    std::cout << "pair:" << std::endl;
+    std::cout << *bv_it << "<-" << (*aa_it)->get_string() << std::endl;
+    std::cout << "" << std::endl;
+    new_state.formal_arg_map.insert(make_pair(*bv_it, *aa_it));
+  }
+
+
+  if (in_exists) {
+    return node_sptr(new True());
+  }
 
   //循環参照のチェック
   if (state.referenced_definition_list.find(def_type) !=
       state.referenced_definition_list.end()) {
     throw CircularReference(caller);
   }
-
-  State new_state(state);
-  new_state.formal_arg_map.clear();
-
-  assert(definition->bound_variable_size() == caller->actual_arg_size());
-
-  Definition::bound_variables_iterator bv_it =
-      definition->bound_variable_begin();
-  Definition::bound_variables_iterator bv_end =
-      definition->bound_variable_end();
-  Caller::actual_args_iterator aa_it = caller->actual_arg_begin();
-  for (; bv_it != bv_end; ++bv_it, ++aa_it) {
-    // 実引数に対しpreprocess適用
-    accept(*aa_it);
-    if (new_child_) {
-      *aa_it = new_child_;
-      new_child_.reset();
-    }
-
-    // 仮引数と実引数の対応付け
-    new_state.formal_arg_map.insert(make_pair(*bv_it, *aa_it));
-  }
-
   // 循環参照検出用リストに登録
   new_state.referenced_definition_list.insert(def_type);
 
   // 定義の子ノードに対しpreprocess適用
   todo_stack_.push(new_state);
-  dispatch_child(definition);
+  dispatch_child(cloned_definition);
   todo_stack_.pop();
-
-  return definition->get_child();
+  return cloned_definition->get_child();
 }
 
 // 制約呼び出し
@@ -191,11 +203,16 @@ void ParseTreeSemanticAnalyzer::visit(
     unused_constraint_definition.erase(cons_def);
 
     // 定義の展開
+    /*
     if (!todo_stack_.top().in_exists) {
       node->set_child(apply_definition(deftype, node, cons_def));
+      new_child_ = node;
     } else {
       node->set_child(node_sptr(new Variable()));
     }
+    */
+    node->set_child(apply_definition(deftype, node, cons_def));
+    new_child_ = node;
   }
 }
 

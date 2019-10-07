@@ -3,7 +3,6 @@
 #include <boost/foreach.hpp>
 #include <iterator>
 
-#include "DefinitionContainer.h"
 #include "Logger.h"
 #include "ParseTreeGraphvizDumper.h"
 #include "ParseTreeJsonDumper.h"
@@ -32,16 +31,6 @@ ParseTree::~ParseTree() {}
 void ParseTree::parse(std::istream &stream) {
   auto detail = logger::Detail(__FUNCTION__);
 
-  // ParseTreeの構築
-  DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>
-      constraint_definition;
-  DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>
-      program_definition;
-  DefinitionContainer<hydla::symbolic_expression::ExpressionListDefinition>
-      expression_list_definition;
-  DefinitionContainer<hydla::symbolic_expression::ProgramListDefinition>
-      program_list_definition;
-
   Parser parser(stream);
   node_tree_ = parser.parse(assertion_node_tree_, constraint_definition,
                             program_definition, expression_list_definition,
@@ -57,13 +46,15 @@ void ParseTree::parse(std::istream &stream) {
   if (assertion_node_tree_)
     HYDLA_LOGGER_DEBUG("\n--- Assertion Tree ---\n", *assertion_node_tree_);
   // 意味解析
+  /*
   ParseTreeSemanticAnalyzer analyzer(constraint_definition, program_definition,
                                      expression_list_definition,
                                      program_list_definition, this);
-  /*analyer_ = new ParseTreeSemanticAnalyzer(
+                                     */
+  analyzer_ = new ParseTreeSemanticAnalyzer(
       constraint_definition, program_definition, expression_list_definition,
-      program_list_definition, this);*/
-  analyzer.analyze(node_tree_);
+      program_list_definition, this);
+  analyzer_->analyze(node_tree_);
   HYDLA_LOGGER_DEBUG("\n--- Analyzed Parse Tree ---\n", *this);
 }
 

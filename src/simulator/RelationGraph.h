@@ -242,6 +242,7 @@ public:
   asks_t get_expanded_asks();
 
   void clone_exists_constraint(ask_t parent_ask, constraint_t conseq);
+  void expand_caller(ask_t ask);
   void disable_exists_nonalways();
 
   /**
@@ -296,6 +297,7 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
   void visit(boost::shared_ptr<symbolic_expression::Always> always);
   void visit(boost::shared_ptr<symbolic_expression::ConstraintCaller> caller);
+  void visit(boost::shared_ptr<symbolic_expression::Exists> caller);
   void
   visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> binary);
 
@@ -328,10 +330,18 @@ private:
 
   parser::ParseTreeSemanticAnalyzer *analyzer_;
 
+  std::map<
+      AskNode *,
+      std::vector<boost::shared_ptr<symbolic_expression::ConstraintCaller>>>
+      ask_caller_map_;
+  std::map<std::pair<std::string, int>, symbolic_expression::Caller::actual_args_iterator> caller_arg_map_;
+
   VisitMode visit_mode;
   bool in_always;
   bool ignore_prev;
   int expanding_caller_;
+  int in_exists;
+  bool first_;
 };
 
 } // namespace simulator

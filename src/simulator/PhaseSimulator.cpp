@@ -626,6 +626,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
   time_id = 0;
   module_set_container = msc;
   result_root = root;
+  analyzer_ = analyzer;
 
   simulator::module_set_t ms = module_set_container->get_max_module_set();
   auto it = variable_set_->begin();
@@ -753,7 +754,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     set<ask_t> adjacents;
     if (phase->parent == result_root.get() && first)
     {
-      adjacents = relation_graph_->get_all_asks();
+      adjacents = relation_graph_->get_expanded_asks();
       first = false;
     }
     else if (phase->phase_type == POINT_PHASE || !phase->in_following_step()){
@@ -829,12 +830,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
           if(!p.first.empty()){
             map<Variable, Variable> vm = p.first;
             constraint_t conseq = p.second;
-            cout << "ろーかる" << endl;
-            std::cout << conseq->get_string() << std::endl;
-            cout << local_diff_sum << endl;
-            cout << "ばりあぶるまっぷ" << endl;
             for(auto entry: vm) {
-              std::cout << entry.second.get_name() << std::endl;
               discrete_variables.insert(entry.second);
               discrete_variables.erase(entry.first);
             }
@@ -842,13 +838,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
             diff_sum.erase(ask->get_child());
             local_diff_sum.add_constraint(conseq);
             local_diff_sum.erase(ask->get_child());
+
             /*
             for(auto entry: phase->variable_map) {
-              cout << "ろーかる" << endl;
-              std::cout << entry.first.name << std::endl;
               if(vm.count(entry.first.name) > 0){
-                std::cout << "ねーむ" << std::endl;
-                std::cout << entry.first.name << std::endl;
                 phase->variable_map[Variable(vm[entry.first.name], entry.first.get_differential_count())] = entry.second;
               }
             }
@@ -2208,6 +2201,9 @@ PhaseSimulator::clone_exists_constraint(ask_t positive, int phase_num) {
   if(exists_variables.empty()) {
     return make_pair(ret, cloned_conseq);
   }
+  relation_graph_->expand_caller(positive);
+  std::cout << "expand_caller end" << std::endl;
+
   cloned_conseq = conseq->clone();
   renamer.rename_exists(cloned_conseq, phase_num);
   map<Variable,Variable> tmp = renamer.get_renamed_variable_map();
@@ -2218,7 +2214,6 @@ PhaseSimulator::clone_exists_constraint(ask_t positive, int phase_num) {
   relation_graph_->clone_exists_constraint(positive, cloned_conseq);
   relation_graph_->set_expanded_recursive(conseq, false);
 
-  relation_graph_->dump_graph(cout);
   backend_->set_variable_set(*variable_set_);
   return make_pair(ret, cloned_conseq);
 }

@@ -541,7 +541,11 @@ node_sptr ConstraintCaller::clone() {
   n->name_ = name_;
 
   n->actual_args_.resize(actual_args_.size());
-  copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+  auto it_dest = n->actual_args_.begin();
+  for(auto it = actual_args_.begin(); it != actual_args_.end(); it++, it_dest++) {
+    *it_dest = (*it)->clone();
+  }
+  //copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
 
   if (child_)
     n->child_ = child_->clone();

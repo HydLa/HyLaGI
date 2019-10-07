@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "DefinitionContainer.h"
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -144,7 +145,7 @@ public:
    */
   std::ostream &dump(std::ostream &s) const;
 
-  parser::ParseTreeSemanticAnalyzer *get_analyser() const { return analyer_; };
+  parser::ParseTreeSemanticAnalyzer *get_analyser() const { return analyzer_; };
 
 private:
   ParseTree &operator=(const ParseTree &pt);
@@ -154,7 +155,18 @@ private:
 
   variable_map_t variable_map_;
 
-  parser::ParseTreeSemanticAnalyzer *analyer_;
+  parser::ParseTreeSemanticAnalyzer *analyzer_;
+
+  // ParseTreeの構築
+  parser::DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition>
+      constraint_definition;
+  parser::DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>
+      program_definition;
+  parser::DefinitionContainer<
+      hydla::symbolic_expression::ExpressionListDefinition>
+      expression_list_definition;
+  parser::DefinitionContainer<hydla::symbolic_expression::ProgramListDefinition>
+      program_list_definition;
 };
 
 std::ostream &operator<<(std::ostream &s, const ParseTree &pt);
