@@ -73,6 +73,7 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr &n) {
     state.in_guard = false;
     state.in_always = false;
     state.in_constraint = false;
+    state.in_exists = false;
     state.differential_count = 0;
     todo_stack_.push(state);
 
@@ -190,7 +191,11 @@ void ParseTreeSemanticAnalyzer::visit(
     unused_constraint_definition.erase(cons_def);
 
     // 定義の展開
-    node->set_child(apply_definition(deftype, node, cons_def));
+    if (!todo_stack_.top().in_exists) {
+      node->set_child(apply_definition(deftype, node, cons_def));
+    } else {
+      node->set_child(node_sptr(new Variable()));
+    }
   }
 }
 
@@ -295,9 +300,8 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Exists> node) {
 
   // 子ノードの探索
   todo_stack_.push(state);
-  // todo_stack_.top().in_always = false;
+  todo_stack_.top().in_exists = true;
   dispatch<Exists, &Exists::get_child, &Exists::set_child>(node.get());
-
   todo_stack_.pop();
 
   int cnt = exists_variable_cnt_map[name] + 1;

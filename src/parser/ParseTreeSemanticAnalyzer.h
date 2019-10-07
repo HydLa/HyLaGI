@@ -222,6 +222,9 @@ private:
     /// always制約の有効範囲内かどうか
     bool in_always;
 
+    /// existsの中かどうか
+    bool in_exists;
+
     /// 微分記号を通過した回数
     /// 変数に到達した際、この値がその変数に対する微分の最大回数
     int differential_count;

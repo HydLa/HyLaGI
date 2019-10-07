@@ -9,7 +9,9 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-RelationGraph::RelationGraph(const module_set_t &ms) {
+RelationGraph::RelationGraph(const module_set_t &ms,
+                             parser::ParseTreeSemanticAnalyzer *analyzer) {
+  analyzer_ = analyzer;
   for (auto module : ms) {
     add(module);
   }
@@ -38,6 +40,7 @@ void RelationGraph::add(module_t &mod) {
   visit_mode = ADDING;
   in_always = false;
   parent_ask = nullptr;
+  expanding_caller_ = 0;
   accept(mod.second);
 }
 
@@ -370,6 +373,7 @@ void RelationGraph::clone_exists_constraint(ask_t parent, constraint_t conseq) {
   parent_ask = parent_asknode;
   visit_mode = ADDING;
 
+  expanding_caller_ = 0;
   accept(conseq);
   for (auto child : parent_asknode->children) {
     child->expanded = true;
@@ -377,9 +381,9 @@ void RelationGraph::clone_exists_constraint(ask_t parent, constraint_t conseq) {
 }
 
 void RelationGraph::disable_exists_nonalways() {
-  for(auto asknode: exists_asknodes_) {
-    for(auto child: asknode->children){
-      if(!child->always) {
+  for (auto asknode : exists_asknodes_) {
+    for (auto child : asknode->children) {
+      if (!child->always) {
         child->expanded = false;
       }
     }
@@ -602,7 +606,7 @@ asks_t RelationGraph::get_all_asks() {
 asks_t RelationGraph::get_expanded_asks() {
   asks_t asks;
   for (auto ask_node : ask_nodes) {
-    if(ask_node->expanded){
+    if (ask_node->expanded) {
       asks.insert(ask_node->ask);
     }
   }
@@ -840,6 +844,15 @@ void RelationGraph::visit(
     guard_node_map[not_expr] = current_guard_node;
     guard_nodes.push_back(current_guard_node);
   }
+}
+
+void RelationGraph::visit(
+    boost::shared_ptr<symbolic_expression::ConstraintCaller> caller) {
+  if (expanding_caller_) {
+    symbolic_expression::node_sptr ptr = caller;
+    analyzer_->analyze(ptr);
+  }
+  accept(caller->get_child());
 }
 
 } // namespace simulator

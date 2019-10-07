@@ -5,6 +5,7 @@
 #include "GuardNode.h"
 #include "ModuleSetContainer.h"
 #include "Node.h"
+#include "ParseTreeSemanticAnalyzer.h"
 #include "TreeVisitorForAtomicConstraint.h"
 #include "Variable.h"
 
@@ -95,7 +96,8 @@ struct VariableNode {
 class RelationGraph
     : public symbolic_expression::TreeVisitorForAtomicConstraint {
 public:
-  RelationGraph(const module_set_t &mods);
+  RelationGraph(const module_set_t &mods,
+                parser::ParseTreeSemanticAnalyzer *analyer_);
 
   virtual ~RelationGraph();
 
@@ -293,6 +295,7 @@ private:
   void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and);
   void visit(boost::shared_ptr<symbolic_expression::Not> not_expr);
   void visit(boost::shared_ptr<symbolic_expression::Always> always);
+  void visit(boost::shared_ptr<symbolic_expression::ConstraintCaller> caller);
   void
   visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> binary);
 
@@ -318,14 +321,17 @@ private:
 
   ConstraintStore always_list; /// temporary variables to return always
 
-  std::vector<AskNode*> exists_asknodes_;
+  std::vector<AskNode *> exists_asknodes_;
 
   GuardNode *current_guard_node;
   std::list<AtomicGuardNode *> atomic_guard_list;
 
+  parser::ParseTreeSemanticAnalyzer *analyzer_;
+
   VisitMode visit_mode;
   bool in_always;
   bool ignore_prev;
+  int expanding_caller_;
 };
 
 } // namespace simulator

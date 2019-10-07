@@ -616,7 +616,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
                                 module_set_container_sptr &msc,
-                                phase_result_sptr_t root)
+                                phase_result_sptr_t root,
+                                parser::ParseTreeSemanticAnalyzer* analyzer)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
@@ -636,7 +637,7 @@ void PhaseSimulator::initialize(variable_set_t &v,
     }
   }
 
-  relation_graph_.reset(new RelationGraph(ms));
+  relation_graph_.reset(new RelationGraph(ms, analyzer));
 
   if (opts_->dump_relation)
   {
@@ -933,7 +934,6 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
   for (auto related_variable : related_variables)
   {
     if(related_variable.name.back() == '$') {
-      std::cout << "back" << std::endl;
       continue;
     }
     auto vm_it = vm.find(related_variable);

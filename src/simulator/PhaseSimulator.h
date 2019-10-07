@@ -6,6 +6,7 @@
 #include <string>
 
 #include "ConsistencyChecker.h"
+#include "ParseTreeSemanticAnalyzer.h"
 #include "PhaseResult.h"
 #include "RelationGraph.h"
 #include "Simulator.h"
@@ -66,7 +67,8 @@ public:
 
   virtual void initialize(variable_set_t &v, parameter_map_t &p,
                           variable_map_t &m, module_set_container_sptr &msc,
-                          phase_result_sptr_t root);
+                          phase_result_sptr_t root,
+                          parser::ParseTreeSemanticAnalyzer *analyzer);
 
   phase_list_t process_todo(phase_result_sptr_t &);
 
