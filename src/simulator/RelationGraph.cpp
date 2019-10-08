@@ -401,14 +401,9 @@ void RelationGraph::expand_caller(ask_t ask) {
   in_exists = 0;
 
   for (auto caller : callers) {
-    auto p = std::make_pair(caller->get_name(), caller->actual_arg_size());
     caller->set_child(nullptr);
-    symbolic_expression::Caller::actual_args_iterator def_it = caller_arg_map_[p];
-    for(auto it = caller->actual_arg_begin(); it!=caller->actual_arg_end(); it++, def_it++) {
-      *it = *def_it;
-    }
     std::cout << "Analyze:"<< std::endl;
-    std::cout << get_infix_string(caller) << std::endl;
+    std::cout << caller->get_string() << std::endl;
     symbolic_expression::node_sptr ptr = caller;
     analyzer_->analyze(ptr);
     accept(ptr);
@@ -921,10 +916,6 @@ void RelationGraph::visit(
     std::cout << parent_ask->ask->get_string() << std::endl;
     std::cout << "" << std::endl;
     ask_caller_map_[parent_ask].push_back(caller);
-  }
-  if(first_) {
-    auto p = std::make_pair(caller->get_name(), caller->actual_arg_size());
-      caller_arg_map_[p] = caller->actual_arg_begin();
   }
   accept(caller->get_child());
 }

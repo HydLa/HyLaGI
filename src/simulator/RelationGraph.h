@@ -334,7 +334,6 @@ private:
       AskNode *,
       std::vector<boost::shared_ptr<symbolic_expression::ConstraintCaller>>>
       ask_caller_map_;
-  std::map<std::pair<std::string, int>, symbolic_expression::Caller::actual_args_iterator> caller_arg_map_;
 
   VisitMode visit_mode;
   bool in_always;
