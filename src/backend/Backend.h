@@ -5,6 +5,8 @@
 #include "DefaultTreeVisitor.h"
 #include "PhaseSimulator.h"
 
+#include "maplec.h"
+
 namespace hydla {
 namespace backend {
 
@@ -33,8 +35,6 @@ struct CalculateTLinearResult
   node_sptr            exp;
   MidpointRadius       mid_rad;
 };
-
-
 
 class Backend : public symbolic_expression::DefaultTreeVisitor
 {
@@ -97,6 +97,12 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
    *           REDUCE doesn't distinguish whether characters are in upper cases or not.
    */
   int call(const char* name, bool trace, int arg_cnt, const char* args_fmt, const char* ret_fmt, ...);
+
+  void wolfram_to_maple(std::string &s);
+
+  void maple_to_wolfram(std::string &s);
+
+  void dsolve_by_maple(std::string &s);
 
   void set_variable_set(variable_set_t& v)
   {

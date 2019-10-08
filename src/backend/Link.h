@@ -24,13 +24,15 @@ class Link
 
   virtual void reset() {}
 
+  virtual void set_maple_expression(const std::string &s) = 0;
+
   virtual void put_symbol(const char *symbol) = 0;
   void put_symbol(const std::string& str) {put_symbol(str.c_str());}
   virtual void put_integer(int value) = 0;
   virtual void put_double(double value) = 0;
   virtual void put_number(const char *value) = 0;
   virtual void put_string(const char *value) = 0;
-  virtual void put_string(const std::string &str) {put_string(str.c_str());}
+  void put_string(const std::string &str) {put_string(str.c_str());}
   void put_number(const std::string &val) {put_number(val.c_str());}
   virtual void put_function(const char *name, int arg_cnt) = 0;
   void put_function(const std::string &name, int arg_cnt) {put_function(name.c_str(), arg_cnt);}

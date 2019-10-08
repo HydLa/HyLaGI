@@ -447,6 +447,16 @@ void MathematicaLink::post_receive()
   WSNewPacket();
 }
 
+void MathematicaLink::set_maple_expression(const std::string &s)
+{
+  WSPutFunction("Set", 2);
+  WSPutSymbol("mapleExpression");
+  WSPutFunction("ToExpression", 1);
+  WSPutString(s.c_str());
+  WSEndPacket();
+  skip_pkt_until(RETURNPKT);
+  WSNewPacket();
+}
 
 MathematicaLink::DataType MathematicaLink::get_type(){
   int tk_type;

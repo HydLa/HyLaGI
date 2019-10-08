@@ -36,6 +36,7 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
+mapleExpression = {};
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
@@ -123,7 +124,7 @@ If[True,  (* エラーが起きた時の対応のため，常にdebugPrintを返
 
 profilePrint[arg___] := If[optUseProfilePrint, Print[InputForm[arg]], Null];
 
-oin(*
+(*
  * 関数呼び出しを再現するための文字列出力を行う
  *)
 

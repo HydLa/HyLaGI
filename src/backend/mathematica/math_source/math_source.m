@@ -119,7 +119,22 @@ Module[
   trueCond
 ];
 
+getEquation[] := (getEquation[True]
+);
 
+publicMethod[
+  getEquation,
+  cons,
+  Module[
+    {listExpr, resultCons},
+      listExpr = applyList[Simplify[cons && constraint]];
+      resultCons = Select[listExpr, (Head[#] =!= Equal)&];
+      listExpr = Complement[listExpr, resultCons];
+      resultCons = And@@resultCons && t > 0;
+      simplePrint[listExpr];
+      ToString[InputForm[listExpr]]
+  ]
+];
 
 publicMethod[
   checkConsistencyInterval,
@@ -1073,14 +1088,38 @@ Module[
   tmp = expr;
   (*simplePrint[expr];*)
   (*simplePrint[vars];*)
-  solwithconstant = Quiet[
-    Check[
-      DSolve[expr, vars, t],
-          overConstrained,
-      {DSolve::overdet, DSolve::bvimp}
+  If[Head[mapleExpression] =!= List,
+    solwithconstant = Quiet[
+      Check[
+        DSolve[expr, vars, t],
+        overConstrained,
+        {DSolve::overdet, DSolve::bvimp}
+      ],
+      {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
     ],
-    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+    If[Length[mapleExpression] < 1,
+      solwithconstant = Quiet[
+        Check[
+          DSolve[expr, vars, t],
+          overConstrained,
+          {DSolve::overdet, DSolve::bvimp}
+        ],
+        {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      ],
+      If[Head[mapleExpression[[1]]] =!= List,
+        solwithconstant = Quiet[
+          Check[
+            DSolve[expr, vars, t],
+            overConstrained,
+            {DSolve::overdet, DSolve::bvimp}
+          ],
+          {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+        ],
+        solwithconstant = mapleExpression
+      ]
+    ]
   ];
+
   (*simplePrint[solwithconstant];*)
   For[i = 1, i <= Length[solwithconstant], i++,
     ini = {};

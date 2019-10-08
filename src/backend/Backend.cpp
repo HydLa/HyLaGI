@@ -5,7 +5,28 @@
 #include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
 
+#include <regex>
+
 using namespace std;
+
+char err[2048];
+string buf;
+
+static void M_DECL textCallBack( void *data, int tag, char *output ){
+  buf = output;
+}
+
+MKernelVector maplekernelvector;
+MCallBackVectorDesc maplecallbackvectordesc = {
+  textCallBack,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+};
 
 namespace hydla {
 namespace backend {
@@ -38,10 +59,15 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs)
 Backend::Backend(Link* link)
 {
   link_.reset(link);
+  if( (maplekernelvector=StartMaple(0,NULL,&maplecallbackvectordesc,NULL,NULL,err)) == NULL ) {
+    cout << "Fatal error, " << err << endl;
+    exit(1);
+  }
 }
 
 Backend::~Backend()
 {
+  if (maplekernelvector) StopMaple(maplekernelvector);
 }
 
 void Backend::invalid_fmt(const char* fmt, int idx)
@@ -75,6 +101,12 @@ int Backend::read_args_fmt(const char* args_fmt, const int& idx, void *arg)
   }
   break;
 
+  case 'r':
+  {
+    const char* s = (const char *)arg;
+    link_->put_string(s);
+  }
+  break;
 
   case 'e':
   {
@@ -257,6 +289,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int& idx, void* ret)
     *mr = receive_midpoint_radius();
   }
   break;
+
+  case 's':
+  {
+    std::string *s = (std::string *)ret;
+    *s = link_->get_string();
+  }
+  break;
+
   case 'i':
   {
     int* num = (int *)ret;
@@ -421,6 +461,90 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
   HYDLA_LOGGER_DEBUG(name);
   hydla::logger::Logger::debug_write_timer(call_timer);
   return 0;
+}
+
+void Backend::wolfram_to_maple(std::string &s){
+  s = regex_replace(s, regex("Derivative\\[1\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t)");
+  s = regex_replace(s, regex("Derivative\\[2\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t,t)");
+  s = regex_replace(s, regex("\\["), "(");
+  s = regex_replace(s, regex("\\]"), ")");
+  s = regex_replace(s, regex("=="), "=");
+  s = regex_replace(s, regex("E\\^\\("), "exp(");
+  s = regex_replace(s, regex("E\\^([a-zA-Z0-9]+)"), "exp($1)");
+  s = regex_replace(s, regex("Sin\\("), "sin(");
+  s = regex_replace(s, regex("Cos\\("), "cos(");
+  s = regex_replace(s, regex("Tan\\("), "tan(");
+}
+
+void Backend::maple_to_wolfram(std::string &s){
+  s = regex_replace(s,regex("\\\\"),"");           // \を除去
+  s = regex_replace(s,regex("\\(t\\)"),"\[t\]");   // "(t)" -> "[t]"
+  s = regex_replace(s,regex("_C(\\d+)"),"C\[$1\]"); // "_Cn" -> "C[n]"
+  s = regex_replace(s,regex("="),"->");            // "=" -> "->"
+  s = regex_replace(s,regex("exp\\("),"E^(");          // "exp" -> "E^"
+  s = regex_replace(s,regex("Int"),"Integrate");   // "Int" -> "Integrate"
+
+  /*
+   * アルゴリズムについて
+   *
+   * 例えばs = "((()()(())))"においてs[1]とs[6]の'('と対応する')'をそれぞれ'[',']'に変えたいとする．
+   * ちなみに対応する括弧はそれぞれs[9], s[10]．
+   * sでi文字目までにいくつの括弧が開いているかを考えると次のような数列aが得られる．
+   * a = 123232343210
+   * これを見るとa[1] = 2, a[6] = 3である．
+   * それぞれについてそれ以降で初めて値がより小さくなる位置を探すと，それぞれa[10] = 1, a[9] = 2であり閉じる位置が分かる．
+   * またa[6]未満になる場所を探している間はa[1]未満になることはないので，走査は2回ではなく1回で済むことが分かる．
+   *
+   * 一般に'['に置き換えたい括弧が来たら以前の値はstackに積んで処理が終わったら取り出すようにすれば，
+   * 置き換える括弧の数によらず1回の走査で置き換えができる．
+   */
+
+  stack<int> st; // 後で探す値を積む
+  int v = 0, now = 0; // v：探す値，now：括弧がいくつ開いているか
+  for(int i = 0; i < s.size(); ++i){
+    string sbstr = s.substr(i,3);
+    if(sbstr == "sin" or sbstr == "cos" or sbstr == "tan" or sbstr == "exp" or sbstr == "ate"){ // 三角関数かIntegrate
+      if(v != 0) st.push(v);
+      if(sbstr != "ate")
+        s[i] = toupper(s[i]); // sin -> Sin, cos -> Cos, tan -> Tan
+      i += 3; // '('の場所に飛ぶ
+      s[i] = '[';
+      now++;
+      v = now;
+      continue;
+    }
+
+    if(s[i] == '(') now++;
+    else if(s[i] == ')'){
+      now--;
+      if(now == v-1){ // sinなどの括弧が閉じたら
+        s[i] = ']';
+        if(st.empty()){
+          v = 0;
+        }else{
+          v = st.top();
+          st.pop();
+        }
+      }
+    }
+  }
+  s = "{" + s + "}";
+}
+
+
+
+void Backend::dsolve_by_maple(std::string &s){
+  std::cout << s << std::endl;
+  wolfram_to_maple(s);
+  std::cout << s << std::endl;
+  s = "dsolve(" + s + ");";
+  std::cout << s << std::endl;
+  EvalMapleStatement(maplekernelvector, (char *)s.c_str());
+  s = buf;
+  std::cout << s << std::endl;
+  maple_to_wolfram(s);
+  std::cout << s << std::endl;
+  link_->set_maple_expression(s);
 }
 
 bool Backend::get_form(const char &form_c, VariableForm &form)

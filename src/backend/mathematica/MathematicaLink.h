@@ -57,6 +57,10 @@ public:
     WSPutSymbol(s);
   }
 
+  inline void put_string(const char* s) {
+    WSPutString(s);
+  }
+
   inline void put_number(const char* value)
   {
     WSPutFunction("ToExpression", 1);
@@ -67,8 +71,8 @@ public:
     WSPutSymbol(s.c_str());
   }
 
-  void put_string(const char* s) {
-    WSPutString(s);
+  void put_string(const std::string& s) {
+    WSPutString(s.c_str());
   }
 
   void put_integer(int i) {
@@ -106,6 +110,7 @@ public:
 
   void post_receive();
 
+  void set_maple_expression(const std::string &s);
 
   std::string get_debug_print()
   {

@@ -21,7 +21,7 @@ MATH_FLAGS_64 := -lWSTP64i4
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
 LIBS_STATIC += -lboost_program_options
-LIBS     += $(MATH_FLAGS_$(ARCH)) -lm -lrt
+LIBS     += $(MATH_FLAGS_$(ARCH)) -lmaplec -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
 LIBS_STATIC += -lboost_program_options-mt

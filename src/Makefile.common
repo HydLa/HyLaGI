@@ -15,10 +15,11 @@ UNAME := $(shell uname)
 
 LIBS_STATIC += -lboost_thread -lboost_regex
 MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
+MAPLEPATH ?= /opt/maple2015
 
 ifeq ($(UNAME),Linux)
-INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -I${MAPLEPATH}/extern/include
+LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/ -L${MAPLEPATH}/bin.X86_64_LINUX
 
 CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 # CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg

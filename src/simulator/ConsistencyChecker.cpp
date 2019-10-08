@@ -134,6 +134,7 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   timer::Timer timer;
   backend_check_consistency_count++;
   CheckConsistencyResult ret;
+  std::string s;
   if(phase == POINT_PHASE)
   {
     backend->call("checkConsistencyPoint", true, 1, "csn", "cc", &tmp_cons, &ret);
@@ -142,6 +143,8 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   }
   else
   {
+    backend->call("getEquation", true, 1, "cst", "s", &tmp_cons, &s);
+    backend->dsolve_by_maple(s);
     backend->call("checkConsistencyInterval", true, 1, "cst", "cc", &tmp_cons, &ret);
   }
   backend_check_consistency_time += timer.get_elapsed_us();
@@ -327,8 +330,16 @@ CheckConsistencyResult &result,
           send_vars.insert(Variable(pair.first, i));
         }
       }
+      std::string s;
+      backend->call("getEquation", true, 0, "", "s", &s);
+      backend->dsolve_by_maple(s);
       backend->call("createVariableMapInterval", true, 1, "vst", "cv", &send_vars, &create_result);
-    }else backend->call("createVariableMapInterval", true, 0, "", "cv", &create_result);
+    }else{
+      std::string s;
+      backend->call("getEquation", true, 0, "", "s", &s);
+      backend->dsolve_by_maple(s);
+      backend->call("createVariableMapInterval", true, 0, "", "cv", &create_result);
+    }
 
     profile["CreateVMInCC"] += timer.get_elapsed_us();
     int size_of_constraint;
