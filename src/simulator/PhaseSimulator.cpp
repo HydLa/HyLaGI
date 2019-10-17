@@ -359,7 +359,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore ms_local_always;
 
   consistency_checker->clear_inconsistent_constraints();
-  backend_->call("resetAssumption", false, 0, "", "");
+  // backend_->call("resetAssumption", false, 0, "", "");
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
