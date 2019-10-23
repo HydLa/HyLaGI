@@ -30,6 +30,8 @@
 
 #include "SymbolicTrajPrinter.h"
 
+#include "../hierarchy/IncrementalModuleSet.h"
+
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
 namespace hydla
@@ -120,11 +122,11 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
 
-		cout << "Execution stuck! (unsatisfiable constraints)" << endl;
-		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
-		cout << endl;
-		auto unsatv2unsatcons = todo->calc_map_v2cons();
-		print_possible_causes(unsatv2unsatcons);
+    cout << "Execution stuck! (unsatisfiable constraints)" << endl;
+    io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
+    cout << endl;
+    auto unsatcauses = todo->unsat_cons_causes();
+    print_possible_causes(filter_required(unsatcauses));
   }
   else
   {
@@ -2107,6 +2109,16 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   phase->set_parameter_constraint(new_store);
 
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+}
+
+std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
+  auto ims = boost::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
+  for(auto&& p : causes){
+    for(auto m : p.second)
+      if(not ims->is_required(m)) p.second.erase(m);
+    if(p.second.size() == 0) causes.erase(p.first);
+  }
+  return causes;
 }
 
 void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t> &mp){

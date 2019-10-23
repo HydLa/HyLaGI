@@ -5,7 +5,7 @@
 #include "HydLaError.h"
 #include "VariableFinder.h"
 #include "Variable.h"
-
+#include "AtomicConstraintFinder.h"
 #include <sstream>
 
 using namespace std;
@@ -179,25 +179,35 @@ void PhaseResult::set_full_information(FullInformation &info)
   full_information = info;
 }
 
-std::map<variable_set_t,module_set_t> PhaseResult::calc_map_v2cons()const{
+std::map<variable_set_t,module_set_t> PhaseResult::unsat_cons_causes()const{
   std::map<variable_set_t,module_set_t> res;
+
   auto unsatmodset = (this->inconsistent_module_sets).begin();
   for(auto unsatconsset : this->inconsistent_constraints){
-    variable_set_t vars;
+
+    std::map<module_t,AtomicConstraintFinder> mod2foundcons;
+    for(auto unsatmod : *unsatmodset){
+      AtomicConstraintFinder acfinder;
+      acfinder.visit_node(unsatmod.second);
+      mod2foundcons[unsatmod] = acfinder;
+    }
+    
     for(auto unsatcons : unsatconsset){
-      VariableFinder finder;
-      finder.visit_node(unsatcons);
-      
-      // HACK: use std::set::merge
-      for(auto v : finder.get_all_variable_set()){
-        vars.insert(v);
+      VariableFinder vfinder;
+      vfinder.visit_node(unsatcons);
+      auto vars = vfinder.get_all_variable_set();
+
+      for(auto p : mod2foundcons){
+	if(p.second.include_constraint(unsatcons)){
+	  res[vars].insert(p.first);
+	  break;
+	}
       }
     }
-    if(res.count(vars) == 0 or res[vars].size() > unsatmodset->size()){
-      res[vars] = *unsatmodset;
-    }
+    
     ++unsatmodset;
   }
+  
   return res;
 }
 

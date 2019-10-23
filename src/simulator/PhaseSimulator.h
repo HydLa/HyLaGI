@@ -153,6 +153,8 @@ private:
 
   void add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange current_range);
 
+  std::map<variable_set_t,module_set_t> filter_required(std::map<variable_set_t,module_set_t> causes);
+  
   void print_possible_causes(const std::map<variable_set_t,module_set_t> &map);
 
   void update_condition(const variable_set_t &vs, const module_set_t &ms);

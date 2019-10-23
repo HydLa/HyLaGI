@@ -316,5 +316,9 @@ void IncrementalModuleSet::generate_new_ms(const module_set_set_t& mcss, const M
     ms_to_visit_.insert(ModuleSet());
   }
 
+  bool IncrementalModuleSet::is_required(const module_t &m) const{
+    return not stronger_modules_.count(m);
+  }
+
 } // namespace hierarchy
 } // namespace hydla
