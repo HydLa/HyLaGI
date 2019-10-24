@@ -40,7 +40,6 @@ namespace simulator
 {
 
 using namespace std;
-using namespace boost;
 
 using namespace backend;
 using namespace hierarchy;
