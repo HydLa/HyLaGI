@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 
@@ -25,16 +25,16 @@ public:
   }
 
   /// 因子ノードの呼び出し
-  virtual void visit(boost::shared_ptr<FactorNode> node);
+  virtual void visit(std::shared_ptr<FactorNode> node);
   
   /// 1つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<UnaryNode> node);
+  virtual void visit(std::shared_ptr<UnaryNode> node);
 
   /// 2つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<BinaryNode> node);
+  virtual void visit(std::shared_ptr<BinaryNode> node);
   
   /// 2つの子ノードを持つノードの呼び出し
-  virtual void visit(boost::shared_ptr<VariadicNode> node);
+  virtual void visit(std::shared_ptr<VariadicNode> node);
 };
 
 } //namespace symbolic_expression

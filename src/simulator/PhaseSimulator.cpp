@@ -2112,7 +2112,7 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
 }
 
 std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
-  auto ims = boost::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
+  auto ims = std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
   for(auto&& p : causes){
     for(auto m : p.second)
       if(not ims->is_required(m)) p.second.erase(m);

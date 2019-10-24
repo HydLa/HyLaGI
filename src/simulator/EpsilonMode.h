@@ -4,7 +4,7 @@
 #include <string>
 #include <cassert>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Backend.h"
 #include "PhaseResult.h"

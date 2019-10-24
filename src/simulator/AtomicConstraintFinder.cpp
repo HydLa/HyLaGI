@@ -10,7 +10,7 @@ AtomicConstraintFinder::AtomicConstraintFinder() {}
 
 AtomicConstraintFinder::~AtomicConstraintFinder() {}
 
-void AtomicConstraintFinder::visit_node(boost::shared_ptr<symbolic_expression::Node> node) {
+void AtomicConstraintFinder::visit_node(std::shared_ptr<symbolic_expression::Node> node) {
   accept(node);
 }
 
@@ -29,12 +29,12 @@ bool AtomicConstraintFinder::include_constraint(const constraint_t &con) const {
 constraints_t AtomicConstraintFinder::get_all_constraint_set() const { return constraints_; }
 
 // 比較演算子
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::Equal> node) { constraints_.insert(node); }
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::UnEqual> node) { constraints_.insert(node); }
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::Less> node) { constraints_.insert(node); }
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::LessEqual> node) { constraints_.insert(node); }
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::Greater> node) { constraints_.insert(node); }
-void AtomicConstraintFinder::visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::Equal> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::UnEqual> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::Less> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::LessEqual> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::Greater> node) { constraints_.insert(node); }
+void AtomicConstraintFinder::visit(std::shared_ptr<symbolic_expression::GreaterEqual> node) { constraints_.insert(node); }
 
 } //namespace simulator
 } //namespace hydla 

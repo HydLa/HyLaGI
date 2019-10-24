@@ -3,7 +3,7 @@
 #include <set>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -29,7 +29,7 @@ public:
    * 制約を調べ，変数の出現を取得する
    * @param node 調べる対象となる制約
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node);
+  void visit_node(std::shared_ptr<symbolic_expression::Node> node);
 
   void clear();
   
@@ -40,12 +40,12 @@ public:
   bool include_constraint(const constraint_t &con) const;
   
   // 比較演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Equal> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Less> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LessEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Greater> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::GreaterEqual> node);
   
 private:
   constraints_t constraints_;

@@ -60,7 +60,7 @@ AffineMixedValue AffineTreeVisitor::approximate(const node_sptr &node)
   return current_val_;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Plus> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
@@ -72,7 +72,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Plus
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Subtract> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
@@ -84,7 +84,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Subt
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Times> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
@@ -96,7 +96,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Time
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Divide> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
@@ -108,7 +108,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Divi
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Power> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
@@ -140,7 +140,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Powe
   HYDLA_LOGGER_NODE_VALUE;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Negative> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_child());
@@ -149,7 +149,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nega
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Positive> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_child());
@@ -157,18 +157,18 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Posi
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Pi> node)
 {
   current_val_.interval = pi;
   current_val_.type = INTERVAL;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::E> node)
 {
   current_val_ = AffineMixedValue(e);
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Number> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   std::string number_str = node->get_number();
@@ -189,14 +189,14 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
   HYDLA_LOGGER_NODE_VALUE;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Float> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Float> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   current_val_ = AffineMixedValue(itvd(node->get_number()));
   HYDLA_LOGGER_NODE_VALUE;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Function> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Function> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   std::string name = node->get_name();
@@ -247,7 +247,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Func
   HYDLA_LOGGER_NODE_VALUE;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node)
+void AffineTreeVisitor::visit(std::shared_ptr<hydla::symbolic_expression::Parameter> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   current_val_ = affine_t();
@@ -275,7 +275,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Para
 
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<symbolic_expression::Variable> node)
+void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::Variable> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   simulator::Variable variable(node->get_name(), differential_count);
@@ -287,7 +287,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<symbolic_expression::Variable> n
 }
 
 
-void AffineTreeVisitor::visit(boost::shared_ptr<Differential> node)
+void AffineTreeVisitor::visit(std::shared_ptr<Differential> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   differential_count++;
@@ -297,7 +297,7 @@ void AffineTreeVisitor::visit(boost::shared_ptr<Differential> node)
   return;
 }
 
-void AffineTreeVisitor::visit(boost::shared_ptr<SymbolicT> node)
+void AffineTreeVisitor::visit(std::shared_ptr<SymbolicT> node)
 {
   HYDLA_LOGGER_NODE_VISIT;
   current_val_ = AffineMixedValue(affine_t());
@@ -328,7 +328,7 @@ void AffineTreeVisitor::invalid_node(symbolic_expression::Node& node)
 
 
 #define DEFINE_INVALID_NODE(NODE_NAME)                           \
-void AffineTreeVisitor::visit(boost::shared_ptr<NODE_NAME> node) \
+void AffineTreeVisitor::visit(std::shared_ptr<NODE_NAME> node) \
 {                                                                \
   HYDLA_LOGGER_DEBUG("");                                        \
   invalid_node(*node);                                           \

@@ -5,7 +5,7 @@
 #include <string>
 #include <cassert>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
@@ -85,7 +85,7 @@ public:
 
   void add_break_point(BreakPoint b);
 
-  boost::shared_ptr<RelationGraph> relation_graph_;
+  std::shared_ptr<RelationGraph> relation_graph_;
 
   void print_completely_unconstrained_condition();
 
@@ -173,11 +173,11 @@ private:
 
   phase_result_sptr_t result_root;
 
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  std::shared_ptr<ConsistencyChecker> consistency_checker;
   int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
-  boost::shared_ptr<ValueModifier>      value_modifier;
+  std::shared_ptr<ValueModifier>      value_modifier;
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;

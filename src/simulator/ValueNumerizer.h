@@ -19,26 +19,26 @@ public:
   */
   void numerize(Value &exp);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Plus> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Times> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Power> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Plus> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Subtract> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Times> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Divide> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Power> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Float> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Parameter> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SymbolicT> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::E> node);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Negative> node);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
 
 private:
   void invalid_node(symbolic_expression::Node &node);

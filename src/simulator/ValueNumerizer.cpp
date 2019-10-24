@@ -5,7 +5,7 @@
 #include "Logger.h"
 
 using namespace hydla::symbolic_expression;
-using namespace boost;
+using namespace std;
 
 namespace hydla
 {

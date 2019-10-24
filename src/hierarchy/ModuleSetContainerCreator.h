@@ -4,7 +4,7 @@
 #include <deque>
 #include <map>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "ParseTree.h"
 #include "TreeInfixPrinter.h"
@@ -26,8 +26,8 @@ template <class Container>
 class ModuleSetContainerCreator : public hydla::symbolic_expression::DefaultTreeVisitor
 {
 public:
-  typedef boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
-  typedef typename boost::shared_ptr<Container> container_sptr;
+  typedef std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree_sptr;
+  typedef typename std::shared_ptr<Container> container_sptr;
   typedef std::deque<container_sptr>            container_stack_t;
   typedef std::map<std::string, int>            mod_name_map_t;
   typedef std::map<std::string, ModuleSet>      module_set_map_t;
@@ -63,146 +63,146 @@ public:
     return ret;
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::LogicalOr> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="|";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::LogicalAnd> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="&";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Pi> node)
   {
     if (!in_constraint_caller_) container_name_+="PI";
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ImaginaryUnit> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::ImaginaryUnit> node)
   {
     if (!in_constraint_caller_) container_name_+="I";
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::E> node)
   {
     if (!in_constraint_caller_) container_name_+="E";
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Plus> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="+";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Subtract> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="-";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Times> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="*";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Divide> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="/";
     accept(node->get_rhs());
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Power> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="^";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Equal> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Equal> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="=";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Less> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Less> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="<";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::LessEqual> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::LessEqual> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="<=";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Greater> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Greater> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+=">";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::GreaterEqual> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+=">=";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Ask> node)
   {
     accept(node->get_lhs());
     if (!in_constraint_caller_) container_name_+="=>";
     accept(node->get_rhs());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Differential> node)
   {
     accept(node->get_child());
     if (!in_constraint_caller_) container_name_+="\'";
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Previous> node)
   {
     accept(node->get_child());
     if (!in_constraint_caller_) container_name_+="-";
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Negative> node)
   {
     if (!in_constraint_caller_) container_name_+="-";
     accept(node->get_child());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Variable> node)
   {
     if (!in_constraint_caller_) container_name_ += node->get_name();
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::SymbolicT> node)
   {
     if (!in_constraint_caller_) container_name_ += node->get_name();
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Number> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Number> node)
   {
     if (!in_constraint_caller_) container_name_ += node->get_number();
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::ConstraintCaller> node)
   {
     if (!in_constraint_caller_)
     {
@@ -221,7 +221,7 @@ public:
     }
   }
   
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::ProgramCaller> node)
   {
     container_name_ = node->get_name();
     int arg_size = node->actual_arg_size();
@@ -235,7 +235,7 @@ public:
     accept(node->get_child());
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Constraint> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Constraint> node)
   {
     if (container_name_ == "")
     {
@@ -260,7 +260,7 @@ public:
     mod_set_stack_.push_back(container);
   }
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Weaker> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Weaker> node)
   {    
     constraint_level_++;
     container_name_.clear();
@@ -282,7 +282,7 @@ public:
   /**
   * 並列合成「,」
    */
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Parallel> node)
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Parallel> node)
   {    
     container_name_.clear();
 
