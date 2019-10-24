@@ -5,9 +5,6 @@
 
 #include <iostream>
 #include <algorithm>
-#include <boost/lambda/lambda.hpp>
-
-using namespace boost::lambda;
 
 namespace hydla {
 namespace hierarchy {
