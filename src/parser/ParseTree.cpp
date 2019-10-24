@@ -1,7 +1,6 @@
 #include "ParseTree.h"
 
 #include <iterator>
-#include <boost/foreach.hpp>
 
 #include "Logger.h"
 #include "ParseTreeSemanticAnalyzer.h"
@@ -13,7 +12,6 @@
 
 
 using namespace std;
-using namespace boost;
 using namespace hydla::parser;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
@@ -173,11 +171,8 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   
 
   s << "--- variables ---\n";
-  BOOST_FOREACH(const variable_map_t::value_type& i, 
-                variable_map_) 
-  {
-    s << i.first << " : " << i.second << "\n";
-  }
+  for(auto i : variable_map_)
+    s << i.first << " : " << i.second << endl;
 
   return s;
 }
