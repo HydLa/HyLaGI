@@ -1,7 +1,6 @@
 #include "IntervalTreeVisitor.h"
 #include "Logger.h"
 #include <exception>
-#include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
 
 namespace hydla
@@ -149,14 +148,14 @@ void IntervalTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Nu
   // try translation to int
   try
   {
-    int integer = boost::lexical_cast<int>(number_str);
+    int integer = stoi(number_str);
     current_value.is_integer = true;
     current_value.integer = integer;
     // HYDLA_LOGGER_DEBUG("Number : ", current_value.integer);
     // HYDLA_LOGGER_NODE_VALUE;
     return;
   }
-  catch(const boost::bad_lexical_cast &e)
+  catch(const std::logic_error &e)
   {
     // do nothing
   }

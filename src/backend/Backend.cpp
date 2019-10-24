@@ -2,7 +2,6 @@
 #include "Timer.h"
 #include <stdarg.h>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
 
 using namespace std;
@@ -1039,10 +1038,10 @@ symbolic_expression::node_sptr Backend::receive_function()
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str;
     d_str = link_->get_string();
-    int differential_count = boost::lexical_cast<int, std::string>(d_str);
+    int differential_count = stoi(d_str);
     std::string id_str;
     id_str = link_->get_string();
-    int id = boost::lexical_cast<int, std::string>(id_str);
+    int id = stoi(id_str);
     ret = symbolic_expression::node_sptr(new symbolic_expression::Parameter(name, differential_count, id));
   }
   else if (equal_ignoring_case(symbol, "prev"))
@@ -1050,7 +1049,7 @@ symbolic_expression::node_sptr Backend::receive_function()
     std::string name;
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str = link_->get_string();
-    int differential_count = boost::lexical_cast<int, std::string>(d_str);
+    int differential_count = stoi(d_str);
     symbolic_expression::node_sptr tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Variable(name));
     for (int i = 0; i < differential_count; i++) tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Differential(tmp_var));
     ret = symbolic_expression::node_sptr(new symbolic_expression::Previous(tmp_var));
@@ -1116,7 +1115,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   else if (equal_ignoring_case(symbol, "derivative"))
   {
     std::string d_str = link_->get_string();
-    int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
+    int variable_differential_count = stoi(d_str);
     std::string variable_name = link_->get_symbol();
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for (int i = 0; i < variable_differential_count; i++)

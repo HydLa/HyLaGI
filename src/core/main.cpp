@@ -26,8 +26,6 @@
 #include "AffineTreeVisitor.h"
 #include "Parser.h"
 
-#include <boost/regex.hpp>
-
 // debug
 #include "debug_main.h"
 

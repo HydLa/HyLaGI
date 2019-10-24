@@ -1,5 +1,4 @@
 #include "AffineApproximator.h"
-#include <boost/lexical_cast.hpp>
 #include "TreeInfixPrinter.h"
 #include <exception>
 #include "Backend.h"

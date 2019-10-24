@@ -1,5 +1,4 @@
 #include "AffineTreeVisitor.h"
-#include <boost/lexical_cast.hpp>
 #include "TreeInfixPrinter.h"
 #include <exception>
 #include "Backend.h"
@@ -176,12 +175,13 @@ void AffineTreeVisitor::visit(boost::shared_ptr<hydla::symbolic_expression::Numb
 
   // try translation to int
   try{
-    int integer = lexical_cast<int>(number_str);
+    int integer = stoi(number_str);
     current_val_ = AffineMixedValue(integer);
     HYDLA_LOGGER_NODE_VALUE;
     return;
-  }catch(const bad_lexical_cast &){
+  }catch(const std::logic_error &){
   }
+
 
   //try approximation as double with upper rounding
   kv::interval<double> itv = kv::interval<double>(number_str);

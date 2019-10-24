@@ -5,7 +5,6 @@
 #include <map>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "ParseTree.h"
 #include "TreeInfixPrinter.h"
