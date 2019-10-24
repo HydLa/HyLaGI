@@ -41,7 +41,7 @@ private:
    * @param formulas Formulas to be reduced
    * @param limit the number which the number of dummy variables are to be after reduction
    */
-  void reduce_dummy_variables(boost::numeric::ublas::vector<affine_t> &formulas, int limit);
+  void reduce_dummy_variables(kv::ub::vector<affine_t> &formulas, int limit);
 
 
   value_t translate_into_symbolic_value(const affine_t &affine_value, parameter_map_t &parameter_map);

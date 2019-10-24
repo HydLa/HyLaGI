@@ -10,7 +10,6 @@
 
 
 using namespace std;
-using namespace boost;
 using namespace hydla::simulator;
 
 namespace hydla {

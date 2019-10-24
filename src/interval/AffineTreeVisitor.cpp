@@ -7,7 +7,6 @@
 
 using namespace std;
 using namespace hydla::symbolic_expression;
-using namespace boost;
 
 #define HYDLA_LOGGER_NODE_VALUE \
   ;
