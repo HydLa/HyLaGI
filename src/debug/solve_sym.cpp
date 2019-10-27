@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include "boost_algo_str.h"
 #include <boost/algorithm/string.hpp>
 
 
@@ -322,8 +323,8 @@ namespace hydla{
         rest_val = false;
         solve_var = conv_list(add_var_list_c);
         solve_eq_list = conv_list(eq_list);
-        boost::algorithm::replace_all(solve_var, "[", "");
-        boost::algorithm::replace_all(solve_var, "]", "");
+	replace_all(solve_var, "[","");
+        replace_all(solve_var, "]", "");
         solve_ret = solve_equation(solve_eq_list, solve_var);
         /// []が帰ってくるならばその制約集合は解なし
         if(solve_ret == "[]" or solve_ret == "False"){
@@ -335,12 +336,12 @@ namespace hydla{
         }
 
         /// いらない部分の消去(TODO:複数の解がある時はこれではダメ "}, {" でsplitして複数の候補制約集合に分割する(文字列はsplitできないので、一回特殊文字か何かに置き換える))
-        boost::algorithm::replace_all(solve_ret, "[", "");
-        boost::algorithm::replace_all(solve_ret, "]", "");
+        replace_all(solve_ret, "[", "");
+        replace_all(solve_ret, "]", "");
         /// 上は複数の解が存在する場合専用
-        boost::algorithm::replace_all(solve_ret, "{", "");
-        boost::algorithm::replace_all(solve_ret, "}", "");
-        boost::algorithm::replace_all(solve_ret, " ", "");
+        replace_all(solve_ret, "{", "");
+        replace_all(solve_ret, "}", "");
+        replace_all(solve_ret, " ", "");
 
         
         boost::split(split_str, solve_ret, boost::is_any_of(","));
@@ -529,21 +530,21 @@ namespace hydla{
             }
             /// askと違うprev値なら、tellで求めたprev値以外のprev値はどうなるのか確認する(名前をつける。どうにかする)
             n_str = var_map_after.first+"N"+var_map_after.second;
-            boost::algorithm::replace_all(n_str, "(", "");
-            boost::algorithm::replace_all(n_str, ")", "");
-            boost::algorithm::replace_all(n_str, " ", "");
-            boost::algorithm::replace_all(n_str, ">=", "igtoe");
-            boost::algorithm::replace_all(n_str, "<=", "iltoe");
-            boost::algorithm::replace_all(n_str, ">", "igt");
-            boost::algorithm::replace_all(n_str, "<", "ilt");
+            replace_all(n_str, "(", "");
+            replace_all(n_str, ")", "");
+            replace_all(n_str, " ", "");
+            replace_all(n_str, ">=", "igtoe");
+            replace_all(n_str, "<=", "iltoe");
+            replace_all(n_str, ">", "igt");
+            replace_all(n_str, "<", "ilt");
             y_str = var_map_after.first+"Y"+var_map_after.second;
-            boost::algorithm::replace_all(y_str, "(", "");
-            boost::algorithm::replace_all(y_str, ")", "");
-            boost::algorithm::replace_all(y_str, " ", "");
-            boost::algorithm::replace_all(y_str, ">=", "igtoe");
-            boost::algorithm::replace_all(y_str, "<=", "iltoe");
-            boost::algorithm::replace_all(y_str, ">", "igt");
-            boost::algorithm::replace_all(y_str, "<", "ilt");
+            replace_all(y_str, "(", "");
+            replace_all(y_str, ")", "");
+            replace_all(y_str, " ", "");
+            replace_all(y_str, ">=", "igtoe");
+            replace_all(y_str, "<=", "iltoe");
+            replace_all(y_str, ">", "igt");
+            replace_all(y_str, "<", "ilt");
             error = add_equation(n_str, "0"); /// TODO:範囲値が来た時にどうするか(特殊解の想定なので、範囲は存在しないと信じてる(今の所))
             range_map[n_str] = "~Eq("+var_map_after.first+","+var_map_after.second+")";
             var_val_map_first_base.push_back(y_str); /// PDyY0のような感じ。式を追加する必要があるなら追加するが、今の所必要なさそう
@@ -788,10 +789,10 @@ namespace hydla{
           }
         }
       }else if(error_m == "range"){
-        boost::algorithm::replace_all(renge_eq, ".subs", "?");
-        boost::algorithm::replace_all(renge_eq, "),(", ")!(");
-        boost::algorithm::replace_all(renge_eq, "([", "");
-        boost::algorithm::replace_all(renge_eq, "])", "");
+        replace_all(renge_eq, ".subs", "?");
+        replace_all(renge_eq, "),(", ")!(");
+        replace_all(renge_eq, "([", "");
+        replace_all(renge_eq, "])", "");
         boost::split(eq, renge_eq, boost::is_any_of("?"));
         v_eq = eq[1];
         boost::split(eq_var, v_eq, boost::is_any_of("!"));

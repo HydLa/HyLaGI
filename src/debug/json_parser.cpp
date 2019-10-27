@@ -46,8 +46,8 @@ namespace hydla{
       boost::split(split_prio, prio, boost::is_any_of(";\n"), boost::token_compress_on);
       for(auto p : split_prio){
         if (p.find("->") != std::string::npos) {
-          boost::algorithm::replace_all(p, " ", "");
-          boost::algorithm::replace_all(p, "\"", "");
+          replace_all(p, " ", "");
+          replace_all(p, "\"", "");
           boost::split(split_p, p, boost::is_any_of("->"), boost::token_compress_on);
           ret[split_p[1]].push_back(split_p[0]);
         }
