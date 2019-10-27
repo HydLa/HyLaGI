@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string>
 #include "boost_algo_str.h"
-#include <boost/algorithm/string.hpp>
 
 
 #include "IncrementalModuleSet.h"
@@ -344,9 +343,9 @@ namespace hydla{
         replace_all(solve_ret, " ", "");
 
         
-        boost::split(split_str, solve_ret, boost::is_any_of(","));
+	split(split_str, solve_ret, ",");
         for(auto each_val : split_str){
-          boost::split(split_val, each_val, boost::is_any_of(":"));
+          split(split_val, each_val, ":");
           if(split_val[0] != "AAAvar"){
             rest_val = true;
             ret[split_val[0]] = split_val[1];
@@ -379,7 +378,7 @@ namespace hydla{
         if(std::find(eq_list.begin(), eq_list.end(), each_range_name) != eq_list.end()){
           renge_eq = each_range.second;
           /// 使用変数を求める
-          boost::split(split_in_val, renge_eq, boost::is_any_of(" -(),"));
+          split(split_in_val, renge_eq, " -(),");
           for(auto each_in_val : split_in_val){ /// 不等式の要素ごとに回す
             if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
               renge_eq_subs = "(" + renge_eq + ")" + subs;
@@ -394,11 +393,11 @@ namespace hydla{
               }else if(solve_ret == "True"){ // 代入した値がそのまま正しい場合
                 continue;
               }else{
-                boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
+                split(split_solve_ret, solve_ret, "|");  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
                 for(auto each_solve_ret : split_solve_ret){
-                  boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+                  split(split_each_solve_ret, each_solve_ret, "&");
                   for(auto each_split_each_solve_ret : split_each_solve_ret){
-                    boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                    split(eq_solve_ret, each_split_each_solve_ret, " -()");
                     inf_flag = false;
                     var_flag = false;
                     for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
@@ -428,11 +427,11 @@ namespace hydla{
       /// 不等式をといた結果として、複数解が存在する場合、それらの成立判定を行う
       for(auto each_ret : ret){
         if(each_ret.second.find(",") != std::string::npos){ /// 複数解が存在するかの判定
-          boost::split(split_each_ret, each_ret.second, boost::is_any_of(" "));
+          split(split_each_ret, each_ret.second, " ");
           mul_eq = "";
           for(auto e_split_each_ret : split_each_ret){
             if(e_split_each_ret.find("/") != std::string::npos){ /// python2.7では分数の余りを切り捨ててしまうので、書き換える必要がある
-              boost::split(split_e_each_ret, e_split_each_ret, boost::is_any_of("/"));
+              split(split_e_each_ret, e_split_each_ret, "/");
               mul_eq += "Retional(" + split_e_each_ret[0] + "," + split_e_each_ret[1] + ")";
             }else{
               mul_eq += e_split_each_ret;
@@ -446,12 +445,12 @@ namespace hydla{
             ret["no_result"] = "var";
             return ret;
           }else{
-            boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));
+            split(split_solve_ret, solve_ret, "|");
             for(auto each_solve_ret : split_solve_ret){
               replace_flag = false;
-              boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+              split(split_each_solve_ret, each_solve_ret, "&");
               for(auto each_split_each_solve_ret : split_each_solve_ret){
-                boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                split(eq_solve_ret, each_split_each_solve_ret, " -()");
                 inf_flag = false;
                 var_flag = false;
                 for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
@@ -501,7 +500,7 @@ namespace hydla{
           flag = false;
           undef_flag = false;
           /// 使用変数を求める
-          boost::split(split_in_val, var_map_after.second, boost::is_any_of(" -/*"));
+          split(split_in_val, var_map_after.second, " -/*");
           for(auto each_in_val : split_in_val){ /// 式の要素ごとに回す /// tellの時の判定
             if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
               if(each_in_val != var_map_after.first){ /// 確認しているprev変数以外の変数が出現した場合は値が定まらないから流す(?)(TODO:prevの変数が出たら一致しないって言ってもいいかも)
@@ -572,9 +571,9 @@ namespace hydla{
 
       if(var_val_after["no_result"] == "equality"){
         /// pre_eraseをもらって削除する制約を決める
-        boost::split(split_str, var_val_after["unsat_cons"], boost::is_any_of(","));
+        split(split_str, var_val_after["unsat_cons"], ",");
         for(auto cons : split_str){
-          boost::split(split_str_, cons, boost::is_any_of("_"));
+          split(split_str_, cons, "_");
           c_cons = split_str_[2];
           for(auto sym_prio : sym_prio_map){ /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
             if(sym_prio[0][0] == c_cons){ /// sym_prioの制約名が候補制約集合内の制約と一致するなら
@@ -622,7 +621,7 @@ namespace hydla{
           ret.push_back("no_solution");
         }
       }else if(var_val_after["no_result"] == "range"){
-        boost::split(split_str, var_val_after["unsat_cons"], boost::is_any_of(","));
+        split(split_str, var_val_after["unsat_cons"], ",");
         ret = make_resolve_cons_set(split_str, var_val_map_first, sym_prio_map);/// 制約を減らす
       }else{
         ret.clear();
@@ -793,9 +792,9 @@ namespace hydla{
         replace_all(renge_eq, "),(", ")!(");
         replace_all(renge_eq, "([", "");
         replace_all(renge_eq, "])", "");
-        boost::split(eq, renge_eq, boost::is_any_of("?"));
+        split(eq, renge_eq, "?");
         v_eq = eq[1];
-        boost::split(eq_var, v_eq, boost::is_any_of("!"));
+        split(eq_var, v_eq, "!");
         s_eq_list.push_back(eq[0]);
         while(s_sat){
           d_eq_list = s_eq_list;
@@ -944,7 +943,7 @@ namespace hydla{
       std::vector<std::string> ret, split_eq;
       std::string val_name;
 
-      boost::split(split_eq, eq, boost::is_any_of(" <>=+-*/()"), boost::token_compress_on);
+      split(split_eq, eq, "<>=+-*/()");
       for(auto each_split_eq : split_eq){
         //if(var_map_after.first == "AAAvar"){
         //  continue;
