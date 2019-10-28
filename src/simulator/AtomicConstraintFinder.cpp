@@ -20,8 +20,7 @@ void AtomicConstraintFinder::clear() {
 
 bool AtomicConstraintFinder::include_constraint(const constraint_t &con) const {
   for(auto c : constraints_) {
-    // same_structで頑張る
-    if(c->is_same_struct(*con,true)) return true;
+    if(c->is_same_struct(*con,false)) return true;
   }
   return false;
 }

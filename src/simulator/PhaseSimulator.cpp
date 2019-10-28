@@ -550,6 +550,7 @@ phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t origi
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
+  branch_state_false->unadopted_mss = original->unadopted_mss;
   return branch_state_false;
 }
 
