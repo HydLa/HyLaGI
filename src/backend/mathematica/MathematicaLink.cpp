@@ -12,7 +12,7 @@ namespace mathematica{
 const std::string MathematicaLink::par_prefix = "p";
 
 
-MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level) : env_(0), link_(0)
+MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warnings, const std::string& simplify_time, const int simplify_level, const int dsolve_method, bool solve_over_reals) : env_(0), link_(0)
 {
 
   if((env_ = WSInitialize(0)) == (WSENV)0)throw LinkError("math", "can not link",0);
@@ -57,6 +57,19 @@ MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warni
   skip_pkt_until(RETURNPKT);
   WSNewPacket();
 
+  WSPutFunction("Set", 2);
+  WSPutSymbol("optDSolveMethod");
+  WSPutInteger(dsolve_method);
+  WSEndPacket();
+  skip_pkt_until(RETURNPKT);
+  WSNewPacket();
+
+  WSPutFunction("Set", 2);
+  WSPutSymbol("optSolveOverReals");
+  WSPutSymbol(solve_over_reals ? "True" : "False");
+  WSEndPacket();
+  skip_pkt_until(RETURNPKT);
+  WSNewPacket();
 
   WSPutFunction("ToExpression", 1);
   WSPutString(math_source());  
@@ -65,22 +78,6 @@ MathematicaLink::MathematicaLink(const std::string &wstp_name, bool ignore_warni
   WSNewPacket();
   
   
-  typedef function_map_t::value_type f_value_t;
-  //HydLaとMathematicaの関数名の対応関係を作っておく．
-  function_map_.insert(f_value_t("sin", "Sin"));
-  function_map_.insert(f_value_t("sinh", "Sinh"));
-  function_map_.insert(f_value_t("Asin", "ArcSin"));
-  function_map_.insert(f_value_t("Asinh","ArcSinh"));
-  function_map_.insert(f_value_t("cos", "Cos"));
-  function_map_.insert(f_value_t("cosh", "Cosh"));
-  function_map_.insert(f_value_t("Acos", "ArcCos"));
-  function_map_.insert(f_value_t("Acosh", "ArcCosh"));
-  function_map_.insert(f_value_t("tan", "Tan"));
-  function_map_.insert(f_value_t("tanh", "Tanh"));
-  function_map_.insert(f_value_t("Atan", "ArcTan"));
-  function_map_.insert(f_value_t("Atanh", "ArcTanh"));
-  function_map_.insert(f_value_t("log", "Log"));
-  function_map_.insert(f_value_t("ln", "Log"));
   on_next_ = false;
 }
 

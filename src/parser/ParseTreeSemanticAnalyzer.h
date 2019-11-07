@@ -34,153 +34,156 @@ public:
 private:
 
   // 定義
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
 
   // 呼び出し
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
 
   // 制約式
-  virtual void visit(boost::shared_ptr<symbolic_expression::Constraint> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<symbolic_expression::Tell> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Equal> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Less> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LessEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Greater> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalOr> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Not> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Not> node);
   
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Plus> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Times> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Power> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Plus> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Subtract> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Times> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Divide> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Power> node);
   
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Positive> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Negative> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Positive> node);
   
   // 制約階層定義演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Weaker> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parallel> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Weaker> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Parallel> node);
 
   // 時相演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Always> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Always> node);
   
   // 微分
-  virtual void visit(boost::shared_ptr<symbolic_expression::Differential> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Previous> node);
   
   // 関数
-  virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);
 
   // 円周率
-  virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
   // 自然対数の底
-  virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::E> node);
   
   
   // 変数
-  virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Variable> node);
 
   // 数字
-  virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Float> node);
 
 
   // Print
-  virtual void visit(boost::shared_ptr<symbolic_expression::Print> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintPP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintIP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Scan> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Exit> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Abort> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Print> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintPP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintIP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Scan> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Exit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Abort> node);
 
   //Parameter
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node){assert(0);}
+  virtual void visit(std::shared_ptr<symbolic_expression::Parameter> node){assert(0);}
   //Infinity
-  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
   //SymbolicT
-  virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SymbolicT> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   //SystemVariable
-  virtual void visit(boost::shared_ptr<symbolic_expression::SVtimer> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SVtimer> node);
   
   //True
-  virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::True> node);
  
   //False
-  virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::False> node);
 
   // ExpressionList
-  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
 
   // ConditionalExpressionList
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
 
   // ProgramList
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramList> node);
 
   // ConditionalProgramList
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConditionalProgramList> node);
 
   // EachElement
-  virtual void visit(boost::shared_ptr<symbolic_expression::EachElement> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::EachElement> node);
 
   // DifferentVariable
-  virtual void visit(boost::shared_ptr<symbolic_expression::DifferentVariable> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::DifferentVariable> node);
 
   // ExpressionListElement
-  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);
 
   // ExpressionListCaller
-  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListCaller> node);
 
   // ExpressionListDefinition
-  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
 
   // ProgramListDefinition
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListDefinition> node);
 
   // ProgramListCaller
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListCaller> node);
 
   // ProgramListElement
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramListElement> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListElement> node);
 
   // SizeOfList
-  virtual void visit(boost::shared_ptr<symbolic_expression::SizeOfList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SizeOfList> node);
 
   // SumOfList
-  virtual void visit(boost::shared_ptr<symbolic_expression::SumOfList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SumOfList> node);
+
+  // MulOfList
+  virtual void visit(std::shared_ptr<symbolic_expression::MulOfList> node);
 
   // Range
-  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Range> node);
 
   // Union
-  virtual void visit(boost::shared_ptr<symbolic_expression::Union> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Union> node);
 
   // Intersection 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Intersection> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Intersection> node);
 
   typedef parser::DefinitionContainer<
     symbolic_expression::Definition>::definition_map_key_t referenced_definition_t;
@@ -216,10 +219,10 @@ private:
   /// Stateをつむためのスタック
   std::stack<State> todo_stack_;
 
-  std::set<boost::shared_ptr<symbolic_expression::ConstraintDefinition> > unused_constraint_definition;
-  std::set<boost::shared_ptr<symbolic_expression::ProgramDefinition> >  unused_program_definition;
-  std::set<boost::shared_ptr<symbolic_expression::ExpressionListDefinition> >  unused_expression_list_definition;
-  std::set<boost::shared_ptr<symbolic_expression::ProgramListDefinition> >  unused_program_list_definition;
+  std::set<std::shared_ptr<symbolic_expression::ConstraintDefinition> > unused_constraint_definition;
+  std::set<std::shared_ptr<symbolic_expression::ProgramDefinition> >  unused_program_definition;
+  std::set<std::shared_ptr<symbolic_expression::ExpressionListDefinition> >  unused_expression_list_definition;
+  std::set<std::shared_ptr<symbolic_expression::ProgramListDefinition> >  unused_program_list_definition;
 
   /**
    * 新しい子ノード
@@ -304,8 +307,8 @@ private:
    */
   symbolic_expression::node_sptr apply_definition(
     const referenced_definition_t& def_type,
-    boost::shared_ptr<symbolic_expression::Caller> caller, 
-    boost::shared_ptr<symbolic_expression::Definition> definition);
+    std::shared_ptr<symbolic_expression::Caller> caller, 
+    std::shared_ptr<symbolic_expression::Definition> definition);
 };
 
 } //namespace parser

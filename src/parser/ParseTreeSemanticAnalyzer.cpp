@@ -15,7 +15,7 @@ namespace parser {
 
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<NODE_NAME> node) \
 {                                                     \
   for(int i=0;i<node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
@@ -27,18 +27,18 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
 }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<NODE_NAME> node) \
 {                                                     \
   dispatch_lhs(node);                                 \
   dispatch_rhs(node);                                 \
 }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)        \
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node) \
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<NODE_NAME> node) \
 { dispatch_child(node);}
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)        \
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<NODE_NAME> node){}
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<NODE_NAME> node){}
 
 
 ParseTreeSemanticAnalyzer::ParseTreeSemanticAnalyzer(
@@ -89,37 +89,37 @@ void ParseTreeSemanticAnalyzer::analyze(symbolic_expression::node_sptr& n)
 }
 
 // 制約定義
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintDefinition> node)  
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ConstraintDefinition> node)  
 {
   assert(0);
 }
 
 // プログラム定義
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramDefinition> node)     
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramDefinition> node)     
 {
   assert(0);
 }
 
 // ProgramListDefinition
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListDefinition> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramListDefinition> node)
 {
   assert(0);
 }
 
 // ExpressionListDefinition
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListDefinition> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ExpressionListDefinition> node)
 {
   assert(0);
 }
 
 symbolic_expression::node_sptr ParseTreeSemanticAnalyzer::apply_definition(
   const referenced_definition_t& def_type,
-  boost::shared_ptr<symbolic_expression::Caller> caller, 
-  boost::shared_ptr<Definition> definition)
+  std::shared_ptr<symbolic_expression::Caller> caller, 
+  std::shared_ptr<Definition> definition)
 {
   State& state = todo_stack_.top();
 
-  definition = boost::dynamic_pointer_cast<Definition>(definition->clone());
+  definition = std::dynamic_pointer_cast<Definition>(definition->clone());
   
   //循環参照のチェック
   if (state.referenced_definition_list.find(def_type) != 
@@ -162,7 +162,7 @@ symbolic_expression::node_sptr ParseTreeSemanticAnalyzer::apply_definition(
 }
 
 // 制約呼び出し
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)      
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ConstraintCaller> node)      
 {
   referenced_definition_t deftype(
     std::make_pair(node->get_name(), 
@@ -170,7 +170,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
 
   if(!node->get_child()) {
     // 制約定義から探す
-    boost::shared_ptr<ConstraintDefinition> cons_def(
+    std::shared_ptr<ConstraintDefinition> cons_def(
       constraint_definition_.get_definition(deftype));
     if(!cons_def) {
       throw UndefinedReference(node);
@@ -185,20 +185,20 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConstraintCaller> node)
 }
 
 // プログラム呼び出し
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)         
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramCaller> node)         
 {
   referenced_definition_t deftype(
     std::make_pair(node->get_name(), 
                    node->actual_arg_size()));
 
-  boost::shared_ptr<Definition> def;
+  std::shared_ptr<Definition> def;
 
   if(!node->get_child()) {
     // プログラム定義から探す
-    boost::shared_ptr<ProgramDefinition> prog_def(
+    std::shared_ptr<ProgramDefinition> prog_def(
       program_definition_.get_definition(deftype));
     if(!prog_def){
-      boost::shared_ptr<ConstraintDefinition> cons_def(
+      std::shared_ptr<ConstraintDefinition> cons_def(
         constraint_definition_.get_definition(deftype));
       if(!cons_def){
         throw UndefinedReference(node);
@@ -224,14 +224,14 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramCaller> node)
 }
 
 // 式リスト呼び出し
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> node)         
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ExpressionListCaller> node)         
 {
   referenced_definition_t deftype(
     std::make_pair(node->get_name(), 
                    node->actual_arg_size()));
 
   if(!node->get_child()) {
-    boost::shared_ptr<ExpressionListDefinition> expr_list_def(
+    std::shared_ptr<ExpressionListDefinition> expr_list_def(
       expression_list_definition_.get_definition(deftype));
     if(!expr_list_def){
       throw UndefinedReference(node);
@@ -240,7 +240,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
 
     // 定義の展開
     new_child_ = apply_definition(deftype,node,expr_list_def);
-    boost::shared_ptr<ExpressionList> el = boost::dynamic_pointer_cast<ExpressionList>(new_child_->clone());
+    std::shared_ptr<ExpressionList> el = std::dynamic_pointer_cast<ExpressionList>(new_child_->clone());
     if(el)
     {
       el->set_list_name(node->get_name());
@@ -250,14 +250,14 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListCaller> no
 }
 
 // プログラムリスト呼び出し
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)         
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramListCaller> node)         
 {
   referenced_definition_t deftype(
     std::make_pair(node->get_name(), 
                    node->actual_arg_size()));
 
   if(!node->get_child()) {
-    boost::shared_ptr<ProgramListDefinition> prog_list_def(
+    std::shared_ptr<ProgramListDefinition> prog_list_def(
       program_list_definition_.get_definition(deftype));
     if(!prog_list_def){
       throw UndefinedReference(node);
@@ -271,7 +271,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListCaller> node)
 }
 
 // 制約式
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)            
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Constraint> node)            
 {
   State& state = todo_stack_.top();
 
@@ -291,7 +291,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Constraint> node)
 }
 
 // Ask制約
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Ask> node)                   
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Ask> node)                   
 {
   State& state = todo_stack_.top();
 
@@ -333,7 +333,7 @@ DEFINE_DEFAULT_VISIT_BINARY(Divide)
 DEFINE_DEFAULT_VISIT_BINARY(Power)
 
 // 論理演算子
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<LogicalAnd> node)
 {
   if(!todo_stack_.top().in_constraint) {
     throw InvalidConjunction(node->get_lhs(), 
@@ -344,7 +344,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalAnd> node)
   dispatch_rhs(node); 
 }
 
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<LogicalOr> node)
 {
   if(!todo_stack_.top().in_guard) {
     throw InvalidDisjunction(node->get_lhs(), 
@@ -357,7 +357,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<LogicalOr> node)
 
 DEFINE_DEFAULT_VISIT_UNARY(Not)
 
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Weaker> node)
 {
   if(todo_stack_.top().in_constraint) {
     throw InvalidWeakComposition(node->get_lhs(), 
@@ -369,7 +369,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Weaker> node)
 
 }
 
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Parallel> node)
 {
   if(todo_stack_.top().in_constraint) {
     throw InvalidParallelComposition(node->get_lhs(), 
@@ -383,7 +383,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Parallel> node)
 }
 
 // 時相演算子
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Always> node)
 {
   State& state = todo_stack_.top();
 
@@ -407,11 +407,12 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Always> node)
 }
   
 // 微分
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Differential> node)
 {
   // 子ノードが微分か変数でなかったらエラー
-  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
-     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+  if(!std::dynamic_pointer_cast<Differential>(node->get_child()) &&
+     !std::dynamic_pointer_cast<Variable>(node->get_child()) && 
+     !std::dynamic_pointer_cast<ExpressionListElement>(node->get_child())) {
        throw InvalidDifferential(node);
   }
 
@@ -422,11 +423,12 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Differential> node)
 }
 
 // 左極限
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Previous> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Previous> node)
 {  
   // 子ノードが微分か変数でなかったらエラー
-  if(!boost::dynamic_pointer_cast<Differential>(node->get_child()) &&
-     !boost::dynamic_pointer_cast<Variable>(node->get_child())) {
+  if(!std::dynamic_pointer_cast<Differential>(node->get_child()) &&
+     !std::dynamic_pointer_cast<Variable>(node->get_child()) &&
+     !std::dynamic_pointer_cast<ExpressionListElement>(node->get_child())) {
        throw InvalidPrevious(node);
   }
 
@@ -454,7 +456,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(True)
 DEFINE_DEFAULT_VISIT_FACTOR(False)
 
 // 変数
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Variable> node)
 {
   State& state = todo_stack_.top();
 
@@ -463,7 +465,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Variable> node)
   if(it != state.formal_arg_map.end()) {
     // 自身が仮引数であった場合、書き換える
     new_child_ = (*it).second->clone();
-    boost::shared_ptr<symbolic_expression::Variable> v_ptr = boost::dynamic_pointer_cast<Variable>(new_child_);
+    std::shared_ptr<symbolic_expression::Variable> v_ptr = std::dynamic_pointer_cast<Variable>(new_child_);
     if(v_ptr){
       //変数だった場合、登録する
       parse_tree_->register_variable(v_ptr->get_name(), state.differential_count);
@@ -496,21 +498,29 @@ DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 
 // ExpressionList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionList> node)
-{
+DEFINE_DEFAULT_VISIT_ARBITRARY(ExpressionList)
+//void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ExpressionList> node)
+//{
   // TODO: implement
-  assert(0);
-}
+  // assert(0);
+//}
 
 // ConditionalExpressionList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalExpressionList> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ConditionalExpressionList> node)
 {
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
 }
 
 // ProgramList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramList> node)
 {
   node_sptr element;
   std::queue<node_sptr> queue;
@@ -535,39 +545,61 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramList> node)
 }
 
 // ConditionalProgramList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ConditionalProgramList> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ConditionalProgramList> node)
 {
+  /*
+  for(int i=0;i<node->get_arguments_size();i++){
+    accept(node->get_argument(i));
+    if(new_child_) {
+      node->set_argument((new_child_), i);
+      new_child_.reset();
+    }
+  }
+  */
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
 }
 
 // ExpressionListElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ExpressionListElement> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ExpressionListElement> node)
 {
+  dispatch_rhs(node);
   node_sptr ret = list_expander_.expand_list(node);
-  boost::shared_ptr<ExpressionListElement> ele = boost::dynamic_pointer_cast<ExpressionListElement>(ret);
+  dispatch_lhs(node);
+  std::shared_ptr<ExpressionListElement> ele = std::dynamic_pointer_cast<ExpressionListElement>(ret);
   if(!(ele)) accept(ret);
   if(!new_child_) new_child_ = ret;
 }
 
 // SizeOfList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SizeOfList> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<SizeOfList> node)
 {
+  dispatch_child(node);
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
   if(!new_child_) new_child_ = ret;
 }
 
 // SumOfList
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<SumOfList> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<SumOfList> node)
 {
+  dispatch_child(node);
+  node_sptr ret = list_expander_.expand_list(node);
+  accept(ret);
+  if(!new_child_) new_child_ = ret;
+}
+
+// MulOfList
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<MulOfList> node)
+{
+  dispatch_child(node);
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
   if(!new_child_) new_child_ = ret;
 }
 
 // ProgramListElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<ProgramListElement> node)
 {
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
@@ -575,15 +607,17 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<ProgramListElement> node
 }
 
 // Range
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Range> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Range> node)
 {
+  dispatch_lhs(node);
+  dispatch_rhs(node);
   node_sptr ret = list_expander_.expand_list(node);
-  accept(ret);
+  if(ret) accept(ret);
   if(!new_child_) new_child_ = ret;
 }
 
 // Union 
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Union> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Union> node)
 {
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
@@ -591,7 +625,7 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Union> node)
 }
 
 // Intersection
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Intersection> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<Intersection> node)
 {
   node_sptr ret = list_expander_.expand_list(node);
   accept(ret);
@@ -599,15 +633,16 @@ void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<Intersection> node)
 }
 
 // EachElement
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<EachElement> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<EachElement> node)
 {
-  assert(0);
+  dispatch_rhs(node);
+  //assert(0);
 }
 
 // DifferentVariable
-void ParseTreeSemanticAnalyzer::visit(boost::shared_ptr<DifferentVariable> node)
+void ParseTreeSemanticAnalyzer::visit(std::shared_ptr<DifferentVariable> node)
 {
-  assert(0);
+  //assert(0);
 }
 
 

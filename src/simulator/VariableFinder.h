@@ -3,25 +3,23 @@
 #include <set>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
 #include "Variable.h"
 
-
 namespace hydla {
 namespace simulator {
 
-typedef std::set<Variable, VariableComparator>                            variable_set_t;
+typedef std::set<Variable, VariableComparator> variable_set_t;
 
 /**
  * 制約を調べ，変数の出現を取得するクラス．
  */
-class VariableFinder : public symbolic_expression::DefaultTreeVisitor {
+class VariableFinder : public symbolic_expression::DefaultTreeVisitor
+{
 public:
-
-
   VariableFinder();
 
   virtual ~VariableFinder();
@@ -30,7 +28,7 @@ public:
    * 制約を調べ，変数の出現を取得する
    * @param node 調べる対象となる制約
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node);
+  void visit_node(std::shared_ptr<symbolic_expression::Node> node);
 
   void clear();
   
@@ -47,34 +45,32 @@ public:
   bool include_variables(std::set<std::string> variables) const;
   bool include_variables_prev(std::set<std::string> variables) const;
 
-  bool include_variable(const Variable& var)const;
-  bool include_variable_prev(const Variable& var)const;
+  bool include_variable(const Variable& var) const;
+  bool include_variable_prev(const Variable& var) const;
 
   /// judge if given constraints include any of found variables
-  bool include_variables(const boost::shared_ptr<symbolic_expression::Node> &constraint) const;
+  bool include_variables(const std::shared_ptr<symbolic_expression::Node> &constraint) const;
   
   /// Ask制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   /// 微分
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   /// 左極限
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   /// 変数
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
 
   /// 時刻
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
 
 private:
-
   variable_set_t variables_, prev_variables_;  
   int differential_count_;
   bool in_prev_;
 };
 
-} //namespace simulator
-} //namespace hydla 
-
+} // namespace simulator
+} // namespace hydla 

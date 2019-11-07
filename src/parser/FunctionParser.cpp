@@ -16,22 +16,42 @@ std::string Parser::function_name(){
   Token token = lexer.get_token();
   if(token == LOWER_IDENTIFIER || token == UPPER_IDENTIFIER){
     std::string name = lexer.get_current_token_string();
-    bool alpha = true;
-    for(auto c : name){
-      if(!(('a' <= c && c <= 'z') ||
-         ('A' <= c && c <= 'Z'))){
-        alpha = false;
-        break;
-      }
-      if(alpha) return name;
-    }
+    //bool alpha = true;
+    //for(auto c : name){
+    //  if(!(('a' <= c && c <= 'z') ||
+    //     ('A' <= c && c <= 'Z'))){
+    //    alpha = false;
+    //    break;
+    //  }
+    //  if(alpha) return name;
+    //}
+ 
+    if(name == "sin") return "Sin";
+    if(name == "sinh") return "Sinh";
+    if(name == "asin") return"ArcSin";
+    if(name == "asinh") return"ArcSinh";
+    if(name == "cos") return "Cos";
+    if(name == "cosh") return "Cosh";
+    if(name == "acos") return "ArcCos";
+    if(name == "acosh") return "ArcCosh";
+    if(name == "tan") return "Tan";
+    if(name == "tanh") return "Tanh";
+    if(name == "atan") return "ArcTan";
+    if(name == "atanh") return "ArcTanh";
+    if(name == "log" )return "Log";
+    if(name == "log2" )return "Log2";
+    if(name == "log10" )return "Log10";
+    if(name == "ln") return "Log";
+    if(name == "exp") return "Exp";
+    if(name == "floor") return "Floor";
+    return name;
   }
   lexer.set_current_position(position);
   return std::string();
 }
 
 /// unsupported_function := " " " function_name " " "
-boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
+std::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
   position_t position = lexer.get_current_position();
   std::string name;
   // " " "
@@ -40,26 +60,26 @@ boost::shared_ptr<UnsupportedFunction> Parser::unsupported_function(){
     if((name = function_name()) != ""){
       // " " " 
       if(lexer.get_token() == DOUBLE_QUOTATION){
-        return boost::shared_ptr<UnsupportedFunction>(new UnsupportedFunction(name));
+        return std::shared_ptr<UnsupportedFunction>(new UnsupportedFunction(name));
       }
     }
   }
   lexer.set_current_position(position);
 
-  return boost::shared_ptr<UnsupportedFunction>(); 
+  return std::shared_ptr<UnsupportedFunction>(); 
 }
 
 /// function := function_name 
-boost::shared_ptr<Function> Parser::function(){
+std::shared_ptr<Function> Parser::function(){
   position_t position = lexer.get_current_position();
   std::string name;
   // [a-z,A-Z]+
   if((name = function_name()) != ""){ 
-    return boost::shared_ptr<Function>(new Function(name));
+    return std::shared_ptr<Function>(new Function(name));
   }
   lexer.set_current_position(position);
 
-  return boost::shared_ptr<Function>();
+  return std::shared_ptr<Function>();
 }
 
 /// actual_args := ( "("expression ("," expression)*")" )?
@@ -104,7 +124,7 @@ std::vector<std::string> Parser::formal_args(){
   position_t position = lexer.get_current_position();
   // "("
   if(lexer.get_token() == LEFT_PARENTHESES){
-    boost::shared_ptr<Variable> var;
+    std::shared_ptr<Variable> var;
     // variable
     if((var = variable())){
       ret.push_back(var->get_name());

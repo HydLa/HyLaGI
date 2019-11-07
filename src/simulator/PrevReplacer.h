@@ -4,7 +4,7 @@
 #include <set>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"
@@ -18,11 +18,11 @@ namespace simulator {
  * A class to replace prevs with parameters.
  * (and introduce parameter)
  */
-class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
+class PrevReplacer : public symbolic_expression::DefaultTreeVisitor
+{
   typedef symbolic_expression::node_sptr                 node_sptr;
 
-  public:
-
+public:
   PrevReplacer(PhaseResult &phase, Simulator& simulator, backend::Backend *b, bool affine);
 
   virtual ~PrevReplacer();
@@ -31,67 +31,67 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   void replace_node(symbolic_expression::node_sptr &exp);
   ConstraintStore get_parameter_constraint()const;
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintDefinition> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramDefinition> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::ProgramCaller> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Constraint> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Tell> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Tell> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalOr> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr> node);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Weaker> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parallel> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Always> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Weaker> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Parallel> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Always> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Float> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::True> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::False> node);
 
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Print> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintPP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintIP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Scan> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Exit> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Abort> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Print> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintPP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintIP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Scan> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Exit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Abort> node);
 
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Plus> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Times> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Power> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Plus> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Subtract> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Times> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Divide> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Power> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Less> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LessEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Greater> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::GreaterEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Equal> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnEqual> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Positive> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Negative> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Positive> node);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::Differential> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Differential> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);  
+  virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);  
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Variable> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::SVtimer> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Parameter> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SymbolicT> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SVtimer> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Previous> node);
 
-  private:
+private:
   ConstraintStore parameter_constraint;
   int differential_cnt;
   bool in_prev;
@@ -100,7 +100,6 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   bool replaced;
   backend::Backend* backend;
   bool affine_mode = false;
-  
 
   symbolic_expression::node_sptr new_child;
 
@@ -110,7 +109,8 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   void dispatch(C* n) 
   {
     accept((n->*getter)());
-    if(new_child) {
+    if (new_child)
+    {
       (n->*setter)(new_child);
       new_child.reset();
     }
@@ -141,6 +141,5 @@ class PrevReplacer : public symbolic_expression::DefaultTreeVisitor{
   }
 };
 
-}
-}
-
+} // namespace simulator
+} // namespace hydla

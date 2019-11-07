@@ -1,9 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
+#include <memory>
 
 #include "Variable.h"
 #include "ValueRange.h"
@@ -14,7 +14,7 @@
 
 
 namespace hydla {
-namespace backend{
+namespace backend {
 class Backend;
 }
 
@@ -38,7 +38,7 @@ typedef enum{
   SIMULATED,
   INTERRUPTED,
   NONE
-}SimulationState;
+} SimulationState;
 
 /**
  * type of a phase
@@ -49,14 +49,13 @@ typedef enum {
   INTERVAL_PHASE
 } PhaseType;
 
-
-typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
-typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
+typedef std::vector<std::shared_ptr<symbolic_expression::Tell> > tells_t;
+typedef std::shared_ptr<symbolic_expression::Ask>                ask_t;
 typedef std::set<ask_t >                                           asks_t;
-typedef std::set<boost::shared_ptr<symbolic_expression::Always> >  always_set_t;
+typedef std::set<std::shared_ptr<symbolic_expression::Always> >  always_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
-typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+typedef std::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 typedef std::list<phase_result_sptr_t >                   phase_list_t;
 
@@ -69,13 +68,13 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 typedef std::set<variable_t, VariableComparator>                             variable_set_t;
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
-typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
+typedef std::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
 
 
-typedef std::map<constraint_t, bool> constraint_diff_t;
-typedef std::map<module_set_t::module_t, bool>     module_diff_t;
+typedef std::map<constraint_t, bool>              constraint_diff_t;
+typedef std::map<module_set_t::module_t, bool>    module_diff_t;
 typedef hierarchy::ModuleSet                      module_set_t;
 typedef std::set<module_set_t>                    module_set_set_t;
 
@@ -103,17 +102,16 @@ struct FindMinTimeCandidate
 
 typedef std::list<FindMinTimeCandidate> find_min_time_result_t;
 
-struct DCCandidate{
+struct DCCandidate
+{
   value_t                       time;
   std::map<ask_t, bool>         discrete_asks;
   ConstraintStore               parameter_constraint;
 
-  DCCandidate(const value_t                &t,
+  DCCandidate(const value_t &t,
               const std::map<ask_t, bool> &d,
               const ConstraintStore &p)
-                :time(t),
-                 discrete_asks(d),
-                 parameter_constraint(p)
+    : time(t), discrete_asks(d), parameter_constraint(p)
     {}
   DCCandidate(){}
 };
@@ -128,8 +126,8 @@ typedef std::map<std::string, double>  profile_t;
 /**
  * A class to express the result of each phase.
  */
-class PhaseResult {
-
+class PhaseResult
+{
 public:
   static backend::Backend *backend;  
   PhaseType                    phase_type;
@@ -140,7 +138,6 @@ public:
 
   variable_map_t               variable_map;
   variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
-
 
   ConstraintStore              additional_parameter_constraint; /// use for case analysis
   ConstraintStore              additional_constraint_store; /// use for case analysis
@@ -157,7 +154,6 @@ public:
   guard_time_map_t             guard_time_map;
   ConstraintStore              always_list;
 
-
   SimulationState              simulation_state;
   PhaseResult                 *parent;
   phase_result_sptrs_t         children;
@@ -171,7 +167,6 @@ public:
 
   PhaseResult();  
   ~PhaseResult();
-
 
   asks_t                    get_diff_positive_asks()const;
   asks_t                    get_diff_negative_asks()const;
@@ -190,15 +185,18 @@ public:
   std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
+  std::map<variable_set_t,module_set_t> unsat_cons_causes()const; 
 
   std::string get_string() const;
+	std::string get_vm_string() const;
+
 private:
   void generate_full_information() const;
 
   asks_t                   diff_positive_asks, diff_negative_asks;
   mutable ConstraintStore                      parameter_constraint;
-  mutable boost::optional<std::vector<parameter_map_t> >     parameter_maps;
-  mutable boost::optional<FullInformation>             full_information;
+  mutable std::optional<std::vector<parameter_map_t> >     parameter_maps;
+  mutable std::optional<FullInformation>             full_information;
 };
 
 std::ostream& operator<<(std::ostream& s, const PhaseResult& pr);

@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace hydla{
 
 namespace symbolic_expression
 {
 class Node;
-typedef boost::shared_ptr<Node> node_sptr;
+typedef std::shared_ptr<Node> node_sptr;
 }
 
 struct Opts {
@@ -33,9 +33,12 @@ struct Opts {
   bool stop_at_failure;
   bool ignore_warnings;
   bool eager_approximation;
+  bool solve_over_reals;
+  bool html;
   int approximation_step;
   int extra_dummy_num;
   int simplify;
+  int dsolve;
   symbolic_expression::node_sptr assertion;
   int max_phase;
   EOutputMode output_mode;

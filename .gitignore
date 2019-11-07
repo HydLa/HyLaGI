@@ -4,6 +4,9 @@
 *.dot
 *.png
 *.csv
+*.o.json
+**/*.o.tmp
+compile_commands.json
 bin/
 *.txt
 src/math_source_converter/msc
@@ -13,3 +16,6 @@ src/reduce_source_converter/rsc
 *.hydat
 *~
 workspace/
+*.pyc
+./.DS_Store
+src/debug/*.pyc

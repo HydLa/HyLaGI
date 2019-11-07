@@ -1,7 +1,6 @@
 #include "ParseTree.h"
 
 #include <iterator>
-#include <boost/foreach.hpp>
 
 #include "Logger.h"
 #include "ParseTreeSemanticAnalyzer.h"
@@ -13,7 +12,6 @@
 
 
 using namespace std;
-using namespace boost;
 using namespace hydla::parser;
 using namespace hydla::parser::error;
 using namespace hydla::logger;
@@ -36,6 +34,8 @@ ParseTree::~ParseTree()
 
 void ParseTree::parse(std::istream& stream) 
 {
+  auto detail = logger::Detail(__FUNCTION__);
+
   // ParseTreeの構築
   DefinitionContainer<hydla::symbolic_expression::ConstraintDefinition> constraint_definition;
   DefinitionContainer<hydla::symbolic_expression::ProgramDefinition>    program_definition;
@@ -49,7 +49,6 @@ void ParseTree::parse(std::istream& stream)
       expression_list_definition,
       program_list_definition
   );
-  
   HYDLA_LOGGER_DEBUG("\n--- Parse Tree ---\n", *this);
   HYDLA_LOGGER_DEBUG("\n--- Constraint Definition ---\n", constraint_definition);
   HYDLA_LOGGER_DEBUG("\n--- Program Definition ---\n",    program_definition);
@@ -172,11 +171,8 @@ std::ostream& ParseTree::dump(std::ostream& s) const
   
 
   s << "--- variables ---\n";
-  BOOST_FOREACH(const variable_map_t::value_type& i, 
-                variable_map_) 
-  {
-    s << i.first << " : " << i.second << "\n";
-  }
+  for(auto i : variable_map_)
+    s << i.first << " : " << i.second << endl;
 
   return s;
 }

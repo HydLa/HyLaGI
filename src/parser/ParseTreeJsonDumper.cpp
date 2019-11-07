@@ -31,13 +31,13 @@ std::ostream& ParseTreeJsonDumper::dump(std::ostream& s, const symbolic_expressi
   return s;
 }
 
-void ParseTreeJsonDumper::dump_node(boost::shared_ptr<FactorNode> node)
+void ParseTreeJsonDumper::dump_node(std::shared_ptr<FactorNode> node)
 {
   // set the type of current node
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
 }
 
-void ParseTreeJsonDumper::dump_node(boost::shared_ptr<UnaryNode> node)
+void ParseTreeJsonDumper::dump_node(std::shared_ptr<UnaryNode> node)
 {
   // set the type of current node
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
@@ -50,7 +50,7 @@ void ParseTreeJsonDumper::dump_node(boost::shared_ptr<UnaryNode> node)
   accept(node->get_child());
 }
 
-void ParseTreeJsonDumper::dump_node(boost::shared_ptr<BinaryNode> node)
+void ParseTreeJsonDumper::dump_node(std::shared_ptr<BinaryNode> node)
 {
   // set the type of current node
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
@@ -69,7 +69,7 @@ void ParseTreeJsonDumper::dump_node(boost::shared_ptr<BinaryNode> node)
   accept(node->get_rhs());
 }
 
-void ParseTreeJsonDumper::dump_node(boost::shared_ptr<VariadicNode> node)
+void ParseTreeJsonDumper::dump_node(std::shared_ptr<VariadicNode> node)
 {
   // set the type of current node
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
@@ -90,364 +90,369 @@ void ParseTreeJsonDumper::dump_node(boost::shared_ptr<VariadicNode> node)
 }
 
 // 制約定義
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ConstraintDefinition> node)  
+void ParseTreeJsonDumper::visit(std::shared_ptr<ConstraintDefinition> node)  
 {
   dump_node(node);
 }
 
 // プログラム定義
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramDefinition> node)     
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramDefinition> node)     
 {
   dump_node(node);
 }
 
 // 制約呼び出し
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ConstraintCaller> node)      
+void ParseTreeJsonDumper::visit(std::shared_ptr<ConstraintCaller> node)      
 {
   current_->get<object>()["name"] = value{ node->get_name() };
   dump_node(node);
 }
 
 // プログラム呼び出し
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramCaller> node)         
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramCaller> node)         
 {
   dump_node(node);
 }
 
 // 制約式
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Constraint> node)            
+void ParseTreeJsonDumper::visit(std::shared_ptr<Constraint> node)            
 {
   dump_node(node);
 }
 
 // Ask制約
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Ask> node)                   
+void ParseTreeJsonDumper::visit(std::shared_ptr<Ask> node)                   
 {
   dump_node(node);
 }
 
 // Tell制約
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Tell> node)                  
+void ParseTreeJsonDumper::visit(std::shared_ptr<Tell> node)                  
 {
   dump_node(node);
 }
 
 // 算術単項演算子
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Negative> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Negative> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Positive> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Positive> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Equal> node)                 
+void ParseTreeJsonDumper::visit(std::shared_ptr<Equal> node)                 
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<UnEqual> node)               
+void ParseTreeJsonDumper::visit(std::shared_ptr<UnEqual> node)               
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Less> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Less> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<LessEqual> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<LessEqual> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Greater> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Greater> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<GreaterEqual> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<GreaterEqual> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Plus> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Plus> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Subtract> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Subtract> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Times> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Times> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Divide> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Divide> node)
 {
   dump_node(node);
 }
 
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Power> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Power> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<LogicalAnd> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<LogicalAnd> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<LogicalOr> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<LogicalOr> node)
 {
   dump_node(node);
 }  
 
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Not> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Not> node)
 {
   dump_node(node);
 }  
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Weaker> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Weaker> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Parallel> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Parallel> node)
 {
   dump_node(node);
 }
   
 // 時相演算子
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Always> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Always> node)
 {
   dump_node(node);
 }
   
 // 微分
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Differential> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Differential> node)
 {
   dump_node(node);
 }
 
 // 左極限
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Previous> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Previous> node)
 {
   dump_node(node);
 }
 
 //Print 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Print> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Print> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<PrintPP> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<PrintPP> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<PrintIP> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<PrintIP> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Scan> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Scan> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Exit> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Exit> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Abort> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Abort> node)
 {
   dump_node(node);
 }
 // SystemVariable
-void ParseTreeJsonDumper::visit(boost::shared_ptr<SVtimer> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<SVtimer> node)
 {
   dump_node(node);
 }
 // 関数
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Function> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Function> node)
 {
   dump_node(node);
 }
-void ParseTreeJsonDumper::visit(boost::shared_ptr<UnsupportedFunction> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<UnsupportedFunction> node)
 {
   dump_node(node);
 }
 
 // 円周率
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Pi> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Pi> node)
 {
   dump_node(node);
 }
 
 // 自然対数の底
-void ParseTreeJsonDumper::visit(boost::shared_ptr<E> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<E> node)
 {
   dump_node(node);
 }
 
 // True
-void ParseTreeJsonDumper::visit(boost::shared_ptr<True> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<True> node)
 {
   dump_node(node);
 }
 
 // False
-void ParseTreeJsonDumper::visit(boost::shared_ptr<False> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<False> node)
 {
   dump_node(node);
 }
 
 // 変数
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Variable> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Variable> node)
 {
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
   current_->get<object>()["name"] = value{ node->get_name() };
 }
 
 // 数字
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Number> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Number> node)
 {
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
   current_->get<object>()["value"] = value{ node->get_number() };
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Float> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Float> node)
 {
   current_->get<object>()["type"] = value{ node->get_node_type_name() };
   current_->get<object>()["value"] = value{ node->get_number() };
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ImaginaryUnit> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ImaginaryUnit> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Infinity> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Infinity> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Parameter> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Parameter> node)
 {
   dump_node(node);
 }
 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<SymbolicT> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<SymbolicT> node)
 {
   dump_node(node);
 }
 
 // ExpressionList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ExpressionList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ExpressionList> node)
 {
   dump_node(node);
 }
 
 // ConditionalExpressionList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ConditionalExpressionList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ConditionalExpressionList> node)
 {
   dump_node(node);
 }
 
 // ProgramList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramList> node)
 {
   dump_node(node);
 }
 
 // ConditionalProgramList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ConditionalProgramList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ConditionalProgramList> node)
 {
   dump_node(node);
 }
 
 // EachElement
-void ParseTreeJsonDumper::visit(boost::shared_ptr<EachElement> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<EachElement> node)
 {
   dump_node(node);
 }
 
 // DifferentVariable
-void ParseTreeJsonDumper::visit(boost::shared_ptr<DifferentVariable> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<DifferentVariable> node)
 {
   dump_node(node);
 }
 
 // ExpressionListElement 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ExpressionListElement> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ExpressionListElement> node)
 {
   dump_node(node);
 }
 
 // ExpressionListCaller
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ExpressionListCaller> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ExpressionListCaller> node)
 {
   dump_node(node);
 }
 
 // ProgramListElement 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramListElement> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramListElement> node)
 {
   dump_node(node);
 }
 
 // ExpressionListDefinition
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ExpressionListDefinition> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ExpressionListDefinition> node)
 {
   dump_node(node);
 }
 
 // ProgramListDefinition
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramListDefinition> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramListDefinition> node)
 {
   dump_node(node);
 }
 
 // ProgramListCaller 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<ProgramListCaller> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<ProgramListCaller> node)
 {
   dump_node(node);
 }
 
 // Union 
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Union> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Union> node)
 {
   dump_node(node);
 }
 
 // Intersection
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Intersection> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Intersection> node)
 {
   dump_node(node);
 }
 
 // Range
-void ParseTreeJsonDumper::visit(boost::shared_ptr<Range> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<Range> node)
 {
   dump_node(node);
 }
 
 // SizeOfList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<SizeOfList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<SizeOfList> node)
 {
   dump_node(node);
 }
 
 // SumOfList
-void ParseTreeJsonDumper::visit(boost::shared_ptr<SumOfList> node)
+void ParseTreeJsonDumper::visit(std::shared_ptr<SumOfList> node)
 {
   dump_node(node);
 }
 
+// MulOfList
+void ParseTreeJsonDumper::visit(std::shared_ptr<MulOfList> node)
+{
+  dump_node(node);
+}
 } //namespace parser
 } //namespace hydla

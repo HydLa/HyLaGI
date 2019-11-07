@@ -1,13 +1,13 @@
 #pragma once
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include "../symbolic_expression/Node.h"
 #include "PhaseResult.h"
 
-
-namespace hydla{
-namespace simulator{
+namespace hydla {
+namespace simulator {
 
 class AutomatonNode;
 typedef hydla::symbolic_expression::node_sptr              node_sptr;
@@ -26,6 +26,7 @@ public:
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
   int peripheries;
+	bool node_vm_write;
   bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
@@ -39,7 +40,6 @@ public:
   void set_peripheries(int num);
   void dump(std::ostream &ost = std::cout);
 };
-
 
 class Automaton
 {
@@ -62,5 +62,5 @@ private:
   void get_nodes(AutomatonNode *node, std::list<AutomatonNode *> &result_list);
 };
 
-}
-}
+} // namespace simulator
+} // namespace hydla

@@ -29,27 +29,27 @@ node_sptr Parser::compare_expression(){
         if((rhs = expression())){
           switch(token){
             case LESS:
-              lhs = boost::shared_ptr<Less>(new Less(lhs,rhs));
+              lhs = std::shared_ptr<Less>(new Less(lhs,rhs));
               break;
             case LESS_EQUAL:
-              lhs = boost::shared_ptr<LessEqual>(new LessEqual(lhs,rhs));
+              lhs = std::shared_ptr<LessEqual>(new LessEqual(lhs,rhs));
               break;
             case GREATER:
-              lhs = boost::shared_ptr<Greater>(new Greater(lhs,rhs));
+              lhs = std::shared_ptr<Greater>(new Greater(lhs,rhs));
               break;
             case GREATER_EQUAL:
-              lhs = boost::shared_ptr<GreaterEqual>(new GreaterEqual(lhs,rhs));
+              lhs = std::shared_ptr<GreaterEqual>(new GreaterEqual(lhs,rhs));
               break;
             case EQUAL:
-              lhs = boost::shared_ptr<Equal>(new Equal(lhs,rhs));
+              lhs = std::shared_ptr<Equal>(new Equal(lhs,rhs));
               break;
             case NOT_EQUAL:
-              lhs = boost::shared_ptr<UnEqual>(new UnEqual(lhs,rhs));
+              lhs = std::shared_ptr<UnEqual>(new UnEqual(lhs,rhs));
               break;
             default: break;
           }
           if(!ret) ret = lhs;
-          else ret = boost::shared_ptr<LogicalAnd>(new LogicalAnd(ret,lhs));
+          else ret = std::shared_ptr<LogicalAnd>(new LogicalAnd(ret,lhs));
           lhs = rhs;
         }else{
           error_occurred(lexer.get_current_position(), "expected expression after \""+op_token+"\"");
@@ -94,10 +94,10 @@ node_sptr Parser::arithmetic(){
       if((tmp = arith_term())){
         switch(token){
           case PLUS:
-            ret = boost::shared_ptr<Plus>(new Plus(ret, tmp));
+            ret = std::shared_ptr<Plus>(new Plus(ret, tmp));
             break;
           case MINUS:
-            ret = boost::shared_ptr<Subtract>(new Subtract(ret, tmp));
+            ret = std::shared_ptr<Subtract>(new Subtract(ret, tmp));
             break;
           default:
             break;
@@ -131,10 +131,10 @@ node_sptr Parser::arith_term(){
       if((tmp = unary())){
         switch(token){
           case MUL:
-            ret = boost::shared_ptr<Times>(new Times(ret, tmp));
+            ret = std::shared_ptr<Times>(new Times(ret, tmp));
             break;
           case DIVIDE:
-            ret = boost::shared_ptr<Divide>(new Divide(ret, tmp));
+            ret = std::shared_ptr<Divide>(new Divide(ret, tmp));
             break;
           default:
             break;
@@ -165,9 +165,9 @@ node_sptr Parser::unary(){
     if((ret = power())){
       switch(token){
         case PLUS:
-          return boost::shared_ptr<Positive>(new Positive(ret));
+          return std::shared_ptr<Positive>(new Positive(ret));
         case MINUS:
-          return boost::shared_ptr<Negative>(new Negative(ret));
+          return std::shared_ptr<Negative>(new Negative(ret));
         default:
           break;
       }
@@ -192,7 +192,7 @@ node_sptr Parser::power(){
       std::string op_token = lexer.get_current_token_string();
       node_sptr tmp;
       // power
-      if((tmp = power())){ return boost::shared_ptr<Power>(new Power(ret,tmp));}
+      if((tmp = power())){ return std::shared_ptr<Power>(new Power(ret,tmp));}
       else{
         error_occurred(lexer.get_current_position(), "expected expression after \""+op_token+"\"");
       }
@@ -213,7 +213,7 @@ node_sptr Parser::prev(){
     // "-"
     if(lexer.get_token() == MINUS){
       // [^factor]
-      if(!(factor())){ return boost::shared_ptr<Previous>(new Previous(ret));}
+      if(!(factor())){ return std::shared_ptr<Previous>(new Previous(ret));}
     }
     lexer.set_current_position(position);
     return ret;
@@ -230,7 +230,7 @@ node_sptr Parser::diff(){
     position_t position = lexer.get_current_position();
     // "'"*
     while(lexer.get_token() == DIFFERENTIAL){
-      ret = boost::shared_ptr<Differential>(new Differential(ret));
+      ret = std::shared_ptr<Differential>(new Differential(ret));
       position = lexer.get_current_position();
     }
     lexer.set_current_position(position);
@@ -243,6 +243,7 @@ node_sptr Parser::diff(){
 /**
  * factor := constant 
  *         | sum_of_list
+ *         | mul_of_list
  *         | (fanction | unsupported_function) "(" (expression ("," expression)* )? ")"
  *         | parameter
  *         | variable
@@ -259,8 +260,10 @@ node_sptr Parser::factor(){
   if((ret = constant())) return ret;
   // sum_of_list
   if((ret = sum_of_list())){ return ret;}
+  // mul_of_list
+  if((ret = mul_of_list())){ return ret;}
 
-  boost::shared_ptr<VariadicNode> func;
+  std::shared_ptr<VariadicNode> func;
   // (function | unsupported_function) "(" (expression ("," expression)* )? ")"
   if((func = function()) || (func = unsupported_function())){
     // "("
@@ -326,20 +329,25 @@ std::string Parser::variable_name(){
 /**
  * variable := variable_name
  */
-boost::shared_ptr<Variable> Parser::variable(){
+std::shared_ptr<Variable> Parser::variable(){
   std::string name;
   // identifier
   position_t position = lexer.get_current_position();
-  if((name = variable_name()) != ""){
+  name = variable_name();
+  if (name.find('_') != std::string::npos) {
+    std::cout<<"ERROR: variable names containing under-scores are invalid ("<<name<<")\n";
+    std::exit(1);
+  }
+  if(name != ""){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token () != LEFT_BOX_BRACKETS){
       lexer.set_current_position(tmp_position);
-      if(name == "t") return boost::shared_ptr<Variable>(new SymbolicT());
-      return boost::shared_ptr<Variable>(new Variable(name));
+      if(name == "t") return std::shared_ptr<Variable>(new SymbolicT());
+      return std::shared_ptr<Variable>(new Variable(name));
     }
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<Variable>();
+  return std::shared_ptr<Variable>();
 }
 
 /// parameter := "p" "[" variable "," integer "," integer "]"
@@ -352,7 +360,7 @@ node_sptr Parser::parameter(){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == LEFT_BOX_BRACKETS){
       tmp_position = lexer.get_current_position();
-      boost::shared_ptr<Variable> var;
+      std::shared_ptr<Variable> var;
       int first,second;
       // variable
       if((var = variable())){
@@ -373,7 +381,7 @@ node_sptr Parser::parameter(){
                 tmp_position = lexer.get_current_position();
                 // "]"
                 if(lexer.get_token() == RIGHT_BOX_BRACKETS){
-                  return boost::shared_ptr<Parameter>(new Parameter(var->get_name(),first,second));
+                  return std::shared_ptr<Parameter>(new Parameter(var->get_name(),first,second));
                 }else{
                   error_occurred(tmp_position, "expected \"]\"");
                 }
@@ -420,10 +428,10 @@ node_sptr Parser::number(){
         if(dot_appear)divided_by += "0";
       }
     }
-    return boost::shared_ptr<Divide>(new Divide(boost::shared_ptr<Number>(new Number(num)), boost::shared_ptr<Number>(new Number(divided_by))));
+    return std::shared_ptr<Divide>(new Divide(std::shared_ptr<Number>(new Number(num)), std::shared_ptr<Number>(new Number(divided_by))));
   }
   if(token == INTEGER){ 
-    return boost::shared_ptr<Number>(new Number(lexer.get_current_token_string()));
+    return std::shared_ptr<Number>(new Number(lexer.get_current_token_string()));
   }
   lexer.set_current_position(position);
   return node_sptr();

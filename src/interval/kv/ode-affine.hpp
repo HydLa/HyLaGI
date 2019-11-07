@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2018 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef ODE_AFFINE_HPP
@@ -26,6 +26,15 @@
 #ifndef ODE_FAST
 #define ODE_FAST 1
 #endif
+
+#ifndef ODE_RESTART_RATIO
+#define ODE_RESTART_RATIO 1
+#endif
+
+#ifndef ODE_COEF_MID
+#define ODE_CORF_MID 0
+#endif
+
 
 
 namespace kv {
@@ -64,6 +73,9 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 	T radius, radius_tmp;
 	T tolerance;
 	int n_rad;
+	#if ODE_RESTART_RATIO == 1
+	T max_ratio;
+	#endif
 
 	int ret_val;
 	interval<T> end2;
@@ -113,13 +125,15 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 		for (j = p.order; j>=1; j--) {
 			m = 0.;
 			for (i=0; i<n; i++) {
-				// m = std::max(m, norm(to_interval(x(i).v(j))));
+				#if ODE_COEF_MID == 1
 				using std::abs;
 				m = std::max(m, abs(x(i).v(j).get_mid()));
+				#else
+				m = std::max(m, norm(to_interval(x(i).v(j))));
+				#endif
 			}
 			if (m == 0.) continue;
-			radius_tmp = std::pow((double)m, 1./j);
-			if (radius_tmp > radius) radius = radius_tmp;
+			radius = std::max(radius, (T)std::pow((double)m, 1./j));
 			n_rad++;
 			if (n_rad == 2) break;
 		}
@@ -139,6 +153,7 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 			end2 = mid(start + radius);
 			if (end2 >= end.lower()) {
 				end2 = end;
+				radius = mid(end2 - start);
 				ret_val = 2;
 			} else {
 				ret_val = 1;
@@ -158,9 +173,15 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 			w = f(z, t);
 		}
 		catch (std::domain_error& e) {
-			 if (restart < p.restart_max) {
+			 if (p.autostep && restart < p.restart_max) {
 				psa< affine<T> >::use_history() = false;
+				if (p.verbose == 1) {
+					std::cout << "ode: radius changed: " << radius;
+				}
 				radius *= 0.5;
+				if (p.verbose == 1) {
+					std::cout << " -> " << radius << "\n";
+				}
 				restart++;
 				continue;
 			} else {
@@ -198,19 +219,20 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 			#endif
 		}
 
-		if (p.autostep && resized == false) {
+		if (p.autostep && ret_val != 2 && resized == false) {
 			resized = true;
-			m = 0.;
+			m = (std::numeric_limits<T>::min)();
 			for (i=0; i<n; i++) {
 				m = std::max(m, rad(eval(z(i), (affine<T>)deltat)) - rad(init(i)));
 			}
 			m = m / tolerance;
-			if (restart > 0) {
-				radius /= std::max(1., std::pow((double)m, 1. / p.order));
+			radius_tmp = radius / std::pow((double)m, 1. / p.order);
+			if (radius_tmp >= radius && restart > 0) {
+				// do nothing, not continue
 			} else {
-				radius /= std::pow((double)m, 1. / p.order);
+				radius = radius_tmp;
+				continue;
 			}
-			continue;
 		}
 
 		w = f(z, t);
@@ -221,15 +243,24 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 		w = init + w;
 
 		flag = true;
+		#if ODE_RESTART_RATIO == 1
+		max_ratio = 0.;
+		#endif
 		for (i=0; i<n; i++) {
 			#ifdef ODE_AFFINE_SIMPLE
 			s2i = to_interval(w(i).v(p.order));
+			#if ODE_RESTART_RATIO == 1
+			max_ratio = std::max(max_ratio, width(s2i) / width(s2i_save(i)));
+			#endif
 			flag = flag && subset(s2i, s2i_save(i));
 			s2i_save(i) = s2i;
 			w(i).v(p.order) = (affine<T>)s2i;
 			#else
 			split(w(i).v(p.order), maxnum_save, s1, s2);
 			s2i = to_interval(s2);
+			#if ODE_RESTART_RATIO == 1
+			max_ratio = std::max(max_ratio, width(to_interval(s1 - s1_save(i)) + s2i) / width(s2i_save(i)));
+			#endif
 			flag = flag && subset(to_interval(s1 - s1_save(i)) + s2i, s2i_save(i));
 			s1_save(i) = s1;
 			s2i_save(i) = s2i;
@@ -242,7 +273,17 @@ ode_affine(F f, ub::vector< affine<T> >& init, const interval<T>& start, interva
 			ret_val = 0;
 			break;
 		}
+		if (p.verbose == 1) {
+			std::cout << "ode: radius changed: " << radius;
+		}
+		#if ODE_RESTART_RATIO == 1
+		radius *= std::max(std::min((T)0.5, (T)0.5 / max_ratio), (T)0.125);
+		#else
 		radius *= 0.5;
+		#endif
+		if (p.verbose == 1) {
+			std::cout << " -> " << radius << "\n";
+		}
 		restart++;
 	}
 
@@ -329,8 +370,9 @@ odelong_affine(
 	int s = init.size();
 	ub::vector< affine<T> > x, x1;
 	interval<T> t, t1;
-	int r;
+	int ret_ode;
 	int ret_val = 0;
+	bool ret_callback;
 
 	ub::vector< psa< interval<T> > > result_tmp;
 
@@ -338,12 +380,13 @@ odelong_affine(
 	x = init;
 	t = start;
 	p.set_autostep(true);
+
 	while (1) {
 		x1 = x;
 		t1 = end;
 
-		r = ode_affine(f, x1, t, t1, p, &result_tmp);
-		if (r == 0) {
+		ret_ode = ode_affine(f, x1, t, t1, p, &result_tmp);
+		if (ret_ode == 0) {
 			if (ret_val == 1) {
 				init = x1;
 				end = t;
@@ -358,10 +401,17 @@ odelong_affine(
 
 		callback(t, t1, to_interval(x), to_interval(x1), result_tmp);
 		
-		if (r == 2) {
+		if (ret_callback == false) {
+			init = x1;
+			end = t1;
+			return 3;
+		}
+
+		if (ret_ode == 2) {
 			init = x1;
 			return 2;
 		}
+
 		t = t1;
 		x = x1;
 	}
@@ -382,21 +432,19 @@ odelong_affine(
 	ub::vector< affine<T> > x;
 	int maxnum_save;
 	int r;
-	interval<T> end2 = end;
 
 	maxnum_save = affine<T>::maxnum();
 	affine<T>::maxnum() = 0;
 
 	x = init;
 
-	r = odelong_affine(f, x, start, end2, p, callback);
+	r = odelong_affine(f, x, start, end, p, callback);
 
 	affine<T>::maxnum() = maxnum_save;
 
 	if (r == 0) return 0;
 
 	for (i=0; i<s; i++) init(i) = to_interval(x(i));
-	if (r == 1) end = end2;
 
 	return r;
 }

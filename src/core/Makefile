@@ -1,11 +1,12 @@
 TARGET	 := ../../bin/hylagi
 
-LIB_DIRS := backend simulator hierarchy parser common io symbolic_expression utility interval
+LIB_DIRS := backend simulator hierarchy parser common io interval debug symbolic_expression utility
 
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica
 INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
+INCLUDES +=   -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib
@@ -29,7 +30,7 @@ endif
 
 CXX_OPT  += 
 
-
+DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\"
 
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 

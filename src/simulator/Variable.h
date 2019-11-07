@@ -6,27 +6,28 @@
 
 namespace hydla {
 namespace simulator {
-
-class Variable {
+	
+class Variable
+{
 public:
   std::string  name;
   int differential_count;
   
-  Variable(const std::string& n, const int& d):name(n), differential_count(d){}
+  Variable(const std::string& n, const int& d) : name(n), differential_count(d) {}
   /**
    * create Variable from string (like x')
    */
   Variable(const std::string& n)
   {
     std::string::size_type index = n.find_first_of("'");
-    if(index != std::string::npos)
+    if (index != std::string::npos)
     {
       name = n.substr(0, index);
       differential_count = n.length() - index;
       // check the correctness of given string
-      for(;index < n.length(); index++)
+      for (;index < n.length(); index++)
       {
-        if(n[index] != '\'') throw std::runtime_error("invalid name of variable: " + n);
+        if (n[index] != '\'') throw std::runtime_error("invalid name of variable: " + n);
       }
     }
     else
@@ -35,7 +36,8 @@ public:
       differential_count = 0;
     }
   }
-  Variable():name(""), differential_count(0){}
+
+  Variable() : name(""), differential_count(0) {}
 
   std::string get_name() const
   {
@@ -53,7 +55,7 @@ public:
   std::ostream& dump(std::ostream& s) const
   {
     s << name;
-    for(int i=0; i<differential_count; i++) s << "'";
+    for (int i=0; i<differential_count; i++) s << "'";
     return s;
   }
   
@@ -67,7 +69,7 @@ public:
   friend bool operator<(const Variable& lhs, 
                         const Variable& rhs)
   {
-    if(lhs.differential_count == rhs.differential_count) {
+    if (lhs.differential_count == rhs.differential_count) {
       return lhs.name < rhs.name;
     }
     return lhs.differential_count < rhs.differential_count;
@@ -78,7 +80,6 @@ public:
   {
     return (lhs.name == rhs.name) && (lhs.differential_count == rhs.differential_count);
   }
-
 
   friend bool operator!=(const Variable& lhs, 
                         const Variable& rhs)
@@ -93,13 +94,11 @@ public:
   }
 };
 
-
-
-class VariableComparator { // simple comparison class
-   public:
+// simple comparison class
+class VariableComparator {
+public:
    bool operator()(const Variable x,const Variable y) const { return x < y; }
 };
-
+ 
 } // namespace simulator
 } // namespace hydla 
-

@@ -328,7 +328,7 @@ itvd AffineMixedValue::to_interval() const
 {
   if(type == INTEGER)return itvd(integer);
   else if(type == INTERVAL) return interval;
-  else return affine_value.get_interval();
+  else return affine_value.as_interval();
 }
 
 affine_t AffineMixedValue::to_affine() const

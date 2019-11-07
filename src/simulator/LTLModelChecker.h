@@ -8,12 +8,12 @@
 namespace hydla {
 namespace simulator {
 
-typedef boost::shared_ptr<hydla::simulator::ConsistencyChecker>  consistency_checker_t;
-typedef boost::shared_ptr<hydla::symbolic_expression::Ask>                       ask_t;
+typedef std::shared_ptr<hydla::simulator::ConsistencyChecker>  consistency_checker_t;
+typedef std::shared_ptr<hydla::symbolic_expression::Ask>                       ask_t;
 typedef std::set<ask_t >                                                        asks_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
+typedef std::set<std::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
 typedef hydla::hierarchy::ModuleSet                                       module_set_t;
-typedef boost::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
+typedef std::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                         phase_result_sptrs_t;
 typedef std::list<phase_result_sptr_t >                                   phase_list_t;
 typedef hydla::simulator::Value                                                value_t;
@@ -35,15 +35,17 @@ typedef std::pair<LTLNode*,node_sptr>         ltl_edge_t;
 typedef std::vector<ltl_edge_t>          ltl_edge_list_t;
 
 
-typedef struct current_checking_node{
+typedef struct current_checking_node
+{
   LTLNode* node;
   ltl_node_list_t created_nodes;
   ltl_path_list_t acceptance_path_list;
 } current_checking_node_t;
+
 typedef std::vector<current_checking_node_t> current_checking_node_list_t;
 
-
-class LTLModelChecker: public Simulator{
+class LTLModelChecker: public Simulator
+{
 public:
   LTLModelChecker(Opts &opts);
   virtual ~LTLModelChecker();
@@ -51,6 +53,7 @@ public:
    * 与えられた解候補モジュール集合を元にシミュレーション実行をおこなう
    */
   virtual phase_result_sptr_t simulate();
+
 private:
   void LTLsearch(phase_result_sptr_t current,current_checking_node_list_t checking_list,phase_list_t phase_list);
   current_checking_node_list_t transition(current_checking_node_list_t checking_list,phase_result_sptr_t phase);
@@ -71,8 +74,8 @@ private:
   /* phase_list_t get_path(phase_result_sptr_t phase); */
 
   io::SymbolicTrajPrinter printer;
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  std::shared_ptr<ConsistencyChecker> consistency_checker;
 };
 
-} // simulator
-} // hydla
+} // namespace simulator
+} // namespace hydla

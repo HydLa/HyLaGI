@@ -36,12 +36,10 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
-optTimeConstraint = 1;
-optSimplifyLevel = 1;
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,
-  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[Reduce::ztest], HoldForm[Minimize::ztest], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
+  checkMessage := (If[Length[Select[$MessageList, (FreeQ[{HoldForm[Solve::incnst], HoldForm[Solve::ifun], HoldForm[Minimize::ztest1], HoldForm[Reduce::ztest1], HoldForm[Reduce::ztest], HoldForm[Minimize::ztest], HoldForm[DSolve::bvnul], HoldForm[General::stop]}, #])&] ] > 0, Abort[]]),
   checkMessage := (If[Length[$MessageList] > 0, Abort[] ])
 ];
 
@@ -243,7 +241,8 @@ applyList[reduceSol_] :=
 applyListToOr[reduceSol_] :=
   If[Head[reduceSol] === Or, List @@ reduceSol, List[reduceSol]];
 
-
+consToDoubleList[expr_] :=
+  If[Head[expr]===Or, List@@Map[applyList[#]&, expr], {applyList[expr]}]
 
 (* And ではなくandでくくる。条件式の数が１つの場合でも特別扱いしたくないため *)
 And2and[reduceSol_] :=
@@ -268,11 +267,19 @@ getReverseRelop[relop_] := Switch[relop,
 
 variablePrefix = "u";
 
-
+(* optSimplifyLevel の値に応じた簡約化関数を呼び出す。optTimeConstraint で指定された秒数が経過した場合、簡約化前の値を返す *)
 Switch[optSimplifyLevel,
-    0, timeConstrainedSimplify[expr_] := expr;
-    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr];
-    _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr];
+    0, timeConstrainedSimplify[expr_] := expr,
+    1, timeConstrainedSimplify[expr_] := TimeConstrained[Simplify[expr], optTimeConstraint, expr],
+    _, timeConstrainedSimplify[expr_] := TimeConstrained[FullSimplify[expr], optTimeConstraint, expr]
 ];
+
+Switch[optDSolveMethod,
+    0, dsolve[expr_, vars_] := solveByDSolve[expr, vars],
+    _, dsolve[expr_, vars_] := solveByDSolveAndSolve[expr, vars]
+];
+
+solveOverRorC[consToSolve_,vars_] :=
+  If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
 
 derivativePrefix = "d";

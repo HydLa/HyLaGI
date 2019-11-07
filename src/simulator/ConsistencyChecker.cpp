@@ -11,7 +11,6 @@
 #include "Timer.h"
 
 using namespace std;
-using namespace boost;
 
 namespace hydla
 {
@@ -40,7 +39,7 @@ void ConsistencyChecker::send_range_constraint(const Variable &var, const variab
   else
   {
     // replace variables in the range with their values
-    VariableReplacer v_replacer(vm);
+    VariableReplacer v_replacer(vm, false);
     v_replacer.replace_range(range);
     if(range.get_upper_cnt())
     {
@@ -90,37 +89,20 @@ void ConsistencyChecker::add_continuity(VariableFinder& finder, const PhaseType 
   map<string, int> vm;
   variable_set_t variable_set;
 
-
   // get variables assumed to be continuous
+  if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
   if(phase == POINT_PHASE)
   {
-    if(constraint_for_default_continuity.get())finder.visit_node(constraint_for_default_continuity);
     variable_set = finder.get_variable_set();
     fmt += "n";
   }
   else
   {
-    fmt += "z";
     variable_set = finder.get_all_variable_set();
+    fmt += "z";
   }
-
   // create a map that projects variables to orders of those derivatives
   auto dm = get_differential_map(variable_set);
-  if(phase == INTERVAL_PHASE && constraint_for_default_continuity.get())
-  {
-    // assuming default continuity for variables in constraints
-    VariableFinder tmp_finder;
-    tmp_finder.visit_node(constraint_for_default_continuity);
-    auto tmp_dm = get_differential_map(tmp_finder.get_all_variable_set());
-    for(auto entry: tmp_dm)
-    {
-      for(int i = 0; i <= entry.second;i++){
-        variable_t var(entry.first, i);
-        send_init_equation(var, fmt);
-      }
-    }
-  }
-
   for(auto dm_entry : dm)
   {
     for(int i = 0; i < dm_entry.second;i++){
@@ -189,6 +171,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   const constraint_t &constraint_for_default_continuity,
   const asks_t &unknown_asks,
   const PhaseType &phase,
+  bool following_step,
   profile_t &profile
   )
 {
@@ -223,7 +206,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   {
     finder.visit_node(constraint);
   }
-  add_continuity(finder, phase, constraint_for_default_continuity);
+  if(following_step) add_continuity(finder, phase, constraint_for_default_continuity);
   backend->call("addConstraint", true, 1, (phase == POINT_PHASE)?"csn":"cst", "", &constraint_store);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
@@ -241,7 +224,7 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   
   backend->call("resetConstraintForVariable", false, 0, "", "");
 
-  string fmt = (phase==POINT_PHASE)?"mv0n":"mv0t";
+  string fmt = (phase==POINT_PHASE)?"mvn":"mvt";
   backend->call("addConstraint", true, 1, fmt.c_str(), "", &vm);
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
@@ -312,7 +295,7 @@ CheckConsistencyResult &result,
   if(!tmp_result.consistent_store.consistent())
   {
     result.consistent_store.set_consistency(false);
-    HYDLA_LOGGER_DEBUG(""); inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
+    inconsistent_module_sets.push_back(relation_graph.get_related_modules(constraints));
     inconsistent_constraints.push_back(constraints);
   }
   else
@@ -405,7 +388,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(RelationGraph &rela
     }
   }
 
-vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
+  vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_vector(difference_constraints, related_constraints_list, module_set_vector);
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for(auto ask : relation_graph.get_active_asks())HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
   for(int i = 0; i < related_constraints_list.size(); i++)
@@ -413,6 +396,7 @@ vector<module_set_t> module_set_vector;  relation_graph.get_related_constraints_
     HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
                        "]: ", related_constraints_list[i]);
     check_consistency_foreach(related_constraints_list[i], relation_graph, result, phase, profile, following_step);
+    if(!result.consistent_store.consistent()) break;
     if(result.consistent_store.consistent() && !result.inconsistent_store.empty())break;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2019 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef AFFINE_HPP
@@ -14,6 +14,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 #include <map> //@hylagi
 
@@ -100,15 +101,13 @@ template <class T> class affine {
   friend inline T rad(const affine& x) {
     int i, xs;
     T r(0.);
-    T tmp;
 
     xs = x.a.size();
 
     rop<T>::begin();
     for (i=1; i<xs; i++) {
-      // r = rop<T>::add_up(r, abs(x.a(i)));
-      tmp = (x.a(i) >= 0.) ? x.a(i) : -x.a(i);
-      r = rop<T>::add_up(r, tmp);
+      using std::abs;
+      r = rop<T>::add_up(r, abs(x.a(i)));
     }
     #if AFFINE_SIMPLE >= 1
     r = rop<T>::add_up(r, x.er);
@@ -129,7 +128,7 @@ template <class T> class affine {
     return interval<T>(t2, t3);
   }
 
-  interval<T> get_interval() const{
+  interval<T> as_interval() const{ // @hylagi modified
     T t1, t2, t3;
     t1 = rad(*this);
     rop<T>::begin();
@@ -138,7 +137,6 @@ template <class T> class affine {
     rop<T>::end();
     return interval<T>(t2, t3);
   }
-
 
   affine() {
   }
@@ -614,7 +612,8 @@ template <class T> class affine {
     #endif
     #if AFFINE_SIMPLE >= 1
     rop<T>::begin();
-    r.er = rop<T>::add_up(rop<T>::mul_up(x.er, (T)((y >= 0.) ? y : -y)), err);
+    using std::abs;
+    r.er = rop<T>::add_up(rop<T>::mul_up(x.er, T(abs(y))), err);
     rop<T>::end();
     #else
     r.a(maxnum()) = err;
@@ -651,7 +650,8 @@ template <class T> class affine {
     #endif
     #if AFFINE_SIMPLE >= 1
     rop<T>::begin();
-    r.er = rop<T>::add_up(rop<T>::mul_up(y.er, (T)((x >= 0.) ? x : -x)), err);
+    using std::abs;
+    r.er = rop<T>::add_up(rop<T>::mul_up(y.er, T(abs(x))), err);
     rop<T>::end();
     #else
     r.a(maxnum()) = err;
@@ -852,7 +852,8 @@ template <class T> class affine {
 
     #if AFFINE_SIMPLE >= 1
     rop<T>::begin();
-    err = rop<T>::add_up(err, rop<T>::add_up(rop<T>::mul_up((y.a(0) >= 0.) ? y.a(0) : -y.a(0), x.er), rop<T>::mul_up((x.a(0) >= 0.) ? x.a(0) : -x.a(0), y.er)));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::add_up(rop<T>::mul_up(abs(y.a(0)), x.er), rop<T>::mul_up(abs(x.a(0)), y.er)));
     rop<T>::end();
     #endif
 
@@ -937,7 +938,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -990,7 +992,8 @@ template <class T> class affine {
     #if AFFINE_SIMPLE >= 1
     // r.er = x.er / abs(y) + err;
     rop<T>::begin();
-    r.er = rop<T>::add_up(err, rop<T>::div_up(x.er, (T)((y >= 0.) ? y : -y)));
+    using std::abs;
+    r.er = rop<T>::add_up(err, rop<T>::div_up(x.er, T(abs(y))));
     rop<T>::end();
     #else
     r.a(maxnum()) = err;
@@ -1074,7 +1077,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -1137,7 +1141,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -1201,7 +1206,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -1269,7 +1275,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -1336,7 +1343,8 @@ template <class T> class affine {
     err = rop<T>::add_up(err, rop<T>::sub_up(r.a(0), l));
     #if AFFINE_SIMPLE >= 1
     // err += abs(a) * x.er;
-    err = rop<T>::add_up(err, rop<T>::mul_up(((a >= 0.) ? a : -a), x.er));
+    using std::abs;
+    err = rop<T>::add_up(err, rop<T>::mul_up(abs(a), x.er));
     #endif
     rop<T>::end();
 
@@ -1617,6 +1625,7 @@ template <class T> class affine {
 
   friend std::ostream& operator<<(std::ostream& s, const affine& x) {
     int i;
+
     s << "[(" << x.a(0) << ")";
     for (i=1; i<x.a.size(); i++) {
       s << "+(" << x.a(i) << ")e" << i;
@@ -1662,7 +1671,7 @@ template <class T> class affine {
   }
 };
 
-/*
+
 template <class T> inline ub::vector< interval<T> > to_interval(const ub::vector< affine<T> >& x) {
   int s = x.size();
   ub::vector< interval<T> > r;
@@ -1673,7 +1682,7 @@ template <class T> inline ub::vector< interval<T> > to_interval(const ub::vector
 
   return r;
 }
-*/
+
 
 /*
  * epsilon_reduce(x, n, n_limit)
@@ -1700,6 +1709,10 @@ template <class T> class ep_reduce_v {
     using std::abs;
     if (s<2){score = abs(v(0)); return;} // @hylagi
     m1 = abs(v(0));
+    if (s == 1) {
+      score = m1;
+      return;
+    }
     m2 = abs(v(1));
     if (m2 > m1) {
       tmp = m2; m2 = m1; m1 = tmp;
@@ -1727,10 +1740,8 @@ template <class T> inline bool ep_reduce_cmp(ep_reduce_v<T>* a, ep_reduce_v<T>* 
   return a->score > b->score;
 #endif
 }
-
 //template <class T> inline void epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) {
 template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T> >& x, int n, int n_limit = 0) { // @hylagi modified
-    
   int s = x.size();
   int m = affine<T>::maxnum();
   int i, j;
@@ -1739,7 +1750,6 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
   ub::vector< affine<T> > r;
   T tmp;
   std::map<int, int> result_map; // @hylagi
-  
 
   if (n_limit < n) n_limit = n;
 
@@ -1749,7 +1759,6 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
   if (m <= n_limit) return result_map;
   if (n < s) return result_map; // impossible
 
-  
   a.resize(m);
   pa.resize(m);
 
@@ -1766,7 +1775,6 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 
 #ifdef EP_REDUCE_REVERSE
   std::partial_sort(pa.begin(), pa.begin()+m-n+s, pa.end(), ep_reduce_cmp<T>);
-
 #else
   std::partial_sort(pa.begin(), pa.begin()+n-s, pa.end(), ep_reduce_cmp<T>);
 #endif
@@ -1781,7 +1789,6 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
       result_map[pa[m-1-j]->index] = j+1; // @hylagi
 #else
       r(i).a(j+1) = pa[j]->v(i);
-      result_map[pa[j]->index] = j+1; // @hylagi
 #endif
     }
     tmp = 0.;
@@ -1813,35 +1820,61 @@ template <class T> inline std::map<int, int> epsilon_reduce(ub::vector< affine<T
 }
 
 
+
+// simple version of epsilon_reduce
+// keep ep_1...ep_n and "intervalize" epsilons newer than ep_n
+
+template <class T> inline void epsilon_reduce2(ub::vector< affine<T> >& x, int n) {
+  int s = x.size();
+  int i, j;
+  T tmp;
+
+  for (i=0; i<s; i++) {
+    tmp = 0.;
+    rop<T>::begin();
+    for (j=n+1; j<x(i).a.size(); j++) {
+      using std::abs;
+      tmp = rop<T>::add_up(tmp, abs(x(i).a(j)));
+    }
+    #if AFFINE_SIMPLE >= 1
+    tmp = rop<T>::add_up(tmp, x(i).er);
+    #endif
+    rop<T>::end();
+
+    x(i).a.resize(n+1+i+1, true);
+    for (j=0; j<i; j++) {
+      x(i).a(n+1+j) = 0.;
+    }
+    x(i).a(n+1+i) = tmp;
+    #if AFFINE_SIMPLE >= 1
+    x(i).er = 0.;
+    #endif
+  }
+
+  affine<T>::maxnum() = n + s;
+}
+
+
 template <class T> struct constants< affine<T> > {
   static affine<T> pi() {
-    static const affine<T> tmp(
-      "3.1415926535897932384626433832795028841971693993751",
-      "3.1415926535897932384626433832795028841971693993752"
-    );
+    static const affine<T> tmp(constants< interval<T> >::pi());
     return tmp;
   }
 
   static affine<T> e() {
-    static const affine<T> tmp(
-      "2.7182818284590452353602874713526624977572470936999",
-      "2.7182818284590452353602874713526624977572470937000"
-    );
+    static const affine<T> tmp(constants< interval<T> >::e());
     return tmp;
   }
 
   static affine<T> ln2() {
-    static const affine<T> tmp(
-      "0.69314718055994530941723212145817656807550013436025",
-      "0.69314718055994530941723212145817656807550013436026"
-    );
+    static const affine<T> tmp(constants< interval<T> >::ln2());
     return tmp;
   }
   static affine<T> str(const std::string& s) {
-    return affine<T>(s, s);
+    return affine<T>(constants< interval<T> >::str(s));
   }
   static affine<T> str(const std::string& s1, const std::string& s2) {
-    return affine<T>(s1, s2);
+    return affine<T>(constants< interval<T> >::str(s1, s2));
   }
 };
 

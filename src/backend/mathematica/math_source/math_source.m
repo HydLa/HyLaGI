@@ -11,7 +11,7 @@ trySolve[cons_, vars_] :=
         eachCons = consToSolve[[i]];
         If[Head[eachCons] === Equal,
           (* swap lhs and rhs if rhs is variable *)
-          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[1]] == eachCons[[2]])];
+          If[isVariable[eachCons[[2]] ], eachCons = (eachCons[[2]] == eachCons[[1]])];
           If[isVariable[eachCons[[1]] ] && !hasVariable[eachCons[[2]] ],
             trivialCons = trivialCons && eachCons;
             consToSolve = Drop[consToSolve, {i}];
@@ -21,9 +21,10 @@ trySolve[cons_, vars_] :=
         ]
       ]
     ];
+    simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
-      sol = Quiet[Solve[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
-      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
+      sol = Quiet[solveOverRorC[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
+      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && Length[sol[[1]]] > 0 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     If[solved =!= True, sol = And@@consToSolve];
     {trivialCons && sol && inequalities, solved}
@@ -46,7 +47,7 @@ publicMethod[
     debugPrint["assum: ", assum];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
-    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[sol]];
+    resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
     simplePrint[solved, resultConstraint];
     If[solved,
       If[resultConstraint =!= False && (Length[sol] > 0 || sol === True), 
@@ -128,16 +129,25 @@ publicMethod[
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs];
+        sol = exDSolve[Simplify[cons], prevRs, assum];
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
         If[sol === overConstrained,
           toReturnForm[{{False}, {LogicalExpand[pCons]}}],
+          debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
           tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
           simplePrint[tRules];
           substitutedInit = initCons /. prevRs;
-          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
+          debugPrint["hoge"];
+          debugPrint[cons];
+          debugPrint[initCons];
+          debugPrint[prevRs];
+          debugPrint[substitutedInit];
+          debugPrint[tRules];
+          debugPrint[(initCons /. (tRules /. t -> 0))];
+          debugPrint[(substitutedInit /. (tRules /. t -> 0))];
+          If[(initCons /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];
@@ -151,6 +161,7 @@ publicMethod[
               ];
               cpTrue = cpTrue || eachCpTrue
             ];
+			debugPrint["cpFalse", cpFalse];
             cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
             toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
           ]
@@ -220,7 +231,7 @@ publicMethod[
     {map, tmpCons, succeded = false},
 
     If[cons === True, Return[{{}}]];
-    If[cons === False, Return[{}]];    
+    If[cons === False, Return[{}]];
 
     tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
     If[Head[tmpCons] =!= LogicalOr,
@@ -229,14 +240,13 @@ publicMethod[
     simplePrint[tmpCons, succeeded];
     If[!succeeded,
       (* try to solve with parameters *)
-      tmpCons = removeUnnecessaryConstraints[cons, hasVariableOrParameter];
-      tmpCons = Reduce[tmpCons, vars, Reals];
-      tmpCons = removeUnnecessaryConstraints[tmpCons, hasVariable];
-      tmpCons = LogicalExpand[tmpCons];
+      tmpCons = consToDoubleList[cons];
+      debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
+      tmpCons = Union[Flatten[Map[(createMapForEachCons[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
+      debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
+      , tmpCons = applyListToOr[tmpCons];
+      tmpCons = Map[(applyList[#])&, tmpCons];
     ];
-
-    tmpCons = applyListToOr[tmpCons];
-    tmpCons = Map[(applyList[#])&, tmpCons];
     tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
     debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
@@ -246,7 +256,6 @@ publicMethod[
     map
   ]
 ];
-
 
 
 createVariableMapInterval[] := createVariableMapInterval[constraint, prevRules, timeVariables];
@@ -311,19 +320,15 @@ publicMethod[
   createParameterMaps,
   pCons, pars,
   Module[
-    {map},
-    map = removeUnnecessaryConstraints[pCons, hasParameter];
-    map = Reduce[map, pars, Reals];
-    map = removeUnnecessaryConstraints[map, hasParameter];
-    If[map === True,
+    {consList, map},
+    consList = removeUnnecessaryConstraints[pCons, hasParameter];
+    consList = consToDoubleList[consList];
+    map = Union[Flatten[Map[(createMapForEachCons[#, isParameter, {}, getParameters[pCons]])&, consList], 1]];
+    If[map === {{True}},
         {{}},
-      If[map === False,
+      If[map === {{}},
          {},
-         map = LogicalExpand[map];
-         map = applyListToOr[map];
-         map = Map[(applyList[#])&, map];
-         map = Map[(adjustExprs[#, isParameter])&, map];
-         debugPrint["map after adjustExprs in createParameterMap", map];
+         debugPrint["map after createMapForEachCons in createParameterMap", map];
          map = Map[(convertExprs[#])&, map];
          map
       ]
@@ -357,8 +362,20 @@ getTimeVariables[exprs_] := Map[(#[t])&, getVariables[exprs]];
 getPrevVariables[exprs_] := Cases[exprs, prev[_, _], {0, Infinity}];
 
 (* 式中に出現する記号定数を取得 *)
-
 getParameters[exprs_] := Union[Cases[exprs, p[_, _, _], {0, Infinity}]];
+
+getRelativeVars[vars_, consList_, getFunc_] :=
+  Module[
+    {nvars, npConsList},
+    If[vars === {},
+      {},
+      nvars = Complement[Flatten[Select[Map[(getFunc[#])&, consList], (Length[Intersection[#, vars]]>0)&]], vars];
+      nconsList = Select[Map[(getFunc[#])&, consList], (Length[Intersection[#, vars]]==0)&];
+      Union[vars, getRelativeVars[nvars,nconsList,getFunc]]
+    ]
+  ]
+
+
 
 (* 式中に定数名が出現するか否か *)
 
@@ -384,6 +401,51 @@ isPrevVariable[exprs_] := Head[exprs] === prev;
 (* 式がprev変数を持つか *)
 hasPrevVariable[exprs_] := Length[Cases[exprs, prev[_, _], {0, Infinity}]] > 0;
 
+resolveVariableOrder[consList_, vars_] :=
+  Module[
+    {relatedConsMap, resolved = {}, restVars=vars, found},
+    For[i=1, i<=Length[vars], i++,
+      relatedConsMap[vars[[i]]] = Select[consList, MemberQ[getVariablesWithDerivatives[#], vars[[i]] ]&];
+    ];
+    While[True,
+      found =
+        Select[
+          restVars,
+          Function[var, Fold[(#1||Complement[getVariablesWithDerivatives[#2], Append[resolved, var]]==={})&, False, relatedConsMap[var] ]]
+        ];
+      If[found == {},
+         Break[],
+         resolved = Join[resolved, found];
+         simplePrint[resolved];
+         restVars = Complement[restVars, found];
+         found = {}
+      ]
+    ];
+    Join[resolved, restVars]
+  ]
+
+
+(* 変数varsに関する制約ストアからjudgeFunctionでTrueとなる変数に関するMapを作成 *)
+createMapForEachCons[consList_, judgeFunction_, vars_, pars_] :=
+  Module [
+    {resolvedVars},
+    resolvedVars = If[vars === {}, {}, resolveVariableOrder[consList, vars]];
+    simplePrint[Join[pars, resolvedVars]];
+    simplePrint[consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]];
+    Map[
+      (Fold[
+        (If[Head[#2]===Inequality&&judgeFunction[#2[[3]]],
+            Union[#1, {getReverseRelop[#2[[2]] ]@@{#2[[3]],#2[[1]] }, #2[[4]]@@{#2[[3]],#2[[5]] } } ],
+          If[MemberQ[{Equal,Unequal,Less,LessEqual,Greater,GreaterEqual}, Head[#2]]&&judgeFunction[#2[[1]]],
+            Append[#1, #2],
+            #1] ])&,
+        {},
+        #
+      ])&,
+      consToDoubleList[Quiet[Reduce[consList, Join[pars,resolvedVars]], Reduce::useq]]
+    ]
+  ]
+
 (* 必ず関係演算子の左側に変数名や定数名が入るようにする *)
 adjustExprs[andExprs_, judgeFunction_] :=
 Fold[
@@ -399,6 +461,11 @@ Fold[
   andExprs
 ];
 
+publicMethod[
+  resetAssumption,
+  assumptions = True;
+];
+       
 publicMethod[
   resetConstraint,
   constraint = True;
@@ -530,7 +597,7 @@ publicMethod[
 publicMethod[
   resetConstraintForParameter,
   pCons,
-  pConstraint = Reduce[pCons, Reals];
+  pConstraint = Reduce[pCons, getParameters[pCons], Reals];
 ];
 
 
@@ -554,7 +621,9 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pCons,
-  pConstraint = Reduce[pConstraint && pCons, Reals];
+  pConstraint = Reduce[pConstraint && pCons, Union[getParameters[pConstraint], getParameters[pCons]], Reals];
+  debugPrint["pConstraint", pConstraint];
+  debugPrint["pCons", pCons]
 ];
 
 
@@ -588,6 +657,7 @@ makeListFromPiecewise[minT_, others_] := Module[
     Append[retMinT, {minT[[2]], tmpCondition}]
   ]
 ];
+
 
 
 (* 最大時刻と時刻と条件との組を比較し，最大時刻の方が早い場合は1を付加したものを末尾に，
@@ -647,15 +717,16 @@ publicMethod[
 
     maxCons = If[maxTime === Infinity, True, t < maxTime];
 
-    parsInCons = Union[getParameters[tCons], getParameters[maxTime] ];
-    consList = applyList[pCons];
+    consList = applyList[LogicalExpand[pCons]];
+    parsInCons = Union[getRelativeVars[getParameters[tCons && maxCons], consList, getParameters]];
+    debugPrint["parsInCons", parsInCons];
     necessaryPCons = Select[consList, (Length[Intersection[getParameters[#], parsInCons] ] > 0)&];
     restPCons = And@@Complement[consList, necessaryPCons];
     necessaryPCons = And@@necessaryPCons;
     simplePrint[necessaryPCons];
     simplePrint[restPCons];
 
-    Quiet[Check[minT = Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}],
+    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 3],
          onTime = False,
          Minimize::wksol
        ],
@@ -663,22 +734,22 @@ publicMethod[
     ];
     (* TODO: 解が分岐していた場合、onTimeは必ずしも一意に定まらないため分岐が必要 *)
     debugPrint["minT after Minimize:", minT];
-    If[Head[minT] === Minimize,
+    If[minT === $Aborted || Head[minT] === Minimize,
       Message[findMinTime::minimizeFailure, minT],
       minT = First[minT];
       If[minT === Infinity,
         {},
         ret = makeListFromPiecewise[minT, necessaryPCons];
         ret = Map[({#[[1]], #[[2]] && restPCons})&, ret];
-        (* 時刻が0となる場合はinfとする．*)
-        ret = Map[(If[#[[1]] =!= 0, #, ReplacePart[#, 1->Infinity]])&, ret];
+        (* 時刻が0となる場合は弾く．*)
+        ret = Select[ret, (#[[1]] =!= 0)&];
         ret = Select[ret, (#[[2]] =!= False)&];
 
         (* 整形して結果を返す *)
         resultList = Map[({toReturnForm[#[[1]] ], If[onTime, 1, 0], {toReturnForm[LogicalExpand[#[[2]] ] ]}, -1})&, ret];
         resultList
       ]
-    ]
+      ]
   ]
 ];
 
@@ -692,20 +763,10 @@ publicMethod[
   time1, time2, pCons1, pCons2,
   Module[
     {
-      andCond, caseEq, caseLe, caseGr, ret, necessaryPCons, usedPars, otherPCons, pRules, intervalLess, intervalGreater, interval
+      andCond, caseEq, caseLe, caseGr, ret, usedPars, otherPCons = False, pRules, intervalLess, intervalGreater, interval
     },
     usedPars = Union[getParameters[time1], getParameters[time2] ];
     andCond = Reduce[pCons1 && pCons2];
-    If[andCond === True,
-      necessaryPCons = True;
-      otherPCons = True,
-      If[Head[andCond] =!= Or,
-        necessaryPCons = andCond; otherPCons = True,
-        necessaryPCons = removeUnnecessaryConstraints[andCond, (containsAny[#, usedPars])&];
-        otherPCons = If[necessaryPCons === True, andCond, Complement[andCond, necessaryPCons]];
-        necessaryPCons = Reduce[necessaryPCons, Reals];
-      ]
-    ];
     If[andCond === False,
       Return[{{False}, {False}, {False}}]
     ];
@@ -718,23 +779,20 @@ publicMethod[
       interval = Quiet[N[(time1 - time2) /. pRules], {N::meprec}];
       intervalLess = interval < 0;
       If[intervalLess === True,
-        Return[{{toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}, {False}}]
+        Return[{{toReturnForm[LogicalExpand[andCond] ]}, {False}, {False}}]
       ];
       intervalGreater = interval > 0;
       If[intervalGreater === True,
-        Return[{{False}, {toReturnForm[LogicalExpand[necessaryPCons && otherPCons] ]}, {False}}]
+        Return[{{False}, {toReturnForm[LogicalExpand[andCond] ]}, {False}}]
       ];
     ];
     (* If it isn't determined, use Reduce *)
-    caseEq = Quiet[Reduce[And[necessaryPCons, time1 == time2], Reals]];
+    caseEq = Quiet[Reduce[And[andCond, time1 == time2], Reals]];
     simplePrint[caseEq];
-    caseLe = Quiet[Reduce[And[necessaryPCons, time1 < time2], Reals]];
+    caseLe = Quiet[Reduce[And[andCond, time1 < time2], Reals]];
     simplePrint[caseLe];
-    caseGr = Reduce[necessaryPCons && !caseLe && !caseEq];
+    caseGr = Reduce[andCond && !caseLe && !caseEq];
     simplePrint[caseGr];
-    caseEq = caseEq && otherPCons;
-    caseLe = caseLe && otherPCons;
-    caseGr = caseGr && otherPCons;
     {{toReturnForm[LogicalExpand[caseLe] ]}, {toReturnForm[LogicalExpand[caseGr] ]}, {toReturnForm[LogicalExpand[caseEq] ]}}
   ]
 ];
@@ -815,9 +873,9 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, prevRs_] :=
+exDSolve[expr_, prevRs_, assum_:True] :=
 Module[
-  {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
+  {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond, resConsAndAssum},
   inputPrint["exDSolve", expr, prevRs];
   listExpr = applyList[expr];
   sol = {};
@@ -826,7 +884,7 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
-  resultRule = Quiet[Check[solveByDSolve[listExpr, getVariables[listExpr] ], {}] ];
+  resultRule = Quiet[Check[dsolve[listExpr, getVariables[listExpr] ], {}] ];
   If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
@@ -839,9 +897,9 @@ Module[
       simplePrint[searchResult];
       If[searchResult === unExpandable,
         Break[],
-        rules = solveByDSolve[searchResult[[1]], searchResult[[3]]];
+        rules = dsolve[searchResult[[1]], searchResult[[3]]];
         simplePrint[rules];
-        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained] ];
+        If[rules === overConstrained || Length[rules] == 0, Return[overConstrained]];
         (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
         If[Head[rules] === DSolve,
           resultCons = resultCons && And@@searchResult[[1]];
@@ -862,7 +920,11 @@ Module[
     ]
   ];
   simplePrint[resultRule, resultCons, prevRs];
-  retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
+  (* exDSolveで求められた解が仮定と矛盾しないかチェック
+     TODO: exDSolveで扱わない不等式やPPでの検査 *)
+  resConsAndAssum = (resultRule//.Rule->Equal//.List->And) && assum;
+  simplePrint[resConsAndAssum];
+  If[Not[assum === True] && Quiet[TimeConstrained[Reduce[resConsAndAssum],0.1]] == False, Return[overConstrained]];
   restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
   restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];
   restCond = Or2or[restCond];
@@ -907,8 +969,7 @@ searchExprsAndVars[searchedExprs_, searchedVars_, exprs_, tVarsMap_] :=
 Module[
   {tVar, tVarsInExpr, unionVars, i, j, k, appendExprs, searchResult},
   inputPrint["searchExprsAndVars", searchedExprs, searchedVars, exprs, tVarsMap];
-  For[i=1, i<=Min[Length[searchedVars], 2], i++,
-    (* 解けない変数が2つ以上含まれるなら候補には入らないはずなので，2とのMinをとる *)
+  For[i=1, i<=Length[searchedVars], i++,
     tVar = searchedVars[[i]];
     For[j=1, j<=Length[exprs], j++,
       tVarsInExpr = tVarsMap[ exprs[[j]] ];
@@ -942,6 +1003,21 @@ createPrevRules[var_] := Module[
   ]
 ];
 
+createPrevOnly[var_] := Module[
+  {tRemovedVar, dCount, i, varName, der},
+  tRemovedVar = var /. x_[t] -> x;
+  If[MatchQ[Head[tRemovedVar], Derivative[_]],
+    varName = tRemovedVar[[1]];
+    dCount = Head[tRemovedVar][[1]];
+    ret = {varName};
+    der = Derivative[i][varName];
+    For[i = 1, i < dCount, i++,
+      ret = Append[ret, der];
+    ];
+    ret,
+    {}
+  ]
+];
 
 (* 渡された式をDSolveで解いて，結果のRuleを返す．
   @param expr: DSolveに渡す微分方程式系．形式はリスト．
@@ -950,21 +1026,92 @@ createPrevRules[var_] := Module[
 solveByDSolve[expr_, vars_] :=
 solveByDSolve[expr, vars] = (* for memoization *)
 Module[
-  {ini = {}, sol, derivatives, i},
+  {ini = {}, inis, sol, derivatives, i},
   tVars = Map[(#[t])&, vars];
   derivatives = getTimeVariablesWithDerivatives[expr];
   For[i = 1, i <= Length[derivatives], i++,
-    ini = Append[ini, createPrevRules[derivatives[[i]] ] ]
+    ini = Union[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
-  sol = Quiet[
+  For[i = Length[ini], i >= 0, i--,
+    inis = Subsets[ini, {i}];
+    For[j = 1, j <= Length[inis], j++,
+      (*simplePrint[Union[expr, inis[[j]]]];*)
+      (*simplePrint[tVars];*)
+      sol = Quiet[
+        Check[
+          DSolve[Union[expr, inis[[j]]], tVars, t],
+              overConstrained,
+          {DSolve::overdet, DSolve::bvimp}
+        ],
+        {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      ];
+      If[Length[sol] > 0,
+        Break[]
+      ]
+    ];
+    If[Length[sol] > 0,
+      Break[]
+    ]
+  ];
+  (* remove solutions with imaginary numbers *)
+  For[i = 1, i <= Length[sol], i++,
+    If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
+      sol = Drop[sol, {i}];
+      --i;
+    ]
+  ];
+  If[Length[sol] > 0, sol, overConstrained]
+];
+
+solveByDSolveAndSolve[expr_, vars_] :=
+solveByDSolveAndSolve[expr, vars] = (* for memoization *)
+Module[
+  {ini, inis, sol = {}, solwithconstant, solofconstant, derivatives, prevs = {}, constants, i, j},
+  tVars = Map[(#[t])&, vars];
+  derivatives = getTimeVariablesWithDerivatives[expr];
+  For[i = 1, i <= Length[derivatives], i++,
+    prevs = Union[prevs, createPrevOnly[derivatives[[i]] ] ]
+  ];
+  (*simplePrint[prevs];*)
+  tmp = expr;
+  (*simplePrint[expr];*)
+  (*simplePrint[vars];*)
+  solwithconstant = Quiet[
     Check[
-      DSolve[Union[expr, ini], tVars, t],
+      DSolve[expr, vars, t],
           overConstrained,
       {DSolve::overdet, DSolve::bvimp}
     ],
-  {DSolve::overdet, DSolve::bvimp, Solve::svars, PolynomialGCD::lrgexp}
+    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
   ];
+  (*simplePrint[solwithconstant];*)
+  For[i = 1, i <= Length[solwithconstant], i++,
+    ini = {};
+    constants = Union[Cases[solwithconstant[[i]], C[_], {0, Infinity}]];
+    (*simplePrint[constants];*)
+    For[j = 1, j <= Length[prevs], j++,
+      ini = Append[ini, Simplify[prevs[[j]][0] /. solwithconstant[[i]] ] == makePrevVar[prevs[[j]] ] ]
+    ];
+    inis = Subsets[ini,{Length[constants]}];
+    (*simplePrint[inis];*)
+    For[j = 1, j <= Length[inis], j++,
+      solofconstant = Quiet[
+        Check[
+          Solve[inis[[j]], constants, Reals],
+              overConstrained,
+          {DSolve::overdet, DSolve::bvimp}
+        ],
+        {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
+      ];
+      (*simplePrint[solofconstant];*)
+      If[Length[solofconstant] > 0,
+        sol = Union[sol, Map[#[t]&, (solwithconstant[[i]] /. solofconstant ), {3}]];
+        Break[]
+      ]
+    ];
+  ];
+  If[Length[sol] == 0, Return[overConstrained]];
   (* remove solutions with imaginary numbers *)
   For[i = 1, i <= Length[sol], i++,
     If[Count[Map[(timeConstrainedSimplify[Element[#[[2]], Reals]])&, sol[[i]] ], False] > 0,
@@ -1056,11 +1203,13 @@ trueAtInitialTime[guard_, initialTime_] := trueAtInitialTime[guard, initialTime,
 publicMethod[
   trueAtInitialTime,
   guard, initialTime, pars, pCons, 
-  Quiet[Reduce[(guard /. t -> initialTime) && pCons, pars, Reals] =!= False]
+  (* Quiet[Reduce[(guard /. t -> initialTime) && pCons, pars, Reals] =!= False] *)
+  Quiet[Reduce[((guard /. t -> initialTime) /. createIntervalRules[pCons]), pars, Reals] =!= False]
 ]
 
 getMinimum[timeList_] := getMinimum[timeList, pConstraint, parameters]; 
 
+(*
 publicMethod[
   getMinimum,
   timeList,
@@ -1071,6 +1220,48 @@ publicMethod[
     minimum = timeList[[1, 1]];
     minimumIndex = 0;
     (* TODO: deal with case branching *)
+    For[i = 2, i <= Length[timeList], i++,
+      debugPrint["BREAK1 reduce: ", Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals]];
+      If[Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals] === False,
+        minimum = timeList[[i, 1]];
+        minimumIndex = i - 1;
+      ];
+    ];
+    debugPrint["BREAK1 minimumIndex: ", minimumIndex];
+    {{toReturnForm[minimum], 1, {toReturnForm[LogicalExpand[pCons] ]}, minimumIndex}}
+  ]
+];
+*)
+publicMethod[
+  getMinimum,
+  timeList,
+  pCons, 
+  pars,
+  Module[
+    {minimum, i, minimumIndex, pRules, interval, intervalLess, intervalGreater},
+    minimum = timeList[[1, 1]];
+    minimumIndex = 0;
+    (* TODO: deal with case branching *)
+    pRules = createIntervalRules[pCons];
+	debugPrint["BREAK1 interval: ", N[(timeList[[1, 1]]) /. pRules]];
+    For[i = 2, i <= Length[timeList], i++,
+      interval = Quiet[N[(minimum - timeList[[i, 1]]) /. pRules], {N::meprec}];
+      debugPrint["BREAK1 interval: ", N[(timeList[[i, 1]]) /. pRules]];
+      intervalLess = interval < 0;
+      intervalGreater = interval > 0;
+      If[intervalLess =!= True && intervalGreater =!= True,
+        minimum = timeList[[1, 1]];
+        minimumIndex = 0;
+        Break[]
+      ];
+      If[intervalGreater === True,
+        minimum = timeList[[i, 1]];
+        minimumIndex = i - 1
+      ];
+      If[i == Length[timeList],
+        Return[{{toReturnForm[minimum], 1, {toReturnForm[LogicalExpand[pCons] ]}, minimumIndex}}]
+      ];
+    ];
     For[i = 2, i <= Length[timeList], i++,
       If[Reduce[minimum <= timeList[[i, 1]] && pCons, pars, Reals] === False,
         minimum = timeList[[i, 1]];
@@ -1106,11 +1297,11 @@ publicMethod[
   start, end, vm, pm,
   Module[
     {parsInVM, parsInPM, redundantPars},
-    parsInVM = Union[getParameters[start], getParameters[end], getParameters[vm] ];
+    parsInVM = Fold[Union[#1, getRelativeVars[Union[getParameters[start], getParameters[end], getParameters[vm] ], #2, getParameters]]&, {}, consToDoubleList[pm]];
     simplePrint[parsInVM];
     parsInPM = getParameters[pm];
     redundantPars = Complement[parsInPM, parsInVM];
     simplePrint[redundantPars];
-    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], Reals] ] ]} 
+    {toReturnForm[LogicalExpand[Reduce[Exists[Evaluate[redundantPars], pm], parsInVM, Reals] ] ]}
   ]
 ];

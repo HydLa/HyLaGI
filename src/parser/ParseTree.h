@@ -6,8 +6,7 @@
 #include <cassert>
 #include <set>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
+#include <memory>
 
 #include "ParseError.h"
 #include "Node.h"

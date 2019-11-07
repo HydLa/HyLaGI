@@ -32,6 +32,5 @@ private:
 
 std::ostream &operator<<(std::ostream &ost, const ConstraintStore &store);
 
-}
-}
-
+} // namespace simulator
+} // namespace hydla

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2018 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef ODE_AUTODIF_HPP
@@ -7,23 +7,12 @@
 
 // ODE (input and output : autodif type)
 
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-#include <kv/interval.hpp>
-#include <kv/rdouble.hpp>
-#include <kv/interval-vector.hpp>
-#include <kv/make-candidate.hpp>
-#include <kv/psa.hpp>
+#include <kv/ode.hpp>
 #include <kv/autodif.hpp>
-#include <kv/ode-param.hpp>
 
 
-#ifndef ODE_FAST
-#define ODE_FAST 1
+#ifndef ODE_AUTODIF_NEW
+#define ODE_AUTODIF_NEW 1
 #endif
 
 
@@ -32,9 +21,160 @@ namespace kv {
 namespace ub = boost::numeric::ublas;
 
 
+#if ODE_AUTODIF_NEW == 1
+
+template <class F, class T> struct MakeVariationalEq {
+	F f;
+	ub::vector< psa<T> > solution;
+	int s, s2;
+
+	MakeVariationalEq(F f, ub::vector< psa<T> > solution) : f(f), solution(solution) {
+		s = solution.size();
+		s2 = s * s;
+	}
+
+	ub::vector< psa<T> > operator() (const ub::vector< psa<T> >& x, const psa<T>& t){
+		ub::matrix< psa<T> > x2(s, s);
+		ub::vector< psa<T> > y(s2);
+
+		ub::vector< psa<T> > solution2(s);
+		psa<T> t2;
+
+		ub::vector< psa<T> > rv;
+		ub::matrix< psa<T> > rm;
+
+		int i, j, k;
+		int order, tmp;
+
+		order = 0;
+		k = 0;
+		for (i=0; i<s; i++) {
+			for (j=0; j<s; j++) {
+				tmp = x(k).v.size() - 1;
+				if (tmp > order) order = tmp;
+				x2(i, j) = x(k);
+				k++;
+			}
+		}
+
+		for (i=0; i<s; i++) {
+			solution2(i) = setorder(solution(i), order);
+		}
+		t2 = setorder(t, order);
+
+		autodif< psa<T> >::split(f(autodif< psa<T> >::init(solution2), autodif< psa<T> >(t2)), rv, rm);
+
+		rm = prod(rm, x2);
+
+		k = 0;
+		for (i=0; i<s; i++) {
+			for (j=0; j<s; j++) {
+				y(k++) = rm(i, j);
+			}
+		}
+
+		return y;
+	}
+};
+
 template <class T, class F>
 int
-ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, interval<T>& end, ode_param<T> p = ode_param<T>(), ub::vector< psa< autodif< interval<T> > > >* result_psa = NULL) {
+ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, interval<T>& end, ode_param<T> p = ode_param<T>(), ub::vector< psa< interval<T> > >* result_psa = NULL) {
+	int n = init.size();
+	int i, j, k;
+	int r, ret_val;
+
+	ub::vector< autodif< interval<T> > > result;
+
+	ub::vector< interval<T> > Iv, Fv;
+	ub::matrix< interval<T> > Id, Fd;
+	ub::matrix< interval<T> > fdI;
+	ub::vector< interval<T> > fdI_tmp;
+	ub::vector< psa< interval<T> > > result_tmp;
+
+	interval<T> end2 = end;
+
+	kv::autodif< interval<T> >::split(init, Iv, Id);
+
+	Fv = Iv;
+	r = ode(f, Fv, start, end2, p, &result_tmp);
+	if (r == 0) return 0;
+	ret_val = r;
+
+	if (result_psa != NULL) {
+		*result_psa = result_tmp;
+	}
+
+	MakeVariationalEq< F, interval<T> > g(f, result_tmp);
+
+	fdI_tmp.resize(n * n);
+	k = 0;
+	for (i=0; i<n; i++) {
+		for (j=0; j<n; j++) {
+			if (i == j) fdI_tmp(k) = 1.;
+			else fdI_tmp(k) = 0.;
+			k++;
+		}
+	}
+
+	ode_param<T> p2 = p;
+
+	p2.set_autostep(true);
+	p2.set_epsilon(std::numeric_limits<T>::infinity());
+
+	r = ode(g, fdI_tmp, start, end2, p2);
+	if (r == 0) return 0;
+	if (r == 1) {
+		if (p.autostep == false) return 0;
+		ret_val = 1;
+	}
+
+	fdI.resize(n, n);
+	k = 0;
+	for (i=0; i<n; i++) {
+		for (j=0; j<n; j++) {
+			fdI(i, j) = fdI_tmp(k++);
+		}
+	}
+
+	Fd = prod(fdI, Id);
+
+	result.resize(n);
+	int s2 = Fd.size2();
+	for (i=0; i<n; i++) {
+		result(i).v = Fv(i);
+		result(i).d.resize(s2);
+		for (j=0; j<s2; j++) {
+			result(i).d(j) = Fd(i, j);
+		}
+	}
+
+	init = result;
+	if (ret_val == 1) end = end2;
+
+	return ret_val;
+}
+
+
+#else // ODE_AUTODIF_NEW != 1
+
+
+#ifndef ODE_FAST
+#define ODE_FAST 1
+#endif
+
+#ifndef ODE_RESTART_RATIO
+#define ODE_RESTART_RATIO 1
+#endif
+
+#ifndef ODE_COEF_MID
+#define ODE_CORF_MID 0
+#endif
+
+
+template <class T, class F>
+int
+ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, interval<T>& end, ode_param<T> p = ode_param<T>(), ub::vector< psa< interval<T> > >* result_psa = NULL) {
 	int n = init.size();
 	int i, j, k, km;
 
@@ -58,6 +198,9 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 	T radius, radius_tmp;
 	T tolerance;
 	int n_rad;
+	#if ODE_RESTART_RATIO == 1
+	T max_ratio;
+	#endif
 
 	int ret_val;
 	interval<T> end2;
@@ -112,22 +255,27 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 		for (j = p.order; j>=1; j--) {
 			m = 0.;
 			for (i=0; i<n; i++) {
-				// m = std::max(m, norm(x(i).v(j).v));
+				#if ODE_COEF_MID == 1
 				using std::abs;
 				m = std::max(m, abs(mid(x(i).v(j).v)));
+				#else
+				m = std::max(m, norm(x(i).v(j).v));
+				#endif
 				#ifdef IGNORE_DIF_PART
 				#else
 				km = x(i).v(j).d.size();
 				for (k=0; k<km; k++) {
-					// m = std::max(m, norm(x(i).v(j).d(k)));
+					#if ODE_COEF_MID == 1
 					using std::abs;
 					m = std::max(m, abs(mid(x(i).v(j).d(k))));
+					#else
+					m = std::max(m, norm(x(i).v(j).d(k)));
+					#endif
 				}
 				#endif
 			}
 			if (m == 0.) continue;
-			radius_tmp = std::pow((double)m, 1./j);
-			if (radius_tmp > radius) radius = radius_tmp;
+			radius = std::max(radius, (T)std::pow((double)m, 1./j));
 			n_rad++;
 			if (n_rad == 2) break;
 		}
@@ -144,6 +292,7 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 			end2 = mid(start + radius);
 			if (end2 >= end.lower()) {
 				end2 = end;
+				radius = mid(end2 - start);
 				ret_val = 2;
 			} else {
 				ret_val = 1;
@@ -163,9 +312,15 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 			w = f(z, t);
 		}
 		catch (std::domain_error& e) {
-			if (restart < p.restart_max) {
+			if (p.autostep && restart < p.restart_max) {
 				psa< autodif< interval<T> > >::use_history() = false;
+				if (p.verbose == 1) {
+					std::cout << "ode: radius changed: " << radius;
+				}
 				radius *= 0.5;
+				if (p.verbose == 1) {
+					std::cout << " -> " << radius << "\n";
+				}
 				restart++;
 				continue;
                         } else {
@@ -195,15 +350,15 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 		k = 0;
 		for (i=0; i<n; i++) {
 			z(i).v(p.order).v += newton_step(k++) * interval<T>(-1., 1.);
-			z(i).v(p.order).d.resize(n);
+			z(i).v(p.order).d.resize(n, true);
 			for (j=0; j<n; j++) {
 				z(i).v(p.order).d(j) += newton_step(k++) * interval<T>(-1., 1.);
 			}
 		}
 
-		if (p.autostep && resized == false) {
+		if (p.autostep && ret_val != 2 && resized == false) {
 			resized = true;
-			m = 0.;
+			m = (std::numeric_limits<T>::min)();
 			for (i=0; i<n; i++) {
 				evalz = eval(z(i), autodif< interval<T> >(deltat));
 				m = std::max(m, rad(evalz.v) - rad(new_init(i).v));
@@ -213,12 +368,13 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 				}
 			}
 			m = m / tolerance;
-			if (restart > 0) {
-				radius /= std::max(1., std::pow((double)m, 1. / p.order));
+			radius_tmp = radius / std::pow((double)m, 1. / p.order);
+			if (radius_tmp >= radius && restart > 0) {
+				// do nothing, not continue
 			} else {
-				radius /= std::pow((double)m, 1. / p.order);
+				radius = radius_tmp;
+				continue;
 			}
-			continue;
 		}
 
 		w = f(z, t);
@@ -229,10 +385,19 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 		w = new_init + w;
 
 		flag = true;
+		#if ODE_RESTART_RATIO == 1
+		max_ratio = 0.;
+		#endif
 		for (i=0; i<n; i++) {
+			#if ODE_RESTART_RATIO == 1
+			max_ratio = std::max(max_ratio, width(w(i).v(p.order).v) / width(z(i).v(p.order).v));
+			#endif
 			flag = flag && subset(w(i).v(p.order).v, z(i).v(p.order).v);
 			w(i).v(p.order).d.resize(n);
 			for (j=0; j<n; j++) {
+				#if ODE_RESTART_RATIO == 1
+				max_ratio = std::max(max_ratio, width(w(i).v(p.order).d(j)) / width(z(i).v(p.order).d(j)));
+				#endif
 				flag = flag && subset(w(i).v(p.order).d(j), z(i).v(p.order).d(j));
 			}
 		}
@@ -242,7 +407,17 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 			ret_val = 0;
 			break;
 		}
+		if (p.verbose == 1) {
+			std::cout << "ode: radius changed: " << radius;
+		}
+		#if ODE_RESTART_RATIO == 1
+		radius *= std::max(std::min((T)0.5, (T)0.5 / max_ratio), (T)0.125);
+		#else
 		radius *= 0.5;
+		#endif
+		if (p.verbose == 1) {
+			std::cout << " -> " << radius << "\n";
+		}
 		restart++;
 	}
 
@@ -278,7 +453,16 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 
 		init = result;
 		if (ret_val == 1) end = end2;
-		if (result_psa != NULL) *result_psa = w;
+		if (result_psa != NULL) {
+			// store w to *result_psa without autodif information
+			(*result_psa).resize(n);
+			for (i=0; i<n; i++) {
+				(*result_psa)(i).v.resize(w(i).v.size());
+				for (j=0; j<w(i).v.size(); j++) {
+					(*result_psa)(i).v(j) = w(i).v(j).v;
+				}
+			}
+		}
 	}
 
 	psa< autodif< interval<T> > >::mode() = save_mode;
@@ -287,6 +471,8 @@ ode(F f, ub::vector< autodif< interval<T> > >& init, const interval<T>& start, i
 
 	return ret_val;
 }
+
+#endif
 
 
 template <class T, class F>

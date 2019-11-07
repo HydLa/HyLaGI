@@ -7,7 +7,7 @@ Yinit := {0,0}.
 Sinit := { 0, Pi }.
 
 INIT(x,y,s,time,x0,y0,s0) <=> x = x0 /\ y = y0 /\ s = s0 /\ time = -1.
-PLAIN(x,y,s) <=> [](x' = 220*cos(s)) /\ [](y' = 220*sin(s)).
+PLANE(x,y,s) <=> [](x' = 220*cos(s)) /\ [](y' = 220*sin(s)).
 
 CONST(s) <=> [](s' = 0).
 
@@ -25,8 +25,8 @@ AVOID_END(time,s,s0) <=> []( time- = 0 => s = s0-).
 TIME(time)<=>[](time' = -1).
 
 { INIT(X[i],Y[i],S[i],Time[i],Xinit[i],Yinit[i],Sinit[i]) | i in {1..|X|} },
-{ PLAIN(X[i],Y[i],S[i]) | i in {1..|X|} },
+{ PLANE(X[i],Y[i],S[i]) | i in {1..|X|} },
 { COLLISION(X[i],Y[i],X[j],Y[j]) | i in {1..|X|-1}, j in {i+1..|X|} }.
-{ (CONST(S[i]),TIME(Time[i])) << AVOID_START(X[i],Y[i],S[i],Time[i],X[j],Y[j]) | i in {1..|X|}, j in {1..|X|}, i =!=j }.
+{ (CONST(S[i]),TIME(Time[i])) << AVOID_START(X[i],Y[i],S[i],Time[i],X[j],Y[j]) | i in {1..|X|}, j in {1..|X|}, i!=j }.
 { CONST(S[i]) << AVOIDING(Time[i],S[i]) | i in {1..|S|} }.
 { CONST(S[i]) << AVOID_END(Time[i],S[i],Sinit[i]) | i in {1..|S|} }.

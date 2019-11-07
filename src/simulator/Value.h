@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 
@@ -14,8 +14,7 @@ class Parameter;
 
 class Value
 {  
-  public:
-
+public: 
   typedef hydla::symbolic_expression::node_sptr node_sptr;
   
   virtual ~Value(){}
@@ -85,7 +84,6 @@ class Value
 
   /// negative
   Value operator-();
-
   
   Value& operator^=(const Value &rhs);
   Value operator^(const Value &rhs);
@@ -94,13 +92,12 @@ class Value
    * データをダンプする
    */
   std::ostream& dump(std::ostream& s) const{
-    if(undefined()) s << "UNDEF";
+    if (undefined()) s << "UNDEF";
     else s << get_string();
     return s;
   }
 
-  private:
-
+private:
   symbolic_expression::node_sptr node_;  /// symbolic expression
 };
 
@@ -108,7 +105,5 @@ bool operator<(const Value& lhs, const Value& rhs);
 
 std::ostream& operator<<(std::ostream& s, const Value & v);
 
-
 } // namespace simulator
 } // namespace hydla
-

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sstream>
 #include "Variable.h"
 
@@ -10,7 +10,8 @@ namespace simulator {
 class PhaseResult;
 class Value;
 
-class Parameter{
+class Parameter
+{
   public:
 
   Parameter(const Variable &variable, const PhaseResult &phase);
@@ -28,7 +29,6 @@ class Parameter{
   inline int get_differential_count()const {return differential_count_;}
   inline int get_phase_id()const {return phase_id_;}
  
- 
   inline void set_name(const std::string &str) {variable_name_ = str;}
   inline void set_differential_count(int d) {differential_count_ = d;}
   inline void set_phase_id(int p) {phase_id_ = p;}
@@ -36,7 +36,6 @@ class Parameter{
   std::string to_string() const;
 
   std::ostream& dump(std::ostream& s) const;
-  
     
   friend bool operator<(const Parameter& lhs, 
                         const Parameter& rhs);  
@@ -46,7 +45,8 @@ class Parameter{
   int phase_id_;
 };
 
-class ParameterComparator{
+class ParameterComparator
+{
   public:
   bool operator()(const Parameter x,const Parameter y) const;
 };
@@ -55,4 +55,3 @@ std::ostream& operator<<(std::ostream& s, const Parameter& p);
 
 } // namespace simulator
 } // namespace hydla 
-

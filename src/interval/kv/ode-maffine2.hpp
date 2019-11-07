@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2019 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef ODE_MAFFINE2_HPP
@@ -166,12 +166,7 @@ ode_maffine2(F f, ub::vector< affine<T> >& init, const interval<T>& start, inter
 
 	int maxnum_save;
 
-	affine<T> s1, s2;
-	interval<T> s2i;
-	ub::vector< affine<T> > s1_save;
-	ub::vector< interval<T> > s2i_save;
-
-	interval<T> deltat, deltat_n;
+	interval<T> deltat_n;
 	ub::vector< psa< interval<T> > > psa_result;
 
 	int r;
@@ -194,9 +189,7 @@ ode_maffine2(F f, ub::vector< affine<T> >& init, const interval<T>& start, inter
 		*result_psa = psa_result;
 	}
 
-	deltat = end2 - start;
-	deltat_n = 1.;
-	for (i=0; i<p.order; i++) deltat_n *= deltat;
+	deltat_n = pow(end2 - start, p.order);
 
 	I2.resize(n);
 	for (i=0; i<n; i++) {
@@ -219,20 +212,7 @@ ode_maffine2(F f, ub::vector< affine<T> >& init, const interval<T>& start, inter
 	result = I2 + fc + prod(result_d, init - c);
 
 	if (p.ep_reduce == 0) {
-		s1_save.resize(n);
-		s2i_save.resize(n);
-		for (i=0; i<n; i++) {
-			split(result(i), maxnum_save, s1, s2);
-			s2i = to_interval(s2);
-			s1_save(i) = s1;
-			s2i_save(i) = s2i;
-		}
-
-		affine<T>::maxnum() = maxnum_save;
-		for (i=0; i<n; i++) {
-			s1_save(i).resize();
-			result(i) = append(s1_save(i), (affine<T>)s2i_save(i));
-		}
+		epsilon_reduce2(result, maxnum_save);
 	} else {
 		epsilon_reduce(result, p.ep_reduce, p.ep_reduce_limit);
 	}
@@ -256,20 +236,23 @@ odelong_maffine2(
 	int s = init.size();
 	ub::vector< affine<T> > x, x1;
 	interval<T> t, t1;
-	int r;
+	int ret_ode;
 	int ret_val = 0;
+	bool ret_callback;
 
 	ub::vector< psa< interval<T> > > result_tmp;
+
 
 	x = init;
 	t = start;
 	p.set_autostep(true);
+
 	while (1) {
 		x1 = x;
 		t1 = end;
 
-		r = ode_maffine2(f, x1, t, t1, p, &result_tmp);
-		if (r == 0) {
+		ret_ode = ode_maffine2(f, x1, t, t1, p, &result_tmp);
+		if (ret_ode == 0) {
 			if (ret_val == 1) {
 				init = x1;
 				end = t;
@@ -282,12 +265,19 @@ odelong_maffine2(
 			std::cout << to_interval(x1) << "\n";
 		}
 
-		callback(t, t1, to_interval(x), to_interval(x1), result_tmp);
+		ret_callback = callback(t, t1, to_interval(x), to_interval(x1), result_tmp);
 
-		if (r == 2) {
+		if (ret_callback == false) {
+			init = x1;
+			end = t1;
+			return 3;
+		}
+
+		if (ret_ode == 2) {
 			init = x1;
 			return 2;
 		}
+
 		t = t1;
 		x = x1;
 	}
@@ -308,20 +298,18 @@ odelong_maffine2(
 	ub::vector< affine<T> > x;
 	int maxnum_save;
 	int r;
-	interval<T> end2 = end;
 
 	maxnum_save = affine<T>::maxnum();
 	affine<T>::maxnum() = 0;
 	x = init;
 
-	r = odelong_maffine2(f, x, start, end2, p, callback);
+	r = odelong_maffine2(f, x, start, end, p, callback);
 
 	affine<T>::maxnum() = maxnum_save;
 
 	if (r == 0) return 0;
 
 	for (i=0; i<s; i++) init(i) = to_interval(x(i));
-	if (r == 1) end = end2;
 
 	return r;
 }

@@ -9,8 +9,10 @@ void conv()
   *out_itr++ = '\"';
   
   char c = *in_itr++;
-  while(in_itr != std::istreambuf_iterator<char>()) {
-    switch(c) {
+  while (in_itr != std::istreambuf_iterator<char>())
+  {
+    switch(c)
+    {
       case '\"':
         *out_itr++ = '\\';
         *out_itr++ = '\"';
@@ -36,28 +38,37 @@ void conv()
         c = *in_itr++;   
         break;
 
-        // for comment
+      // for comment
       case '(': {
         char nc = *in_itr++;
-        if(nc == '*') {
+        if (nc == '*')
+        {
           int count = 1;
           c  = *in_itr++;
           nc = *in_itr++;
-          while(count > 0) {
-            if(c == '(' && nc == '*') {
+          while (count > 0)
+          {
+            if (c == '(' && nc == '*')
+            {
               count++;
               c  = *in_itr++;
               nc = *in_itr++;
-            } else if(c == '*' && nc == ')') {
+            }
+            else if (c == '*' && nc == ')')
+            {
               count--;
               c  = *in_itr++;
-              if(count>0) nc = *in_itr++;
-            } else {
+              if (count > 0) nc = *in_itr++;
+            }
+            else
+            {
               c  = nc;
               nc = *in_itr++;
             }
           }
-        } else {
+        }
+        else
+        {
           *out_itr++ = c;
           c = nc;
         }
@@ -75,7 +86,8 @@ void conv()
 
 int main(int argc, char *argv[])
 {
-  if(argc != 2) {
+  if (argc != 2)
+  {
     std::cerr << "arg size must be 2" << std::endl;
     return -1;
   }

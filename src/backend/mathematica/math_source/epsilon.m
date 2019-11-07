@@ -36,36 +36,33 @@ publicMethod[checkEdgeGuardWt, guard, relatedVm, relatedPm, startTime, endTime,
 
 (* phaseの包含を判定する *)
 publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
-             Module[{ret,i,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+             Module[{ret,i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
                     ret = True;
 
                     tmpLargeVm = largeVm /. p -> pL;
                     tmpLargeTime = largeTime /. p -> pL;
                     (* compare variable num *)
-                    For[i=1,And[ret, Length[tmpLargeVm] >= i],i++,
+                    allExpr = True;
+                    For[i = 1, i <= Length[tmpLargeVm], i++,
                         (* compare variable name *)
-                        If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]],
-                           ret = False
-                        ];
+                        If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]], Return[False];];
+												
                         (* correct expr : large.2 == small.2 *)
-                        If[i == 1,
-                           allExpr = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime],
-                           allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]]
-                        ];
+												tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
+												simplePrint[tmp];
+                        allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]];
                     ];
                     allExpr = Simplify[allExpr];
-                    If[allExpr === False,
-                       ret = False];
+                    If[allExpr === False, Return[False];];
                     tmpLargePm = largePm /. p -> pL;
                     tmpSmallPm = smallPm;
-                    listLarge = getParameters[largePm] /. p -> pL;
-                    listSmall = getParameters[smallPm];
-                    If[ret,
-                       simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
-                       ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]]]
-                    ];
+                    
+                    listLarge = Union[getParameters[largePm], getParameters[largeVm]] /. p -> pL;
+                    listSmall = Union[getParameters[smallPm], getParameters[smallVm]];
+                    simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+                    ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]],Reals];
+                    simplePrint[ret];
                     If[ret =!= True,ret = False];
-                    (* debugPrint["# final return", ret]; *)
                     ret
              ]
        ];
@@ -122,7 +119,7 @@ publicMethod[
              limitEpsilon,
              arg,
              debugPrint["limitEpsilon arg",arg];
-             toReturnForm[Limit[arg, p[peps, 0, 1] -> 0]]
+             toReturnForm[Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}]]
              ];
 
 publicMethod[
@@ -145,8 +142,8 @@ publicMethod[
                     debugPrint["checkEpsilon arg",arg];
                     ret = 0;
                     If[arg =!= Infinity,
-                       direplus = Limit[arg, p[peps, 0, 1] -> 0,Direction->-1];
-                       direminus = Limit[arg, p[peps, 0, 1] -> 0,Direction->1];
+                       direplus = Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}, Direction->-1];
+                       direminus = Limit[arg, {p[peps, 0, 1], ueps} -> {0, 0}, Direction->1];
                        flag = timeConstrainedSimplify[direplus - direminus];
                        If[flag === 0,
                           ret = 1,

@@ -166,7 +166,7 @@ AffineOrInteger AffineOrInteger::operator-()
 itvd AffineOrInteger::to_interval()
 {
   if(is_integer)return itvd(integer);
-  else return affine_value.get_interval();
+  else return affine_value.as_interval();
 }
 
 }

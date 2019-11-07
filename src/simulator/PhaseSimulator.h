@@ -1,10 +1,11 @@
 #pragma once
 
+#include <stack>
 #include <iostream>
 #include <string>
 #include <cassert>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "ConsistencyChecker.h"
@@ -18,7 +19,6 @@ template <class T> class interval;
 namespace hydla {
 namespace simulator {
 
-
 class ValueModifier;
 class MinTimeCalculator;
 
@@ -28,7 +28,7 @@ struct CompareMinTimeResult
 };
 
 typedef std::list<parameter_map_t>                       parameter_maps_t;
- typedef symbolic_expression::node_sptr                     node_sptr;
+typedef symbolic_expression::node_sptr                   node_sptr;
 
 
 struct BreakPoint
@@ -38,7 +38,8 @@ struct BreakPoint
   void *tag;
 };
 
-struct TimeListElement{
+struct TimeListElement
+{
   value_t time;
   ConstraintStore parameter_constraint;
   constraint_t guard;
@@ -46,8 +47,23 @@ struct TimeListElement{
   TimeListElement(){}
 };
 
+struct IntervalNewtonResult
+{
+  std::shared_ptr<kv::interval<double>> current_stack_top;
+  std::shared_ptr<kv::interval<double>> min_interval;
+  std::stack<kv::interval<double>, std::vector<kv::interval<double>>> next_stack;
+  int time_id;
+  value_t time_list_element_time;
+  bool isAffine;
+};
 
-class PhaseSimulator{
+struct HistoryData
+{
+  std::vector<IntervalNewtonResult> results;
+};
+
+class PhaseSimulator
+{
 public:
   PhaseSimulator(Simulator* simulator, const Opts& opts);
   virtual ~PhaseSimulator();
@@ -69,10 +85,11 @@ public:
 
   void add_break_point(BreakPoint b);
 
-  boost::shared_ptr<RelationGraph> relation_graph_;
+  std::shared_ptr<RelationGraph> relation_graph_;
+
+  void print_completely_unconstrained_condition();
 
 private:
-
   struct StateOfIntervalNewton;
 
   std::list<phase_result_sptr_t> simulate_ms(const module_set_t& unadopted_ms, phase_result_sptr_t state, asks_t trigger_asks);
@@ -99,9 +116,9 @@ private:
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
 
-  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase);
+  find_min_time_result_t find_min_time(const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed, phase_result_sptr_t &phase, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map);
 
-  find_min_time_result_t find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed);
+  find_min_time_result_t find_min_time_step_by_step(const constraint_t &guard, variable_map_t &original_vm, Value &time_limit, phase_result_sptr_t &phase, bool entailed, std::map<std::string, HistoryData>& atomic_guard_min_time_interval_map);
 
   bool checkAndUpdateGuards(std::map<constraint_t, bool> &guard_map, constraint_t guard, std::list<constraint_t> guard_list, bool &on_time, bool entailed);
   
@@ -136,6 +153,12 @@ private:
 
   void add_parameter_constraint(const phase_result_sptr_t phase, const Parameter &parameter, ValueRange current_range);
 
+  std::map<variable_set_t,module_set_t> filter_required(std::map<variable_set_t,module_set_t> causes);
+  
+  void print_possible_causes(const std::map<variable_set_t,module_set_t> &map);
+
+  void update_condition(const variable_set_t &vs, const module_set_t &ms);
+  
   Simulator* simulator_;
 
   const Opts *opts_;
@@ -150,20 +173,22 @@ private:
 
   phase_result_sptr_t result_root;
 
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  std::shared_ptr<ConsistencyChecker> consistency_checker;
   int                                   phase_sum_, time_id;
   module_set_container_sptr             module_set_container;
   asks_t                                all_asks;
-  boost::shared_ptr<ValueModifier>      value_modifier;
+  std::shared_ptr<ValueModifier>      value_modifier;
   value_t                               max_time;
   std::list<std::pair<BreakPoint, find_min_time_result_t> >                 break_point_list;
   bool                                  aborting;
-  int                                upper_bound_of_itv_newton = 100;
+  int                                   upper_bound_of_itv_newton = 100;
 
   /// pointer to the backend to be used
   backend_sptr_t backend_;
+
+  // record minimum module_set_t which each variable is completely unconstrained
+  std::map<variable_t,module_set_t> completely_unconstrained_condition;
 };
 
-
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

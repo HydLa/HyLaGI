@@ -1,16 +1,15 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2016 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef CONV_DOUBLE_HPP
 #define CONV_DOUBLE_HPP
 
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wsometimes-uninitialized"
-
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <string>
+#include <sstream>
 #include <cctype>
 #include <vector>
 #include <list>
@@ -82,7 +81,7 @@ struct conv_double {
 
 		bool buf[1023 - (-1074) + 1];
 		int offset = 1074;
-		int emax, emin;
+		int emax, emin = 0;
 		double dtmp, dtmp2;
 
 		dtmp = absx;
@@ -145,7 +144,7 @@ struct conv_double {
 				carry /= 10;
 			}
 
-			while (buf[offset + emax] == 0 && emax >= 0) {
+			while (emax >= 0 && buf[offset + emax] == 0) {
 				emax--;
 			}
 		}
@@ -171,7 +170,7 @@ struct conv_double {
 				carry %= pm;
 			}
 
-			while (buf[offset + emin] == 0 && emin < 0) {
+			while (emin < 0 && buf[offset + emin] == 0) {
 				emin++;
 			}
 		}
@@ -197,13 +196,12 @@ struct conv_double {
 		}
 		#endif
 
-		std::string result_str;
-		char stmp[100];
+		std::ostringstream result_str;
 
 		if (sign == 1) {
-			result_str = "";
+			result_str << "";
 		} else {
-			result_str = "-";
+			result_str << "-";
 		}
 
 		if (format == 'f') {
@@ -226,15 +224,14 @@ struct conv_double {
 			}
 
 			// delete zeros of tail
-			while (result[offset2 + result_min] == 0 && result_min < 0) {
+			while (result_min < 0 && result[offset2 + result_min] == 0) {
 				result_min++;
 			}
 
 			// make result string
 			for (i=result_max; i>=result_min; i--) {
-				if (i == -1) result_str += ".";
-				sprintf(stmp, "%d", result[offset2 + i]);
-				result_str += stmp;
+				if (i == -1) result_str << ".";
+				result_str << result[offset2 + i];
 			}
 
 		} else if (format == 'e') {
@@ -270,12 +267,11 @@ struct conv_double {
 
 			// make result string
 			for (i=result_max; i>=result_min; i--) {
-				if (i == result_max -1) result_str += ".";
-				sprintf(stmp, "%d", result[offset2 + i]);
-				result_str += stmp;
+				if (i == result_max -1) result_str << ".";
+				result_str << result[offset2 + i];
 			}
-			sprintf(stmp, "e%+03d", result_max);
-			result_str += stmp;
+			// sprintf(stmp, "e%+03d", result_max);
+			result_str << "e" << std::internal << std::showpos << std::setfill('0') << std::setw(3) << result_max << std::noshowpos;
 
 		} else if (format == 'g') {
 			// delete zeros of head
@@ -307,7 +303,7 @@ struct conv_double {
 				// use 'f' like format
 
 				// delete zeros of tail
-				while (result[offset2 + result_min] == 0 && result_min < 0) {
+				while (result_min < 0 && result[offset2 + result_min] == 0) {
 					result_min++;
 				}
 
@@ -317,9 +313,8 @@ struct conv_double {
 
 				// make result string
 				for (i=result_max; i>=result_min; i--) {
-					if (i == -1) result_str += ".";
-					sprintf(stmp, "%d", result[offset2 + i]);
-					result_str += stmp;
+					if (i == -1) result_str << ".";
+					result_str << result[offset2 + i];
 				}
 
 			} else {
@@ -332,24 +327,22 @@ struct conv_double {
 
 				// make result string
 				for (i=result_max; i>=result_min; i--) {
-					if (i == result_max -1) result_str += ".";
-					sprintf(stmp, "%d", result[offset2 + i]);
-					result_str += stmp;
+					if (i == result_max -1) result_str << ".";
+					result_str << result[offset2 + i];
 				}
-				sprintf(stmp, "e%+03d", result_max);
-				result_str += stmp;
+				// sprintf(stmp, "e%+03d", result_max);
+				result_str << "e" << std::internal << std::showpos << std::setfill('0') << std::setw(3) << result_max << std::noshowpos;
 			}
 
 		} else if (format == 'a') {
 			// make result string
 			for (i=result_max; i>=result_min; i--) {
-				if (i == -1) result_str += ".";
-				sprintf(stmp, "%d", result[offset2 + i]);
-				result_str += stmp;
+				if (i == -1) result_str << ".";
+				result_str << result[offset2 + i];
 			}
 		}
 
-		return result_str;
+		return result_str.str();
 	}
 
 
@@ -436,7 +429,7 @@ struct conv_double {
 		std::vector<int> table;
 
 		table_max = num1_s.size() - 1 + e10;
-		table_min = - num2_s.size() + e10;
+		table_min = e10 - num2_s.size();
 		table.resize(table_max - table_min + 1);
 		offset = - table_min;
 
@@ -508,7 +501,7 @@ struct conv_double {
 				result1.push_back(carry % 2);
 				carry = carry / 2;
 			}
-			while (table[offset + table_max] == 0 && table_max >= 0) {
+			while (table_max >= 0 && table[offset + table_max] == 0) {
 				table_max--;
 			}
 		}
@@ -555,7 +548,7 @@ struct conv_double {
 				}
 			}
 
-			while (table[offset + table_min] == 0 && table_min < 0) {
+			while (table_min < 0 && table[offset + table_min] == 0) {
 				table_min++;
 			}
 		}
@@ -587,10 +580,17 @@ struct conv_double {
 		double dtmp;
 
 		if (result_max > 1023) {
+			if ((sign == 1 && mode == -1) || (sign == -1 && mode == 1)) {
+                        	return sign * (std::numeric_limits<double>::max)();
+			}
+
 			return sign * std::numeric_limits<double>::infinity();
 		}
 
 		if (result_max < -1075) {
+			if ((sign == 1 && mode == 1) || (sign == -1 && mode == -1)) {
+				return sign * std::numeric_limits<double>::denorm_min();
+			}
 			return sign * 0.;
 		}
 

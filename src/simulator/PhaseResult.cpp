@@ -3,7 +3,9 @@
 #include "Simulator.h"
 #include "Backend.h"
 #include "HydLaError.h"
-
+#include "VariableFinder.h"
+#include "Variable.h"
+#include "AtomicConstraintFinder.h"
 #include <sstream>
 
 using namespace std;
@@ -93,25 +95,25 @@ asks_t PhaseResult::get_diff_positive_asks()const
 
 void PhaseResult::add_diff_positive_asks(const asks_t &asks)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_positive_asks.insert(asks.begin(), asks.end());
 }
 
 void PhaseResult::add_diff_negative_asks(const asks_t &asks)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_negative_asks.insert(asks.begin(), asks.end());
 }
 
 void PhaseResult::add_diff_positive_ask(const ask_t &ask)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_positive_asks.insert(ask);
 }
 
 void PhaseResult::add_diff_negative_ask(const ask_t &ask)
 {
-  full_information = boost::none;
+  full_information = nullopt;
   diff_negative_asks.insert(ask);
 }
 
@@ -130,20 +132,20 @@ asks_t PhaseResult::get_all_negative_asks()const
 void PhaseResult::set_parameter_constraint(const ConstraintStore &cons)
 {
   parameter_constraint = cons;
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 void PhaseResult::add_parameter_constraint(const constraint_t &cons)
 {
   parameter_constraint.add_constraint(cons);
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 
 void PhaseResult::add_parameter_constraint(const ConstraintStore &cons)
 {
   parameter_constraint.add_constraint_store(cons);
-  parameter_maps = boost::none;
+  parameter_maps = nullopt;
 }
 
 
@@ -177,11 +179,50 @@ void PhaseResult::set_full_information(FullInformation &info)
   full_information = info;
 }
 
+std::map<variable_set_t,module_set_t> PhaseResult::unsat_cons_causes()const{
+  std::map<variable_set_t,module_set_t> res;
+
+  auto unsatmodset = (this->inconsistent_module_sets).begin();
+  for(auto unsatconsset : this->inconsistent_constraints){
+
+    std::map<module_t,AtomicConstraintFinder> mod2foundcons;
+    for(auto unsatmod : *unsatmodset){
+      AtomicConstraintFinder acfinder;
+      acfinder.visit_node(unsatmod.second);
+      mod2foundcons[unsatmod] = acfinder;
+    }
+    
+    for(auto unsatcons : unsatconsset){
+      VariableFinder vfinder;
+      vfinder.visit_node(unsatcons);
+      auto vars = vfinder.get_all_variable_set();
+
+      for(auto p : mod2foundcons){
+	if(p.second.include_constraint(unsatcons)){
+	  res[vars].insert(p.first);
+	  break;
+	}
+      }
+    }
+    
+    ++unsatmodset;
+  }
+  
+  return res;
+}
+
 string PhaseResult::get_string()const
 {
   std::stringstream sstr;
   sstr << *this;
   return  sstr.str();
+}
+
+string PhaseResult::get_vm_string()const
+{
+	std::stringstream sstr;
+	sstr << (*this).variable_map;
+	return sstr.str();
 }
 
 

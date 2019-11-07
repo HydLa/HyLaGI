@@ -42,6 +42,7 @@ void RelationGraph::add(module_t &mod)
 {
   current_module = mod;
   visit_mode = ADDING;
+  in_always = false;
   parent_ask = nullptr;
   accept(mod.second);
 }
@@ -668,7 +669,7 @@ constraints_t RelationGraph::get_all_guards()
   return result;
 }
 
-void RelationGraph::visit_atomic_constraint(boost::shared_ptr<symbolic_expression::Node> node)
+void RelationGraph::visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> node)
 {
   if(visit_mode == ADDING_ASK)
   {
@@ -768,7 +769,7 @@ VariableNode* RelationGraph::add_variable_node(Variable &var)
 }
 
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Ask> ask)
 {
   if(visit_mode == ADDING)
   {
@@ -838,7 +839,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask)
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Always> node)
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Always> node)
 {
   if(visit_mode == UNEXPANDING)return;
   bool prev_in_always = in_always;
@@ -847,7 +848,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Always> node)
   in_always = prev_in_always;
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalOr> logical_or)
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::LogicalOr> logical_or)
 {
   if(visit_mode != ADDING_ASK)
   {
@@ -867,7 +868,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalOr> logi
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and)
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::LogicalAnd> logical_and)
 {
   if(visit_mode != ADDING_ASK)
   {
@@ -888,7 +889,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::LogicalAnd> log
 }
 
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Not> not_expr)
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Not> not_expr)
 {
   if(visit_mode != ADDING_ASK)
   {

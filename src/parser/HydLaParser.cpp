@@ -25,7 +25,7 @@ bool Parser::parse_ended(){
   return false;
 }
 
-node_sptr Parser::is_defined(boost::shared_ptr<Definition> definition){
+node_sptr Parser::is_defined(std::shared_ptr<Definition> definition){
   node_sptr ret;
   std::string name = definition->get_name();
   int size = definition->bound_variable_size();
@@ -163,7 +163,7 @@ node_sptr Parser::statement(){
   lexer.set_current_position(position);
 
   // def_statement(constraint_def) "."
-  boost::shared_ptr<ConstraintDefinition> cd;
+  std::shared_ptr<ConstraintDefinition> cd;
   // constraint_callee
   if((cd = constraint_callee())){
     // "<=>"
@@ -193,7 +193,7 @@ node_sptr Parser::statement(){
   lexer.set_current_position(position);
 
   // def_statement(program_def) "."
-  boost::shared_ptr<ProgramDefinition> pd;
+  std::shared_ptr<ProgramDefinition> pd;
   // constraint_callee
   if((pd = program_callee())){
     // "{"
@@ -228,7 +228,7 @@ node_sptr Parser::statement(){
   lexer.set_current_position(position);
 
   // program_list_callee ":=" program_list
-  boost::shared_ptr<ProgramListDefinition> pld;
+  std::shared_ptr<ProgramListDefinition> pld;
   if((pld = program_list_callee())){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
@@ -246,7 +246,7 @@ node_sptr Parser::statement(){
           }
           error_occurred(tmp_position, "expected \".\" after program list definition");
         }else{
-          error_occurred(tmp_position, "expected list after \";=\"");
+          error_occurred(tmp_position, "expected list after \":=\"");
         }
       }
     }
@@ -254,7 +254,7 @@ node_sptr Parser::statement(){
   lexer.set_current_position(position);
 
   // expression_list_callee ":=" expression_list
-  boost::shared_ptr<ExpressionListDefinition> eld;
+  std::shared_ptr<ExpressionListDefinition> eld;
   if((eld = expression_list_callee())){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == DEFINITION){
@@ -284,7 +284,7 @@ node_sptr Parser::statement(){
     position_t tmp_position = lexer.get_current_position();
     if(lexer.get_token() == PERIOD){
       if(!parsed_program) parsed_program = ret;
-      else parsed_program = boost::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
+      else parsed_program = std::shared_ptr<Parallel>(new Parallel(parsed_program,ret));
       return ret;
     }
     lexer.set_current_position(tmp_position);
@@ -306,7 +306,7 @@ node_sptr Parser::program(){
     node_sptr rhs;
     while(lexer.get_token() == COMMA){
       if((rhs = program_priority())){
-        boost::shared_ptr<Parallel> tmp(new Parallel());
+        std::shared_ptr<Parallel> tmp(new Parallel());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -332,7 +332,7 @@ node_sptr Parser::program_priority(){
     node_sptr rhs;
     while(lexer.get_token() == WEAKER){
       if((rhs = program_factor())){
-        boost::shared_ptr<Weaker> tmp(new Weaker());
+        std::shared_ptr<Weaker> tmp(new Weaker());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -424,9 +424,9 @@ node_sptr Parser::module(){
 }
 
 /// program_callee := name formal_args
-boost::shared_ptr<ProgramDefinition> Parser::program_callee(){
+std::shared_ptr<ProgramDefinition> Parser::program_callee(){
   position_t position = lexer.get_current_position();
-  boost::shared_ptr<ProgramDefinition> ret(new ProgramDefinition());
+  std::shared_ptr<ProgramDefinition> ret(new ProgramDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
@@ -440,12 +440,12 @@ boost::shared_ptr<ProgramDefinition> Parser::program_callee(){
     return ret;
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ProgramDefinition>(); 
+  return std::shared_ptr<ProgramDefinition>(); 
 }
 
 /// program_caller := name actual_args
-boost::shared_ptr<ProgramCaller> Parser::program_caller(){
-  boost::shared_ptr<ProgramCaller> ret(new ProgramCaller());
+std::shared_ptr<ProgramCaller> Parser::program_caller(){
+  std::shared_ptr<ProgramCaller> ret(new ProgramCaller());
   position_t position = lexer.get_current_position();
   std::vector<node_sptr> args;
   std::string name;
@@ -477,7 +477,7 @@ boost::shared_ptr<ProgramCaller> Parser::program_caller(){
     else return ret;
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ProgramCaller>();
+  return std::shared_ptr<ProgramCaller>();
 }
 
 

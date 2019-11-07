@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <vector>
 #include "kv/interval.hpp"
 #include "kv/rdouble.hpp"
 #include "kv/dd.hpp"
@@ -18,7 +19,7 @@ namespace interval
 typedef kv::dd dd;
 typedef kv::interval<double> itvd;
 // typedef kv::interval<dd> itvd;
-typedef std::stack<itvd> itv_stack_t;
+typedef std::stack<itvd, std::vector<itvd>> itv_stack_t;
 
 typedef hydla::symbolic_expression::node_sptr node_sptr;
 typedef simulator::parameter_map_t            parameter_map_t;

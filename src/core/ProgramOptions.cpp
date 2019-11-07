@@ -4,8 +4,10 @@
 
 namespace hydla {
 
-using namespace boost::program_options;
 using namespace std;
+
+// for options_description, positional_options_description, value, command_line_parser
+using namespace boost::program_options;
 
 ProgramOptions::ProgramOptions() : visible_desc_(LINE_LENGTH)
 {
@@ -30,15 +32,16 @@ pair<string, string> reg_toggle(const string& s)
 
 void ProgramOptions::init_descriptions()
 {
-  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options",
+  options_description generic_desc("Usage: hylagi [options] [file]\n\nAllowed options\n(default value is written in \"()\")\n('n' means \"no\" not a natural number)",
                                    LINE_LENGTH);
   generic_desc.add_options()
     ("help,h", "display help message (this option)")
-    ("version", "display version")
+    ("version,v", "display version")
 
     ("parse_only", "only try to parse given program")
     ("dump_parse_tree", "only output parse tree")
     ("dump_parse_tree_json", "only output parse tree in JSON format")
+    ("debug_constraint", "debugging program")
 
     ("dump_module_set_graph", "only output candidate sets of module sets\n"
      "  in graph representation")
@@ -49,12 +52,19 @@ void ProgramOptions::init_descriptions()
      "only output relation of constraints and variables\n"
      "  in graphviz format")
 
-    ("simplify",
+    ("simplify,s",
      value<int>()->default_value(1),
      "the level of simplification at each phase\n"
      "  0 - no simplification\n"
      "  1 - use \"Simplify\"\n"
      "  2 or others - use \"FullSimplify\""
+      )
+
+     ("dsolve",
+     value<int>()->default_value(0),
+     "the method of differential equation in exDSolve\n"
+     "  0 - Try to get initial value problem directly\n"
+     "  1 - Try to get initial value problem via constant\n"
       )
 
     ("tm",
@@ -124,7 +134,7 @@ void ProgramOptions::init_descriptions()
     ("static_generation_of_module_sets", value<char>()->default_value('n'),"simulate with static generation of module sets")
 
     ("ignore_warnings", value<char>()->default_value('n'), "ignore warnings created by backend solvers. \n"
-     "current canidates: DSolve::bvnul, Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
+     "current canidates: Solve::incnst, Solve::ifun, DSolve::bvnul, Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
      "Note: Warnings from HyLaGI itself are always activated"
       )
 
@@ -144,7 +154,9 @@ void ProgramOptions::init_descriptions()
      value<std::string>()->default_value(""),
      "guards to be solved by interval newton method(delimited by \",\")")
     ("step_by_step", value<char>()->default_value('n'),
-      "use find_min_time_step_by_step");
+      "use find_min_time_step_by_step")
+    ("solve_over_reals", value<char>()->default_value('n'), "solve constrants over the reals")
+    ("html", value<char>()->default_value('n'), "output log with HTML format");
 
 
   options_description hidden_desc("Hidden options");

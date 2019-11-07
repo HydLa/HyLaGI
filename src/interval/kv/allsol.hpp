@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Masahide Kashiwagi (kashi@waseda.jp)
+ * Copyright (c) 2013-2016 Masahide Kashiwagi (kashi@waseda.jp)
  */
 
 #ifndef ALLSOL_HPP
@@ -26,8 +26,13 @@
 #define EDGE_RATIO 0.9
 #endif
 
+// 0: Do not use TRIM
+// 1: use TRIM and use slow trim algorithm
+// 2: use TRIM and use fast bat slightly inefficient trim algorithm
+// 3: use TRIM and use new trim algorithm
+
 #ifndef USE_TRIM
-#define USE_TRIM 1
+#define USE_TRIM 3
 #endif
 
 #ifndef USE_ZERODIVIDE
@@ -197,22 +202,6 @@ template <class T> void recovery_inflation2 (ub::vector< interval<T> >& I, const
 		}
 	}
 }
-
-#if UNIFY_REST == 1
-// convex hull of interval vector
-template <class T> ub::vector< interval<T> > iv_hull (const ub::vector< interval<T> >& x, const ub::vector< interval<T> >& y) {
-	int i;
-	int s = x.size();
-	ub::vector< interval<T> > r;
-
-	r.resize(s);
-	for (i=0; i<s; i++) {
-		r(i) = interval<T>::hull(x(i), y(i));
-	}
-
-	return r;
-}
-#endif // UNIFY_REST == 1
 
 // **not used**
 // return index of division such that norm of M seems to be smallest
@@ -404,18 +393,34 @@ template <class T> int search_maxwidth_finite (const ub::vector< interval<T> >& 
 
 #endif // ENABLE_INFINITY
 
+
+// generate 1-d vector function from scalar function
+
+template <class F>
+struct MakeVec {
+	F f;
+	MakeVec(F f): f(f) {}
+
+	template <class T> ub::vector<T> operator()(const ub::vector<T>& x) {
+		ub::vector<T> r(1);
+		r(0) = f(x(0));
+		return r;
+	}
+};
+
 } // namespace allsol_sub
 
 
 // find all solution of f in I
 
-template <class T, class F> std::list< ub::vector< interval<T> > >
+template <class T, class F>
+std::list< ub::vector< interval<T> > >
 allsol (
 F f,
 const ub::vector< interval<T> >& I,
-int verbose=1,
+int verbose = 1,
 T giveup = T(0.),
-std::list< ub::vector < interval<T> > >* rest=NULL
+std::list< ub::vector < interval<T> > >* rest = NULL
 )
 {
 	std::list< ub::vector < interval<T> > > targets;
@@ -426,13 +431,14 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 
 // find all solution of f in targets (list of intervals)
 
-template <class T, class F> std::list< ub::vector< interval<T> > >
+template <class T, class F>
+std::list< ub::vector< interval<T> > >
 allsol_list (
 F f,
 std::list< ub::vector< interval<T> > > targets,
-int verbose=1,
+int verbose = 1,
 T giveup = T(0.),
-std::list< ub::vector < interval<T> > >* rest=NULL
+std::list< ub::vector < interval<T> > >* rest = NULL
 )
 {
 	int s = (targets.front()).size();
@@ -457,6 +463,9 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 	T wmax;
 	bool r, M_calculated, flag, flag2, flag3;
 	interval<T> A, B, J, J2, Itmp;
+#if USE_TRIM == 3
+	ub::vector< interval<T> > A0, A1, A2; // for new trim algorithm
+#endif // USE_TRIM == 3
 
 	// boost::variate_generator<boost::mt19937, boost::uniform_int<> > rand (boost::mt19937(time(0)), boost::uniform_int<>(0, s-1));
 
@@ -568,7 +577,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		if (allsol_sub::include_infinity(I)) goto label;
 #endif
 
-#if USE_TRIM == 1
+#if USE_TRIM >= 1
 		// interval shrinking
 		IR = I;
 		flag = false; // non-existence in I turns out or not
@@ -585,13 +594,49 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 		}
 		wmax *= RECOVER_RATIO;
 
+#if USE_TRIM == 3
+		A0.resize(s);
+		A1.resize(s);
+		A2.resize(s);
+#endif // USE_TRIM == 3
+
 		for (i=0; i<s; i++) {
+
+#if USE_TRIM == 3
+			// prepare for new trim algorithm
+			for (j=0; j<s; j++) {
+				A0(j) = fdi(i,j) * (I(j)-C(j));
+			}
+			Itmp = 0.;
+			for (j=0; j<s; j++) {
+				A1(j) = Itmp;
+				Itmp += A0(j);
+			}
+			Itmp = 0.;
+			for (j=s-1; j>=0; j--) {
+				A2(j) = Itmp;
+				Itmp += A0(j);
+			}
+#endif // USE_TRIM == 3
+			
 			for (j=0; j<s; j++) {
 				// do not use TRIM for narrow component
 				if (width(I(j)) < wmax) continue;
 
 				B = fdi(i, j);
 
+#if USE_TRIM == 1
+				// calculate A simply
+				// simple but slow
+				A = 0.;
+				for (k=0; k<s; k++) {
+					if (k == j) continue;
+					A += fdi(i, k) * (I(k)-C(k));
+				}
+				A += fc(i);
+#endif // USE_TRIM == 1
+#if USE_TRIM == 2
+				// old trim algorithm
 				// calculate back A from mvf
 				A = mvf(i);
 				Itmp = B * (I(j)-C(j));
@@ -600,16 +645,11 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 				tmp2 = rop<T>::sub_up(A.upper(), Itmp.upper());
 				rop<T>::end();
 				A.assign(tmp, tmp2);
-#if 0
-				// calculate A simply
-				// below is simple but slow
-				A = 0.;
-				for (k=0; k<s; k++) {
-					if (k == j) continue;
-					A += fdi(i, k) * (I(k)-C(k));
-				}
-				A += fc(i);
-#endif
+#endif // USE_TRIM == 2
+#if USE_TRIM == 3
+				// new trim algorithm
+				A = fc(i) + A1(j) + A2(j);
+#endif // USE_TRIM == 3
 
 				if (zero_in(B)) {
 #if USE_ZERODIVIDE >= 1
@@ -735,7 +775,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 			}
 		}
 
-#endif // USE_TRIM == 1
+#endif // USE_TRIM >= 1
 
 #if USE_AFFINEABS == 1
 		g.resize(s);
@@ -988,7 +1028,7 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 					p = (*rest).begin();
 					while (p != (*rest).end()) {
 						if (overlap(*p, I1)) {
-							I1 = allsol_sub::iv_hull(I1, *p);
+							I1 = hull(I1, *p);
 							p = (*rest).erase(p);
 							// #pragma omp atomic
 							// count_giveup--;
@@ -1064,6 +1104,52 @@ std::list< ub::vector < interval<T> > >* rest=NULL
 	}
 
 	return solutions;
+}
+
+
+// allsol for 1-dimentional function
+
+template <class T, class F>
+std::list< interval<T> >
+allsol (
+F f,
+const interval<T>& I,
+int verbose = 1,
+T giveup = T(0.),
+std::list< interval<T> >* rest = NULL
+)
+{
+	allsol_sub::MakeVec<F> g(f);
+	ub::vector< interval<T> > I2(1);
+	std::list< ub::vector< interval<T> > > rest2;
+	typename std::list< ub::vector< interval<T> > >::iterator p1;
+	std::list< ub::vector< interval<T> > >* rest_p;
+	std::list< ub::vector< interval<T> > > r1;
+	typename std::list< ub::vector< interval<T> > >::iterator p2;
+	std::list< interval<T> > r2;
+
+	I2(0) = I;
+	if (rest == NULL) {
+		rest_p = NULL;
+	} else {
+		rest_p = &rest2;
+	}
+
+	r1 = allsol(g, I2, verbose, giveup, rest_p);
+
+	p2 = r1.begin();
+	while (p2 != r1.end()) {
+		r2.push_back((*(p2++))(0));
+	}
+
+	if (rest != NULL) {
+		p1 = rest2.begin();
+		while (p1 != rest2.end()) {
+			(*rest).push_back((*(p1++))(0));
+		}
+	}
+
+	return r2;
 }
 
 } // namespace kv
