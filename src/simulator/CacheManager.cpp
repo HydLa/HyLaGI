@@ -53,6 +53,7 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
 
   vector<Cache*> cache_list;
   vector<variable_map_t> vm_list;
+  bool hit_flag = false;
 
   if(type == POINT_PHASE){
     if(cache_map_point_.count(key) > 0){
@@ -60,13 +61,14 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
       for (auto &cache : cache_list) {
         backend_->call("createVariableMapFromCache", true, 1, "clp", "cv", &cache->cache_result, &vm_list);
         if(vm_list.size() == 0){
-          return false;
+          continue;
         }
         /*
         for (auto vm : vm_list) {
           std::cout << vm << std::endl;
         }
         */
+        hit_flag  = true;
         cache->cache_vm = vm_list[0];
         consistent_cache_list_.push_back(cache);
       }
@@ -89,13 +91,14 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
       for (auto &cache : cache_list) {
         backend_->call("createVariableMapFromCache", true, 1, "cli", "cv", &cache->cache_result, &vm_list);
         if(vm_list.size() == 0){
-          return false;
+          continue;
         }
         /*
         for (auto vm : vm_list) {
           std::cout << vm << std::endl;
         }
         */
+        hit_flag = true;
         cache->cache_vm = vm_list[0];
         consistent_cache_list_.push_back(cache);
       }
@@ -103,8 +106,12 @@ bool CacheManager::check_cache_consistency(PhaseType type, asks_t pos_asks, modu
       return false;
     }
   }
-  cache_hit_count_++;
-  return true;
+  if(hit_flag){
+    cache_hit_count_++;
+    return true;
+  }else{
+    return false;
+  }
 }
 
 void CacheManager::set_phase_result(phase_result_sptr_t phase){

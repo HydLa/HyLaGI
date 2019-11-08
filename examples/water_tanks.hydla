@@ -1,7 +1,7 @@
 // http://www-inst.cs.berkeley.edu/~ee291e/sp09/handouts/book.pdf
 // p57
-Xs := {x1..x3}.
-Ss := {s1..s3}.
+Xs := {x1..x5}.
+Ss := {s1..s5}.
 
 WATER <=> [](w = 50).
 OUT(x,v,s) <=> [](s- = 0 => x' = -v*x) &
@@ -20,4 +20,4 @@ INIT(Xs[1],1,Ss[1],1,w-5*Xs[1]).
 { CONST(Ss[i]) << POUR(Xs[i],1/2*i,Ss[i]) | i in {1..|Xs|} }.
 { CONST(Ss[j]) << NOT_POUR(Xs[i],1/2*i,Ss[j]) | i in {1..|Xs|}, j in {1..|Xs|}, i != j }.
 
-//#hylagi --fnd --fignore_warnings -p6
+//#hylagi --fnd --fignore_warnings -p50

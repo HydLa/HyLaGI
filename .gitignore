@@ -16,3 +16,4 @@ workspace/
 *.pyc
 ./.DS_Store
 src/debug/*.pyc
+*.json
