@@ -899,8 +899,10 @@ Module[
   (* add constraint "t > 0" to exclude past case *)
   resultCons = And@@resultCons && t > 0;
   simplePrint[listExpr];
+  simplePrint[mapleExpression];
   resultRule = Quiet[Check[dsolve[listExpr, getVariables[listExpr] ], {}] ];
-  If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1, 
+  simplePrint[resultRule];
+  If[resultRule =!= overconstrained && Head[resultRule] =!= DSolve && Length[resultRule] == 1,
     resultRule = resultRule[[1]] /. prevRs;
     listExpr = {},
     (* resultRule may equal overconstrained for the constraint such as x'[t] == 0 && x[t] == 0 && x[0] == 0,
@@ -1115,12 +1117,12 @@ Module[
           ],
           {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
         ],
-        solwithconstant = mapleExpression
+        solwithconstant = (mapleExpression /. (Rule[fun_[timer_], expression_] :> Rule[fun, Function[{timer}, expression]]))
       ]
     ]
   ];
 
-  (*simplePrint[solwithconstant];*)
+  simplePrint[solwithconstant];
   For[i = 1, i <= Length[solwithconstant], i++,
     ini = {};
     constants = Union[Cases[solwithconstant[[i]], C[_], {0, Infinity}]];
