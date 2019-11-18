@@ -36,7 +36,6 @@ dList = {};
 profileList = {};
 createMapList = {};
 assumptions = True;
-mapleExpression = {};
 
 (* 想定外のメッセージが出ていないかチェック．出ていたらそこで終了．*)
 If[optIgnoreWarnings,

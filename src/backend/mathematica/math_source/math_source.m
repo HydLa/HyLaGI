@@ -122,17 +122,92 @@ Module[
 getEquation[] := (getEquation[True]
 );
 
+mapleExpression = {};
+mapleResult = overConstrained;
+
+mapleListExpr = {};
+mapleResultCons = True;
+mapleTVars = {};
+mapleResultRule = {};
+
+mapleSearchResult = {};
+mapleRules = {};
+mapleResultCons = True;
+mapleUnsolvable = False;
+
+mapleRetCode = underConstrained;
+mapleRestCond = True;
+
 publicMethod[
   getEquation,
   cons,
   Module[
-    {listExpr, resultCons},
-      listExpr = applyList[Simplify[cons && constraint]];
-      resultCons = Select[listExpr, (Head[#] =!= Equal)&];
-      listExpr = Complement[listExpr, resultCons];
-      resultCons = And@@resultCons && t > 0;
-      simplePrint[listExpr];
-      ToString[InputForm[listExpr]]
+    {},
+    mapleListExpr = applyList[Simplify[cons && constraint]];
+    sol = {};
+    mapleResultCons = Select[mapleListExpr, (Head[#] =!= Equal)&];
+    mapleListExpr = Complement[mapleListExpr, mapleResultCons];
+    mapleResultCons = And@@mapleResultCons && t > 0;
+    mapleTVars = getTimeVariables[mapleListExpr];
+    mapleResultRule = {};
+    mapleUnsolvable = False;
+    simplePrint[mapleListExpr];
+    simplePrint[mapleResultCons];
+    ToString[InputForm[mapleListExpr]]
+  ]
+];
+
+publicMethod[
+  beforeMaple,
+  Module[
+    {},
+    mapleSearchResult = searchExprsAndVars[mapleListExpr];
+    simplePrint[mapleSearchResult];
+    If[mapleSearchResult === unExpandable,
+      "unExpandable",
+      ToString[InputForm[mapleSearchResult[[1]]]]
+    ]
+  ]
+];
+
+publicMethod[
+  afterMaple,
+  Module[
+    {},
+    mapleRules = dsolve[mapleSearchResult[[1]], mapleSearchResult[[3]]];
+    simplePrint[mapleRules];
+    If[mapleRules === overConstrained || Length[mapleRules] == 0, mapleResult = overConstrained; Return["overConstrained"]];
+    (* TODO:rulesの要素数が2以上，つまり解が複数存在する微分方程式系への対応 *)
+    If[Head[mapleRules] === DSolve,
+      mapleResultCons = mapleResultCons && And@@mapleSearchResult[[1]];
+      mapleListExpr = Complement[mapleListExpr, mapleSearchResult[[1]] ];
+      mapleUnsolvable = True;
+      Return["Continue"]
+    ];
+    mapleResultRule = Union[mapleResultRule, mapleRules[[1]] ];
+    mapleListExpr = applyDSolveResult[mapleSearchResult[[2]], mapleRules[[1]] ];
+    mapleListExpr = mapleListExpr //. prevRules;
+    If[MemberQ[mapleListExpr, ele_ /; (ele === False || (!hasVariable[ele] && MemberQ[ele, t, {0, Infinity}]))], mapleResult = overConstrained; Return["overConstrained"] ];
+    mapleListExpr = Select[mapleListExpr, (#=!=True)&];
+    mapleTVars = getTimeVariables[mapleListExpr];
+    simplePrint[mapleListExpr, mapleTVars];
+    mapleResultCons = applyDSolveResult[mapleResultCons, mapleResultRule] /. prevRules;
+    If[mapleResultCons === False, mapleResult = overConstrained; Return["overConstrained"], Return["Continue"]];
+  ]
+];
+
+publicMethod[
+  finMaple,
+  Module[
+    {},
+    simplePrint[mapleResultRule, mapleResultCons, prevRules];
+    mapleRetCode = If[Length[mapleListExpr] > 0 || mapleUnsolvable, underConstrained, solved];
+    mapleRestCond = And@@mapleListExpr && applyDSolveResult[mapleResultCons, mapleResultRule];
+    mapleRestCond = LogicalExpand[Assuming[t > 0, Simplify[mapleRestCond] ] ];
+    mapleRestCond = Or2or[mapleRestCond];
+    mapleRestCond = Map[(And2and[#])&, mapleRestCond];
+    mapleResult = {mapleRetCode, mapleRestCond, mapleResultRule};
+    Return["fin"]
   ]
 ];
 
@@ -144,7 +219,8 @@ publicMethod[
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs];
+        (*sol = exDSolve[Simplify[cons], prevRs];*)
+        sol = mapleResult;
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
@@ -284,7 +360,8 @@ publicMethod[
   cons, prevRs, vars,
   Module[
     {sol, tStore, ret},
-    sol = exDSolve[cons, prevRs];
+    (*sol = exDSolve[cons, prevRs];*)
+    sol = mapleResult;
     sol = sol /. prevRs;
     debugPrint["sol after exDSolve", sol];
     If[sol === overConstrained || sol[[1]] === underConstrained,

@@ -144,7 +144,14 @@ CheckConsistencyResult ConsistencyChecker::call_backend_check_consistency(const 
   else
   {
     backend->call("getEquation", true, 1, "cst", "s", &tmp_cons, &s);
-    backend->dsolve_by_maple(s);
+    while (true) {
+      backend->call("beforeMaple", true, 0, "", "s", &s);
+      if (s == "unExpandable") break;
+      backend->dsolve_by_maple(s);
+      backend->call("afterMaple", true, 0, "", "s", &s);
+      if (s == "overConstrained") break;
+    }
+    if (s != "overConstrained") backend->call("finMaple", true, 0, "", "s", &s);
     backend->call("checkConsistencyInterval", true, 1, "cst", "cc", &tmp_cons, &ret);
   }
   backend_check_consistency_time += timer.get_elapsed_us();
@@ -332,12 +339,26 @@ CheckConsistencyResult &result,
       }
       std::string s;
       backend->call("getEquation", true, 0, "", "s", &s);
-      backend->dsolve_by_maple(s);
+      while (true) {
+        backend->call("beforeMaple", true, 0, "", "s", &s);
+        if (s == "unExpandable") break;
+        backend->dsolve_by_maple(s);
+        backend->call("afterMaple", true, 0, "", "s", &s);
+        if (s == "overConstrained") break;
+      }
+      if (s != "overConstrained") backend->call("finMaple", true, 0, "", "s", &s);
       backend->call("createVariableMapInterval", true, 1, "vst", "cv", &send_vars, &create_result);
     }else{
       std::string s;
       backend->call("getEquation", true, 0, "", "s", &s);
-      backend->dsolve_by_maple(s);
+      while (true) {
+        backend->call("beforeMaple", true, 0, "", "s", &s);
+        if (s == "unExpandable") break;
+        backend->dsolve_by_maple(s);
+        backend->call("afterMaple", true, 0, "", "s", &s);
+        if (s == "overConstrained") break;
+      }
+      if (s != "overConstrained") backend->call("finMaple", true, 0, "", "s", &s);
       backend->call("createVariableMapInterval", true, 0, "", "cv", &create_result);
     }
 
