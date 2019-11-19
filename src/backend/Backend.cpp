@@ -466,6 +466,7 @@ int Backend::call(const char* name, bool trace, int arg_cnt, const char* args_fm
 void Backend::wolfram_to_maple(std::string &s){
   s = regex_replace(s, regex("Derivative\\[1\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t)");
   s = regex_replace(s, regex("Derivative\\[2\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t,t)");
+  s = regex_replace(s, regex("prev\\[([a-zA-Z0-9]+),\\s([0-9]+)\\]"),"prev$1of$2");
   s = regex_replace(s, regex("\\["), "(");
   s = regex_replace(s, regex("\\]"), ")");
   s = regex_replace(s, regex("=="), "=");
@@ -478,6 +479,7 @@ void Backend::wolfram_to_maple(std::string &s){
 
 void Backend::maple_to_wolfram(std::string &s){
   s = regex_replace(s,regex("\\\\"),"");           // \を除去
+  s = regex_replace(s,regex("prev([a-zA-Z0-9]+)of([0-9]+)"),"prev\[$1,$2\]");
   s = regex_replace(s,regex("\\(t\\)"),"\[t\]");   // "(t)" -> "[t]"
   s = regex_replace(s,regex("_C(\\d+)"),"C\[$1\]"); // "_Cn" -> "C[n]"
   s = regex_replace(s,regex("="),"->");            // "=" -> "->"

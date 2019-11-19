@@ -1155,7 +1155,7 @@ Module[
 ];
 
 solveByDSolveAndSolve[expr_, vars_] :=
-solveByDSolveAndSolve[expr, vars] = (* for memoization *)
+(*solveByDSolveAndSolve[expr, vars] = (* for memoization *)*)
 Module[
   {ini, inis, sol = {}, solwithconstant, solofconstant, derivatives, prevs = {}, constants, i, j},
   tVars = Map[(#[t])&, vars];
