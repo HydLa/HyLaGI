@@ -147,7 +147,7 @@ publicMethod[
           debugPrint[tRules];
           debugPrint[(initCons /. (tRules /. t -> 0))];
           debugPrint[(substitutedInit /. (tRules /. t -> 0))];
-          If[(initCons /. (tRules /. t -> 0)) === False, 
+          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];
