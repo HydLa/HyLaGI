@@ -29,7 +29,7 @@ ifeq ($(UNAME),Darwin)
 LIBS_STATIC += -lboost_thread-mt
 
 INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-INCLUDES += -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/
+INCLUDES += `python3-config --includes`
 LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable

@@ -24,8 +24,10 @@ namespace hydla{
     {
       std::string solve_ret;
       int error;
-      char *a = "a";
-      char **aa = &a;
+      const char *a = "a";
+      wchar_t *wa;
+      mbstowcs(wa, a, 1);
+      wchar_t **aa = &wa;
       std::string solve_var;
       std::vector<std::string> add_var_list, eq_list, ask_eq_list, true_eq_list;
       std::vector<std::vector<std::string>> each_ask_cons_sets;
@@ -44,11 +46,11 @@ namespace hydla{
       Py_InitializeEx(0);
       PyObject *sys = PyImport_ImportModule("sys");
       PyObject *path = PyObject_GetAttrString(sys, "path");
-      PyList_Append(path, PyString_FromString("./src/debug"));  
+      PyList_Append(path, PyUnicode_FromString("./src/debug"));
       PyRun_SimpleString("import os, sys\n");
 
       PySys_SetArgv(0, aa); 
-      pName = PyString_FromString("solve_sym");
+      pName = PyUnicode_FromString("solve_sym");
       pModule = PyImport_Import(pName);
 /// solve.py接続部分終わり
 
@@ -1163,7 +1165,7 @@ namespace hydla{
           /* pFunc is a new reference */
           if (pFunc && PyCallable_Check(pFunc)) {
             pArgs = PyTuple_New(1);
-            pValue = PyString_FromString(name_var.c_str());
+            pValue = PyUnicode_FromString(name_var.c_str());
             PyTuple_SetItem(pArgs, 0, pValue);
             pValue = PyObject_CallObject(pFunc, pArgs);
             Py_DECREF(pArgs);
@@ -1186,9 +1188,9 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
@@ -1211,15 +1213,15 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
           error = check_error(pValue);
           if(error == 0){
-            ret = PyString_AsString(pValue);
+            ret = PyUnicode_AsUTF8(pValue);
           }
         }
         else {
@@ -1238,15 +1240,15 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
           error = check_error(pValue);
           if(error == 0){
-            ret = PyString_AsString(pValue);
+            ret = PyUnicode_AsUTF8(pValue);
           }
         }
         else {
@@ -1259,7 +1261,7 @@ namespace hydla{
 /// python関数の呼び出しが成功したかどうかの判定
     int Solve_sym::check_error(PyObject *pValue){
       if (pValue != NULL) {
-        //printf("Result of call: %s\n", PyString_AsString(pValue));
+        //printf("Result of call: %s\n", PyUnicode_AsUTF8(pValue));
         return 0;
       }
       else {
