@@ -231,7 +231,8 @@ int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   //if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   //else     Logger::instance().set_log_level(Logger::Warn);
-
+  
+  // バックエンドは一応抽象化されているが、現状Mathematica直打ち
   backend_.reset(new Backend(new MathematicaLink(opts.wstp, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.dsolve, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();
 
@@ -245,6 +246,7 @@ int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     }
   else
     {
+      // 現状のメインのシミュレーションはここから
       simulator_ = new SequentialSimulator(opts);
     }
 
