@@ -19,6 +19,7 @@ SequentialSimulator::~SequentialSimulator()
 {
 }
 
+  // ここから、メインのシミュレーションが始まる
 phase_result_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str = "";
@@ -26,6 +27,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
   try
   {
+    // dfsが再帰的に呼ばれて、PP/IPのシミュレーションが行われる
     dfs(result_root_);
   }
   catch(const std::exception &se)
