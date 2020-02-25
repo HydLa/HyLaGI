@@ -52,19 +52,19 @@ public:
   node_sptr program_priority();
   node_sptr program_factor();
   node_sptr parenthesis_program();
-  boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
   constraint_def();
-  boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>
   program_def();
-  boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
   constraint_callee();
-  boost::shared_ptr<hydla::symbolic_expression::ConstraintCaller>
+  std::shared_ptr<hydla::symbolic_expression::ConstraintCaller>
   constraint_caller();
-  boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>
   program_callee();
-  boost::shared_ptr<hydla::symbolic_expression::ProgramCaller> program_caller();
+  std::shared_ptr<hydla::symbolic_expression::ProgramCaller> program_caller();
   node_sptr module();
-  boost::shared_ptr<hydla::symbolic_expression::Constraint> constraint();
+  std::shared_ptr<hydla::symbolic_expression::Constraint> constraint();
   node_sptr logical_or();
   node_sptr logical_and();
   node_sptr always();
@@ -85,10 +85,10 @@ public:
   node_sptr diff();
   node_sptr factor();
   node_sptr system_variable();
-  boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction>
+  std::shared_ptr<hydla::symbolic_expression::UnsupportedFunction>
   unsupported_function();
-  boost::shared_ptr<hydla::symbolic_expression::Function> function();
-  boost::shared_ptr<hydla::symbolic_expression::Variable> variable();
+  std::shared_ptr<hydla::symbolic_expression::Function> function();
+  std::shared_ptr<hydla::symbolic_expression::Variable> variable();
   node_sptr parameter();
   std::vector<node_sptr> actual_args();
   std::vector<std::string> formal_args();
@@ -106,18 +106,18 @@ public:
   node_sptr program_list();
   node_sptr program_list_term();
   node_sptr program_list_factor();
-  boost::shared_ptr<hydla::symbolic_expression::ProgramListCaller>
+  std::shared_ptr<hydla::symbolic_expression::ProgramListCaller>
   program_list_caller();
-  boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>
   program_list_callee();
   node_sptr nameless_list();
   node_sptr conditional_expression_list();
   node_sptr expression_list();
   node_sptr expression_list_term();
   node_sptr expression_list_factor();
-  boost::shared_ptr<hydla::symbolic_expression::ExpressionListCaller>
+  std::shared_ptr<hydla::symbolic_expression::ExpressionListCaller>
   expression_list_caller();
-  boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>
+  std::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>
   expression_list_callee();
   node_sptr list_condition();
   node_sptr size_of_list();
@@ -140,7 +140,7 @@ public:
   void list_type_check();
   bool parse_ended();
   node_sptr
-      is_defined(boost::shared_ptr<hydla::symbolic_expression::Definition>);
+      is_defined(std::shared_ptr<hydla::symbolic_expression::Definition>);
 
 private:
   Lexer lexer;
@@ -149,36 +149,36 @@ private:
   bool in_conditional_program_list_ = false;
 
   std::stack<
-      std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramCaller>>>
+      std::vector<std::shared_ptr<hydla::symbolic_expression::ProgramCaller>>>
       local_program_caller_;
 
   std::vector<error_info_t> error_info;
   std::vector<error_info_t> error_tmp;
 
   node_sptr parsed_program;
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
+  std::vector<std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
       program_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
       constraint_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>
       expression_list_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>>
       program_list_definitions;
   node_sptr assertion_node;
 
-  std::vector<boost::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
+  std::vector<std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
       tmp_program_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
       tmp_constraint_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>
       tmp_expression_list_definitions;
   std::vector<
-      boost::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>>
+      std::shared_ptr<hydla::symbolic_expression::ProgramListDefinition>>
       tmp_program_list_definitions;
 };
 

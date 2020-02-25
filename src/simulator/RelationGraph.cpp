@@ -685,7 +685,7 @@ constraints_t RelationGraph::get_all_guards() {
 }
 
 void RelationGraph::visit_atomic_constraint(
-    boost::shared_ptr<symbolic_expression::Node> node) {
+    std::shared_ptr<symbolic_expression::Node> node) {
   if (visit_mode == ADDING_ASK) {
     AtomicConstraint atomic_guard;
     atomic_guard.constraint = node;
@@ -770,7 +770,7 @@ VariableNode *RelationGraph::add_variable_node(Variable &var) {
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask) {
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Ask> ask) {
   if (visit_mode == ADDING) {
     if (in_always)
       always_list.add_constraint(ask);
@@ -842,14 +842,14 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Ask> ask) {
   }
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Exists> exists) {
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Exists> exists) {
   in_exists++;
   accept(exists->get_variable());
   accept(exists->get_child());
   in_exists--;
 }
 
-void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Always> node) {
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Always> node) {
   if (visit_mode == UNEXPANDING)
     return;
   bool prev_in_always = in_always;
@@ -859,7 +859,7 @@ void RelationGraph::visit(boost::shared_ptr<symbolic_expression::Always> node) {
 }
 
 void RelationGraph::visit(
-    boost::shared_ptr<symbolic_expression::LogicalOr> logical_or) {
+    std::shared_ptr<symbolic_expression::LogicalOr> logical_or) {
   if (visit_mode != ADDING_ASK) {
     accept(logical_or->get_lhs());
     accept(logical_or->get_rhs());
@@ -876,7 +876,7 @@ void RelationGraph::visit(
 }
 
 void RelationGraph::visit(
-    boost::shared_ptr<symbolic_expression::LogicalAnd> logical_and) {
+    std::shared_ptr<symbolic_expression::LogicalAnd> logical_and) {
   if (visit_mode != ADDING_ASK) {
     accept(logical_and->get_lhs());
     accept(logical_and->get_rhs());
@@ -893,7 +893,7 @@ void RelationGraph::visit(
 }
 
 void RelationGraph::visit(
-    boost::shared_ptr<symbolic_expression::Not> not_expr) {
+    std::shared_ptr<symbolic_expression::Not> not_expr) {
   if (visit_mode != ADDING_ASK) {
     accept(not_expr->get_child());
   } else {
@@ -907,7 +907,7 @@ void RelationGraph::visit(
 }
 
 void RelationGraph::visit(
-    boost::shared_ptr<symbolic_expression::ConstraintCaller> caller) {
+    std::shared_ptr<symbolic_expression::ConstraintCaller> caller) {
   if(in_exists > 0 && visit_mode == ADDING){
     std::cout << "VISIT" << std::endl;
     std::cout << "caller:" << std::endl;

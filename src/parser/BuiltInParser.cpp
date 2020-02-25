@@ -19,9 +19,9 @@ node_sptr Parser::constant(){
   position_t position = lexer.get_current_position();
   if(lexer.get_token() == UPPER_IDENTIFIER){
     std::string str = lexer.get_current_token_string();
-    if(str == "Pi") return boost::shared_ptr<Pi>(new Pi());
-    if(str == "Infinity") return boost::shared_ptr<Infinity>(new Infinity());
-    if(str == "E") return boost::shared_ptr<E>(new E());
+    if(str == "Pi") return std::shared_ptr<Pi>(new Pi());
+    if(str == "Infinity") return std::shared_ptr<Infinity>(new Infinity());
+    if(str == "E") return std::shared_ptr<E>(new E());
   }
   lexer.set_current_position(position);
   return node_sptr();
@@ -39,9 +39,9 @@ node_sptr Parser::system_variable(){
     if(lexer.get_token() == LOWER_IDENTIFIER){
       std::string str = lexer.get_current_token_string();
       // t
-      if(str == "t"){ return boost::shared_ptr<SymbolicT>(new SymbolicT()); }
+      if(str == "t"){ return std::shared_ptr<SymbolicT>(new SymbolicT()); }
       // timer
-      if(str == "timer"){ return boost::shared_ptr<SVtimer>(new SVtimer()); }
+      if(str == "timer"){ return std::shared_ptr<SVtimer>(new SVtimer()); }
     }
   }
   lexer.set_current_position(position);
@@ -85,8 +85,8 @@ node_sptr Parser::tautology(){
   if(lexer.get_token() == SYSTEM){
     if(lexer.get_token() == UPPER_IDENTIFIER){
       // "TRUE"
-      if(lexer.get_current_token_string() == "TRUE"){ return boost::shared_ptr<True>(new True());}
-      if(lexer.get_current_token_string() == "FALSE"){ return boost::shared_ptr<False>(new False());}
+      if(lexer.get_current_token_string() == "TRUE"){ return std::shared_ptr<True>(new True());}
+      if(lexer.get_current_token_string() == "FALSE"){ return std::shared_ptr<False>(new False());}
     }
   }
   lexer.set_current_position(position);

@@ -8,12 +8,12 @@
 namespace hydla {
 namespace simulator {
 
-typedef boost::shared_ptr<hydla::simulator::ConsistencyChecker>  consistency_checker_t;
-typedef boost::shared_ptr<hydla::symbolic_expression::Ask>                       ask_t;
+typedef std::shared_ptr<hydla::simulator::ConsistencyChecker>  consistency_checker_t;
+typedef std::shared_ptr<hydla::symbolic_expression::Ask>                       ask_t;
 typedef std::set<ask_t >                                                        asks_t;
-typedef std::set<boost::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
+typedef std::set<std::shared_ptr<hydla::symbolic_expression::Always> >  always_set_t;
 typedef hydla::hierarchy::ModuleSet                                       module_set_t;
-typedef boost::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
+typedef std::shared_ptr<hydla::simulator::PhaseResult>           phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                         phase_result_sptrs_t;
 typedef std::list<phase_result_sptr_t >                                   phase_list_t;
 typedef hydla::simulator::Value                                                value_t;
@@ -74,7 +74,7 @@ private:
   /* phase_list_t get_path(phase_result_sptr_t phase); */
 
   io::SymbolicTrajPrinter printer;
-  boost::shared_ptr<ConsistencyChecker> consistency_checker;
+  std::shared_ptr<ConsistencyChecker> consistency_checker;
 };
 
 } // namespace simulator

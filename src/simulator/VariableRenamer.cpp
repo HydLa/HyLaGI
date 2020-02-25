@@ -12,7 +12,7 @@ VariableRenamer::VariableRenamer() {}
 VariableRenamer::~VariableRenamer() {}
 
 void VariableRenamer::rename_exists(
-    boost::shared_ptr<symbolic_expression::Node> node, int phase_num) {
+    std::shared_ptr<symbolic_expression::Node> node, int phase_num) {
   phase_num_ = phase_num;
   diff_cnt_ = 0;
   accept(node);
@@ -25,9 +25,9 @@ map<Variable, Variable> VariableRenamer::get_renamed_variable_map() const {
 }
 
 void VariableRenamer::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Exists> node) {
+    std::shared_ptr<hydla::symbolic_expression::Exists> node) {
   string varname =
-      boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(
+      std::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(
           node->get_variable())
           ->get_name();
   exists_variable_set_.insert(varname);
@@ -37,7 +37,7 @@ void VariableRenamer::visit(
 
 // 変数
 void VariableRenamer::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Variable> node) {
+    std::shared_ptr<hydla::symbolic_expression::Variable> node) {
   string varname = node->get_name();
   auto it = exists_variable_set_.find(varname);
   if (it != exists_variable_set_.end()) {
@@ -50,14 +50,14 @@ void VariableRenamer::visit(
 }
 
 void VariableRenamer::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Differential> node) {
+    std::shared_ptr<hydla::symbolic_expression::Differential> node) {
   diff_cnt_++;
   dispatch_child(node);
   diff_cnt_--;
 }
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)                              \
-  void VariableRenamer::visit(boost::shared_ptr<NODE_NAME> node) {             \
+  void VariableRenamer::visit(std::shared_ptr<NODE_NAME> node) {             \
     for (int i = 0; i < node->get_arguments_size(); i++) {                     \
       accept(node->get_argument(i));                                           \
       if (new_child_) {                                                        \
@@ -68,18 +68,18 @@ void VariableRenamer::visit(
   }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)                                 \
-  void VariableRenamer::visit(boost::shared_ptr<NODE_NAME> node) {             \
+  void VariableRenamer::visit(std::shared_ptr<NODE_NAME> node) {             \
     dispatch_lhs(node);                                                        \
     dispatch_rhs(node);                                                        \
   }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)                                  \
-  void VariableRenamer::visit(boost::shared_ptr<NODE_NAME> node) {             \
+  void VariableRenamer::visit(std::shared_ptr<NODE_NAME> node) {             \
     dispatch_child(node);                                                      \
   }
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)                                 \
-  void VariableRenamer::visit(boost::shared_ptr<NODE_NAME> node) {}
+  void VariableRenamer::visit(std::shared_ptr<NODE_NAME> node) {}
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
 DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)

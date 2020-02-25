@@ -252,7 +252,7 @@ namespace hydla{
     }
 
 
-    std::vector<std::vector<std::string>> Json_p::make_v_map(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree){
+    std::vector<std::vector<std::string>> Json_p::make_v_map(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree){
       std::vector<std::vector<std::string>> ret;
       std::vector<std::string> map_ret;
 

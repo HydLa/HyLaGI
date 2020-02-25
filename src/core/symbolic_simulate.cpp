@@ -223,7 +223,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 }
 
 
-int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   //process_opts(opts, cmdline_options, false);
 

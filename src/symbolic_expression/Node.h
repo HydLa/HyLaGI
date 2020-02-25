@@ -24,15 +24,15 @@ class ProgramDefinition;
 class TreeVisitor;
 class BaseNodeVisitor;
 
-typedef boost::shared_ptr<Node> node_sptr;
-typedef boost::shared_ptr<const Node> node_const_sptr;
+typedef std::shared_ptr<Node> node_sptr;
+typedef std::shared_ptr<const Node> node_const_sptr;
 
 /**
  * パースツリーの基底ノード
  */
 class Node {
 public:
-  typedef boost::shared_ptr<Node> node_type_sptr;
+  typedef std::shared_ptr<Node> node_type_sptr;
 
   Node() {}
 
@@ -85,7 +85,7 @@ std::string get_infix_string(const node_sptr &node);
 
 class FactorNode : public Node {
 public:
-  typedef boost::shared_ptr<FactorNode> node_type_sptr;
+  typedef std::shared_ptr<FactorNode> node_type_sptr;
 
   FactorNode() {}
 
@@ -104,7 +104,7 @@ public:
  */
 class UnaryNode : public Node {
 public:
-  typedef boost::shared_ptr<UnaryNode> node_type_sptr;
+  typedef std::shared_ptr<UnaryNode> node_type_sptr;
 
   UnaryNode() {}
 
@@ -150,7 +150,7 @@ protected:
 #define DEFINE_UNARY_NODE(NAME)                                                \
   class NAME : public UnaryNode {                                              \
   public:                                                                      \
-    typedef boost::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                            \
                                                                                \
     NAME() {}                                                                  \
                                                                                \
@@ -174,7 +174,7 @@ protected:
  */
 class BinaryNode : public Node {
 public:
-  typedef boost::shared_ptr<BinaryNode> node_type_sptr;
+  typedef std::shared_ptr<BinaryNode> node_type_sptr;
 
   BinaryNode() {}
 
@@ -237,7 +237,7 @@ protected:
 #define DEFINE_BINARY_NODE(NAME)                                               \
   class NAME : public BinaryNode {                                             \
   public:                                                                      \
-    typedef boost::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                            \
                                                                                \
     NAME() {}                                                                  \
                                                                                \
@@ -260,7 +260,7 @@ protected:
 #define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                                    \
   class NAME : public BinaryNode {                                             \
   public:                                                                      \
-    typedef boost::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                            \
                                                                                \
     NAME() {}                                                                  \
                                                                                \
@@ -745,7 +745,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Pi> n(new Pi());
+    std::shared_ptr<Pi> n(new Pi());
     return n;
   }
   virtual std::string get_node_type_name() const { return "Pi"; }
@@ -759,7 +759,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<E> n(new E());
+    std::shared_ptr<E> n(new E());
     return n;
   }
   virtual std::string get_node_type_name() const { return "E"; }
@@ -770,7 +770,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<ImaginaryUnit> n(new ImaginaryUnit());
+    std::shared_ptr<ImaginaryUnit> n(new ImaginaryUnit());
     return n;
   }
   virtual std::string get_node_type_name() const { return "I"; }
@@ -792,7 +792,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Number> n(new Number());
+    std::shared_ptr<Number> n(new Number());
     n->number_ = number_;
     return n;
   }
@@ -828,7 +828,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Float> n(new Float());
+    std::shared_ptr<Float> n(new Float());
     n->number_ = number_;
     return n;
   }
@@ -859,7 +859,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<False> n(new False());
+    std::shared_ptr<False> n(new False());
     return n;
   }
 
@@ -877,7 +877,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<True> n(new True());
+    std::shared_ptr<True> n(new True());
     return n;
   }
 
@@ -901,7 +901,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Variable> n(new Variable());
+    std::shared_ptr<Variable> n(new Variable());
     n->name_ = name_;
     return n;
   }
@@ -939,7 +939,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Parameter> n(
+    std::shared_ptr<Parameter> n(
         new Parameter(name_, differential_count_, phase_id_));
     return n;
   }
@@ -985,7 +985,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Infinity> n(new Infinity());
+    std::shared_ptr<Infinity> n(new Infinity());
     return n;
   }
 
@@ -1010,7 +1010,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<SymbolicT> n(new SymbolicT());
+    std::shared_ptr<SymbolicT> n(new SymbolicT());
     return n;
   }
 
@@ -1037,7 +1037,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Print> n(new Print());
+    std::shared_ptr<Print> n(new Print());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1089,7 +1089,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<PrintPP> n(new PrintPP());
+    std::shared_ptr<PrintPP> n(new PrintPP());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1114,7 +1114,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<PrintIP> n(new PrintIP());
+    std::shared_ptr<PrintIP> n(new PrintIP());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1139,7 +1139,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Scan> n(new Scan());
+    std::shared_ptr<Scan> n(new Scan());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1164,7 +1164,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Exit> n(new Exit());
+    std::shared_ptr<Exit> n(new Exit());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1199,7 +1199,7 @@ public:
   virtual bool is_same_struct(const Node &n, bool exactly_same) const;
 
   virtual node_sptr clone() {
-    boost::shared_ptr<Abort> n(new Abort());
+    std::shared_ptr<Abort> n(new Abort());
     n->string_ = string_;
     n->args_ = args_;
     return n;
@@ -1246,7 +1246,7 @@ public:
   virtual void accept(node_sptr own, TreeVisitor *visitor);
 
   virtual node_sptr clone() {
-    boost::shared_ptr<SVtimer> n(new SVtimer());
+    std::shared_ptr<SVtimer> n(new SVtimer());
     return n;
   }
 
@@ -1263,7 +1263,7 @@ public:
  */
 class VariadicNode : public Node {
 public:
-  typedef boost::shared_ptr<VariadicNode> node_type_sptr;
+  typedef std::shared_ptr<VariadicNode> node_type_sptr;
 
   VariadicNode() {}
 
@@ -1294,7 +1294,7 @@ protected:
  */
 class Range : public BinaryNode {
 public:
-  typedef boost::shared_ptr<Range> node_type_sptr;
+  typedef std::shared_ptr<Range> node_type_sptr;
 
   Range() {}
 
@@ -1368,7 +1368,7 @@ DEFINE_UNARY_NODE(MulOfList)
  */
 class ExpressionList : public VariadicNode {
 public:
-  typedef boost::shared_ptr<ExpressionList> node_type_sptr;
+  typedef std::shared_ptr<ExpressionList> node_type_sptr;
 
   ExpressionList() {}
   ExpressionList(const std::string &str) : list_name_(str) {}
@@ -1399,7 +1399,7 @@ private:
 
 class ConditionalExpressionList : public VariadicNode {
 public:
-  typedef boost::shared_ptr<ConditionalExpressionList> node_type_sptr;
+  typedef std::shared_ptr<ConditionalExpressionList> node_type_sptr;
 
   ConditionalExpressionList() {}
   ConditionalExpressionList(const std::string &str) : list_name_(str) {}
@@ -1432,7 +1432,7 @@ private:
  */
 class ProgramList : public VariadicNode {
 public:
-  typedef boost::shared_ptr<ProgramList> node_type_sptr;
+  typedef std::shared_ptr<ProgramList> node_type_sptr;
 
   ProgramList() {}
   ProgramList(const std::string &str) : list_name_(str) {}
@@ -1455,7 +1455,7 @@ private:
 
 class ConditionalProgramList : public VariadicNode {
 public:
-  typedef boost::shared_ptr<ConditionalProgramList> node_type_sptr;
+  typedef std::shared_ptr<ConditionalProgramList> node_type_sptr;
 
   ConditionalProgramList() {}
   ConditionalProgramList(const std::string &str) : list_name_(str) {}
@@ -1513,7 +1513,7 @@ DEFINE_BINARY_NODE(DifferentVariable);
  */
 class Function : public VariadicNode {
 public:
-  typedef boost::shared_ptr<Function> node_type_sptr;
+  typedef std::shared_ptr<Function> node_type_sptr;
 
   Function() {}
 
@@ -1537,7 +1537,7 @@ private:
 
 class UnsupportedFunction : public VariadicNode {
 public:
-  typedef boost::shared_ptr<UnsupportedFunction> node_type_sptr;
+  typedef std::shared_ptr<UnsupportedFunction> node_type_sptr;
 
   UnsupportedFunction() {}
 

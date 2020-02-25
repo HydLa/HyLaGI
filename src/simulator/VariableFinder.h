@@ -27,7 +27,7 @@ public:
    * 制約を調べ，変数の出現を取得する
    * @param node 調べる対象となる制約
    */
-  void visit_node(boost::shared_ptr<symbolic_expression::Node> node);
+  void visit_node(std::shared_ptr<symbolic_expression::Node> node);
 
   void clear();
 
@@ -52,29 +52,29 @@ public:
 
   /// judge if given constraints include any of found variables
   bool include_variables(
-      const boost::shared_ptr<symbolic_expression::Node> &constraint) const;
+      const std::shared_ptr<symbolic_expression::Node> &constraint) const;
 
   /// Ask制約
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Ask> node);
 
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Exists> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Exists> node);
 
   /// 微分
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   /// 左極限
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Previous> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Previous> node);
 
   /// 変数
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
 
   /// 時刻
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
 
 private:
   variable_set_t variables_, prev_variables_, exists_variables_;

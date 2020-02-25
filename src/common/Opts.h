@@ -8,7 +8,7 @@ namespace hydla{
 namespace symbolic_expression
 {
 class Node;
-typedef boost::shared_ptr<Node> node_sptr;
+typedef std::shared_ptr<Node> node_sptr;
 }
 
 struct Opts {

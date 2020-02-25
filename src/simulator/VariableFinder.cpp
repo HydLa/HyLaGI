@@ -12,7 +12,7 @@ VariableFinder::VariableFinder() {}
 VariableFinder::~VariableFinder() {}
 
 void VariableFinder::visit_node(
-    boost::shared_ptr<symbolic_expression::Node> node) {
+    std::shared_ptr<symbolic_expression::Node> node) {
   in_prev_ = false;
   differential_count_ = 0;
   accept(node);
@@ -53,7 +53,7 @@ bool VariableFinder::include_variables(std::set<std::string> variables) const {
 }
 
 bool VariableFinder::include_variables(
-    const boost::shared_ptr<symbolic_expression::Node> &constraint) const {
+    const std::shared_ptr<symbolic_expression::Node> &constraint) const {
   VariableFinder tmp_finder;
   tmp_finder.visit_node(constraint);
   for (auto found_var : variables_) {
@@ -90,9 +90,9 @@ variable_set_t VariableFinder::get_exists_variable_set() const {
 }
 
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Exists> node) {
+    std::shared_ptr<hydla::symbolic_expression::Exists> node) {
   std::string varname =
-      boost::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(
+      std::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(
           node->get_variable())
           ->get_name();
   exists_variables_.insert(Variable(varname));
@@ -101,14 +101,14 @@ void VariableFinder::visit(
 
 // Ask制約
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Ask> node) {
+    std::shared_ptr<hydla::symbolic_expression::Ask> node) {
   accept(node->get_guard());
   accept(node->get_child());
 }
 
 // 時刻
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node) {
+    std::shared_ptr<hydla::symbolic_expression::SymbolicT> node) {
   variables_.insert(
       Variable("t", 0)); // Since t is always continuous, it can be regarded as
                          // previous value (for simplicity of simulation)
@@ -116,7 +116,7 @@ void VariableFinder::visit(
 
 // 変数
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Variable> node) {
+    std::shared_ptr<hydla::symbolic_expression::Variable> node) {
   if (in_prev_) {
     prev_variables_.insert(Variable(node->get_name(), differential_count_));
   } else {
@@ -126,7 +126,7 @@ void VariableFinder::visit(
 
 // 微分
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Differential> node) {
+    std::shared_ptr<hydla::symbolic_expression::Differential> node) {
   differential_count_++;
   accept(node->get_child());
   differential_count_--;
@@ -134,7 +134,7 @@ void VariableFinder::visit(
 
 // 左極限
 void VariableFinder::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Previous> node) {
+    std::shared_ptr<hydla::symbolic_expression::Previous> node) {
   in_prev_ = true;
   accept(node->get_child());
   in_prev_ = false;

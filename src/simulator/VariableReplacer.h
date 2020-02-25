@@ -29,42 +29,42 @@ public:
   void replace_value(value_t &val);
   void replace_range(ValueRange &range);
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Plus> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Plus> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Times> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Subtract> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Times> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Power> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Divide> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Power> node);
 
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Negative> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Negative> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Positive> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Positive> node);
 
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Differential> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Differential> node);
 
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Function> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Function> node);
   virtual void visit(
-      boost::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> node);
+      std::shared_ptr<hydla::symbolic_expression::UnsupportedFunction> node);
 
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Variable> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
 
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::Pi> node);
-  virtual void visit(boost::shared_ptr<hydla::symbolic_expression::E> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Pi> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::E> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Number> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Number> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Parameter> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Parameter> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::SymbolicT> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::Infinity> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::Infinity> node);
   virtual void
-  visit(boost::shared_ptr<hydla::symbolic_expression::SVtimer> node);
+  visit(std::shared_ptr<hydla::symbolic_expression::SVtimer> node);
 
 private:
   int differential_cnt;

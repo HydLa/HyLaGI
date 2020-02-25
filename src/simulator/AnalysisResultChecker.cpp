@@ -139,7 +139,7 @@ void AnalysisResultChecker::parse(){
   }
 }
 
-void AnalysisResultChecker::set_solver(boost::shared_ptr<hydla::solver::SymbolicSolver> solver){
+void AnalysisResultChecker::set_solver(std::shared_ptr<hydla::solver::SymbolicSolver> solver){
   solver_ = solver;
 }
 

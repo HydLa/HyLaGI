@@ -27,7 +27,7 @@ itvd IntervalTreeVisitor::get_interval_value(const node_sptr &node, itvd *t,
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Plus> node) {
+    std::shared_ptr<hydla::symbolic_expression::Plus> node) {
   accept(node->get_lhs());
   IntervalOrInteger lhs = current_value;
   accept(node->get_rhs());
@@ -38,7 +38,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Subtract> node) {
+    std::shared_ptr<hydla::symbolic_expression::Subtract> node) {
   accept(node->get_lhs());
   IntervalOrInteger lhs = current_value;
   accept(node->get_rhs());
@@ -49,7 +49,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Times> node) {
+    std::shared_ptr<hydla::symbolic_expression::Times> node) {
   accept(node->get_lhs());
   IntervalOrInteger lhs = current_value;
   accept(node->get_rhs());
@@ -60,7 +60,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Divide> node) {
+    std::shared_ptr<hydla::symbolic_expression::Divide> node) {
   accept(node->get_lhs());
   IntervalOrInteger lhs = current_value;
   accept(node->get_rhs());
@@ -71,7 +71,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Power> node) {
+    std::shared_ptr<hydla::symbolic_expression::Power> node) {
   accept(node->get_lhs());
   IntervalOrInteger lhs = current_value;
   accept(node->get_rhs());
@@ -100,18 +100,18 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Negative> node) {
+    std::shared_ptr<hydla::symbolic_expression::Negative> node) {
   accept(node->get_child());
   current_value = -current_value;
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Positive> node) {
+    std::shared_ptr<hydla::symbolic_expression::Positive> node) {
   accept(node->get_child());
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Pi> node) {
+    std::shared_ptr<hydla::symbolic_expression::Pi> node) {
   current_value.interval_value = pi;
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("Pi : ", current_value.interval_value);
@@ -119,7 +119,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::E> node) {
+    std::shared_ptr<hydla::symbolic_expression::E> node) {
   current_value.interval_value = e;
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("E : ", current_value.interval_value);
@@ -127,7 +127,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Number> node) {
+    std::shared_ptr<hydla::symbolic_expression::Number> node) {
   std::string number_str = node->get_number();
 
   // try translation to int
@@ -150,7 +150,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Float> node) {
+    std::shared_ptr<hydla::symbolic_expression::Float> node) {
   current_value.interval_value = itvd(node->get_number());
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("Float : ", current_value.interval_value);
@@ -158,7 +158,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Function> node) {
+    std::shared_ptr<hydla::symbolic_expression::Function> node) {
   std::string name = node->get_name();
   itvd arg;
   if (name == "sin") {
@@ -270,7 +270,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::SymbolicT> node) {
+    std::shared_ptr<hydla::symbolic_expression::SymbolicT> node) {
   if (time_interval == nullptr)
     invalid_node(*node);
   current_value.interval_value = *time_interval;
@@ -280,7 +280,7 @@ void IntervalTreeVisitor::visit(
 }
 
 void IntervalTreeVisitor::visit(
-    boost::shared_ptr<hydla::symbolic_expression::Parameter> node) {
+    std::shared_ptr<hydla::symbolic_expression::Parameter> node) {
   if (parameter_map == nullptr)
     invalid_node(*node);
   parameter_t param(node->get_name(), node->get_differential_count(),
@@ -325,7 +325,7 @@ void IntervalTreeVisitor::debug_print(std::string str, itvd x) {
 }
 
 #define DEFINE_INVALID_NODE(NODE_NAME)                                         \
-  void IntervalTreeVisitor::visit(boost::shared_ptr<NODE_NAME> node) {         \
+  void IntervalTreeVisitor::visit(std::shared_ptr<NODE_NAME> node) {         \
     HYDLA_LOGGER_DEBUG("");                                                    \
     invalid_node(*node);                                                       \
   }

@@ -11,9 +11,9 @@ namespace parser {
 using namespace symbolic_expression;
 
 /// constraint_callee := name formal_args
-boost::shared_ptr<ConstraintDefinition> Parser::constraint_callee() {
+std::shared_ptr<ConstraintDefinition> Parser::constraint_callee() {
   position_t position = lexer.get_current_position();
-  boost::shared_ptr<ConstraintDefinition> ret(new ConstraintDefinition());
+  std::shared_ptr<ConstraintDefinition> ret(new ConstraintDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
@@ -28,13 +28,13 @@ boost::shared_ptr<ConstraintDefinition> Parser::constraint_callee() {
     return ret;
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ConstraintDefinition>();
+  return std::shared_ptr<ConstraintDefinition>();
 }
 
 /// constraint_caller := name actual_args
-boost::shared_ptr<ConstraintCaller> Parser::constraint_caller() {
+std::shared_ptr<ConstraintCaller> Parser::constraint_caller() {
   position_t position = lexer.get_current_position();
-  boost::shared_ptr<ConstraintCaller> ret(new ConstraintCaller());
+  std::shared_ptr<ConstraintCaller> ret(new ConstraintCaller());
   std::vector<node_sptr> args;
   std::string name;
   // name
@@ -59,15 +59,15 @@ boost::shared_ptr<ConstraintCaller> Parser::constraint_caller() {
     }
   }
   lexer.set_current_position(position);
-  return boost::shared_ptr<ConstraintCaller>();
+  return std::shared_ptr<ConstraintCaller>();
 }
 
 /// constraint := logical_or
-boost::shared_ptr<Constraint> Parser::constraint() {
+std::shared_ptr<Constraint> Parser::constraint() {
   node_sptr ret;
   if ((ret = logical_or()))
-    return boost::shared_ptr<Constraint>(new Constraint(ret));
-  return boost::shared_ptr<Constraint>();
+    return std::shared_ptr<Constraint>(new Constraint(ret));
+  return std::shared_ptr<Constraint>();
 }
 
 /// logical_or := logical_and ( ("|" | "\/") logical_and )*
@@ -82,7 +82,7 @@ node_sptr Parser::logical_or() {
     while (token == VERTICAL_BAR || token == LOGICAL_OR) {
       std::string or_token = lexer.get_current_token_string();
       if ((rhs = logical_and())) {
-        boost::shared_ptr<LogicalOr> tmp(new LogicalOr());
+        std::shared_ptr<LogicalOr> tmp(new LogicalOr());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -112,7 +112,7 @@ node_sptr Parser::logical_and() {
     while (token == AMPERSAND || token == LOGICAL_AND) {
       std::string and_token = lexer.get_current_token_string();
       if ((rhs = always())) {
-        boost::shared_ptr<LogicalAnd> tmp(new LogicalAnd());
+        std::shared_ptr<LogicalAnd> tmp(new LogicalAnd());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -133,7 +133,7 @@ node_sptr Parser::logical_and() {
 /// always := "[]"? conditional_constraint
 node_sptr Parser::always() {
   node_sptr ret;
-  boost::shared_ptr<Always> always(new Always());
+  std::shared_ptr<Always> always(new Always());
   position_t position = lexer.get_current_position();
   // "[]"
   if (lexer.get_token() == ALWAYS) {
@@ -169,7 +169,7 @@ node_sptr Parser::conditional_constraint() {
 
   // guard "=>" constraint
   if ((ret = guard())) {
-    boost::shared_ptr<Ask> ask(new Ask());
+    std::shared_ptr<Ask> ask(new Ask());
     node_sptr c;
     // "=>"
     if (lexer.get_token() == IMPLIES) {
@@ -235,9 +235,9 @@ node_sptr Parser::atomic_constraint() {
 /// exists := "\" variable "." constraint
 node_sptr Parser::exists() {
   position_t pos = lexer.get_current_position();
-  boost::shared_ptr<Exists> exists(new Exists());
-  boost::shared_ptr<Variable> variable_node;
-  boost::shared_ptr<Constraint> constraint_node;
+  std::shared_ptr<Exists> exists(new Exists());
+  std::shared_ptr<Variable> variable_node;
+  std::shared_ptr<Constraint> constraint_node;
   if (lexer.get_token() != BACKSLASH) {
     lexer.set_current_position(pos);
     return node_sptr();
@@ -279,7 +279,7 @@ node_sptr Parser::guard() {
     while (token == VERTICAL_BAR || token == LOGICAL_OR) {
       std::string or_token = lexer.get_current_token_string();
       if ((rhs = guard_term())) {
-        boost::shared_ptr<LogicalOr> tmp(new LogicalOr());
+        std::shared_ptr<LogicalOr> tmp(new LogicalOr());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -309,7 +309,7 @@ node_sptr Parser::guard_term() {
     while (token == AMPERSAND || token == LOGICAL_AND) {
       std::string and_token = lexer.get_current_token_string();
       if ((rhs = logical_not())) {
-        boost::shared_ptr<LogicalAnd> tmp(new LogicalAnd());
+        std::shared_ptr<LogicalAnd> tmp(new LogicalAnd());
         tmp->set_lhs(tmp_l);
         tmp->set_rhs(rhs);
         tmp_l = tmp;
@@ -336,7 +336,7 @@ node_sptr Parser::logical_not() {
   if (lexer.get_token() == NOT) {
     // comparison
     if ((ret = comparison())) {
-      return boost::shared_ptr<Not>(new Not(ret));
+      return std::shared_ptr<Not>(new Not(ret));
     } else {
       error_occurred(lexer.get_current_position(),
                      "expected constraint after \"!\"");
