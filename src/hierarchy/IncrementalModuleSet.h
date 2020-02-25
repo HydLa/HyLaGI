@@ -137,11 +137,9 @@ private:
    */
   virtual void update_by_new_mss(module_set_set_t&);
 
-  /**
-   * stronger_data_[module_t ms] is a map which has stronger modules than ms.
-   * children_data_[module_t ms] is a map which has weaker modules than ms.
-   */ 
+  /// stronger_data_[module_t ms] is a map which has stronger modules than ms.
   node_relations_data_t stronger_modules_;
+  /// children_data_[module_t ms] is a map which has weaker modules than ms.
   node_relations_data_t weaker_modules_;
    
 };

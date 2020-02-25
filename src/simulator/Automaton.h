@@ -26,7 +26,9 @@ public:
   automaton_edge_list_t edges;
   automaton_node_list_t reversed_edges;
   int peripheries;
+  /// 遷移グラフのノードに変数の割当を書くかどうか
 	bool node_vm_write;
+  /// 遷移グラフのエッジにガードを書くかどうか
   bool edge_guard_write;
 
   AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);

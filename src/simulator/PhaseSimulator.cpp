@@ -2121,6 +2121,13 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 }
 
+/**
+ * 矛盾原因のマップに対し，requiredでないモジュールを除去する
+ * @brief この関数はexecution stuck(unsatisfiable constraints)時に原因となったモジュールを求めるときに呼ばれるため，requiredでないモジュールは除去する
+ * @param (causes) 引数の説明
+ * @return フィルター後のマップ
+ * @sa hydla::simulator::PhaseResult::unsat_cons_causes
+ */
 std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
   auto ims = std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
   for(auto&& p : causes){

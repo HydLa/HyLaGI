@@ -43,9 +43,11 @@ struct EdgeToConstraint
 
 struct ConstraintNode
 {
-  module_t module; /// module which the constraint belongs to
+  /// module which the constraint belongs to
+  module_t module;
   bool collected;
-  bool module_adopted; /// whether the module is in current module sets
+  /// whether the module is in current module sets
+  bool module_adopted;
   bool expanded;
   bool always;
   AskNode* parent;
@@ -308,7 +310,8 @@ private:
   std::map<module_t, std::vector<AskNode*> > module_ask_nodes_map;
   std::map<ask_t, AskNode*> ask_node_map;
 
-  ConstraintStore always_list; /// temporary variables to return always
+  /// temporary variables to return always
+  ConstraintStore always_list;
 
   GuardNode *current_guard_node;
   std::list<AtomicGuardNode *> atomic_guard_list;

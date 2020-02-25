@@ -112,6 +112,12 @@ private:
 
   void push_branch_states(phase_result_sptr_t original,
                           CheckConsistencyResult &result);
+  /**
+   * 分岐用にフェーズリザルトをコピーする
+   * @brief 必要なフィールドを新しいインスタンスに代入
+   * @param (original) コピーしたいフェーズリザルト
+   * @return コピーしたフェーズリザルト
+   */
   phase_result_sptr_t clone_branch_state(phase_result_sptr_t original);
   find_min_time_result_t find_min_time_test(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
   find_min_time_result_t calculate_tmp_min_time(phase_result_sptr_t &phase,const constraint_t &guard, MinTimeCalculator &min_time_calculator, guard_time_map_t &guard_time_map, variable_map_t &original_vm, Value &time_limit, bool entailed);
@@ -186,7 +192,7 @@ private:
   /// pointer to the backend to be used
   backend_sptr_t backend_;
 
-  // record minimum module_set_t which each variable is completely unconstrained
+  /// record minimum module_set_t which each variable is completely unconstrained
   std::map<variable_t,module_set_t> completely_unconstrained_condition;
 };
 

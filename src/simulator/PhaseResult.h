@@ -137,18 +137,25 @@ public:
   value_t                      current_time, end_time;
 
   variable_map_t               variable_map;
-  variable_map_t               prev_map; /// variable map for left-hand limit (for PP) or initial values (for IP)
+  /// variable map for left-hand limit (for PP) or initial values (for IP)
+  variable_map_t               prev_map;
 
-  ConstraintStore              additional_parameter_constraint; /// use for case analysis
-  ConstraintStore              additional_constraint_store; /// use for case analysis
+  /// use for case analysis
+  ConstraintStore              additional_parameter_constraint;
+  /// use for case analysis
+  ConstraintStore              additional_constraint_store;
   ConstraintStore              diff_sum;
   variable_set_t               discrete_differential_set;
   
   module_diff_t                module_diff;
 
+  /// 今，採用するか計算の対象となっているモジュール集合
   module_set_t                 unadopted_ms;
+  /// まだ計算の対象になっていないモジュール集合
   module_set_set_t             unadopted_mss;
+  /// どのモジュール達が矛盾したか
   std::list<module_set_t>  inconsistent_module_sets;
+  /// どの制約達が矛盾したか
   std::list<ConstraintStore>   inconsistent_constraints;
   next_pp_candidate_map_t      next_pp_candidate_map;
   guard_time_map_t             guard_time_map;

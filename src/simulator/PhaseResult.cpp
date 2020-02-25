@@ -179,6 +179,9 @@ void PhaseResult::set_full_information(FullInformation &info)
   full_information = info;
 }
 
+/**
+ * 矛盾の原因となった変数集合とその変数を含む矛盾の原因となったモジュール集合を対応させて返す
+ */
 std::map<variable_set_t,module_set_t> PhaseResult::unsat_cons_causes()const{
   std::map<variable_set_t,module_set_t> res;
 
