@@ -7,28 +7,35 @@
 
 #include "DefaultTreeVisitor.h"
 #include "Node.h"
-#include "PhaseResult.h"
-#include "Simulator.h"
+#include "Variable.h"
+
+#include "Value.h"
 
 namespace hydla {
 namespace simulator {
 
 /**
- * A class to replace prevs with parameters.
- * (and introduce parameter)
+ * 変数名の書き換えをするクラス(存在量化子の変数名の書き換えに使ってる)
  */
-class PrevReplacer : public symbolic_expression::DefaultTreeVisitor {
-  typedef symbolic_expression::node_sptr node_sptr;
+class VariableRenamer : public symbolic_expression::DefaultTreeVisitor {
 
 public:
-  PrevReplacer(PhaseResult &phase, Simulator &simulator, backend::Backend *b,
-               bool affine);
+  VariableRenamer();
 
-  virtual ~PrevReplacer();
+  virtual ~VariableRenamer();
 
-  bool replace_value(value_t &val);
-  void replace_node(symbolic_expression::node_sptr &exp);
-  ConstraintStore get_parameter_constraint() const;
+  void rename_exists(std::shared_ptr<symbolic_expression::Node> node,
+                     int phase_num);
+
+  void clear();
+
+  //　書き換え前の変数名 -> 書き換え後の変数名 のmap
+  std::map<Variable, Variable> get_renamed_variable_map() const;
+
+  virtual void
+  visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
+  virtual void
+  visit(std::shared_ptr<hydla::symbolic_expression::Exists> node);
 
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
@@ -41,7 +48,6 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
-  virtual void visit(std::shared_ptr<symbolic_expression::Exists> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Tell> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
@@ -82,9 +88,6 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
   virtual void
   visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);
-
-  virtual void visit(std::shared_ptr<symbolic_expression::Variable> node);
-
   virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
   virtual void visit(std::shared_ptr<symbolic_expression::E> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
@@ -95,43 +98,39 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Previous> node);
 
 private:
-  ConstraintStore parameter_constraint;
-  int differential_cnt;
-  bool in_prev;
-  PhaseResult &prev_phase;
-  Simulator &simulator;
-  bool replaced;
-  backend::Backend *backend;
-  bool affine_mode = false;
+  int phase_num_;
+  int diff_cnt_;
+  std::map<Variable, Variable> exists_variable_map_;
+  std::set<std::string> exists_variable_set_;
 
-  symbolic_expression::node_sptr new_child;
+  symbolic_expression::node_sptr new_child_;
 
   template <class C, const symbolic_expression::node_sptr &(C::*getter)() const,
             void (C::*setter)(const symbolic_expression::node_sptr &child)>
   void dispatch(C *n) {
     accept((n->*getter)());
-    if (new_child) {
-      (n->*setter)(new_child);
-      new_child.reset();
+    if (new_child_) {
+      (n->*setter)(new_child_);
+      new_child_.reset();
     }
   }
 
   template <class NodeType> void dispatch_child(NodeType &node) {
-    dispatch<symbolic_expression::UnaryNode,
-             &symbolic_expression::UnaryNode::get_child,
-             &symbolic_expression::UnaryNode::set_child>(node.get());
+    dispatch<hydla::symbolic_expression::UnaryNode,
+             &hydla::symbolic_expression::UnaryNode::get_child,
+             &hydla::symbolic_expression::UnaryNode::set_child>(node.get());
   }
 
   template <class NodeType> void dispatch_rhs(NodeType &node) {
-    dispatch<symbolic_expression::BinaryNode,
-             &symbolic_expression::BinaryNode::get_rhs,
-             &symbolic_expression::BinaryNode::set_rhs>(node.get());
+    dispatch<hydla::symbolic_expression::BinaryNode,
+             &hydla::symbolic_expression::BinaryNode::get_rhs,
+             &hydla::symbolic_expression::BinaryNode::set_rhs>(node.get());
   }
 
   template <class NodeType> void dispatch_lhs(NodeType &node) {
-    dispatch<symbolic_expression::BinaryNode,
-             &symbolic_expression::BinaryNode::get_lhs,
-             &symbolic_expression::BinaryNode::set_lhs>(node.get());
+    dispatch<hydla::symbolic_expression::BinaryNode,
+             &hydla::symbolic_expression::BinaryNode::get_lhs,
+             &hydla::symbolic_expression::BinaryNode::set_lhs>(node.get());
   }
 };
 

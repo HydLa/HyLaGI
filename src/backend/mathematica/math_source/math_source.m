@@ -24,7 +24,7 @@ trySolve[cons_, vars_] :=
     simplePrint[consToSolve];
     If[freeFromInequalities[consToSolve],
       sol = Quiet[solveOverRorC[consToSolve, vars], {Solve::svars, PolynomialGCD::lrgexp, Solve::fulldim}];
-      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && Length[sol[[1]]] > 0 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
+      If[FreeQ[sol, ConditionalExpression] && Length[sol] === 1 && inequalities === True, sol = And@@Map[(Equal@@#)&, sol[[1]] ]; solved = True]
     ];
     If[solved =!= True, sol = And@@consToSolve];
     {trivialCons && sol && inequalities, solved}
@@ -42,9 +42,14 @@ publicMethod[
   checkConsistencyPoint,
   cons, init, pcons, assum, prevRs, vars, prevs, pars, current,
   Module[
-    {cpTrue, cpFalse, initRules, initSubsituted, sol, solved = False},
-    initRules = Map[(Rule@@#)&, applyList[init] ];
+    {cpTrue, cpFalse, initRsPrevs, initRules, initSubsituted, sol, solved = False},
+    initRsPrevs = Map[(#[[1]])&, prevRs];
+    debugPrint[initRsPrevs];
+    initRules = Select[applyList[init], (!isPrevVariable[#[[2]]] || MemberQ[initRsPrevs, #[[2]]])&];
+    debugPrint[initRules];
+    initRules = Map[(Rule@@#)&, initRules ];
     debugPrint["assum: ", assum];
+    debugPrint["cons:", cons];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
     resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
@@ -338,7 +343,7 @@ publicMethod[
 
 removeUnnecessaryConstraints[cons_, hasJudge_] :=
 (
-cons /. (expr_ /; ( MemberQ[{Equal, Element, NotElement, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True)
+cons /. (expr_ /; ( MemberQ[{Equal, Element, NotElement, LessEqual, Less, Greater, GreaterEqual, Unequal, Inequality}, Head[expr] ] && (!hasJudge[expr] || hasPrevVariable[expr])) -> True) 
 );
 
 
@@ -348,11 +353,11 @@ hasVariable[exprs_] := Length[getTimeVariablesWithDerivatives[exprs] ] > 0;
 
 (* 式が変数もしくはその微分そのものか否か *)
 
-isVariable[exprs_] := MatchQ[exprs, _Symbol] && (StringMatchQ[ToString[exprs], variablePrefix ~~ WordCharacter__] || StringMatchQ[ToString[exprs], derivativePrefix ~~ WordCharacter__] )|| MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
+isVariable[exprs_] := MatchQ[exprs, _Symbol] && (StringMatchQ[ToString[exprs], variablePrefix ~~ (WordCharacter|"$")..] || StringMatchQ[ToString[exprs], derivativePrefix ~~ (WordCharacter|"$")..] )|| MatchQ[exprs, Derivative[_][_][_] ] || MatchQ[exprs, Derivative[_][_] ] ;
 
 (* 式中に出現する変数を取得 *)
 
-getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ WordCharacter..], {0, Infinity}, Heads->True];
+getVariables[exprs_] := Cases[exprs, ele_ /; StringMatchQ[ToString[ele], variablePrefix ~~ (WordCharacter|"$")..], {0, Infinity}, Heads->True];
 getDerivatives[exprs_] := Union[Cases[exprs, Derivative[_][_], {0, Infinity}], Cases[exprs, Derivative[_][_][_], {0, Infinity}]];
 getVariablesWithDerivatives[exprs_] := Union[getVariables[exprs], getDerivatives[exprs] ];
 getTimeVariablesWithDerivatives[exprs_] := Union[getTimeVariables[exprs], getDerivatives[exprs] ];
