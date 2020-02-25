@@ -387,8 +387,6 @@ void RelationGraph::expand_caller(ask_t ask) {
   if (it == ask_node_map.end())
     throw HYDLA_ERROR("AskNode for " + get_infix_string(ask) + " is not found");
   AskNode *parent_asknode = (*it).second;
-  std::cout << "expand_caller:" << std::endl;
-  std::cout << ask->get_string() << std::endl;
 
   auto it2 = ask_caller_map_.find(parent_asknode);
   if (it2 == ask_caller_map_.end())
@@ -402,13 +400,9 @@ void RelationGraph::expand_caller(ask_t ask) {
 
   for (auto caller : callers) {
     caller->set_child(nullptr);
-    std::cout << "Analyze:"<< std::endl;
-    std::cout << caller->get_string() << std::endl;
     symbolic_expression::node_sptr ptr = caller;
     analyzer_->analyze(ptr);
     accept(ptr);
-    std::cout << "Result:" << std::endl;
-    std::cout << ptr->get_string() << std::endl;
   }
 }
 
@@ -506,17 +500,11 @@ asks_t RelationGraph::get_adjacent_asks(const string &var_name,
       }
     }
   }
-  std::cout << "" << std::endl;
-  std::cout << "Adjacent Ask!" << std::endl;
   for (auto ask_node : ask_nodes) {
     if (ask_node->expanded && !ask_node->entailed) {
       VariableFinder finder;
       finder.visit_node(ask_node->ask->get_guard());
-      if(finder.get_all_variable_set().empty()){
-        std::cout << ask_node->ask->get_string() << std::endl;
-        std::cout << ask_node->ask << std::endl;
-        std::cout << ask_node->expanded << std::endl;
-        std::cout << " " << std::endl;
+      if (finder.get_all_variable_set().empty()) {
         asks.insert(ask_node->ask);
       }
     }
@@ -823,16 +811,10 @@ void RelationGraph::visit(std::shared_ptr<symbolic_expression::Ask> ask) {
     if (ask_node_it == ask_node_map.end())
       throw HYDLA_ERROR("ask_node not found");
     if (visit_mode == EXPANDING) {
-      std::cout << "EXPAND!!!!!" << std::endl;
-      std::cout << ask << std::endl;
-      std::cout << ask->get_string() << std::endl;
       ask_node_it->second->expanded = true;
       if (ask_node_it->second->entailed)
         accept(ask_node_it->second->ask->get_child());
     } else if (visit_mode == UNEXPANDING && !in_always) {
-      std::cout << "UNEXPAND!!!!!" << std::endl;
-      std::cout << ask << std::endl;
-      std::cout << ask->get_string() << std::endl;
       ask_node_it->second->expanded = false;
       if (ask_node_it->second->entailed) {
         accept(ask_node_it->second->ask->get_child());
@@ -892,8 +874,7 @@ void RelationGraph::visit(
   }
 }
 
-void RelationGraph::visit(
-    std::shared_ptr<symbolic_expression::Not> not_expr) {
+void RelationGraph::visit(std::shared_ptr<symbolic_expression::Not> not_expr) {
   if (visit_mode != ADDING_ASK) {
     accept(not_expr->get_child());
   } else {
@@ -908,13 +889,7 @@ void RelationGraph::visit(
 
 void RelationGraph::visit(
     std::shared_ptr<symbolic_expression::ConstraintCaller> caller) {
-  if(in_exists > 0 && visit_mode == ADDING){
-    std::cout << "VISIT" << std::endl;
-    std::cout << "caller:" << std::endl;
-    std::cout << caller->get_string() << std::endl;
-    std::cout << "parent" << std::endl;
-    std::cout << parent_ask->ask->get_string() << std::endl;
-    std::cout << "" << std::endl;
+  if (in_exists > 0 && visit_mode == ADDING) {
     ask_caller_map_[parent_ask].push_back(caller);
   }
   accept(caller->get_child());

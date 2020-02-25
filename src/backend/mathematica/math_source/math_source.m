@@ -238,8 +238,7 @@ publicMethod[
     If[cons === True, Return[{{}}]];
     If[cons === False, Return[{}]];
 
-    (*tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];*)
-    tmpCons = cons;
+    tmpCons = removeUnnecessaryConstraints[LogicalExpand[cons], hasVariable];
     If[Head[tmpCons] =!= LogicalOr,
       {tmpCons, succeeded} = tryToTransformConstraints[applyList[LogicalExpand[tmpCons] ], vars]
     ];
