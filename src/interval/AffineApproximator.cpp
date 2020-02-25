@@ -1,5 +1,4 @@
 #include "AffineApproximator.h"
-#include <boost/lexical_cast.hpp>
 #include "TreeInfixPrinter.h"
 #include <exception>
 #include "Backend.h"
@@ -11,7 +10,6 @@
 
 
 using namespace std;
-using namespace boost;
 using namespace hydla::simulator;
 
 namespace hydla {

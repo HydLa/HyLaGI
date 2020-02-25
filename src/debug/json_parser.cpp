@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
+#include "boost_algo_str.h"
 
 using namespace hydla::debug;
 using namespace std;
@@ -43,12 +43,12 @@ namespace hydla{
       std::vector<std::string> split_prio, split_p;
       bool flag = false;
 
-      boost::split(split_prio, prio, boost::is_any_of(";\n"), boost::token_compress_on);
+      split(split_prio, prio, ";\n");
       for(auto p : split_prio){
         if (p.find("->") != std::string::npos) {
-          boost::algorithm::replace_all(p, " ", "");
-          boost::algorithm::replace_all(p, "\"", "");
-          boost::split(split_p, p, boost::is_any_of("->"), boost::token_compress_on);
+          replace_all(p, " ", "");
+          replace_all(p, "\"", "");
+          split(split_p, p, "->");
           ret[split_p[1]].push_back(split_p[0]);
         }
       }
@@ -115,25 +115,25 @@ namespace hydla{
       std::vector<std::string> split_str, split_str2, split_str21, split_str3, split_str3_ask, split_str3_tell, cons_list;
       std::string cons;
 
-      boost::split(split_str, serch_str, boost::is_any_of(next_m));
+      split(split_str, serch_str, next_m);
       split_str.pop_back();
       for(auto spl : split_str){
         each_eq.clear();
         each_eq_ask.clear();
         each_eq_tell.clear();
         each_m.clear();
-        boost::split(split_str2, spl, boost::is_any_of(definition_m));
+        split(split_str2, spl, definition_m);
         cons = *split_str2.begin();
         if(std::find(cons_list.begin(), cons_list.end(), cons) != cons_list.end()){ // 登録済みなら飛ばす
           continue;
         }
         each_eq.push_back(cons);
         cons_list.push_back(cons);
-        boost::split(split_str21, split_str2[1], boost::is_any_of(logical_and_tell)); /// 複数tell制約がある場合の対処(複数のask制約には対応していない)
+        split(split_str21, split_str2[1], logical_and_tell); /// 複数tell制約がある場合の対処(複数のask制約には対応していない)
         for(auto split_str22 : split_str21){
-          boost::split(split_str3, split_str22, boost::is_any_of(ask_c));
-          boost::split(split_str3_ask, *split_str3.begin(), boost::is_any_of(logical_and));
-          boost::split(split_str3_tell, split_str3[1], boost::is_any_of(logical_and));
+          split(split_str3, split_str22, ask_c);
+          split(split_str3_ask, *split_str3.begin(), logical_and);
+          split(split_str3_tell, split_str3[1], logical_and);
           for(auto spl_ask : split_str3_ask){
             each_eq_ask.push_back(spl_ask);
           }
@@ -252,7 +252,7 @@ namespace hydla{
     }
 
 
-    std::vector<std::vector<std::string>> Json_p::make_v_map(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree){
+    std::vector<std::vector<std::string>> Json_p::make_v_map(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree){
       std::vector<std::vector<std::string>> ret;
       std::vector<std::string> map_ret;
 

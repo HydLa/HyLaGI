@@ -19,6 +19,7 @@ SequentialSimulator::~SequentialSimulator()
 {
 }
 
+  // ここから、メインのシミュレーションが始まる
 phase_result_sptr_t SequentialSimulator::simulate()
 {
   std::string error_str = "";
@@ -26,6 +27,7 @@ phase_result_sptr_t SequentialSimulator::simulate()
 
   try
   {
+    // dfsが再帰的に呼ばれて、PP/IPのシミュレーションが行われる
     dfs(result_root_);
   }
   catch(const std::exception &se)
@@ -55,7 +57,7 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
   }
 
   phase_simulator_->apply_diff(*current);
-
+  // current->todo_listは、次に探索すべきphaseResultのリスト
   while (!current->todo_list.empty())
   {
     phase_result_sptr_t todo = current->todo_list.front();
@@ -63,6 +65,7 @@ void SequentialSimulator::dfs(phase_result_sptr_t current)
     profile_vector_->insert(todo);
     if (todo->simulation_state == NOT_SIMULATED)
     {
+      //ここから、次に探索すべきphaseResultを導出する。
       process_one_todo(todo);
       if (opts_->dump_in_progress){
         printer.output_one_phase(todo, "------ In Progress ------");

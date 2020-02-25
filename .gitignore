@@ -5,6 +5,7 @@
 *.png
 *.csv
 *.o.json
+**/*.o.tmp
 compile_commands.json
 bin/
 *.txt

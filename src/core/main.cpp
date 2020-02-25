@@ -26,14 +26,11 @@
 #include "AffineTreeVisitor.h"
 #include "Parser.h"
 
-#include <boost/regex.hpp>
-
 // debug
 #include "debug_main.h"
 
 
 // namespace
-using namespace boost;
 using namespace hydla;
 using namespace hydla::logger;
 using namespace hydla::timer;
@@ -47,8 +44,8 @@ using namespace std;
 // prototype declarations
 int main(int argc, char* argv[]);
 int hydla_main(int argc, char* argv[]);
-int simulate(boost::shared_ptr<parse_tree::ParseTree> parse_tree);
-bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& p);
+int simulate(std::shared_ptr<parse_tree::ParseTree> parse_tree);
+bool dump(std::shared_ptr<ParseTree> pt, ProgramOptions& p);
 bool dump_in_advance(ProgramOptions& p);
 void output_result(simulator::SequentialSimulator& ss, Opts& opts);
 void add_vars_from_string(string var_string, set<string> &set_to_add, string warning_prefix);
@@ -62,6 +59,7 @@ extern string input_file_name;
 
 /**
  * エントリポイント
+ * 基本的にはマクロの処理と構文解析
  */
 int main(int argc, char* argv[]) 
 {
@@ -86,7 +84,7 @@ int hydla_main(int argc, char* argv[])
   // ParseTreeの構築
   // ファイルを指定されたらファイルから
   // そうでなければ標準入力から受け取る
-  boost::shared_ptr<ParseTree> pt(new ParseTree);
+  std::shared_ptr<ParseTree> pt(new ParseTree);
   string input;
   if(cmdline_options.count("input-file")) {
     input_file_name = cmdline_options.get<string>("input-file");
@@ -465,6 +463,8 @@ int hydla_main(int argc, char* argv[])
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
 
+  // inputがHydLaプログラム
+  // ここで、HydLaプログラムをASTに変換する
   pt->parse_string(input);
 
   if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
@@ -478,7 +478,7 @@ int hydla_main(int argc, char* argv[])
     cout << "debug constraint" << endl;
     Debug db;
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
-    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    std::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     Debug::dump_debug(&db, input, pt, msc);
     return 0;
   }
@@ -502,7 +502,7 @@ int hydla_main(int argc, char* argv[])
  * ProgramOptionとParseTreeを元に出力
  * 何か出力したらtrueを返す
  */
-bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
+bool dump(std::shared_ptr<ParseTree> pt, ProgramOptions& po)
 {
 
   if(po.count("dump_parse_tree")>0) {
@@ -523,14 +523,14 @@ bool dump(boost::shared_ptr<ParseTree> pt, ProgramOptions& po)
 
   if(po.count("dump_module_set_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
-    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    std::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_module_sets_for_graphviz(cout);
     return true;
   }
 
   if(po.count("dump_module_priority_graph")>0) {
     ModuleSetContainerCreator<IncrementalModuleSet> mcc;
-    boost::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
+    std::shared_ptr<IncrementalModuleSet> msc(mcc.create(pt));
     msc->dump_priority_data_for_graphviz(cout);
     return true;
   }

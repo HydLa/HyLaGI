@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "picojson.h"
@@ -12,8 +12,8 @@ class JsonReader
 {
 public:
   typedef simulator::PhaseResult                   phase_result_t;
-  typedef boost::shared_ptr<phase_result_t>        phase_result_sptr_t;
-  typedef boost::shared_ptr<const phase_result_t>  phase_result_const_sptr_t;
+  typedef std::shared_ptr<phase_result_t>        phase_result_sptr_t;
+  typedef std::shared_ptr<const phase_result_t>  phase_result_const_sptr_t;
   typedef simulator::variable_map_t                variable_map_t;
   typedef simulator::variable_set_t                variable_set_t;
   typedef simulator::parameter_map_t               parameter_map_t;

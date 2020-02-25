@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 
@@ -12,7 +12,7 @@ namespace hydla {
 namespace io {
 
 typedef simulator::PhaseResult                  phase_result_t;
-typedef boost::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
+typedef std::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
 using simulator::phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >       phase_result_sptrs_t;
 using simulator::variable_map_t; 
@@ -27,7 +27,7 @@ class TrajPrinter
 {
 public:
   typedef simulator::PhaseResult                  phase_result_t;
-  typedef boost::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
+  typedef std::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
 
   virtual ~TrajPrinter(){}
 

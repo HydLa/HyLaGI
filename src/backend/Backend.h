@@ -171,83 +171,83 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   bool get_form(const char &form_c, VariableForm &form);
 
   // Ask制約
-  virtual void visit(boost::shared_ptr<symbolic_expression::Ask> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
 
   // Tell制約
-  virtual void visit(boost::shared_ptr<symbolic_expression::Tell> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Tell> node);
 
   // 比較演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Equal> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Less> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LessEqual> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Greater> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::GreaterEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Equal> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Less> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LessEqual> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Greater> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::GreaterEqual> node);
 
   // 論理演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalAnd> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::LogicalOr> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr> node);
 
   // 算術二項演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Plus> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Subtract> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Times> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Divide> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Power> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Plus> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Subtract> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Times> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Divide> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Power> node);
   
   // コマンド文
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintPP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::PrintIP> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Scan> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintPP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::PrintIP> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Scan> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::True> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::False> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::True> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::False> node);
 
   // 算術単項演算子
-  virtual void visit(boost::shared_ptr<symbolic_expression::Negative> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Positive> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Negative> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Positive> node);
 
   // 微分
-  virtual void visit(boost::shared_ptr<symbolic_expression::Differential> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Differential> node);
 
   // 左極限
-  virtual void visit(boost::shared_ptr<symbolic_expression::Previous> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Previous> node);
 
   // 否定
-  virtual void visit(boost::shared_ptr<symbolic_expression::Not> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Not> node);
   
   // 関数
-  virtual void visit(boost::shared_ptr<symbolic_expression::Function> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::UnsupportedFunction> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);
   
   
   // 円周率
-  virtual void visit(boost::shared_ptr<symbolic_expression::Pi> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
   // 自然対数の底
-  virtual void visit(boost::shared_ptr<symbolic_expression::E> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::E> node);
   
     
   // 変数
-  virtual void visit(boost::shared_ptr<symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Variable> node);
 
   // 数字
-  virtual void visit(boost::shared_ptr<symbolic_expression::Number> node);
-  virtual void visit(boost::shared_ptr<symbolic_expression::Float> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Float> node);
 
   // 記号定数
-  virtual void visit(boost::shared_ptr<symbolic_expression::Parameter> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Parameter> node);
 
   // t
-  virtual void visit(boost::shared_ptr<symbolic_expression::SymbolicT> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::SymbolicT> node);
   
   // 無限大
-  virtual void visit(boost::shared_ptr<symbolic_expression::Infinity> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
   
-  virtual void visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);
 
-  virtual void visit(boost::shared_ptr<symbolic_expression::Range> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Range> node);
 
   VariableForm adapt_variable_form(VariableForm orig, bool in_prev);
   
@@ -264,7 +264,7 @@ class Backend : public symbolic_expression::DefaultTreeVisitor
   void put_converted_function(const std::string& name, int arg_cnt);
 
 
-  boost::shared_ptr<Link> link_;
+  std::shared_ptr<Link> link_;
 
   VariableForm variable_arg_;
 

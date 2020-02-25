@@ -22,7 +22,7 @@ namespace hydla{
   namespace debug{
     Debug::Debug(){}
 
-    void Debug::dump_debug(Debug *db, std::string string, boost::shared_ptr<ParseTree> pt, boost::shared_ptr<IncrementalModuleSet> msc)
+    void Debug::dump_debug(Debug *db, std::string string, std::shared_ptr<ParseTree> pt, std::shared_ptr<IncrementalModuleSet> msc)
     {
       std::stringstream sout1, sout2;
       std::vector<std::vector<std::vector<std::string>>> constraint_map;

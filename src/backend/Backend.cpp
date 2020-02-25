@@ -2,7 +2,6 @@
 #include "Timer.h"
 #include <stdarg.h>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 #include "HydLaError.h"
 
 #include <regex>
@@ -746,18 +745,18 @@ int Backend::send_parameter_map(const parameter_map_t& parameter_map)
   return 0;
 }
 
-void Backend::visit(boost::shared_ptr<Ask> node)                   
+void Backend::visit(std::shared_ptr<Ask> node)                   
 {
   throw HYDLA_ERROR("ask node cannot be sent to backend");
 }
 
-void Backend::visit(boost::shared_ptr<Tell> node)
+void Backend::visit(std::shared_ptr<Tell> node)
 {
   accept(node->get_child());
 }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                       \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)                \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node)                \
 {                                                                       \
   link_->put_converted_function(#FUNC_NAME, 2);                         \
   accept(node->get_lhs());                                              \
@@ -765,14 +764,14 @@ void Backend::visit(boost::shared_ptr<Tell> node)
 }
 
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)          \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node)  \
   {                                                       \
     link_->put_converted_function(#FUNC_NAME, 1);         \
     accept(node->get_child());                            \
   }
 
 #define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)         \
-  void Backend::visit(boost::shared_ptr<NODE_NAME> node)  \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node)  \
   {                                                       \
     link_->put_symbol(#FUNC_NAME);                        \
   }
@@ -799,13 +798,13 @@ DEFINE_VISIT_BINARY(Power, Power)
 /// 算術単項演算子
 
 DEFINE_VISIT_UNARY(Negative, Minus)
-void Backend::visit(boost::shared_ptr<Positive> node)              
+void Backend::visit(std::shared_ptr<Positive> node)              
 {
   accept(node->get_child());
 }
 
 /// 微分
-void Backend::visit(boost::shared_ptr<Differential> node)          
+void Backend::visit(std::shared_ptr<Differential> node)          
 {
   differential_count_++;
   accept(node->get_child());
@@ -813,7 +812,7 @@ void Backend::visit(boost::shared_ptr<Differential> node)
 }
 
 /// 左極限
-void Backend::visit(boost::shared_ptr<Previous> node)              
+void Backend::visit(std::shared_ptr<Previous> node)              
 {
   in_prev_ = true;
   accept(node->get_child());
@@ -822,14 +821,14 @@ void Backend::visit(boost::shared_ptr<Previous> node)
 
 
 /// 否定
-void Backend::visit(boost::shared_ptr<Not> node)              
+void Backend::visit(std::shared_ptr<Not> node)              
 {
   link_->put_function("Not", 1);
   accept(node->get_child());
 }
 
 /// 関数
-void Backend::visit(boost::shared_ptr<Function> node)              
+void Backend::visit(std::shared_ptr<Function> node)              
 {
   string name;
   int arg_cnt = node->get_arguments_size();
@@ -846,7 +845,7 @@ void Backend::visit(boost::shared_ptr<Function> node)
   }
 }
 
-void Backend::visit(boost::shared_ptr<UnsupportedFunction> node)              
+void Backend::visit(std::shared_ptr<UnsupportedFunction> node)              
 {
   link_->put_function(node->get_name().c_str(), 1);
   link_->put_function("Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
@@ -865,7 +864,7 @@ DEFINE_VISIT_FACTOR(E, E)
 DEFINE_VISIT_FACTOR(ImaginaryUnit, I)
 
 // 変数
-void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)              
+void Backend::visit(std::shared_ptr<symbolic_expression::Variable> node)              
 {
   // 変数の送信
   VariableForm va = adapt_variable_form(variable_arg_, in_prev_);
@@ -874,32 +873,32 @@ void Backend::visit(boost::shared_ptr<symbolic_expression::Variable> node)
 }
 
 // 数字
-void Backend::visit(boost::shared_ptr<Number> node)                
+void Backend::visit(std::shared_ptr<Number> node)                
 {
   // link_->put_integer(atoi(node->get_number().c_str())); //数値がでかいとオーバーフローする
   // link_->put_symbol(node->get_number().c_str()); // put_symbolだと送れない
   link_->put_number(node->get_number().c_str());
 }
 
-void Backend::visit(boost::shared_ptr<Float> node)              {
+void Backend::visit(std::shared_ptr<Float> node)              {
   link_->put_double(node->get_number());
 }  
 
 
 // 記号定数
-void Backend::visit(boost::shared_ptr<symbolic_expression::Parameter> node)
+void Backend::visit(std::shared_ptr<symbolic_expression::Parameter> node)
 {
   link_->put_parameter(par_prefix + node->get_name(), node->get_differential_count(), node->get_phase_id());
 }
 
 // t
-void Backend::visit(boost::shared_ptr<SymbolicT> node)                
+void Backend::visit(std::shared_ptr<SymbolicT> node)                
 {    
   link_->put_symbol("t");
 }
 
 
-void Backend::visit(boost::shared_ptr<Range> node)
+void Backend::visit(std::shared_ptr<Range> node)
 {
   link_->put_converted_function("Interval", 1);
   link_->put_converted_function("List", 2);
@@ -948,12 +947,12 @@ void Backend::send_variable(const std::string& name, int diff_count, const Varia
 
 
 // コマンド文
-void Backend::visit(boost::shared_ptr<symbolic_expression::PrintPP> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::PrintIP> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::Scan> node) {link_->put_symbol("True");}
+void Backend::visit(std::shared_ptr<symbolic_expression::PrintPP> node) {link_->put_symbol("True");}
+void Backend::visit(std::shared_ptr<symbolic_expression::PrintIP> node) {link_->put_symbol("True");}
+void Backend::visit(std::shared_ptr<symbolic_expression::Scan> node) {link_->put_symbol("True");}
 
-void Backend::visit(boost::shared_ptr<symbolic_expression::True> node) {link_->put_symbol("True");}
-void Backend::visit(boost::shared_ptr<symbolic_expression::False> node) {link_->put_symbol("False");}
+void Backend::visit(std::shared_ptr<symbolic_expression::True> node) {link_->put_symbol("True");}
+void Backend::visit(std::shared_ptr<symbolic_expression::False> node) {link_->put_symbol("False");}
 
 void Backend::set_range(const value_t &val, value_range_t &range, const int& relop)
 {
@@ -995,10 +994,10 @@ Backend::VariableForm Backend::adapt_variable_form(VariableForm form, bool in_pr
   }
 }
 
-void Backend::visit(boost::shared_ptr<symbolic_expression::ExpressionListElement> node)
+void Backend::visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node)
 {
 
-  boost::shared_ptr<symbolic_expression::ExpressionList> el = boost::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs());
+  std::shared_ptr<symbolic_expression::ExpressionList> el = std::dynamic_pointer_cast<symbolic_expression::ExpressionList>(node->get_lhs());
   if (el && el->has_nameless_contents())
   {
     // send this element as a variable
@@ -1165,10 +1164,10 @@ symbolic_expression::node_sptr Backend::receive_function()
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str;
     d_str = link_->get_string();
-    int differential_count = boost::lexical_cast<int, std::string>(d_str);
+    int differential_count = stoi(d_str);
     std::string id_str;
     id_str = link_->get_string();
-    int id = boost::lexical_cast<int, std::string>(id_str);
+    int id = stoi(id_str);
     ret = symbolic_expression::node_sptr(new symbolic_expression::Parameter(name, differential_count, id));
   }
   else if (equal_ignoring_case(symbol, "prev"))
@@ -1176,7 +1175,7 @@ symbolic_expression::node_sptr Backend::receive_function()
     std::string name;
     name = remove_prefix(link_->get_symbol(), par_prefix);
     std::string d_str = link_->get_string();
-    int differential_count = boost::lexical_cast<int, std::string>(d_str);
+    int differential_count = stoi(d_str);
     symbolic_expression::node_sptr tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Variable(name));
     for (int i = 0; i < differential_count; i++) tmp_var = symbolic_expression::node_sptr(new symbolic_expression::Differential(tmp_var));
     ret = symbolic_expression::node_sptr(new symbolic_expression::Previous(tmp_var));
@@ -1242,7 +1241,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   else if (equal_ignoring_case(symbol, "derivative"))
   {
     std::string d_str = link_->get_string();
-    int variable_differential_count = boost::lexical_cast<int, std::string>(d_str.c_str());
+    int variable_differential_count = stoi(d_str);
     std::string variable_name = link_->get_symbol();
     ret = symbolic_expression::node_sptr(new symbolic_expression::Variable(variable_name));
     for (int i = 0; i < variable_differential_count; i++)
@@ -1252,7 +1251,7 @@ symbolic_expression::node_sptr Backend::receive_function()
   }
   else{
     // その他の関数
-    boost::shared_ptr<symbolic_expression::VariadicNode> f;
+    std::shared_ptr<symbolic_expression::VariadicNode> f;
     //if (converted)
     //{
       // 対応している関数

@@ -3,7 +3,7 @@
 #include <vector>
 #include <optional>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Variable.h"
 #include "ValueRange.h"
@@ -49,13 +49,13 @@ typedef enum {
   INTERVAL_PHASE
 } PhaseType;
 
-typedef std::vector<boost::shared_ptr<symbolic_expression::Tell> > tells_t;
-typedef boost::shared_ptr<symbolic_expression::Ask>                ask_t;
+typedef std::vector<std::shared_ptr<symbolic_expression::Tell> > tells_t;
+typedef std::shared_ptr<symbolic_expression::Ask>                ask_t;
 typedef std::set<ask_t >                                           asks_t;
-typedef std::set<boost::shared_ptr<symbolic_expression::Always> >  always_set_t;
+typedef std::set<std::shared_ptr<symbolic_expression::Always> >  always_set_t;
 typedef hierarchy::ModuleSet                              module_set_t;
 
-typedef boost::shared_ptr<PhaseResult>                    phase_result_sptr_t;
+typedef std::shared_ptr<PhaseResult>                    phase_result_sptr_t;
 typedef std::vector<phase_result_sptr_t >                 phase_result_sptrs_t;
 typedef std::list<phase_result_sptr_t >                   phase_list_t;
 
@@ -68,7 +68,7 @@ typedef std::map<variable_t, range_t, VariableComparator>                    var
 typedef std::set<variable_t, VariableComparator>                             variable_set_t;
 
 typedef std::map<parameter_t, range_t, ParameterComparator>                   parameter_map_t;
-typedef boost::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
+typedef std::shared_ptr<hierarchy::ModuleSetContainer> module_set_container_sptr;
 
 typedef std::set<std::string> change_variables_t;
 
@@ -185,7 +185,7 @@ public:
   std::vector<parameter_map_t> get_parameter_maps()const;
   void                         set_full_information(FullInformation &info);
   inline bool                  in_following_step(){return parent && parent->parent && parent->parent->parent;}
-  std::map<variable_set_t,module_set_t> calc_map_v2cons()const; 
+  std::map<variable_set_t,module_set_t> unsat_cons_causes()const; 
 
   std::string get_string() const;
 	std::string get_vm_string() const;

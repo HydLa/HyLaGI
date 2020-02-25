@@ -30,6 +30,8 @@
 
 #include "SymbolicTrajPrinter.h"
 
+#include "../hierarchy/IncrementalModuleSet.h"
+
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
 namespace hydla
@@ -38,7 +40,6 @@ namespace simulator
 {
 
 using namespace std;
-using namespace boost;
 
 using namespace backend;
 using namespace hierarchy;
@@ -55,6 +56,7 @@ PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts)
 
 PhaseSimulator::~PhaseSimulator() {}
 
+// メインの処理
 phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
   timer::Timer phase_timer;
@@ -113,6 +115,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 
   if (todo->phase_type == POINT_PHASE)backend_->call("setCurrentTime", true, 1, "vln", "", &todo->current_time);
 
+ 
   list<phase_result_sptr_t> phase_list = make_results_from_todo(todo);
   if (phase_list.empty())
   {
@@ -120,11 +123,11 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
 
-		cout << "Execution stuck! (unsatisfiable constraints)" << endl;
-		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
-		cout << endl;
-		auto unsatv2unsatcons = todo->calc_map_v2cons();
-		print_possible_causes(unsatv2unsatcons);
+    cout << "Execution stuck! (unsatisfiable constraints)" << endl;
+    io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
+    cout << endl;
+    auto unsatcauses = todo->unsat_cons_causes();
+    print_possible_causes(filter_required(unsatcauses));
   }
   else
   {
@@ -262,6 +265,8 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
     }
   }
 
+  // 極大無矛盾集合をトップレベルから探索していく。
+  // 河野さんの最適化で、探索すべきモジュール集合を動的に生成している
   while (module_set_container->has_next())
   {
     // TODO: unadopted_ms も差分をとるようにして使いたい
@@ -343,6 +348,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 {
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n", unadopted_ms.get_infix_string());
 
+  // diffがついているのは、小林さんの最適化 (フェーズ間の差分を用いたシミュレーション)
   module_diff_t module_diff = get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
 
   ConstraintStore local_diff_sum = phase->diff_sum;
@@ -359,7 +365,10 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore ms_local_always;
 
   consistency_checker->clear_inconsistent_constraints();
-  backend_->call("resetAssumption", false, 0, "", "");
+  // backend_->call("resetAssumption", false, 0, "", "");
+  // CaculateClosureの処理は、松本さんの博論参照
+  // 基本的には、モジュールセットにおいて、ガードが成り立つかどうかを収束するまで判定し、
+  // ガード成立の有無が判明したら、その時点で展開されている制約の充足性判定を行い、解候補モジュール集合が充足可能かを判定する関数
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
@@ -379,6 +388,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     for (auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       timer::Timer gen_timer;
+　     // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
+      // ロジックを知りたければ、河野さんの論文参照
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
       phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();
     }
@@ -549,6 +560,7 @@ phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t origi
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
+  branch_state_false->unadopted_mss = original->unadopted_mss;
   return branch_state_false;
 }
 
@@ -2107,6 +2119,16 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   phase->set_parameter_constraint(new_store);
 
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+}
+
+std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
+  auto ims = std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
+  for(auto&& p : causes){
+    for(auto m : p.second)
+      if(not ims->is_required(m)) p.second.erase(m);
+    if(p.second.size() == 0) causes.erase(p.first);
+  }
+  return causes;
 }
 
 void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t> &mp){

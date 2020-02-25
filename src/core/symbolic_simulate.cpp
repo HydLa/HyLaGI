@@ -19,7 +19,6 @@
 
 #include "version.h"
 #include "Logger.h"
-#include <boost/regex.hpp>
 #include <regex>
 
 #ifdef _MSC_VER
@@ -156,9 +155,9 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
   while(std::getline(sstr, buffer, ','))
   {
     trim_front_and_behind_space(buffer);
-    boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
-    boost::smatch match;
-    if (!boost::regex_search(buffer, match, re))
+    regex re("^\l[\l\d]*'*$");
+    smatch match;
+    if (!regex_search(buffer, match, re))
     {
       cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
     }
@@ -223,7 +222,7 @@ void process_opts(Opts& opts, ProgramOptions& po, bool use_default)
 }
 
 
-int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
+int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 {
   //process_opts(opts, cmdline_options, false);
 
@@ -232,7 +231,8 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
 
   //if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   //else     Logger::instance().set_log_level(Logger::Warn);
-
+  
+  // バックエンドは一応抽象化されているが、現状Mathematica直打ち
   backend_.reset(new Backend(new MathematicaLink(opts.wstp, opts.ignore_warnings, opts.simplify_time, opts.simplify, opts.dsolve, opts.solve_over_reals)));
   PhaseResult::backend = backend_.get();
 
@@ -246,6 +246,7 @@ int simulate(boost::shared_ptr<hydla::parse_tree::ParseTree> parse_tree)
     }
   else
     {
+      // 現状のメインのシミュレーションはここから
       simulator_ = new SequentialSimulator(opts);
     }
 

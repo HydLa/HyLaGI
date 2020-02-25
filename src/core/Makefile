@@ -6,7 +6,7 @@ INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica
 INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
-INCLUDES +=   -I/usr/include/python2.7 -L/usr/lib/python2.7/config -lpython2.7
+INCLUDES += `python3-config --includes --ldflags`
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib
@@ -25,7 +25,7 @@ LIBS     += $(MATH_FLAGS_$(ARCH)) -lmaplec -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
 LIBS_STATIC += -lboost_program_options-mt
-LIBS     += -lWSTPi4 -lm -lstdc++.6.0.9
+LIBS     += -lWSTPi4 -lm
 endif
 
 CXX_OPT  += 
