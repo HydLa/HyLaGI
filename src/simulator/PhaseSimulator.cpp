@@ -31,6 +31,7 @@
 #include "SymbolicTrajPrinter.h"
 
 #include "VariableRenamer.h"
+#include "../hierarchy/IncrementalModuleSet.h"
 
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
 
@@ -40,7 +41,6 @@ namespace simulator
 {
 
 using namespace std;
-using namespace boost;
 
 using namespace backend;
 using namespace hierarchy;
@@ -122,11 +122,11 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
     todo->set_parameter_constraint(get_current_parameter_constraint());
     todo->parent->children.push_back(todo);
 
-		cout << "Execution stuck! (unsatisfiable constraints)" << endl;
-		io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
-		cout << endl;
-		auto unsatv2unsatcons = todo->calc_map_v2cons();
-		print_possible_causes(unsatv2unsatcons);
+    cout << "Execution stuck! (unsatisfiable constraints)" << endl;
+    io::SymbolicTrajPrinter(backend_).output_one_phase(todo);
+    cout << endl;
+    auto unsatcauses = todo->unsat_cons_causes();
+    print_possible_causes(filter_required(unsatcauses));
   }
   else
   {
@@ -376,7 +376,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
   ConstraintStore ms_local_always;
 
   consistency_checker->clear_inconsistent_constraints();
-  backend_->call("resetAssumption", false, 0, "", "");
+  // backend_->call("resetAssumption", false, 0, "", "");
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
   phase->profile["CalculateClosure"] += cc_timer.get_elapsed_us();
   phase->profile["# of CalculateClosure"]++;
@@ -569,6 +569,7 @@ phase_result_sptr_t PhaseSimulator::clone_branch_state(phase_result_sptr_t origi
   branch_state_false->always_list = original->always_list;
   branch_state_false->diff_sum = original->diff_sum;
   branch_state_false->next_pp_candidate_map = original->next_pp_candidate_map;
+  branch_state_false->unadopted_mss = original->unadopted_mss;
   return branch_state_false;
 }
 
@@ -2163,6 +2164,16 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   phase->set_parameter_constraint(new_store);
 
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
+}
+
+std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
+  auto ims = std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
+  for(auto&& p : causes){
+    for(auto m : p.second)
+      if(not ims->is_required(m)) p.second.erase(m);
+    if(p.second.size() == 0) causes.erase(p.first);
+  }
+  return causes;
 }
 
 void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t> &mp){

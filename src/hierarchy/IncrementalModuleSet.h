@@ -119,6 +119,8 @@ public:
    */
   virtual void init();
 
+  virtual bool is_required(const module_t &m) const;
+
 private:
   /**
    * add << data

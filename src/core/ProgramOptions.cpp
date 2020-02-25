@@ -4,8 +4,10 @@
 
 namespace hydla {
 
-using namespace boost::program_options;
 using namespace std;
+
+// for options_description, positional_options_description, value, command_line_parser
+using namespace boost::program_options;
 
 ProgramOptions::ProgramOptions() : visible_desc_(LINE_LENGTH)
 {

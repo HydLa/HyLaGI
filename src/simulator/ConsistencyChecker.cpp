@@ -11,7 +11,6 @@
 #include "VariableReplacer.h"
 
 using namespace std;
-using namespace boost;
 
 namespace hydla {
 namespace simulator {

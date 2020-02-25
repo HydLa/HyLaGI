@@ -3,7 +3,6 @@
 #include "Logger.h"
 
 using namespace std;
-using namespace boost;
 
 namespace hydla
 {

@@ -26,14 +26,11 @@
 #include "AffineTreeVisitor.h"
 #include "Parser.h"
 
-#include <boost/regex.hpp>
-
 // debug
 #include "debug_main.h"
 
 
 // namespace
-using namespace boost;
 using namespace hydla;
 using namespace hydla::logger;
 using namespace hydla::timer;

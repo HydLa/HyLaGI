@@ -19,7 +19,6 @@
 
 #include "version.h"
 #include "Logger.h"
-#include <boost/regex.hpp>
 #include <regex>
 
 #ifdef _MSC_VER
@@ -156,9 +155,9 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add, stri
   while(std::getline(sstr, buffer, ','))
   {
     trim_front_and_behind_space(buffer);
-    boost::regex re("^[[:lower:]][[:digit:][:lower:]]*'*$", std::regex_constants::extended);
-    boost::smatch match;
-    if (!boost::regex_search(buffer, match, re))
+    regex re("^\l[\l\d]*'*$");
+    smatch match;
+    if (!regex_search(buffer, match, re))
     {
       cout << warning_prefix << " warning : \"" << buffer << "\" is not a valid variable name." << endl;
     }

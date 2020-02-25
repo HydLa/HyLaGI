@@ -9,9 +9,6 @@ using namespace std;
 
 using namespace hydla::backend;
 
-
-using namespace boost;
-
 using namespace hydla::hierarchy;
 using namespace hydla::simulator;
 using namespace hydla::symbolic_expression;

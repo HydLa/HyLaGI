@@ -11,6 +11,7 @@
 #include "RelationGraph.h"
 #include "Simulator.h"
 #include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace kv {
 template <class T> class interval;
@@ -190,6 +191,8 @@ private:
                                 ValueRange current_range);
 
   void print_possible_causes(const std::map<variable_set_t, module_set_t> &map);
+  std::map<variable_set_t, module_set_t>
+  filter_required(std::map<variable_set_t, module_set_t> causes);
 
   void update_condition(const variable_set_t &vs, const module_set_t &ms);
 

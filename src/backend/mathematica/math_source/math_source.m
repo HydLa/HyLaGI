@@ -134,7 +134,7 @@ publicMethod[
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs];
+        sol = exDSolve[Simplify[cons], prevRs, assum];
         simplePrint[sol];
         prevVars = Map[makePrevVar, vars];
         debugPrint["sol after exDSolve", sol];
@@ -152,7 +152,7 @@ publicMethod[
           debugPrint[tRules];
           debugPrint[(initCons /. (tRules /. t -> 0))];
           debugPrint[(substitutedInit /. (tRules /. t -> 0))];
-          If[(initCons /. (tRules /. t -> 0)) === False, 
+          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
             tCons = sol[[2]] /. tRules;
             initRules = makeRulesForVariable[substitutedInit];
@@ -879,9 +879,9 @@ exDSolve::multi = "Solution of `1` is not unique.";
     {変数値が満たすべき制約 （ルールに含まれているものは除く），各変数の値のルール}
 *)
 
-exDSolve[expr_, prevRs_] :=
+exDSolve[expr_, prevRs_, assum_:True] :=
 Module[
-  {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond},
+  {listExpr, reducedExpr, rules, tVars, resultCons, unsolvable = False, resultRule, searchResult, retCode, restCond, resConsAndAssum},
   inputPrint["exDSolve", expr, prevRs];
   listExpr = applyList[expr];
   sol = {};
@@ -926,7 +926,11 @@ Module[
     ]
   ];
   simplePrint[resultRule, resultCons, prevRs];
-  retCode = If[Length[listExpr] > 0 || unsolvable, underConstrained, solved];
+  (* exDSolveで求められた解が仮定と矛盾しないかチェック
+     TODO: exDSolveで扱わない不等式やPPでの検査 *)
+  resConsAndAssum = (resultRule//.Rule->Equal//.List->And) && assum;
+  simplePrint[resConsAndAssum];
+  If[Not[assum === True] && Quiet[TimeConstrained[Reduce[resConsAndAssum],0.1]] == False, Return[overConstrained]];
   restCond = And@@listExpr && applyDSolveResult[resultCons, resultRule];
   restCond = LogicalExpand[Assuming[t > 0, Simplify[restCond] ] ];
   restCond = Or2or[restCond];

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <boost/algorithm/string.hpp>
+#include "boost_algo_str.h"
 
 
 #include "IncrementalModuleSet.h"
@@ -24,8 +24,10 @@ namespace hydla{
     {
       std::string solve_ret;
       int error;
-      char *a = "a";
-      char **aa = &a;
+      const char *a = "a";
+      wchar_t *wa;
+      mbstowcs(wa, a, 1);
+      wchar_t **aa = &wa;
       std::string solve_var;
       std::vector<std::string> add_var_list, eq_list, ask_eq_list, true_eq_list;
       std::vector<std::vector<std::string>> each_ask_cons_sets;
@@ -44,11 +46,11 @@ namespace hydla{
       Py_InitializeEx(0);
       PyObject *sys = PyImport_ImportModule("sys");
       PyObject *path = PyObject_GetAttrString(sys, "path");
-      PyList_Append(path, PyString_FromString("./src/debug"));  
+      PyList_Append(path, PyUnicode_FromString("./src/debug"));
       PyRun_SimpleString("import os, sys\n");
 
       PySys_SetArgv(0, aa); 
-      pName = PyString_FromString("solve_sym");
+      pName = PyUnicode_FromString("solve_sym");
       pModule = PyImport_Import(pName);
 /// solve.py接続部分終わり
 
@@ -322,8 +324,8 @@ namespace hydla{
         rest_val = false;
         solve_var = conv_list(add_var_list_c);
         solve_eq_list = conv_list(eq_list);
-        boost::algorithm::replace_all(solve_var, "[", "");
-        boost::algorithm::replace_all(solve_var, "]", "");
+	replace_all(solve_var, "[","");
+        replace_all(solve_var, "]", "");
         solve_ret = solve_equation(solve_eq_list, solve_var);
         /// []が帰ってくるならばその制約集合は解なし
         if(solve_ret == "[]" or solve_ret == "False"){
@@ -335,17 +337,17 @@ namespace hydla{
         }
 
         /// いらない部分の消去(TODO:複数の解がある時はこれではダメ "}, {" でsplitして複数の候補制約集合に分割する(文字列はsplitできないので、一回特殊文字か何かに置き換える))
-        boost::algorithm::replace_all(solve_ret, "[", "");
-        boost::algorithm::replace_all(solve_ret, "]", "");
+        replace_all(solve_ret, "[", "");
+        replace_all(solve_ret, "]", "");
         /// 上は複数の解が存在する場合専用
-        boost::algorithm::replace_all(solve_ret, "{", "");
-        boost::algorithm::replace_all(solve_ret, "}", "");
-        boost::algorithm::replace_all(solve_ret, " ", "");
+        replace_all(solve_ret, "{", "");
+        replace_all(solve_ret, "}", "");
+        replace_all(solve_ret, " ", "");
 
         
-        boost::split(split_str, solve_ret, boost::is_any_of(","));
+	split(split_str, solve_ret, ",");
         for(auto each_val : split_str){
-          boost::split(split_val, each_val, boost::is_any_of(":"));
+          split(split_val, each_val, ":");
           if(split_val[0] != "AAAvar"){
             rest_val = true;
             ret[split_val[0]] = split_val[1];
@@ -378,7 +380,7 @@ namespace hydla{
         if(std::find(eq_list.begin(), eq_list.end(), each_range_name) != eq_list.end()){
           renge_eq = each_range.second;
           /// 使用変数を求める
-          boost::split(split_in_val, renge_eq, boost::is_any_of(" -(),"));
+          split(split_in_val, renge_eq, " -(),");
           for(auto each_in_val : split_in_val){ /// 不等式の要素ごとに回す
             if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
               renge_eq_subs = "(" + renge_eq + ")" + subs;
@@ -393,11 +395,11 @@ namespace hydla{
               }else if(solve_ret == "True"){ // 代入した値がそのまま正しい場合
                 continue;
               }else{
-                boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
+                split(split_solve_ret, solve_ret, "|");  /// ケース分岐に対応するためだが、現在は全体的に対応できていない
                 for(auto each_solve_ret : split_solve_ret){
-                  boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+                  split(split_each_solve_ret, each_solve_ret, "&");
                   for(auto each_split_each_solve_ret : split_each_solve_ret){
-                    boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                    split(eq_solve_ret, each_split_each_solve_ret, " -()");
                     inf_flag = false;
                     var_flag = false;
                     for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
@@ -427,11 +429,11 @@ namespace hydla{
       /// 不等式をといた結果として、複数解が存在する場合、それらの成立判定を行う
       for(auto each_ret : ret){
         if(each_ret.second.find(",") != std::string::npos){ /// 複数解が存在するかの判定
-          boost::split(split_each_ret, each_ret.second, boost::is_any_of(" "));
+          split(split_each_ret, each_ret.second, " ");
           mul_eq = "";
           for(auto e_split_each_ret : split_each_ret){
             if(e_split_each_ret.find("/") != std::string::npos){ /// python2.7では分数の余りを切り捨ててしまうので、書き換える必要がある
-              boost::split(split_e_each_ret, e_split_each_ret, boost::is_any_of("/"));
+              split(split_e_each_ret, e_split_each_ret, "/");
               mul_eq += "Retional(" + split_e_each_ret[0] + "," + split_e_each_ret[1] + ")";
             }else{
               mul_eq += e_split_each_ret;
@@ -445,12 +447,12 @@ namespace hydla{
             ret["no_result"] = "var";
             return ret;
           }else{
-            boost::split(split_solve_ret, solve_ret, boost::is_any_of("|"));
+            split(split_solve_ret, solve_ret, "|");
             for(auto each_solve_ret : split_solve_ret){
               replace_flag = false;
-              boost::split(split_each_solve_ret, each_solve_ret, boost::is_any_of("&"));
+              split(split_each_solve_ret, each_solve_ret, "&");
               for(auto each_split_each_solve_ret : split_each_solve_ret){
-                boost::split(eq_solve_ret, each_split_each_solve_ret, boost::is_any_of(" -()"));
+                split(eq_solve_ret, each_split_each_solve_ret, " -()");
                 inf_flag = false;
                 var_flag = false;
                 for(auto each_eq_solve_ret : eq_solve_ret){ /// 不等式の要素ごとに回す
@@ -500,7 +502,7 @@ namespace hydla{
           flag = false;
           undef_flag = false;
           /// 使用変数を求める
-          boost::split(split_in_val, var_map_after.second, boost::is_any_of(" -/*"));
+          split(split_in_val, var_map_after.second, " -/*");
           for(auto each_in_val : split_in_val){ /// 式の要素ごとに回す /// tellの時の判定
             if(std::find(add_var_list.begin(), add_var_list.end(), each_in_val) != add_var_list.end()){ /// 要素が変数として認識できる場合
               if(each_in_val != var_map_after.first){ /// 確認しているprev変数以外の変数が出現した場合は値が定まらないから流す(?)(TODO:prevの変数が出たら一致しないって言ってもいいかも)
@@ -529,21 +531,21 @@ namespace hydla{
             }
             /// askと違うprev値なら、tellで求めたprev値以外のprev値はどうなるのか確認する(名前をつける。どうにかする)
             n_str = var_map_after.first+"N"+var_map_after.second;
-            boost::algorithm::replace_all(n_str, "(", "");
-            boost::algorithm::replace_all(n_str, ")", "");
-            boost::algorithm::replace_all(n_str, " ", "");
-            boost::algorithm::replace_all(n_str, ">=", "igtoe");
-            boost::algorithm::replace_all(n_str, "<=", "iltoe");
-            boost::algorithm::replace_all(n_str, ">", "igt");
-            boost::algorithm::replace_all(n_str, "<", "ilt");
+            replace_all(n_str, "(", "");
+            replace_all(n_str, ")", "");
+            replace_all(n_str, " ", "");
+            replace_all(n_str, ">=", "igtoe");
+            replace_all(n_str, "<=", "iltoe");
+            replace_all(n_str, ">", "igt");
+            replace_all(n_str, "<", "ilt");
             y_str = var_map_after.first+"Y"+var_map_after.second;
-            boost::algorithm::replace_all(y_str, "(", "");
-            boost::algorithm::replace_all(y_str, ")", "");
-            boost::algorithm::replace_all(y_str, " ", "");
-            boost::algorithm::replace_all(y_str, ">=", "igtoe");
-            boost::algorithm::replace_all(y_str, "<=", "iltoe");
-            boost::algorithm::replace_all(y_str, ">", "igt");
-            boost::algorithm::replace_all(y_str, "<", "ilt");
+            replace_all(y_str, "(", "");
+            replace_all(y_str, ")", "");
+            replace_all(y_str, " ", "");
+            replace_all(y_str, ">=", "igtoe");
+            replace_all(y_str, "<=", "iltoe");
+            replace_all(y_str, ">", "igt");
+            replace_all(y_str, "<", "ilt");
             error = add_equation(n_str, "0"); /// TODO:範囲値が来た時にどうするか(特殊解の想定なので、範囲は存在しないと信じてる(今の所))
             range_map[n_str] = "~Eq("+var_map_after.first+","+var_map_after.second+")";
             var_val_map_first_base.push_back(y_str); /// PDyY0のような感じ。式を追加する必要があるなら追加するが、今の所必要なさそう
@@ -571,9 +573,9 @@ namespace hydla{
 
       if(var_val_after["no_result"] == "equality"){
         /// pre_eraseをもらって削除する制約を決める
-        boost::split(split_str, var_val_after["unsat_cons"], boost::is_any_of(","));
+        split(split_str, var_val_after["unsat_cons"], ",");
         for(auto cons : split_str){
-          boost::split(split_str_, cons, boost::is_any_of("_"));
+          split(split_str_, cons, "_");
           c_cons = split_str_[2];
           for(auto sym_prio : sym_prio_map){ /// {{{"FALL"},{"x", ...},{"BOUNCE", ...}}, ...}
             if(sym_prio[0][0] == c_cons){ /// sym_prioの制約名が候補制約集合内の制約と一致するなら
@@ -621,7 +623,7 @@ namespace hydla{
           ret.push_back("no_solution");
         }
       }else if(var_val_after["no_result"] == "range"){
-        boost::split(split_str, var_val_after["unsat_cons"], boost::is_any_of(","));
+        split(split_str, var_val_after["unsat_cons"], ",");
         ret = make_resolve_cons_set(split_str, var_val_map_first, sym_prio_map);/// 制約を減らす
       }else{
         ret.clear();
@@ -788,13 +790,13 @@ namespace hydla{
           }
         }
       }else if(error_m == "range"){
-        boost::algorithm::replace_all(renge_eq, ".subs", "?");
-        boost::algorithm::replace_all(renge_eq, "),(", ")!(");
-        boost::algorithm::replace_all(renge_eq, "([", "");
-        boost::algorithm::replace_all(renge_eq, "])", "");
-        boost::split(eq, renge_eq, boost::is_any_of("?"));
+        replace_all(renge_eq, ".subs", "?");
+        replace_all(renge_eq, "),(", ")!(");
+        replace_all(renge_eq, "([", "");
+        replace_all(renge_eq, "])", "");
+        split(eq, renge_eq, "?");
         v_eq = eq[1];
-        boost::split(eq_var, v_eq, boost::is_any_of("!"));
+        split(eq_var, v_eq, "!");
         s_eq_list.push_back(eq[0]);
         while(s_sat){
           d_eq_list = s_eq_list;
@@ -943,7 +945,7 @@ namespace hydla{
       std::vector<std::string> ret, split_eq;
       std::string val_name;
 
-      boost::split(split_eq, eq, boost::is_any_of(" <>=+-*/()"), boost::token_compress_on);
+      split(split_eq, eq, "<>=+-*/()");
       for(auto each_split_eq : split_eq){
         //if(var_map_after.first == "AAAvar"){
         //  continue;
@@ -1163,7 +1165,7 @@ namespace hydla{
           /* pFunc is a new reference */
           if (pFunc && PyCallable_Check(pFunc)) {
             pArgs = PyTuple_New(1);
-            pValue = PyString_FromString(name_var.c_str());
+            pValue = PyUnicode_FromString(name_var.c_str());
             PyTuple_SetItem(pArgs, 0, pValue);
             pValue = PyObject_CallObject(pFunc, pArgs);
             Py_DECREF(pArgs);
@@ -1186,9 +1188,9 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
@@ -1211,15 +1213,15 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
           error = check_error(pValue);
           if(error == 0){
-            ret = PyString_AsString(pValue);
+            ret = PyUnicode_AsUTF8(pValue);
           }
         }
         else {
@@ -1238,15 +1240,15 @@ namespace hydla{
         /* pFunc is a new reference */
         if (pFunc && PyCallable_Check(pFunc)) {
           pArgs = PyTuple_New(2);
-          pValue = PyString_FromString(name.c_str());
+          pValue = PyUnicode_FromString(name.c_str());
           PyTuple_SetItem(pArgs, 0, pValue);
-          pValue = PyString_FromString(eq.c_str());
+          pValue = PyUnicode_FromString(eq.c_str());
           PyTuple_SetItem(pArgs, 1, pValue);
           pValue = PyObject_CallObject(pFunc, pArgs);
           Py_DECREF(pArgs);
           error = check_error(pValue);
           if(error == 0){
-            ret = PyString_AsString(pValue);
+            ret = PyUnicode_AsUTF8(pValue);
           }
         }
         else {
@@ -1259,7 +1261,7 @@ namespace hydla{
 /// python関数の呼び出しが成功したかどうかの判定
     int Solve_sym::check_error(PyObject *pValue){
       if (pValue != NULL) {
-        //printf("Result of call: %s\n", PyString_AsString(pValue));
+        //printf("Result of call: %s\n", PyUnicode_AsUTF8(pValue));
         return 0;
       }
       else {

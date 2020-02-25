@@ -4,7 +4,7 @@
 #include <vector>
 #include <set>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Node.h"
 #include "DefaultTreeVisitor.h"

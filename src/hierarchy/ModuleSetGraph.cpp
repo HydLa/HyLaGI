@@ -5,7 +5,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace boost;
 
 namespace hydla{
 namespace hierarchy {
