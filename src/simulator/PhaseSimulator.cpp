@@ -404,7 +404,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     for (auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       timer::Timer gen_timer;
-　     // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
+      // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
       // ロジックを知りたければ、河野さんの論文参照
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
       phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();

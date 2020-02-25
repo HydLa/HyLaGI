@@ -25,7 +25,7 @@ namespace hydla{
       std::string solve_ret;
       int error;
       const char *a = "a";
-      wchar_t *wa;
+      wchar_t *wa = nullptr;
       mbstowcs(wa, a, 1);
       wchar_t **aa = &wa;
       std::string solve_var;
