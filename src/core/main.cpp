@@ -59,6 +59,7 @@ extern string input_file_name;
 
 /**
  * エントリポイント
+ * 基本的にはマクロの処理と構文解析
  */
 int main(int argc, char* argv[]) 
 {
@@ -462,6 +463,8 @@ int hydla_main(int argc, char* argv[])
   if(opts.debug_mode)    Logger::instance().set_log_level(Logger::Debug);
   else     Logger::instance().set_log_level(Logger::Warn);
 
+  // inputがHydLaプログラム
+  // ここで、HydLaプログラムをASTに変換する
   pt->parse_string(input);
 
   if(cmdline_options.count("parse_only") || options_in_source.count("parse_only"))
