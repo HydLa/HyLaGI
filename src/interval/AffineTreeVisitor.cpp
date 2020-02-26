@@ -57,8 +57,7 @@ AffineMixedValue AffineTreeVisitor::approximate(const node_sptr &node) {
   return current_val_;
 }
 
-void AffineTreeVisitor::visit(
-    std::shared_ptr<symbolic_expression::Plus> node) {
+void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::Plus> node) {
   HYDLA_LOGGER_NODE_VISIT;
   accept(node->get_lhs());
   AffineMixedValue lhs = current_val_;
@@ -153,14 +152,12 @@ void AffineTreeVisitor::visit(
   return;
 }
 
-void AffineTreeVisitor::visit(
-    std::shared_ptr<symbolic_expression::Pi> node) {
+void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::Pi> node) {
   current_val_.interval = pi;
   current_val_.type = INTERVAL;
 }
 
-void AffineTreeVisitor::visit(
-    std::shared_ptr<symbolic_expression::E> node) {
+void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::E> node) {
   current_val_ = AffineMixedValue(e);
 }
 
@@ -286,7 +283,8 @@ void AffineTreeVisitor::visit(
   return;
 }
 
-void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::Differential> node) {
+void AffineTreeVisitor::visit(
+    std::shared_ptr<symbolic_expression::Differential> node) {
   HYDLA_LOGGER_NODE_VISIT;
   differential_count++;
   // TODO: 変数以外の微分値は扱えないので、その判定もしたい。
@@ -295,7 +293,8 @@ void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::Differential>
   return;
 }
 
-void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::SymbolicT> node) {
+void AffineTreeVisitor::visit(
+    std::shared_ptr<symbolic_expression::SymbolicT> node) {
   HYDLA_LOGGER_NODE_VISIT;
   current_val_ = AffineMixedValue(affine_t());
   parameter_t param("t", -1, time_idx);
@@ -317,7 +316,8 @@ void AffineTreeVisitor::invalid_node(symbolic_expression::Node &node) {
 }
 
 #define DEFINE_INVALID_NODE(NODE_NAME)                                         \
-  void AffineTreeVisitor::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {           \
+  void AffineTreeVisitor::visit(                                               \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {                  \
     HYDLA_LOGGER_DEBUG("");                                                    \
     invalid_node(*node);                                                       \
   }

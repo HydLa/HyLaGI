@@ -5,10 +5,9 @@
 namespace hydla {
 namespace io {
 
-class ProfilePrinter
-{
+class ProfilePrinter {
 public:
-  virtual void print_profile(const entire_profile_t&) const = 0;
+  virtual void print_profile(const entire_profile_t &) const = 0;
 };
 
 } // namespace io

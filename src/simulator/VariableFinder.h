@@ -57,8 +57,7 @@ public:
   /// Ask制約
   virtual void visit(std::shared_ptr<hydla::symbolic_expression::Ask> node);
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Exists> node);
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Exists> node);
 
   /// 微分
   virtual void

@@ -5,8 +5,7 @@
 namespace hydla {
 namespace hierarchy {
 
-class ModuleSetTester
-{
+class ModuleSetTester {
 public:
   ModuleSetTester() {}
   virtual ~ModuleSetTester() {}

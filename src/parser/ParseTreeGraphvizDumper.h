@@ -33,8 +33,7 @@ public:
   // 呼び出し
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
 
   // 制約式
   virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
@@ -115,8 +114,7 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Number> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Float> node);
 
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   // Parameter
   virtual void visit(std::shared_ptr<symbolic_expression::Parameter> node);
@@ -125,8 +123,7 @@ public:
   // Infinity
   virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
   // ExpressionList
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
   // ConditionalExpressionList
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node);

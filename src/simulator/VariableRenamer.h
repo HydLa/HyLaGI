@@ -32,10 +32,8 @@ public:
   //　書き換え前の変数名 -> 書き換え後の変数名 のmap
   std::map<Variable, Variable> get_renamed_variable_map() const;
 
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::Variable> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::Exists> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Variable> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::Exists> node);
 
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
@@ -43,8 +41,7 @@ public:
   visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);

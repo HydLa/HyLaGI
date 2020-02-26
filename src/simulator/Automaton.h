@@ -1,23 +1,22 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <string>
 #include "../symbolic_expression/Node.h"
 #include "PhaseResult.h"
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace hydla {
 namespace simulator {
 
 class AutomatonNode;
-typedef hydla::symbolic_expression::node_sptr              node_sptr;
-typedef std::vector<AutomatonNode*>            automaton_node_list_t;
-typedef std::pair<AutomatonNode*,node_sptr>         automaton_edge_t;
-typedef std::vector<automaton_edge_t>          automaton_edge_list_t;
+typedef hydla::symbolic_expression::node_sptr node_sptr;
+typedef std::vector<AutomatonNode *> automaton_node_list_t;
+typedef std::pair<AutomatonNode *, node_sptr> automaton_edge_t;
+typedef std::vector<automaton_edge_t> automaton_edge_list_t;
 
-//TODO: fix memory leak (memory leak is caused by never freed AutomatonNode)
-class AutomatonNode
-{
+// TODO: fix memory leak (memory leak is caused by never freed AutomatonNode)
+class AutomatonNode {
 public:
   int id;
   std::string name;
@@ -27,14 +26,16 @@ public:
   automaton_node_list_t reversed_edges;
   int peripheries;
   /// 遷移グラフのノードに変数の割当を書くかどうか
-	bool node_vm_write;
+  bool node_vm_write;
   /// 遷移グラフのエッジにガードを書くかどうか
   bool edge_guard_write;
 
-  AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(), std::string name = "no_name",int id = 0);
+  AutomatonNode(phase_result_sptr_t phase = phase_result_sptr_t(),
+                std::string name = "no_name", int id = 0);
 
-  void add_edge(AutomatonNode* child,
-                node_sptr guard = node_sptr(new hydla::symbolic_expression::True()));
+  void
+  add_edge(AutomatonNode *child,
+           node_sptr guard = node_sptr(new hydla::symbolic_expression::True()));
   void remove();
   void set_id(int id);
   void set_name(std::string name);
@@ -43,24 +44,24 @@ public:
   void dump(std::ostream &ost = std::cout);
 };
 
-class Automaton
-{
+class Automaton {
 public:
   Automaton clone();
-  AutomatonNode* initial_node = nullptr;
+  AutomatonNode *initial_node = nullptr;
   void dump(std::ostream &ost = std::cout);
   std::list<AutomatonNode *> get_all_nodes();
-  AutomatonNode* exist_node(std::string name);
+  AutomatonNode *exist_node(std::string name);
   bool exist_edge(AutomatonNode *base, AutomatonNode *end);
 
-/*
-  void trace();
-  void dump_node_and_edge();
-  void output_dot();*/
+  /*
+    void trace();
+    void dump_node_and_edge();
+    void output_dot();*/
 private:
   std::set<AutomatonNode *> visited_nodes;
-  void clone_node(AutomatonNode *node, std::map<int, AutomatonNode*> &cloned_nodes);
-  void dump_node(AutomatonNode * node, std::ostream &ost);
+  void clone_node(AutomatonNode *node,
+                  std::map<int, AutomatonNode *> &cloned_nodes);
+  void dump_node(AutomatonNode *node, std::ostream &ost);
   void get_nodes(AutomatonNode *node, std::list<AutomatonNode *> &result_list);
 };
 

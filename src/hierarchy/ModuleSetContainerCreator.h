@@ -104,32 +104,28 @@ public:
     accept(node->get_rhs());
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Times> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Times> node) {
     accept(node->get_lhs());
     if (!in_constraint_caller_)
       container_name_ += "*";
     accept(node->get_rhs());
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Divide> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Divide> node) {
     accept(node->get_lhs());
     if (!in_constraint_caller_)
       container_name_ += "/";
     accept(node->get_rhs());
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Power> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Power> node) {
     accept(node->get_lhs());
     if (!in_constraint_caller_)
       container_name_ += "^";
     accept(node->get_rhs());
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Equal> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Equal> node) {
     accept(node->get_lhs());
     if (!in_constraint_caller_)
       container_name_ += "=";
@@ -174,8 +170,7 @@ public:
     accept(node->get_rhs());
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Exists> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Exists> node) {
     if (!in_constraint_caller_) {
       container_name_ += "\\";
     }
@@ -222,8 +217,7 @@ public:
       container_name_ += node->get_name();
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Number> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Number> node) {
     if (!in_constraint_caller_)
       container_name_ += node->get_number();
   }
@@ -286,8 +280,7 @@ public:
     mod_set_stack_.push_back(container);
   }
 
-  virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Weaker> node) {
+  virtual void visit(std::shared_ptr<hydla::symbolic_expression::Weaker> node) {
     constraint_level_++;
     container_name_.clear();
 

@@ -36,8 +36,7 @@ public:
   visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);

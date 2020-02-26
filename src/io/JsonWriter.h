@@ -1,35 +1,37 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <memory>
 #include "PhaseResult.h"
 #include "Simulator.h"
 #include "picojson.h"
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace hydla {
 namespace io {
 
-class JsonWriter
-{
+class JsonWriter {
 public:
-  typedef simulator::PhaseResult                  phase_result_t;
-  typedef std::shared_ptr<phase_result_t>       phase_result_sptr_t;
+  typedef simulator::PhaseResult phase_result_t;
+  typedef std::shared_ptr<phase_result_t> phase_result_sptr_t;
   typedef std::shared_ptr<const phase_result_t> phase_result_const_sptr_t;
 
-  virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back, bool flag);
+  virtual void set_epsilon_mode(hydla::simulator::backend_sptr_t back,
+                                bool flag);
   hydla::simulator::backend_sptr_t backend;
   bool epsilon_mode_flag = false;
 
-  typedef simulator::variable_map_t  variable_map_t;
-  typedef simulator::variable_set_t  variable_set_t;
+  typedef simulator::variable_map_t variable_map_t;
+  typedef simulator::variable_set_t variable_set_t;
   typedef simulator::parameter_map_t parameter_map_t;
-  typedef simulator::Simulator       simulator_t;
-  typedef simulator::ValueRange      value_range_t;
+  typedef simulator::Simulator simulator_t;
+  typedef simulator::ValueRange value_range_t;
 
-  void write(const simulator_t &simulator, const std::string &name, const std::string &hydla_name);
-  void write_phase(const phase_result_const_sptr_t &phase, const std::string &name);
+  void write(const simulator_t &simulator, const std::string &name,
+             const std::string &hydla_name);
+  void write_phase(const phase_result_const_sptr_t &phase,
+                   const std::string &name);
 
 private:
   picojson::value for_phase(const phase_result_const_sptr_t &phase);

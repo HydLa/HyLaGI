@@ -49,12 +49,12 @@ void TreeInfixPrinter::print_factor_node(const FactorNode &node,
   (*output_stream_) << post;
 }
 #define DEFINE_INFIX_VISIT_FACTOR(NAME, PRE, POST)                             \
-  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                 \
+  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                   \
     print_factor_node(*node, PRE, POST);                                       \
   }
 
 #define DEFINE_INFIX_VISIT_BINARY(NAME, SYMBOL)                                \
-  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                 \
+  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                   \
     print_binary_node(*node, #SYMBOL);                                         \
   }
 
@@ -86,7 +86,7 @@ void TreeInfixPrinter::visit(std::shared_ptr<Exists> node) {
 }
 
 #define DEFINE_INFIX_VISIT_UNARY(NAME, PRE, POST)                              \
-  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                 \
+  void TreeInfixPrinter::visit(std::shared_ptr<NAME> node) {                   \
     print_unary_node(*node, PRE, POST);                                        \
   }
 

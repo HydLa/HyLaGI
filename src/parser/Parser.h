@@ -54,8 +54,7 @@ public:
   node_sptr parenthesis_program();
   std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
   constraint_def();
-  std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>
-  program_def();
+  std::shared_ptr<hydla::symbolic_expression::ProgramDefinition> program_def();
   std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>
   constraint_callee();
   std::shared_ptr<hydla::symbolic_expression::ConstraintCaller>
@@ -139,8 +138,7 @@ public:
 
   void list_type_check();
   bool parse_ended();
-  node_sptr
-      is_defined(std::shared_ptr<hydla::symbolic_expression::Definition>);
+  node_sptr is_defined(std::shared_ptr<hydla::symbolic_expression::Definition>);
 
 private:
   Lexer lexer;
@@ -158,8 +156,7 @@ private:
   node_sptr parsed_program;
   std::vector<std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
       program_definitions;
-  std::vector<
-      std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
+  std::vector<std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
       constraint_definitions;
   std::vector<
       std::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>
@@ -171,8 +168,7 @@ private:
 
   std::vector<std::shared_ptr<hydla::symbolic_expression::ProgramDefinition>>
       tmp_program_definitions;
-  std::vector<
-      std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
+  std::vector<std::shared_ptr<hydla::symbolic_expression::ConstraintDefinition>>
       tmp_constraint_definitions;
   std::vector<
       std::shared_ptr<hydla::symbolic_expression::ExpressionListDefinition>>

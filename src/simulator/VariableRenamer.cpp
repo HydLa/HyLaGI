@@ -24,8 +24,7 @@ map<Variable, Variable> VariableRenamer::get_renamed_variable_map() const {
   return exists_variable_map_;
 }
 
-void VariableRenamer::visit(
-    std::shared_ptr<symbolic_expression::Exists> node) {
+void VariableRenamer::visit(std::shared_ptr<symbolic_expression::Exists> node) {
   string varname =
       std::dynamic_pointer_cast<hydla::symbolic_expression::Variable>(
           node->get_variable())
@@ -57,7 +56,8 @@ void VariableRenamer::visit(
 }
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)                              \
-  void VariableRenamer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {             \
+  void VariableRenamer::visit(                                                 \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {                  \
     for (int i = 0; i < node->get_arguments_size(); i++) {                     \
       accept(node->get_argument(i));                                           \
       if (new_child_) {                                                        \
@@ -68,18 +68,21 @@ void VariableRenamer::visit(
   }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)                                 \
-  void VariableRenamer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {             \
+  void VariableRenamer::visit(                                                 \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {                  \
     dispatch_lhs(node);                                                        \
     dispatch_rhs(node);                                                        \
   }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)                                  \
-  void VariableRenamer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {             \
+  void VariableRenamer::visit(                                                 \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {                  \
     dispatch_child(node);                                                      \
   }
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)                                 \
-  void VariableRenamer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {}
+  void VariableRenamer::visit(                                                 \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {}
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
 DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)

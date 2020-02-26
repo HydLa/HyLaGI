@@ -1,44 +1,39 @@
 #include "AffineMixedValue.h"
 #include "Logger.h"
 
-namespace hydla{
-namespace interval{
+namespace hydla {
+namespace interval {
 
-AffineMixedValue::AffineMixedValue(){}
-AffineMixedValue::AffineMixedValue(int i):integer(i), type(INTEGER){}
-AffineMixedValue::AffineMixedValue(itvd itv):interval(itv), type(INTERVAL){}
-AffineMixedValue::AffineMixedValue(affine_t a):affine_value(a), type(AFFINE){}
+AffineMixedValue::AffineMixedValue() {}
+AffineMixedValue::AffineMixedValue(int i) : integer(i), type(INTEGER) {}
+AffineMixedValue::AffineMixedValue(itvd itv) : interval(itv), type(INTERVAL) {}
+AffineMixedValue::AffineMixedValue(affine_t a)
+    : affine_value(a), type(AFFINE) {}
 
-class ApproximateException:public std::runtime_error{
+class ApproximateException : public std::runtime_error {
 public:
-  ApproximateException(const std::string& msg):
-    std::runtime_error("error occurred in approximation: " + msg){}
+  ApproximateException(const std::string &msg)
+      : std::runtime_error("error occurred in approximation: " + msg) {}
 };
 
-std::ostream& operator<<(std::ostream &ost, const AffineMixedValue &val)
-{
-  if(val.type == INTEGER)
-  {
+std::ostream &operator<<(std::ostream &ost, const AffineMixedValue &val) {
+  if (val.type == INTEGER) {
     ost << "integer: " << val.integer;
-  }else if(val.type == INTERVAL)
-  {
+  } else if (val.type == INTERVAL) {
     ost << "interval: " << val.interval;
-  }else
-  {
+  } else {
     ost << "affine: " << val.affine_value;
   }
   return ost;
 }
 
-AffineMixedValue AffineMixedValue::operator+(const AffineMixedValue &rhs) const
-{
+AffineMixedValue AffineMixedValue::
+operator+(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
 
-  switch(type)
-  {
+  switch (type) {
   case INTEGER:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTEGER;
       ret.integer = integer + rhs.integer;
@@ -55,8 +50,7 @@ AffineMixedValue AffineMixedValue::operator+(const AffineMixedValue &rhs) const
     break;
 
   case INTERVAL:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTERVAL;
       ret.interval = interval + itvd(rhs.integer);
@@ -73,8 +67,7 @@ AffineMixedValue AffineMixedValue::operator+(const AffineMixedValue &rhs) const
     break;
   case AFFINE:
     ret.type = AFFINE;
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.affine_value = affine_value + affine_t(rhs.integer);
       break;
@@ -90,19 +83,17 @@ AffineMixedValue AffineMixedValue::operator+(const AffineMixedValue &rhs) const
   return ret;
 }
 
-AffineMixedValue AffineMixedValue::operator-(const AffineMixedValue &rhs) const
-{
+AffineMixedValue AffineMixedValue::
+operator-(const AffineMixedValue &rhs) const {
   return -(*this) + -(rhs);
 }
 
-AffineMixedValue AffineMixedValue::operator*(const AffineMixedValue &rhs) const
-{
+AffineMixedValue AffineMixedValue::
+operator*(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
-  switch(type)
-  {
+  switch (type) {
   case INTEGER:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTEGER;
       ret.integer = integer * rhs.integer;
@@ -119,8 +110,7 @@ AffineMixedValue AffineMixedValue::operator*(const AffineMixedValue &rhs) const
     break;
 
   case INTERVAL:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTERVAL;
       ret.interval = interval * itvd(rhs.integer);
@@ -137,8 +127,7 @@ AffineMixedValue AffineMixedValue::operator*(const AffineMixedValue &rhs) const
     break;
   case AFFINE:
     ret.type = AFFINE;
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.affine_value = affine_value * affine_t(rhs.integer);
       break;
@@ -154,28 +143,22 @@ AffineMixedValue AffineMixedValue::operator*(const AffineMixedValue &rhs) const
   return ret;
 }
 
-
-AffineMixedValue AffineMixedValue::operator/(const AffineMixedValue &rhs) const
-{
+AffineMixedValue AffineMixedValue::
+operator/(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
 
-  switch(type)
-  {
+  switch (type) {
   case INTEGER:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
-      if(integer > rhs.integer && integer % rhs.integer == 0)
-      {
+      if (integer > rhs.integer && integer % rhs.integer == 0) {
         ret.type = INTEGER;
         ret.integer = integer / rhs.integer;
-      }
-      else
-      {
+      } else {
         ret.type = INTERVAL;
         ret.interval = itvd(integer) / itvd(rhs.integer);
       }
-      break;      
+      break;
     case INTERVAL:
       ret.type = INTERVAL;
       ret.interval = itvd(integer) / rhs.interval;
@@ -188,8 +171,7 @@ AffineMixedValue AffineMixedValue::operator/(const AffineMixedValue &rhs) const
     break;
 
   case INTERVAL:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTERVAL;
       ret.interval = interval / itvd(rhs.integer);
@@ -206,8 +188,7 @@ AffineMixedValue AffineMixedValue::operator/(const AffineMixedValue &rhs) const
     break;
   case AFFINE:
     ret.type = AFFINE;
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.affine_value = affine_value / affine_t(rhs.integer);
       break;
@@ -220,22 +201,18 @@ AffineMixedValue AffineMixedValue::operator/(const AffineMixedValue &rhs) const
     }
     break;
   }
-  
+
   return ret;
 }
 
-
-AffineMixedValue AffineMixedValue::operator^(const
-  AffineMixedValue &rhs) const
-{
+AffineMixedValue AffineMixedValue::
+operator^(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
   kv::interval<double> itv = to_interval();
   double l = itv.lower(), u = itv.upper();
-  switch(type)
-  {
+  switch (type) {
   case INTEGER:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret = AffineMixedValue(::pow(integer, rhs.integer));
       break;
@@ -251,48 +228,41 @@ AffineMixedValue AffineMixedValue::operator^(const
     break;
 
   case INTERVAL:
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.type = INTERVAL;
       ret.interval = pow(interval, rhs.integer);
       break;
     case INTERVAL:
-      if(u >= 0 && l >= 0)
-      {
+      if (u >= 0 && l >= 0) {
         ret.interval = exp(rhs.interval * log(interval));
       }
       ret.type = INTERVAL;
       break;
     case AFFINE:
       ret.type = AFFINE;
-      if(u >= 0 && l >= 0)
-      {
+      if (u >= 0 && l >= 0) {
         ret.affine_value = exp(rhs.to_affine() * log(interval));
-      }
-      else
-      {
-        throw ApproximateException("noninteger power function for interval including zero");
+      } else {
+        throw ApproximateException(
+            "noninteger power function for interval including zero");
       }
       break;
     }
     break;
   case AFFINE:
     ret.type = AFFINE;
-    switch(rhs.type)
-    {
+    switch (rhs.type) {
     case INTEGER:
       ret.affine_value = pow(affine_value, rhs.integer);
       break;
     case INTERVAL:
     case AFFINE:
-      if(u >= 0 && l >= 0)
-      {
+      if (u >= 0 && l >= 0) {
         ret.affine_value = exp(rhs.to_affine() * log(to_affine()));
-      }
-      else
-      {
-        throw ApproximateException("noninteger power function for interval including zero");
+      } else {
+        throw ApproximateException(
+            "noninteger power function for interval including zero");
       }
       break;
     }
@@ -301,14 +271,10 @@ AffineMixedValue AffineMixedValue::operator^(const
   return ret;
 }
 
-
-
-AffineMixedValue AffineMixedValue::operator-() const
-{
+AffineMixedValue AffineMixedValue::operator-() const {
   AffineMixedValue ret;
   ret.type = type;
-  switch(type)
-  {
+  switch (type) {
   case INTEGER:
     ret.integer = -integer;
     break;
@@ -322,22 +288,23 @@ AffineMixedValue AffineMixedValue::operator-() const
   return ret;
 }
 
-
-
-itvd AffineMixedValue::to_interval() const
-{
-  if(type == INTEGER)return itvd(integer);
-  else if(type == INTERVAL) return interval;
-  else return affine_value.as_interval();
+itvd AffineMixedValue::to_interval() const {
+  if (type == INTEGER)
+    return itvd(integer);
+  else if (type == INTERVAL)
+    return interval;
+  else
+    return affine_value.as_interval();
 }
 
-affine_t AffineMixedValue::to_affine() const
-{
-  if(type == INTEGER)return affine_t(integer);
-  else if(type == INTERVAL) return affine_t(interval);
-  else return affine_value;
+affine_t AffineMixedValue::to_affine() const {
+  if (type == INTEGER)
+    return affine_t(integer);
+  else if (type == INTERVAL)
+    return affine_t(interval);
+  else
+    return affine_value;
 }
 
-
-}
-}
+} // namespace interval
+} // namespace hydla

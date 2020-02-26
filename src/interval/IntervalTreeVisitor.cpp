@@ -110,16 +110,14 @@ void IntervalTreeVisitor::visit(
   accept(node->get_child());
 }
 
-void IntervalTreeVisitor::visit(
-    std::shared_ptr<symbolic_expression::Pi> node) {
+void IntervalTreeVisitor::visit(std::shared_ptr<symbolic_expression::Pi> node) {
   current_value.interval_value = pi;
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("Pi : ", current_value.interval_value);
   return;
 }
 
-void IntervalTreeVisitor::visit(
-    std::shared_ptr<symbolic_expression::E> node) {
+void IntervalTreeVisitor::visit(std::shared_ptr<symbolic_expression::E> node) {
   current_value.interval_value = e;
   current_value.is_integer = false;
   // HYDLA_LOGGER_DEBUG("E : ", current_value.interval_value);
@@ -325,7 +323,8 @@ void IntervalTreeVisitor::debug_print(std::string str, itvd x) {
 }
 
 #define DEFINE_INVALID_NODE(NODE_NAME)                                         \
-  void IntervalTreeVisitor::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {         \
+  void IntervalTreeVisitor::visit(                                             \
+      std::shared_ptr<symbolic_expression::NODE_NAME> node) {                  \
     HYDLA_LOGGER_DEBUG("");                                                    \
     invalid_node(*node);                                                       \
   }

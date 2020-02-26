@@ -1,39 +1,40 @@
-#include <vector>
 #include <cstdlib>
 #include <exception>
+#include <vector>
 
 #include "Lexer.h"
 #include "Parser.h"
 
-namespace hydla{
-  namespace parser{
+namespace hydla {
+namespace parser {
 
 using namespace symbolic_expression;
 
-void Parser::list_type_check(){
+void Parser::list_type_check() {
   bool finish = false;
-  while(!finish){
+  while (!finish) {
     finish = true;
-    for(auto i = program_list_definitions.begin(); i != program_list_definitions.end();)
-    {
+    for (auto i = program_list_definitions.begin();
+         i != program_list_definitions.end();) {
       bool is_expression_list = false;
-      std::shared_ptr<ProgramListCaller> def = std::dynamic_pointer_cast<ProgramListCaller>((*i)->get_child());
-      if(def)
-      {
-        for(auto ed : expression_list_definitions)
-        {
-          if(def->get_name() == ed->get_name() && def->actual_arg_size() == ed->bound_variable_size())
-          {
-            std::shared_ptr<ExpressionListDefinition> eld(new ExpressionListDefinition()); 
+      std::shared_ptr<ProgramListCaller> def =
+          std::dynamic_pointer_cast<ProgramListCaller>((*i)->get_child());
+      if (def) {
+        for (auto ed : expression_list_definitions) {
+          if (def->get_name() == ed->get_name() &&
+              def->actual_arg_size() == ed->bound_variable_size()) {
+            std::shared_ptr<ExpressionListDefinition> eld(
+                new ExpressionListDefinition());
             eld->set_name((*i)->get_name());
-            for(auto var_it = (*i)->bound_variable_begin(); var_it != (*i)->bound_variable_end(); var_it++)
-            {
+            for (auto var_it = (*i)->bound_variable_begin();
+                 var_it != (*i)->bound_variable_end(); var_it++) {
               eld->add_bound_variable(*var_it);
             }
-            std::shared_ptr<ExpressionListCaller> elc(new ExpressionListCaller());
+            std::shared_ptr<ExpressionListCaller> elc(
+                new ExpressionListCaller());
             elc->set_name(def->get_name());
-            for(auto var_it = def->actual_arg_begin(); var_it != def->actual_arg_end(); var_it++)
-            {
+            for (auto var_it = def->actual_arg_begin();
+                 var_it != def->actual_arg_end(); var_it++) {
               elc->add_actual_arg(*var_it);
             }
             eld->set_child(elc);
@@ -45,35 +46,36 @@ void Parser::list_type_check(){
           }
         }
       }
-      if(!is_expression_list) i++;
+      if (!is_expression_list)
+        i++;
     }
   }
 }
 
 /// expression_list_callee := name
-std::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee(){
+std::shared_ptr<ExpressionListDefinition> Parser::expression_list_callee() {
   position_t position = lexer.get_current_position();
   std::shared_ptr<ExpressionListDefinition> ret(new ExpressionListDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
-  if((name = definition_name()) != ""){
+  if ((name = definition_name()) != "") {
     ret->set_name(name);
     // formal_args
-    return ret; 
+    return ret;
   }
   lexer.set_current_position(position);
   return std::shared_ptr<ExpressionListDefinition>();
 }
 
 /// program_list_callee := name
-std::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
+std::shared_ptr<ProgramListDefinition> Parser::program_list_callee() {
   position_t position = lexer.get_current_position();
   std::shared_ptr<ProgramListDefinition> ret(new ProgramListDefinition());
   std::vector<std::string> args;
   std::string name;
   // name
-  if((name = definition_name()) != ""){
+  if ((name = definition_name()) != "") {
     ret->set_name(name);
     return ret;
   }
@@ -84,23 +86,24 @@ std::shared_ptr<ProgramListDefinition> Parser::program_list_callee(){
 /**
  * sum_of_list := "sum" "(" expression_list ")"
  */
-node_sptr Parser::sum_of_list(){
+node_sptr Parser::sum_of_list() {
   std::shared_ptr<SumOfList> ret(new SumOfList());
   position_t position = lexer.get_current_position();
-  if(lexer.get_token() == LOWER_IDENTIFIER &&
-     lexer.get_current_token_string() == "sum"){
-    if(lexer.get_token() == LEFT_PARENTHESES){
+  if (lexer.get_token() == LOWER_IDENTIFIER &&
+      lexer.get_current_token_string() == "sum") {
+    if (lexer.get_token() == LEFT_PARENTHESES) {
       node_sptr tmp;
-      if((tmp = expression_list())){
+      if ((tmp = expression_list())) {
         ret->set_child(tmp);
         position_t tmp_position = lexer.get_current_position();
-        if(lexer.get_token() == RIGHT_PARENTHESES){
+        if (lexer.get_token() == RIGHT_PARENTHESES) {
           return ret;
-        }else{
+        } else {
           error_occurred(tmp_position, "expected \")\" after expression list");
         }
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression list after \"(\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression list after \"(\"");
       }
     }
   }
@@ -111,23 +114,24 @@ node_sptr Parser::sum_of_list(){
 /**
  * mul_of_list := "mul" "(" expression_list ")"
  */
-node_sptr Parser::mul_of_list(){
+node_sptr Parser::mul_of_list() {
   std::shared_ptr<MulOfList> ret(new MulOfList());
   position_t position = lexer.get_current_position();
-  if(lexer.get_token() == LOWER_IDENTIFIER &&
-     lexer.get_current_token_string() == "mul"){
-    if(lexer.get_token() == LEFT_PARENTHESES){
+  if (lexer.get_token() == LOWER_IDENTIFIER &&
+      lexer.get_current_token_string() == "mul") {
+    if (lexer.get_token() == LEFT_PARENTHESES) {
       node_sptr tmp;
-      if((tmp = expression_list())){
+      if ((tmp = expression_list())) {
         ret->set_child(tmp);
         position_t tmp_position = lexer.get_current_position();
-        if(lexer.get_token() == RIGHT_PARENTHESES){
+        if (lexer.get_token() == RIGHT_PARENTHESES) {
           return ret;
-        }else{
+        } else {
           error_occurred(tmp_position, "expected \")\" after expression list");
         }
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression list after \"(\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression list after \"(\"");
       }
     }
   }
@@ -138,22 +142,22 @@ node_sptr Parser::mul_of_list(){
 /**
  * size_of_list := "|" ( expression_list | program_list ) "|"
  */
-node_sptr Parser::size_of_list(){
+node_sptr Parser::size_of_list() {
   std::shared_ptr<SizeOfList> ret(new SizeOfList());
   position_t position = lexer.get_current_position();
-  if(lexer.get_token() == VERTICAL_BAR){
+  if (lexer.get_token() == VERTICAL_BAR) {
     node_sptr tmp;
-    if((tmp = expression_list()) ||
-       (tmp = program_list())){
+    if ((tmp = expression_list()) || (tmp = program_list())) {
       ret->set_child(tmp);
       position_t tmp_position = lexer.get_current_position();
-      if(lexer.get_token() == VERTICAL_BAR){
+      if (lexer.get_token() == VERTICAL_BAR) {
         return ret;
-      }else{
+      } else {
         error_occurred(tmp_position, "expected \"|\" after list");
       }
-    }else{
-      error_occurred(lexer.get_current_position(), "expected expression list after \"|\"");
+    } else {
+      error_occurred(lexer.get_current_position(),
+                     "expected expression list after \"|\"");
     }
   }
   lexer.set_current_position(position);
@@ -163,24 +167,25 @@ node_sptr Parser::size_of_list(){
 /**
  * program_list_element := program_list "[" expression "]"
  */
-node_sptr Parser::program_list_element(){
+node_sptr Parser::program_list_element() {
   position_t position = lexer.get_current_position();
   node_sptr list;
-  if((list = program_list())){
-    if(lexer.get_token() == LEFT_BOX_BRACKETS){
+  if ((list = program_list())) {
+    if (lexer.get_token() == LEFT_BOX_BRACKETS) {
       node_sptr expr;
-      if((expr = expression())){
+      if ((expr = expression())) {
         position_t tmp_position = lexer.get_current_position();
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+        if (lexer.get_token() == RIGHT_BOX_BRACKETS) {
           std::shared_ptr<ProgramListElement> e(new ProgramListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
-        }else{
+        } else {
           error_occurred(tmp_position, "expected \"]\" after expression");
         }
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression after \"[\"");
       }
     }
   }
@@ -190,24 +195,25 @@ node_sptr Parser::program_list_element(){
 /**
  * expression_list_element := expression_list "[" expression "]"
  */
-node_sptr Parser::expression_list_element(){
+node_sptr Parser::expression_list_element() {
   position_t position = lexer.get_current_position();
   node_sptr list;
-  if((list = expression_list())){
-    if(lexer.get_token() == LEFT_BOX_BRACKETS){
+  if ((list = expression_list())) {
+    if (lexer.get_token() == LEFT_BOX_BRACKETS) {
       node_sptr expr;
-      if((expr = expression())){
+      if ((expr = expression())) {
         position_t tmp_position = lexer.get_current_position();
-        if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+        if (lexer.get_token() == RIGHT_BOX_BRACKETS) {
           std::shared_ptr<ExpressionListElement> e(new ExpressionListElement());
           e->set_lhs(list);
           e->set_rhs(expr);
           return e;
-        }else{
+        } else {
           error_occurred(tmp_position, "expected \"]\" after expression");
         }
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression after \"[\"");
       }
     }
   }
@@ -216,41 +222,45 @@ node_sptr Parser::expression_list_element(){
 }
 
 /**
- * conditional_program_list := "{" program "|" ( list_condition ("," list_condition)* )?
+ * conditional_program_list := "{" program "|" ( list_condition (","
+ * list_condition)* )?
  */
-node_sptr Parser::conditional_program_list(){
+node_sptr Parser::conditional_program_list() {
   in_conditional_program_list_ = true;
-  std::vector<std::shared_ptr<ProgramCaller> > pc;
+  std::vector<std::shared_ptr<ProgramCaller>> pc;
   local_program_caller_.push(pc);
   position_t position = lexer.get_current_position();
   node_sptr tmp;
-  if(lexer.get_token() == LEFT_BRACES){
-    if((tmp = program())){
-      if(lexer.get_token() == VERTICAL_BAR){
-        std::shared_ptr<ConditionalProgramList> ret(new ConditionalProgramList());
+  if (lexer.get_token() == LEFT_BRACES) {
+    if ((tmp = program())) {
+      if (lexer.get_token() == VERTICAL_BAR) {
+        std::shared_ptr<ConditionalProgramList> ret(
+            new ConditionalProgramList());
         ret->set_program(tmp);
-        if((tmp = list_condition())){
+        if ((tmp = list_condition())) {
           ret->add_argument(tmp);
           position_t tmp_position = lexer.get_current_position();
-          while(lexer.get_token() == COMMA){
-            if((tmp = list_condition())){
+          while (lexer.get_token() == COMMA) {
+            if ((tmp = list_condition())) {
               ret->add_argument(tmp);
-            }else{
-              error_occurred(lexer.get_current_position(), "expected list condition after \",\"");
+            } else {
+              error_occurred(lexer.get_current_position(),
+                             "expected list condition after \",\"");
               break;
             }
             tmp_position = lexer.get_current_position();
           }
           lexer.set_current_position(tmp_position);
-          if(lexer.get_token() == RIGHT_BRACES){
+          if (lexer.get_token() == RIGHT_BRACES) {
             local_program_caller_.pop();
             in_conditional_program_list_ = false;
             return ret;
-          }else{
+          } else {
             error_occurred(tmp_position, "expected \"}\"");
           }
-        }else{
-          error_occurred(lexer.get_current_position(), "expected list conditions after \"|\"");
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected list conditions after \"|\"");
         }
       }
     }
@@ -263,18 +273,20 @@ node_sptr Parser::conditional_program_list(){
 /**
  * program_list := program_list_term ("or" program_list_term)*
  */
-node_sptr Parser::program_list(){
+node_sptr Parser::program_list() {
   position_t position = lexer.get_current_position();
   node_sptr ret;
-  if((ret = program_list_term())){
+  if ((ret = program_list_term())) {
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
-      if((list = program_list_term())){
-        std::shared_ptr<Union> uni(new Union(ret,list));
+    while (lexer.get_token() == LOWER_IDENTIFIER &&
+           lexer.get_current_token_string() == "or") {
+      if ((list = program_list_term())) {
+        std::shared_ptr<Union> uni(new Union(ret, list));
         ret = uni;
-      }else{
-        error_occurred(lexer.get_current_position(), "expected program list after \"or\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected program list after \"or\"");
         break;
       }
       tmp_position = lexer.get_current_position();
@@ -288,18 +300,20 @@ node_sptr Parser::program_list(){
 /**
  * program_list_term := program_list_factor ("and" program_list_factor )*
  */
-node_sptr Parser::program_list_term(){
+node_sptr Parser::program_list_term() {
   position_t position = lexer.get_current_position();
   node_sptr ret;
-  if((ret = program_list_factor())){
+  if ((ret = program_list_factor())) {
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
-      if((list = program_list_factor())){
-        std::shared_ptr<Intersection> in(new Intersection(ret,list));
+    while (lexer.get_token() == LOWER_IDENTIFIER &&
+           lexer.get_current_token_string() == "and") {
+      if ((list = program_list_factor())) {
+        std::shared_ptr<Intersection> in(new Intersection(ret, list));
         ret = in;
-      }else{
-        error_occurred(lexer.get_current_position(), "expected program list after \"and\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected program list after \"and\"");
         break;
       }
       tmp_position = lexer.get_current_position();
@@ -315,94 +329,98 @@ node_sptr Parser::program_list_term(){
  *                      | "{"program_priority ("," program_priority)* "}"
  *                      | identifier number ".." identifier number
  */
-node_sptr Parser::program_list_factor(){
+node_sptr Parser::program_list_factor() {
   node_sptr ret;
   // conditional_program_list
   position_t position = lexer.get_current_position();
   // "{" program_priority ("," program_priority)* "}"
-  if((ret = conditional_program_list())) return ret;
-  if(lexer.get_token() == LEFT_BRACES){
+  if ((ret = conditional_program_list()))
+    return ret;
+  if (lexer.get_token() == LEFT_BRACES) {
     position_t list_position = lexer.get_current_position();
     std::shared_ptr<ProgramList> list(new ProgramList());
-    if((ret = program_priority())){
+    if ((ret = program_priority())) {
       list->add_argument(ret);
       position_t tmp_position = lexer.get_current_position();
-      while(lexer.get_token() == COMMA){
-        if((ret = program_priority())){
+      while (lexer.get_token() == COMMA) {
+        if ((ret = program_priority())) {
           list->add_argument(ret);
-        }else{
-          error_occurred(lexer.get_current_position(), "expected program after \",\"");
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected program after \",\"");
           break;
         }
         tmp_position = lexer.get_current_position();
       }
       lexer.set_current_position(tmp_position);
-      if(lexer.get_token() == RIGHT_BRACES){
+      if (lexer.get_token() == RIGHT_BRACES) {
         return list;
       }
     }
     lexer.set_current_position(list_position);
     // "{" identifier number ".." identifier number "}"
     std::string str;
-    if((str = definition_name()) != ""){
-      if(lexer.get_token() == TWO_PERIOD){
+    if ((str = definition_name()) != "") {
+      if (lexer.get_token() == TWO_PERIOD) {
         std::string str2;
-        if((str2 = definition_name()) != ""){
+        if ((str2 = definition_name()) != "") {
           int num1;
           int num2;
-          for(num1 = str.length()-1; num1 >= 0; num1--){
-            if(str[num1] < '0' || '9' < str[num1]) break;
+          for (num1 = str.length() - 1; num1 >= 0; num1--) {
+            if (str[num1] < '0' || '9' < str[num1])
+              break;
           }
-          for(num2 = str2.length()-1; num2 >= 0; num2--){
-            if(str2[num2] < '0' || '9' < str2[num2]) break;
+          for (num2 = str2.length() - 1; num2 >= 0; num2--) {
+            if (str2[num2] < '0' || '9' < str2[num2])
+              break;
           }
           position_t right_position = lexer.get_current_position();
-          if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
-            if(lexer.get_token() == RIGHT_BRACES){
-              std::shared_ptr<Range> range(
-                new Range(std::shared_ptr<Number>(new Number(str.substr(num1+1))),
-                          std::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
-                range->set_header(str.substr(0,num1+1));
-                return range;
-            }else{
+          if (str.substr(0, num1 + 1) == str2.substr(0, num2 + 1)) {
+            if (lexer.get_token() == RIGHT_BRACES) {
+              std::shared_ptr<Range> range(new Range(
+                  std::shared_ptr<Number>(new Number(str.substr(num1 + 1))),
+                  std::shared_ptr<Number>(new Number(str2.substr(num2 + 1)))));
+              range->set_header(str.substr(0, num1 + 1));
+              return range;
+            } else {
               error_occurred(right_position, "expected \"}\"");
             }
-          }else{
-            error_occurred(right_position, str2 + " do not correspond to " + str);
+          } else {
+            error_occurred(right_position,
+                           str2 + " do not correspond to " + str);
           }
-        }else{
-          error_occurred(lexer.get_current_position(), "expected program corresponding to " + str);
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected program corresponding to " + str);
         }
       }
     }
   }
   lexer.set_current_position(position);
-  if(lexer.get_token() == LEFT_PARENTHESES){
-    if((ret = program_list())){
+  if (lexer.get_token() == LEFT_PARENTHESES) {
+    if ((ret = program_list())) {
       position_t right_position = lexer.get_current_position();
-      if(lexer.get_token() == RIGHT_PARENTHESES){
+      if (lexer.get_token() == RIGHT_PARENTHESES) {
         return ret;
-      }else{
+      } else {
         error_occurred(right_position, "expected \")\"");
       }
     }
   }
   std::string str;
   lexer.set_current_position(position);
-  if((str = definition_name()) != ""){
-    if(second_parse)
-    {
+  if ((str = definition_name()) != "") {
+    if (second_parse) {
       node_sptr defined;
-      IS_DEFINED_AS(str,0,tmp_program_list_definitions,defined);
-      if((defined)){
+      IS_DEFINED_AS(str, 0, tmp_program_list_definitions, defined);
+      if ((defined)) {
         std::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
         caller->set_name(str);
         return caller;
       }
-      error_occurred(lexer.get_current_position(), "undefined program list \"" + str + "\"");  
-    }
-    else
-    {
+      error_occurred(lexer.get_current_position(),
+                     "undefined program list \"" + str + "\"");
+    } else {
       std::shared_ptr<ProgramListCaller> caller(new ProgramListCaller());
       caller->set_name(str);
       return caller;
@@ -412,37 +430,41 @@ node_sptr Parser::program_list_factor(){
   return node_sptr();
 }
 /**
- * conditional_expression_list := "{" expression "|" ( list_condition ("," list_condition)* )? "}"
+ * conditional_expression_list := "{" expression "|" ( list_condition (","
+ * list_condition)* )? "}"
  */
-node_sptr Parser::conditional_expression_list(){
+node_sptr Parser::conditional_expression_list() {
   position_t position = lexer.get_current_position();
   node_sptr tmp;
-  if(lexer.get_token() == LEFT_BRACES){
-    if((tmp = expression())){
-      if(lexer.get_token() == VERTICAL_BAR){
-        std::shared_ptr<ConditionalExpressionList> ret(new ConditionalExpressionList());
+  if (lexer.get_token() == LEFT_BRACES) {
+    if ((tmp = expression())) {
+      if (lexer.get_token() == VERTICAL_BAR) {
+        std::shared_ptr<ConditionalExpressionList> ret(
+            new ConditionalExpressionList());
         ret->set_expression(tmp);
-        if((tmp = list_condition())){
+        if ((tmp = list_condition())) {
           ret->add_argument(tmp);
           position_t tmp_position = lexer.get_current_position();
-          while(lexer.get_token() == COMMA){
+          while (lexer.get_token() == COMMA) {
             position_t error_position = lexer.get_current_position();
-            if((tmp = list_condition())){
+            if ((tmp = list_condition())) {
               ret->add_argument(tmp);
-            }else{
-              error_occurred(error_position, "expected list condition after \",\"");
+            } else {
+              error_occurred(error_position,
+                             "expected list condition after \",\"");
               break;
             }
             tmp_position = lexer.get_current_position();
           }
           lexer.set_current_position(tmp_position);
-          if(lexer.get_token() == RIGHT_BRACES){
+          if (lexer.get_token() == RIGHT_BRACES) {
             return ret;
-          }else{
+          } else {
             error_occurred(tmp_position, "expected \"}\"");
           }
-        }else{
-          error_occurred(lexer.get_current_position(), "expected list condition after \"|\"");
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected list condition after \"|\"");
         }
       }
     }
@@ -453,31 +475,29 @@ node_sptr Parser::conditional_expression_list(){
 
 /**
  * nameless_list := "$" "List" "[" expression "]"
- */ 
-node_sptr Parser::nameless_list(){
+ */
+node_sptr Parser::nameless_list() {
   node_sptr ret;
   position_t position = lexer.get_current_position();
   position_t tmp_position;
-  if(lexer.get_token() == SYSTEM){
-    if(lexer.get_token() == UPPER_IDENTIFIER){
-      if(lexer.get_current_token_string() == "List"){
+  if (lexer.get_token() == SYSTEM) {
+    if (lexer.get_token() == UPPER_IDENTIFIER) {
+      if (lexer.get_current_token_string() == "List") {
         tmp_position = lexer.get_current_position();
-        if(lexer.get_token() == LEFT_BOX_BRACKETS){
-          if((ret = expression())){
+        if (lexer.get_token() == LEFT_BOX_BRACKETS) {
+          if ((ret = expression())) {
             tmp_position = lexer.get_current_position();
-            if(lexer.get_token() == RIGHT_BOX_BRACKETS){
+            if (lexer.get_token() == RIGHT_BOX_BRACKETS) {
               std::shared_ptr<ExpressionList> el(new ExpressionList());
               el->set_nameless_expression_arguments(ret);
               return el;
-            }
-            else
-            {
+            } else {
               error_occurred(tmp_position, "expected \"]\" after expression");
             }
-          }else error_occurred(lexer.get_current_position(), "expected expression after \"[\"");
-        }
-        else
-        {
+          } else
+            error_occurred(lexer.get_current_position(),
+                           "expected expression after \"[\"");
+        } else {
           error_occurred(tmp_position, "expected \"[\" after \"$List\"");
         }
       }
@@ -489,18 +509,20 @@ node_sptr Parser::nameless_list(){
 /**
  * expression_list := expression_list_term ("or" expression_list_term )*
  */
-node_sptr Parser::expression_list(){
+node_sptr Parser::expression_list() {
   position_t position = lexer.get_current_position();
   node_sptr ret;
-  if((ret = expression_list_term())){
+  if ((ret = expression_list_term())) {
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "or"){
-      if((list = expression_list_term())){
-        std::shared_ptr<Union> uni(new Union(ret,list));
+    while (lexer.get_token() == LOWER_IDENTIFIER &&
+           lexer.get_current_token_string() == "or") {
+      if ((list = expression_list_term())) {
+        std::shared_ptr<Union> uni(new Union(ret, list));
         ret = uni;
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression list after \"or\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression list after \"or\"");
         break;
       }
       tmp_position = lexer.get_current_position();
@@ -512,20 +534,23 @@ node_sptr Parser::expression_list(){
   return node_sptr();
 }
 /**
- * expression_list_term := expression_list_factor ("and" expression_list_factor )*
+ * expression_list_term := expression_list_factor ("and" expression_list_factor
+ * )*
  */
-node_sptr Parser::expression_list_term(){
+node_sptr Parser::expression_list_term() {
   position_t position = lexer.get_current_position();
   node_sptr ret;
-  if((ret = expression_list_factor())){
+  if ((ret = expression_list_factor())) {
     node_sptr list;
     position_t tmp_position = lexer.get_current_position();
-    while(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "and"){
-      if((list = expression_list_factor())){
-        std::shared_ptr<Intersection> in(new Intersection(ret,list));
+    while (lexer.get_token() == LOWER_IDENTIFIER &&
+           lexer.get_current_token_string() == "and") {
+      if ((list = expression_list_factor())) {
+        std::shared_ptr<Intersection> in(new Intersection(ret, list));
         ret = in;
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression list after \"and\"");
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression list after \"and\"");
         break;
       }
       tmp_position = lexer.get_current_position();
@@ -545,84 +570,92 @@ node_sptr Parser::expression_list_term(){
  *                         | "(" expression_list ")"
  *                         | identifier
  */
-node_sptr Parser::expression_list_factor(){
+node_sptr Parser::expression_list_factor() {
   node_sptr ret;
   // conditional_expression_list
   position_t position = lexer.get_current_position();
   // nameless_list
-  if((ret = nameless_list())) return ret;
+  if ((ret = nameless_list()))
+    return ret;
   // "{" expression ("," expression)* "}"
-  if((ret = conditional_expression_list())) return ret;
-  if(lexer.get_token() == LEFT_BRACES){
+  if ((ret = conditional_expression_list()))
+    return ret;
+  if (lexer.get_token() == LEFT_BRACES) {
     position_t list_position = lexer.get_current_position();
     std::shared_ptr<ExpressionList> list(new ExpressionList());
-    if((ret = expression())){
+    if ((ret = expression())) {
       list->add_argument(ret);
       position_t tmp_position = lexer.get_current_position();
-      while(lexer.get_token() == COMMA){
-        if((ret = expression())){
+      while (lexer.get_token() == COMMA) {
+        if ((ret = expression())) {
           list->add_argument(ret);
-        }else{
-          error_occurred(lexer.get_current_position(), "expected expression after \",\"");
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected expression after \",\"");
           break;
         }
         tmp_position = lexer.get_current_position();
       }
       lexer.set_current_position(tmp_position);
-      if(lexer.get_token() == RIGHT_BRACES){
+      if (lexer.get_token() == RIGHT_BRACES) {
         return list;
-      }else{
+      } else {
         error_occurred(tmp_position, "expected \"}\"");
       }
     }
     lexer.set_current_position(list_position);
     // "{" identifier number ".." identifier number "}"
     std::string str;
-    if((str = variable_name()) != ""){
-      if(lexer.get_token() == TWO_PERIOD){
+    if ((str = variable_name()) != "") {
+      if (lexer.get_token() == TWO_PERIOD) {
         std::string str2;
-        if((str2 = variable_name()) != ""){
+        if ((str2 = variable_name()) != "") {
           int num1;
           int num2;
-          for(num1 = str.length()-1; num1 >= 0; num1--){
-            if(str[num1] < '0' || '9' < str[num1]) break;
+          for (num1 = str.length() - 1; num1 >= 0; num1--) {
+            if (str[num1] < '0' || '9' < str[num1])
+              break;
           }
-          for(num2 = str2.length()-1; num2 >= 0; num2--){
-            if(str2[num2] < '0' || '9' < str2[num2]) break;
+          for (num2 = str2.length() - 1; num2 >= 0; num2--) {
+            if (str2[num2] < '0' || '9' < str2[num2])
+              break;
           }
-          if(str.substr(0,num1+1) == str2.substr(0,num2+1)){
+          if (str.substr(0, num1 + 1) == str2.substr(0, num2 + 1)) {
             position_t right_position = lexer.get_current_position();
-            if(lexer.get_token() == RIGHT_BRACES){
-              std::shared_ptr<Range> range(
-                new Range(std::shared_ptr<Number>(new Number(str.substr(num1+1))),
-                          std::shared_ptr<Number>(new Number(str2.substr(num2+1)))));
-                range->set_header(str.substr(0,num1+1));
-                return range;
-            }else{
+            if (lexer.get_token() == RIGHT_BRACES) {
+              std::shared_ptr<Range> range(new Range(
+                  std::shared_ptr<Number>(new Number(str.substr(num1 + 1))),
+                  std::shared_ptr<Number>(new Number(str2.substr(num2 + 1)))));
+              range->set_header(str.substr(0, num1 + 1));
+              return range;
+            } else {
               error_occurred(right_position, "expected \"}\"");
             }
-          }else{
-            error_occurred(lexer.get_current_position(), str2 + " do not correspond to " + str);
+          } else {
+            error_occurred(lexer.get_current_position(),
+                           str2 + " do not correspond to " + str);
           }
-        }else{
-          error_occurred(lexer.get_current_position(), "expected variable corresponding to " + str);
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected variable corresponding to " + str);
         }
       }
     }
     lexer.set_current_position(list_position);
     // "{" expression ".." expression "}"
-    if((ret = expression())){
-      if(lexer.get_token() == TWO_PERIOD){
+    if ((ret = expression())) {
+      if (lexer.get_token() == TWO_PERIOD) {
         node_sptr num2;
-        if((num2 = expression())){
+        if ((num2 = expression())) {
           position_t right_position = lexer.get_current_position();
-          if(lexer.get_token() == RIGHT_BRACES){
-            return std::shared_ptr<Range>(new Range(ret,num2));
-          }else{
+          if (lexer.get_token() == RIGHT_BRACES) {
+            return std::shared_ptr<Range>(new Range(ret, num2));
+          } else {
             error_occurred(right_position, "expected \"}\"");
           }
-        }else{
-          error_occurred(lexer.get_current_position(), "expected expression after \"..\"");
+        } else {
+          error_occurred(lexer.get_current_position(),
+                         "expected expression after \"..\"");
         }
       }
     }
@@ -630,32 +663,31 @@ node_sptr Parser::expression_list_factor(){
   }
   lexer.set_current_position(position);
   // "(" expression_list ")"
-  if(lexer.get_token() == LEFT_PARENTHESES){
-    if((ret = expression_list())){
+  if (lexer.get_token() == LEFT_PARENTHESES) {
+    if ((ret = expression_list())) {
       position_t right_position = lexer.get_current_position();
-      if(lexer.get_token() == RIGHT_PARENTHESES){
+      if (lexer.get_token() == RIGHT_PARENTHESES) {
         return ret;
-      }else{
+      } else {
         error_occurred(right_position, "expected \")\"");
       }
     }
   }
   lexer.set_current_position(position);
   std::string str;
-  if((str = definition_name()) != ""){
-    if(second_parse)
-    {
+  if ((str = definition_name()) != "") {
+    if (second_parse) {
       node_sptr defined;
-      IS_DEFINED_AS(str,0,tmp_expression_list_definitions,defined);
-      if((defined)){
-        std::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
+      IS_DEFINED_AS(str, 0, tmp_expression_list_definitions, defined);
+      if ((defined)) {
+        std::shared_ptr<ExpressionListCaller> caller(
+            new ExpressionListCaller());
         caller->set_name(str);
         return caller;
       }
-      error_occurred(lexer.get_current_position(), "undefined expression list \"" + str + "\"");
-    }
-    else
-    {
+      error_occurred(lexer.get_current_position(),
+                     "undefined expression list \"" + str + "\"");
+    } else {
       std::shared_ptr<ExpressionListCaller> caller(new ExpressionListCaller());
       caller->set_name(str);
       return caller;
@@ -667,50 +699,58 @@ node_sptr Parser::expression_list_factor(){
 /**
  * list_condition := variable "in" expression_list
  *                 | program "in" program_list
- *                 | (expression_list_element | program_list_element | variable) "!=" (expression_list_element | program_list_element | variable)
+ *                 | (expression_list_element | program_list_element | variable)
+ * "!=" (expression_list_element | program_list_element | variable)
  */
-node_sptr Parser::list_condition(){
+node_sptr Parser::list_condition() {
   node_sptr lhs;
   position_t position = lexer.get_current_position();
   // variable_name "in" expression_list
   std::string name;
-  if((name = variable_name()) != ""){
-    if(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "in"){
+  if ((name = variable_name()) != "") {
+    if (lexer.get_token() == LOWER_IDENTIFIER &&
+        lexer.get_current_token_string() == "in") {
       node_sptr list;
-      if((list = expression_list())){
-        return std::shared_ptr<EachElement>(new EachElement(std::shared_ptr<Variable>(new Variable(name)),list));
-      }else{
-        error_occurred(lexer.get_current_position(), "expected expression list after \"in\"");
+      if ((list = expression_list())) {
+        return std::shared_ptr<EachElement>(new EachElement(
+            std::shared_ptr<Variable>(new Variable(name)), list));
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected expression list after \"in\"");
       }
     }
   }
   lexer.set_current_position(position);
   // definition_name "in" program_list
-  if((name = definition_name()) != ""){
-    if(lexer.get_token() == LOWER_IDENTIFIER && lexer.get_current_token_string() == "in"){
+  if ((name = definition_name()) != "") {
+    if (lexer.get_token() == LOWER_IDENTIFIER &&
+        lexer.get_current_token_string() == "in") {
       node_sptr list;
-      if((list = program_list())){
+      if ((list = program_list())) {
         std::shared_ptr<ProgramCaller> lhs(new ProgramCaller());
         lhs->set_name(name);
-        return std::shared_ptr<EachElement>(new EachElement(lhs,list));
-      }else{
-        error_occurred(lexer.get_current_position(), "expected program list after \"in\"");
+        return std::shared_ptr<EachElement>(new EachElement(lhs, list));
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected program list after \"in\"");
       }
     }
   }
   lexer.set_current_position(position);
-// (expression_list_element | program_list_element | variable) "!=" (expression_list_element | program_list_element | variable)
-  if((lhs = expression_list_element()) ||
-     (lhs = program_list_element()) ||
-     (lhs = variable())){
-    if(lexer.get_token() == NOT_EQUAL){
+  // (expression_list_element | program_list_element | variable) "!="
+  // (expression_list_element | program_list_element | variable)
+  if ((lhs = expression_list_element()) || (lhs = program_list_element()) ||
+      (lhs = variable())) {
+    if (lexer.get_token() == NOT_EQUAL) {
       node_sptr rhs;
-      if((rhs = expression_list_element()) ||
-         (rhs = program_list_element()) ||
-         (rhs = variable())){
-        return std::shared_ptr<DifferentVariable>(new DifferentVariable(lhs,rhs)); 
-      }else{
-        error_occurred(lexer.get_current_position(), "expected variable, expression list element or program list element after \"!=\"");
+      if ((rhs = expression_list_element()) || (rhs = program_list_element()) ||
+          (rhs = variable())) {
+        return std::shared_ptr<DifferentVariable>(
+            new DifferentVariable(lhs, rhs));
+      } else {
+        error_occurred(lexer.get_current_position(),
+                       "expected variable, expression list element or program "
+                       "list element after \"!=\"");
       }
     }
   }

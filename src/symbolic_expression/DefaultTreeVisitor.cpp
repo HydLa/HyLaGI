@@ -237,8 +237,7 @@ void DefaultTreeVisitor::visit(std::shared_ptr<ExpressionListCaller> node) {
   accept(node->get_child());
 }
 // ExpressionListDefinition
-void DefaultTreeVisitor::visit(
-    std::shared_ptr<ExpressionListDefinition> node) {
+void DefaultTreeVisitor::visit(std::shared_ptr<ExpressionListDefinition> node) {
   accept(node->get_child());
 }
 // ProgramListElement

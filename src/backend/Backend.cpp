@@ -508,23 +508,25 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Exists> node) {
   throw HYDLA_ERROR("exists node cannot be sent to backend");
 }
 
-void Backend::visit(std::shared_ptr<symbolic_expression::Tell> node) { accept(node->get_child()); }
+void Backend::visit(std::shared_ptr<symbolic_expression::Tell> node) {
+  accept(node->get_child());
+}
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                              \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_converted_function(#FUNC_NAME, 2);                              \
     accept(node->get_lhs());                                                   \
     accept(node->get_rhs());                                                   \
   }
 
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                               \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_converted_function(#FUNC_NAME, 1);                              \
     accept(node->get_child());                                                 \
   }
 
 #define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                              \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_symbol(#FUNC_NAME);                                             \
   }
 
@@ -590,7 +592,8 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Function> node) {
   }
 }
 
-void Backend::visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
+void Backend::visit(
+    std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
   link_->put_function(node->get_name().c_str(), 1);
   link_->put_function(
       "Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica

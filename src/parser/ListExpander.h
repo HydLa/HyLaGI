@@ -29,16 +29,16 @@ public:
 
   std::shared_ptr<symbolic_expression::ExpressionList> expand_list(
       std::shared_ptr<symbolic_expression::ConditionalExpressionList>);
-  std::shared_ptr<symbolic_expression::ProgramList> expand_list(
-      std::shared_ptr<symbolic_expression::ConditionalProgramList>);
+  std::shared_ptr<symbolic_expression::ProgramList>
+      expand_list(std::shared_ptr<symbolic_expression::ConditionalProgramList>);
   std::shared_ptr<symbolic_expression::VariadicNode>
       expand_list(std::shared_ptr<symbolic_expression::Range>);
   std::shared_ptr<symbolic_expression::VariadicNode>
       expand_list(std::shared_ptr<symbolic_expression::Union>);
   std::shared_ptr<symbolic_expression::VariadicNode>
       expand_list(std::shared_ptr<symbolic_expression::Intersection>);
-  symbolic_expression::node_sptr expand_list(
-      std::shared_ptr<symbolic_expression::ExpressionListElement>);
+  symbolic_expression::node_sptr
+      expand_list(std::shared_ptr<symbolic_expression::ExpressionListElement>);
   symbolic_expression::node_sptr
       expand_list(std::shared_ptr<symbolic_expression::ProgramListElement>);
   std::shared_ptr<symbolic_expression::Number>
@@ -70,8 +70,7 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Function>);
   virtual void visit(std::shared_ptr<symbolic_expression::GreaterEqual>);
   virtual void visit(std::shared_ptr<symbolic_expression::Scan>);
-  virtual void
-      visit(std::shared_ptr<symbolic_expression::UnsupportedFunction>);
+  virtual void visit(std::shared_ptr<symbolic_expression::UnsupportedFunction>);
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr>);
   virtual void visit(std::shared_ptr<symbolic_expression::Greater>);
   virtual void visit(std::shared_ptr<symbolic_expression::SVtimer>);
@@ -117,8 +116,7 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::ConstraintCaller>);
   virtual void
       visit(std::shared_ptr<symbolic_expression::ExpressionListElement>);
-  virtual void
-      visit(std::shared_ptr<symbolic_expression::ProgramListElement>);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListElement>);
   virtual void visit(std::shared_ptr<symbolic_expression::ProgramListCaller>);
   virtual void
       visit(std::shared_ptr<symbolic_expression::ExpressionListCaller>);

@@ -1,19 +1,16 @@
 #pragma once
 
-#include "kv/interval.hpp"
-#include "kv/rdouble.hpp"
-#include "kv/dd.hpp"
-#include "kv/rdd.hpp"
 #include "kv/constants.hpp"
+#include "kv/dd.hpp"
+#include "kv/interval.hpp"
+#include "kv/rdd.hpp"
+#include "kv/rdouble.hpp"
 
-namespace hydla
-{
-namespace interval
-{
-typedef kv::interval<double>                  itvd;
+namespace hydla {
+namespace interval {
+typedef kv::interval<double> itvd;
 
-class IntervalOrInteger
-{
+class IntervalOrInteger {
 public:
   itvd interval_value;
   int integer;
@@ -26,7 +23,7 @@ public:
   IntervalOrInteger operator-();
 };
 
-std::ostream& operator<<(std::ostream &ost, const IntervalOrInteger &val);
+std::ostream &operator<<(std::ostream &ost, const IntervalOrInteger &val);
 
-} //namespace interval
-} //namespace hydla
+} // namespace interval
+} // namespace hydla

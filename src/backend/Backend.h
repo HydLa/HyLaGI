@@ -223,8 +223,7 @@ private:
   // 無限大
   virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
 
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   virtual void
   visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);

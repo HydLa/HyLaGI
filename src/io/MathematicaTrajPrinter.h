@@ -9,14 +9,12 @@ namespace io {
  * Mathematica形式での出力を行う
  */
 
-class MathematicaTrajPrinter: public TrajPrinter
-{
+class MathematicaTrajPrinter : public TrajPrinter {
 public:
-  MathematicaTrajPrinter(
-            const std::string& max_time,
-            const std::set<std::string> output_variables_);
-            
-  void output_result_tree(const phase_result_const_sptr_t&) const;
+  MathematicaTrajPrinter(const std::string &max_time,
+                         const std::set<std::string> output_variables_);
+
+  void output_result_tree(const phase_result_const_sptr_t &) const;
 
 private:
   std::string max_time_;

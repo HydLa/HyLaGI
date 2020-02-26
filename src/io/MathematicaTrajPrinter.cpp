@@ -8,7 +8,8 @@ using namespace hydla::simulator;
 namespace hydla {
 namespace io {
 /*
-void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& result_root) const
+void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t&
+result_root) const
 {
   if (result_root->children.size() == 0)
   {
@@ -16,12 +17,13 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
     return;
   }
   std::stack< std::pair<phase_result_sptr_t, std::string> > node_stack;
-  
-  for (phase_result_sptrs_t::const_iterator it = result_root->children.begin(); it != result_root->children.end(); it++)
+
+  for (phase_result_sptrs_t::const_iterator it = result_root->children.begin();
+it != result_root->children.end(); it++)
   {
     node_stack.push(std::pair<phase_result_sptr_t, std::string>(*it, ""));
   }
-  
+
   std::cout << "Show[";
   while (!node_stack.empty())
   {
@@ -51,7 +53,8 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
         out_tmp << ",";
       }
       typename variable_map_t::const_iterator it = vm.begin();
-      while (opts_->output_variables.find(it->first->get_string()) == opts_->output_variables.end())
+      while (opts_->output_variables.find(it->first->get_string()) ==
+opts_->output_variables.end())
       {
         it++;
         if (it == vm.end()) return;
@@ -76,8 +79,8 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
       {
         // 定数の条件
         out_tmp << "{";
-        typename parameter_map_t::const_iterator it = now_node->parameter_map.begin();
-        while (it != now_node->parameter_map.end())
+        typename parameter_map_t::const_iterator it =
+now_node->parameter_map.begin(); while (it != now_node->parameter_map.end())
         {
           if (it->second.undefined())
           {
@@ -85,8 +88,9 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
           }
           else
           {
-            out_tmp << *it->first << ", " << it->second.get_lower_bound().value.get_string() << ", " << it->second.get_upper_bound().value.get_string() << ", step}";
-            break;
+            out_tmp << *it->first << ", " <<
+it->second.get_lower_bound().value.get_string() << ", " <<
+it->second.get_upper_bound().value.get_string() << ", step}"; break;
           }
         }
         if (it == now_node->parameter_map.end())
@@ -104,8 +108,10 @@ void MathematicaPrinter::output_result_tree(const phase_result_const_sptr_t& res
     }
     else
     {
-      for (typename phase_result_sptrs_t::const_iterator it = now_node->children.begin(); it != now_node->children.end(); it++)
-        node_stack.push(std::pair<phase_result_sptr_t, std::string>(*it, out_tmp.str()));
+      for (typename phase_result_sptrs_t::const_iterator it =
+now_node->children.begin(); it != now_node->children.end(); it++)
+        node_stack.push(std::pair<phase_result_sptr_t, std::string>(*it,
+out_tmp.str()));
     }
   }
   std::cout << "PlotRange -> {{0, " << opts_->max_time << "}, {lb, ub}}";

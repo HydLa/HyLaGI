@@ -225,12 +225,11 @@ private:
     /// 変数に到達した際、この値がその変数に対する微分の最大回数
     int differential_count;
 
-    /// 展開された定義のリスト 
+    /// 展開された定義のリスト
 
     referenced_definition_list_t referenced_definition_list;
 
-    /// 仮引数とそれに対応する実引数ノードの対応表  
-
+    /// 仮引数とそれに対応する実引数ノードの対応表
 
     formal_arg_map_t formal_arg_map;
 
