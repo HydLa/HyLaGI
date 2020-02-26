@@ -24,7 +24,7 @@ public:
    * read Json corresponding to one phase.
    */
   phase_result_sptr_t read_phase(const std::string &name);
-  phase_result_sptr_t read_phase(picojson::object &o);
+  phase_result_sptr_t read_phase(picojson::object &json_object);
 
 private:
   variable_map_t read_vm(picojson::object &o); 
