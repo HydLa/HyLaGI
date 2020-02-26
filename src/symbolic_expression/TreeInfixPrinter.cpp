@@ -78,7 +78,7 @@ void TreeInfixPrinter::visit(std::shared_ptr<LogicalOr> node) {
 }
 
 // Ask制約
-DEFINE_INFIX_VISIT_BINARY(Ask, = >)
+DEFINE_INFIX_VISIT_BINARY(Ask, =>)
 
 void TreeInfixPrinter::visit(std::shared_ptr<Exists> node) {
   (*output_stream_) << "\\";

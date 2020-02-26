@@ -24,7 +24,7 @@ public:
   virtual void put_double(double value) = 0;
   virtual void put_number(const char *value) = 0;
   virtual void put_string(const char *value) = 0;
-  void put_string(const std::string &str) { put_string(str.c_str()); }
+  virtual void put_string(const std::string &str) { put_string(str.c_str()); }
   void put_number(const std::string &val) { put_number(val.c_str()); }
   virtual void put_function(const char *name, int arg_cnt) = 0;
   void put_function(const std::string &name, int arg_cnt) {
