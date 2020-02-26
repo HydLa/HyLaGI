@@ -4,6 +4,7 @@
 *.dot
 *.png
 *.csv
+*.swp
 *.o.json
 **/*.o.tmp
 compile_commands.json
@@ -19,4 +20,4 @@ workspace/
 *.pyc
 ./.DS_Store
 src/debug/*.pyc
-doc/html
+doc/html/
