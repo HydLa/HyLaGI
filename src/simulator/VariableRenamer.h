@@ -33,9 +33,9 @@ public:
   std::map<Variable, Variable> get_renamed_variable_map() const;
 
   virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Variable> node);
+  visit(std::shared_ptr<symbolic_expression::Variable> node);
   virtual void
-  visit(std::shared_ptr<hydla::symbolic_expression::Exists> node);
+  visit(std::shared_ptr<symbolic_expression::Exists> node);
 
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);

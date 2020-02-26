@@ -500,15 +500,15 @@ int Backend::send_parameter_map(const parameter_map_t &parameter_map) {
   return 0;
 }
 
-void Backend::visit(std::shared_ptr<Ask> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Ask> node) {
   throw HYDLA_ERROR("ask node cannot be sent to backend");
 }
 
-void Backend::visit(std::shared_ptr<Exists> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Exists> node) {
   throw HYDLA_ERROR("exists node cannot be sent to backend");
 }
 
-void Backend::visit(std::shared_ptr<Tell> node) { accept(node->get_child()); }
+void Backend::visit(std::shared_ptr<symbolic_expression::Tell> node) { accept(node->get_child()); }
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                              \
   void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
@@ -528,53 +528,53 @@ void Backend::visit(std::shared_ptr<Tell> node) { accept(node->get_child()); }
     link_->put_symbol(#FUNC_NAME);                                             \
   }
 
-DEFINE_VISIT_BINARY(Equal, Equal)
-DEFINE_VISIT_BINARY(UnEqual, Unequal)
-DEFINE_VISIT_BINARY(Less, Less)
-DEFINE_VISIT_BINARY(LessEqual, LessEqual)
-DEFINE_VISIT_BINARY(Greater, Greater)
-DEFINE_VISIT_BINARY(GreaterEqual, GreaterEqual)
+DEFINE_VISIT_BINARY(symbolic_expression::Equal, Equal)
+DEFINE_VISIT_BINARY(symbolic_expression::UnEqual, Unequal)
+DEFINE_VISIT_BINARY(symbolic_expression::Less, Less)
+DEFINE_VISIT_BINARY(symbolic_expression::LessEqual, LessEqual)
+DEFINE_VISIT_BINARY(symbolic_expression::Greater, Greater)
+DEFINE_VISIT_BINARY(symbolic_expression::GreaterEqual, GreaterEqual)
 
 /// 論理演算子
-DEFINE_VISIT_BINARY(LogicalAnd, And)
-DEFINE_VISIT_BINARY(LogicalOr, Or)
+DEFINE_VISIT_BINARY(symbolic_expression::LogicalAnd, And)
+DEFINE_VISIT_BINARY(symbolic_expression::LogicalOr, Or)
 
 /// 算術二項演算子
-DEFINE_VISIT_BINARY(Plus, Plus)
-DEFINE_VISIT_BINARY(Subtract, Subtract)
-DEFINE_VISIT_BINARY(Times, Times)
-DEFINE_VISIT_BINARY(Divide, Divide)
-DEFINE_VISIT_BINARY(Power, Power)
+DEFINE_VISIT_BINARY(symbolic_expression::Plus, Plus)
+DEFINE_VISIT_BINARY(symbolic_expression::Subtract, Subtract)
+DEFINE_VISIT_BINARY(symbolic_expression::Times, Times)
+DEFINE_VISIT_BINARY(symbolic_expression::Divide, Divide)
+DEFINE_VISIT_BINARY(symbolic_expression::Power, Power)
 
 /// 算術単項演算子
 
-DEFINE_VISIT_UNARY(Negative, Minus)
-void Backend::visit(std::shared_ptr<Positive> node) {
+DEFINE_VISIT_UNARY(symbolic_expression::Negative, Minus)
+void Backend::visit(std::shared_ptr<symbolic_expression::Positive> node) {
   accept(node->get_child());
 }
 
 /// 微分
-void Backend::visit(std::shared_ptr<Differential> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Differential> node) {
   differential_count_++;
   accept(node->get_child());
   differential_count_--;
 }
 
 /// 左極限
-void Backend::visit(std::shared_ptr<Previous> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Previous> node) {
   in_prev_ = true;
   accept(node->get_child());
   in_prev_ = false;
 }
 
 /// 否定
-void Backend::visit(std::shared_ptr<Not> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Not> node) {
   link_->put_function("Not", 1);
   accept(node->get_child());
 }
 
 /// 関数
-void Backend::visit(std::shared_ptr<Function> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Function> node) {
   string name;
   int arg_cnt = node->get_arguments_size();
   // bool converted;
@@ -590,7 +590,7 @@ void Backend::visit(std::shared_ptr<Function> node) {
   }
 }
 
-void Backend::visit(std::shared_ptr<UnsupportedFunction> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
   link_->put_function(node->get_name().c_str(), 1);
   link_->put_function(
       "Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica
@@ -600,12 +600,12 @@ void Backend::visit(std::shared_ptr<UnsupportedFunction> node) {
 }
 
 /// 円周率
-DEFINE_VISIT_FACTOR(Infinity, Infinity)
+DEFINE_VISIT_FACTOR(symbolic_expression::Infinity, Infinity)
 /// 円周率
-DEFINE_VISIT_FACTOR(Pi, Pi)
+DEFINE_VISIT_FACTOR(symbolic_expression::Pi, Pi)
 /// 自然対数の底
-DEFINE_VISIT_FACTOR(E, E)
-DEFINE_VISIT_FACTOR(ImaginaryUnit, I)
+DEFINE_VISIT_FACTOR(symbolic_expression::E, E)
+DEFINE_VISIT_FACTOR(symbolic_expression::ImaginaryUnit, I)
 
 // 変数
 void Backend::visit(std::shared_ptr<symbolic_expression::Variable> node) {
@@ -616,14 +616,14 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Variable> node) {
 }
 
 // 数字
-void Backend::visit(std::shared_ptr<Number> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Number> node) {
   // link_->put_integer(atoi(node->get_number().c_str()));
   // //数値がでかいとオーバーフローする
   // link_->put_symbol(node->get_number().c_str()); // put_symbolだと送れない
   link_->put_number(node->get_number().c_str());
 }
 
-void Backend::visit(std::shared_ptr<Float> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Float> node) {
   link_->put_double(node->get_number());
 }
 
@@ -634,11 +634,11 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Parameter> node) {
 }
 
 // t
-void Backend::visit(std::shared_ptr<SymbolicT> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::SymbolicT> node) {
   link_->put_symbol("t");
 }
 
-void Backend::visit(std::shared_ptr<Range> node) {
+void Backend::visit(std::shared_ptr<symbolic_expression::Range> node) {
   link_->put_converted_function("Interval", 1);
   link_->put_converted_function("List", 2);
   accept(node->get_lhs());

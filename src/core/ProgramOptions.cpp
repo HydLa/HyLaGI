@@ -181,7 +181,7 @@ void ProgramOptions::parse(int argc, char* argv[])
   notify(vm_);
 }
 
-void ProgramOptions::parse(string src_str)
+void ProgramOptions::parse(std::string src_str)
 {
   char dst_str[src_str.length()];
   strcpy(dst_str, src_str.c_str());

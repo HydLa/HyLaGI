@@ -96,7 +96,7 @@ void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::Paramet
 
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)        \
-void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::NODE_NAME> node) \
 {                                                     \
   for(int i=0;i<node->get_arguments_size();i++){      \
     accept(node->get_argument(i));                    \
@@ -108,18 +108,18 @@ void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
 }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)        \
-void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::NODE_NAME> node) \
 {                                                     \
   dispatch_lhs(node);                                 \
   dispatch_rhs(node);                                 \
 }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)        \
-void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node) \
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::NODE_NAME> node) \
 { dispatch_child(node);}
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)        \
-void VariableReplacer::visit(std::shared_ptr<NODE_NAME> node){}
+void VariableReplacer::visit(std::shared_ptr<hydla::symbolic_expression::NODE_NAME> node){}
 
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)

@@ -15,7 +15,7 @@ public:
 
   /**
     numerize given expression
-    @parameter exp expression to numerize(for input and output)
+    @param exp expression to numerize(for input and output)
   */
   void numerize(Value &exp);
   
