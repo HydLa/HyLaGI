@@ -348,8 +348,7 @@ PhaseSimulator::simulate_ms(const module_set_t &unadopted_ms,
   HYDLA_LOGGER_DEBUG("\n--- next unadopted module set ---\n",
                      unadopted_ms.get_infix_string());
 
-  // diffがついているのは、小林さんの最適化
-  // (フェーズ間の差分を用いたシミュレーション)
+  // diffがついているのは, フェーズ間の差分を用いたシミュレーションのため
   module_diff_t module_diff =
       get_module_diff(unadopted_ms, phase->parent->unadopted_ms);
 
