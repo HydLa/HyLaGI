@@ -21,3 +21,4 @@ workspace/
 ./.DS_Store
 src/debug/*.pyc
 doc/html/
+.vscode

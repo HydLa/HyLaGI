@@ -43,6 +43,7 @@ void Backend::invalid_fmt(const char *fmt, int idx) {
 
 void Backend::reset() { link_->reset(); }
 
+/// フォーマットに合わせてMathematicaにデータを送信
 int Backend::read_args_fmt(const char *args_fmt, const int &idx, void *arg) {
   int i = idx;
   switch (args_fmt[i]) {
@@ -191,6 +192,7 @@ int Backend::read_args_fmt(const char *args_fmt, const int &idx, void *arg) {
   return i - idx;
 }
 
+/// フォーマットに合わせてMathematicaからデータを受信
 int Backend::read_ret_fmt(const char *ret_fmt, const int &idx, void *ret) {
   int i = idx;
   switch (ret_fmt[i]) {
