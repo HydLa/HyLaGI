@@ -150,7 +150,7 @@ protected:
 #define DEFINE_UNARY_NODE(NAME)                                                \
   class NAME : public UnaryNode {                                              \
   public:                                                                      \
-    typedef std::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                              \
                                                                                \
     NAME() {}                                                                  \
                                                                                \
@@ -237,7 +237,7 @@ protected:
 #define DEFINE_BINARY_NODE(NAME)                                               \
   class NAME : public BinaryNode {                                             \
   public:                                                                      \
-    typedef std::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                              \
                                                                                \
     NAME() {}                                                                  \
                                                                                \
@@ -260,7 +260,7 @@ protected:
 #define DEFINE_ASYMMETRIC_BINARY_NODE(NAME)                                    \
   class NAME : public BinaryNode {                                             \
   public:                                                                      \
-    typedef std::shared_ptr<NAME> node_type_sptr;                            \
+    typedef std::shared_ptr<NAME> node_type_sptr;                              \
                                                                                \
     NAME() {}                                                                  \
                                                                                \

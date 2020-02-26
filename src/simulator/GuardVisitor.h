@@ -2,18 +2,17 @@
 
 #include "GuardNode.h"
 
-namespace hydla { 
+namespace hydla {
 namespace simulator {
-  
+
 /**
  * A visitor class for GuardNode
  */
-class GuardVisitor
-{
+class GuardVisitor {
 public:
-  GuardVisitor(){}
+  GuardVisitor() {}
 
-  virtual ~GuardVisitor(){}
+  virtual ~GuardVisitor() {}
 
   virtual void visit(AtomicGuardNode *atomic) = 0;
   virtual void visit(AndGuardNode *and_node) = 0;
@@ -21,5 +20,5 @@ public:
   virtual void visit(NotGuardNode *not_node) = 0;
 };
 
-} //namespace simulator
-} //namespace hydla
+} // namespace simulator
+} // namespace hydla

@@ -4,7 +4,7 @@
 
 namespace hydla {
 class Version {
- public:
+public:
   Version();
   ~Version();
 
@@ -14,4 +14,4 @@ class Version {
   static std::string copyright();
   static std::string description();
 };
-}
+} // namespace hydla

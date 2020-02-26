@@ -15,8 +15,7 @@ namespace hierarchy {
  * 参照のこと
  *
  */
-class ModuleSetList : public ModuleSetContainer
-{
+class ModuleSetList : public ModuleSetContainer {
 public:
   ModuleSetList();
   ModuleSetList(ModuleSet m);
@@ -25,21 +24,21 @@ public:
   /**
    * 並列合成として集合を合成する
    */
-  void add_parallel(ModuleSetList& parallel_module_set_list);
+  void add_parallel(ModuleSetList &parallel_module_set_list);
 
   /**
    * 並列合成として集合を合成する（required制約扱い）
    */
-  void add_required_parallel(ModuleSetList& parallel_module_set_list);
-  
+  void add_required_parallel(ModuleSetList &parallel_module_set_list);
+
   /**
    * 弱合成として集合を合成する
    */
-  void add_weak(ModuleSetList& weak_module_set_list);
+  void add_weak(ModuleSetList &weak_module_set_list);
 
   /**
    * 集合の集合(このクラス)の名前
-   */ 
+   */
   std::string get_name() const;
 
   virtual void remove_included_ms_by_current_ms();
@@ -47,17 +46,17 @@ public:
   /**
    * 集合の集合のダンプ
    */
-  virtual std::ostream& dump(std::ostream& s) const;
+  virtual std::ostream &dump(std::ostream &s) const;
 
   /**
    * 名前表現によるダンプ
    */
-  std::ostream& dump_node_names(std::ostream& s) const;
-  
+  std::ostream &dump_node_names(std::ostream &s) const;
+
   /**
    * ツリー表現によるダンプ
    */
-  std::ostream& dump_node_trees(std::ostream& s) const;
+  std::ostream &dump_node_trees(std::ostream &s) const;
 
   void init() {}
 };

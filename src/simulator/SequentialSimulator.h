@@ -6,8 +6,7 @@
 namespace hydla {
 namespace simulator {
 
-class SequentialSimulator: public Simulator
-{
+class SequentialSimulator : public Simulator {
 public:
   SequentialSimulator(Opts &opts);
   virtual ~SequentialSimulator();

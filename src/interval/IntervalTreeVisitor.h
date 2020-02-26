@@ -39,8 +39,7 @@ public:
   visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Constraint> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Exists> node);
@@ -88,8 +87,7 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::E> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
   virtual void
@@ -103,8 +101,7 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
   virtual void visit(std::shared_ptr<symbolic_expression::True> node);
   virtual void visit(std::shared_ptr<symbolic_expression::False> node);
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
   virtual void
   visit(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
   virtual void visit(std::shared_ptr<symbolic_expression::ProgramList> node);

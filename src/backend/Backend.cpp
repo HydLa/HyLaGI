@@ -12,21 +12,13 @@ using namespace std;
 char err[2048];
 string buf;
 
-static void M_DECL textCallBack( void *data, int tag, char *output ){
+static void M_DECL textCallBack(void *data, int tag, char *output) {
   buf = output;
 }
 
 MKernelVector maplekernelvector;
 MCallBackVectorDesc maplecallbackvectordesc = {
-  textCallBack,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0
-};
+    textCallBack, 0, 0, 0, 0, 0, 0, 0};
 
 namespace hydla {
 namespace backend {
@@ -52,20 +44,21 @@ static bool equal_ignoring_case(std::string lhs, std::string rhs) {
   return true;
 }
 
-Backend::Backend(Link* link) {
+Backend::Backend(Link *link) {
   link_.reset(link);
-  if( (maplekernelvector=StartMaple(0,NULL,&maplecallbackvectordesc,NULL,NULL,err)) == NULL ) {
+  if ((maplekernelvector = StartMaple(0, NULL, &maplecallbackvectordesc, NULL,
+                                      NULL, err)) == NULL) {
     cout << "Fatal error, " << err << endl;
     exit(1);
   }
 }
 
 Backend::~Backend() {
-  if (maplekernelvector) StopMaple(maplekernelvector);
+  if (maplekernelvector)
+    StopMaple(maplekernelvector);
 }
 
-void Backend::invalid_fmt(const char* fmt, int idx)
-{
+void Backend::invalid_fmt(const char *fmt, int idx) {
   std::stringstream sstr;
   sstr << "invalid format \"" << fmt << "\" at " << idx;
   throw HYDLA_ERROR(sstr.str().c_str());
@@ -86,16 +79,13 @@ int Backend::read_args_fmt(const char *args_fmt, const int &idx, void *arg) {
     link_->put_symbol(sym);
   } break;
 
-  case 'r':
-  {
-    const char* s = (const char *)arg;
+  case 'r': {
+    const char *s = (const char *)arg;
     link_->put_string(s);
-  }
-  break;
+  } break;
 
-  case 'e':
-  {
-    symbolic_expression::node_sptr* node =
+  case 'e': {
+    symbolic_expression::node_sptr *node =
         (symbolic_expression::node_sptr *)arg;
     VariableForm form;
     if (!get_form(args_fmt[++i], form)) {
@@ -235,16 +225,14 @@ int Backend::read_ret_fmt(const char *ret_fmt, const int &idx, void *ret) {
   case 'r': {
     MidpointRadius *mr = (MidpointRadius *)ret;
     *mr = receive_midpoint_radius();
-  }
-  break;
+  } break;
 
-  case 's':
-  {
+  case 's': {
     std::string *s = (std::string *)ret;
     *s = link_->get_string();
   } break;
   case 'i': {
-    int* num = (int *)ret;
+    int *num = (int *)ret;
     *num = link_->get_integer();
   } break;
 
@@ -381,10 +369,12 @@ int Backend::call(const char *name, bool trace, int arg_cnt,
   return 0;
 }
 
-void Backend::wolfram_to_maple(std::string &s){
-  s = regex_replace(s, regex("Derivative\\[1\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t)");
-  s = regex_replace(s, regex("Derivative\\[2\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),"diff($1(t),t,t)");
-  s = regex_replace(s, regex("prev\\[([a-zA-Z0-9]+),\\s([0-9]+)\\]"),"$1_$2");
+void Backend::wolfram_to_maple(std::string &s) {
+  s = regex_replace(s, regex("Derivative\\[1\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),
+                    "diff($1(t),t)");
+  s = regex_replace(s, regex("Derivative\\[2\\]\\[([a-zA-Z0-9]+)\\]\\[t\\]"),
+                    "diff($1(t),t,t)");
+  s = regex_replace(s, regex("prev\\[([a-zA-Z0-9]+),\\s([0-9]+)\\]"), "$1_$2");
   s = regex_replace(s, regex("\\["), "(");
   s = regex_replace(s, regex("\\]"), ")");
   s = regex_replace(s, regex("=="), "=");
@@ -395,53 +385,58 @@ void Backend::wolfram_to_maple(std::string &s){
   s = regex_replace(s, regex("Tan\\("), "tan(");
 }
 
-void Backend::maple_to_wolfram(std::string &s){
-  s = regex_replace(s,regex("\\\\"),"");           // \を除去
-  s = regex_replace(s,regex("([a-zA-Z0-9]+)_([0-9]+)"),"prev\[$1,$2\]");
-  s = regex_replace(s,regex("\\(t\\)"),"\[t\]");   // "(t)" -> "[t]"
-  s = regex_replace(s,regex("_C(\\d+)"),"C\[$1\]"); // "_Cn" -> "C[n]"
-  s = regex_replace(s,regex("="),"->");            // "=" -> "->"
-  s = regex_replace(s,regex("exp\\("),"E^(");          // "exp" -> "E^"
-  s = regex_replace(s,regex("Int"),"Integrate");   // "Int" -> "Integrate"
+void Backend::maple_to_wolfram(std::string &s) {
+  s = regex_replace(s, regex("\\\\"), ""); // \を除去
+  s = regex_replace(s, regex("([a-zA-Z0-9]+)_([0-9]+)"), "prev\[$1,$2\]");
+  s = regex_replace(s, regex("\\(t\\)"), "\[t\]");    // "(t)" -> "[t]"
+  s = regex_replace(s, regex("_C(\\d+)"), "C\[$1\]"); // "_Cn" -> "C[n]"
+  s = regex_replace(s, regex("="), "->");             // "=" -> "->"
+  s = regex_replace(s, regex("exp\\("), "E^(");       // "exp" -> "E^"
+  s = regex_replace(s, regex("Int"), "Integrate");    // "Int" -> "Integrate"
 
   /*
    * アルゴリズムについて
    *
-   * 例えばs = "((()()(())))"においてs[1]とs[6]の'('と対応する')'をそれぞれ'[',']'に変えたいとする．
+   * 例えばs =
+   * "((()()(())))"においてs[1]とs[6]の'('と対応する')'をそれぞれ'[',']'に変えたいとする．
    * ちなみに対応する括弧はそれぞれs[9], s[10]．
    * sでi文字目までにいくつの括弧が開いているかを考えると次のような数列aが得られる．
    * a = 123232343210
    * これを見るとa[1] = 2, a[6] = 3である．
-   * それぞれについてそれ以降で初めて値がより小さくなる位置を探すと，それぞれa[10] = 1, a[9] = 2であり閉じる位置が分かる．
+   * それぞれについてそれ以降で初めて値がより小さくなる位置を探すと，それぞれa[10]
+   * = 1, a[9] = 2であり閉じる位置が分かる．
    * またa[6]未満になる場所を探している間はa[1]未満になることはないので，走査は2回ではなく1回で済むことが分かる．
    *
    * 一般に'['に置き換えたい括弧が来たら以前の値はstackに積んで処理が終わったら取り出すようにすれば，
    * 置き換える括弧の数によらず1回の走査で置き換えができる．
    */
 
-  stack<int> st; // 後で探す値を積む
+  stack<int> st;      // 後で探す値を積む
   int v = 0, now = 0; // v：探す値，now：括弧がいくつ開いているか
-  for(int i = 0; i < s.size(); ++i){
-    string sbstr = s.substr(i,3);
-    if(sbstr == "sin" or sbstr == "cos" or sbstr == "tan" or sbstr == "exp" or sbstr == "ate"){ // 三角関数かIntegrate
-      if(v != 0) st.push(v);
-      if(sbstr != "ate")
+  for (int i = 0; i < s.size(); ++i) {
+    string sbstr = s.substr(i, 3);
+    if (sbstr == "sin" or sbstr == "cos" or sbstr == "tan" or sbstr == "exp" or
+        sbstr == "ate") { // 三角関数かIntegrate
+      if (v != 0)
+        st.push(v);
+      if (sbstr != "ate")
         s[i] = toupper(s[i]); // sin -> Sin, cos -> Cos, tan -> Tan
-      i += 3; // '('の場所に飛ぶ
+      i += 3;                 // '('の場所に飛ぶ
       s[i] = '[';
       now++;
       v = now;
       continue;
     }
 
-    if(s[i] == '(') now++;
-    else if(s[i] == ')'){
+    if (s[i] == '(')
+      now++;
+    else if (s[i] == ')') {
       now--;
-      if(now == v-1){ // sinなどの括弧が閉じたら
+      if (now == v - 1) { // sinなどの括弧が閉じたら
         s[i] = ']';
-        if(st.empty()){
+        if (st.empty()) {
           v = 0;
-        }else{
+        } else {
           v = st.top();
           st.pop();
         }
@@ -451,9 +446,7 @@ void Backend::maple_to_wolfram(std::string &s){
   s = "{" + s + "}";
 }
 
-
-
-void Backend::dsolve_by_maple(std::string &s){
+void Backend::dsolve_by_maple(std::string &s) {
   std::cout << s << std::endl;
   wolfram_to_maple(s);
   std::cout << s << std::endl;
@@ -468,7 +461,7 @@ void Backend::dsolve_by_maple(std::string &s){
 }
 
 bool Backend::get_form(const char &form_c, VariableForm &form) {
-  switch(form_c)  {
+  switch (form_c) {
   case 'p':
     form = VF_PREV;
     return true;
@@ -639,23 +632,25 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Exists> node) {
   throw HYDLA_ERROR("exists node cannot be sent to backend");
 }
 
-void Backend::visit(std::shared_ptr<symbolic_expression::Tell> node) { accept(node->get_child()); }
+void Backend::visit(std::shared_ptr<symbolic_expression::Tell> node) {
+  accept(node->get_child());
+}
 
 #define DEFINE_VISIT_BINARY(NODE_NAME, FUNC_NAME)                              \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_converted_function(#FUNC_NAME, 2);                              \
     accept(node->get_lhs());                                                   \
     accept(node->get_rhs());                                                   \
   }
 
 #define DEFINE_VISIT_UNARY(NODE_NAME, FUNC_NAME)                               \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_converted_function(#FUNC_NAME, 1);                              \
     accept(node->get_child());                                                 \
   }
 
 #define DEFINE_VISIT_FACTOR(NODE_NAME, FUNC_NAME)                              \
-  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                     \
+  void Backend::visit(std::shared_ptr<NODE_NAME> node) {                       \
     link_->put_symbol(#FUNC_NAME);                                             \
   }
 
@@ -721,7 +716,8 @@ void Backend::visit(std::shared_ptr<symbolic_expression::Function> node) {
   }
 }
 
-void Backend::visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
+void Backend::visit(
+    std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
   link_->put_function(node->get_name().c_str(), 1);
   link_->put_function(
       "Evaluate", node->get_arguments_size()); // for "HoldForm" in Mathematica

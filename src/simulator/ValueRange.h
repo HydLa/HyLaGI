@@ -1,64 +1,55 @@
 #pragma once
 
+#include "Value.h"
+#include <cassert>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
-#include <cassert>
-#include "Value.h"
 
 namespace hydla {
 namespace simulator {
 
 class ConstraintStore;
 
-class ValueRange
-{
+class ValueRange {
 public:
   typedef unsigned int uint;
   typedef Value value_t;
-  typedef struct Bound
-  {
+  typedef struct Bound {
     value_t value;
     bool include_bound;
     Bound() : include_bound(false) {}
-    Bound(const value_t& val, bool in) : value(val), include_bound(in) {}
+    Bound(const value_t &val, bool in) : value(val), include_bound(in) {}
   } bound_t;
 
-  ValueRange(const value_t &lower, bool low_include,
-             const value_t &upper, bool up_include);
+  ValueRange(const value_t &lower, bool low_include, const value_t &upper,
+             bool up_include);
   ValueRange(const value_t &lower, const value_t &upper);
-  ValueRange(const value_t &val){set_unique_value(val);}
-  ValueRange(){}
+  ValueRange(const value_t &val) { set_unique_value(val); }
+  ValueRange() {}
 
-  bool undefined() const
-  {
+  bool undefined() const {
     return (!unique() && lower_.size() == 0 && upper_.size() == 0);
   }
-  
-  bool unique() const
-  {
-    return !unique_value_.undefined();
-  }
-  
+
+  bool unique() const { return !unique_value_.undefined(); }
+
   /**
    * 一意に値を定める
    */
-  void set_unique_value(const value_t& val)
-  {
-    if(val.get_string()!="True"){
+  void set_unique_value(const value_t &val) {
+    if (val.get_string() != "True") {
       unique_value_ = val;
     }
     lower_.clear();
     upper_.clear();
   }
 
-  value_t get_unique_value() const
-  {
-    if (!unique())
-    {
+  value_t get_unique_value() const {
+    if (!unique()) {
       throw std::runtime_error(
-        "ValueRange: " + get_string() + 
-        "is not unique, but get_unique_value() is called");
+          "ValueRange: " + get_string() +
+          "is not unique, but get_unique_value() is called");
     }
     return unique_value_;
   }
@@ -66,57 +57,63 @@ public:
   std::string get_string() const;
 
   uint get_lower_cnt() const { return lower_.size(); }
-  const bound_t& get_lower_bound() const { assert(lower_.size() > 0); return get_lower_bound(0); }
-  const bound_t& get_lower_bound(const uint& idx) const { assert(idx<lower_.size()); return lower_[idx]; }
+  const bound_t &get_lower_bound() const {
+    assert(lower_.size() > 0);
+    return get_lower_bound(0);
+  }
+  const bound_t &get_lower_bound(const uint &idx) const {
+    assert(idx < lower_.size());
+    return lower_[idx];
+  }
 
   uint get_upper_cnt() const { return upper_.size(); }
-  const bound_t& get_upper_bound() const { assert(upper_.size() > 0); return get_upper_bound(0); }
-  const bound_t& get_upper_bound(const uint& idx) const { assert(idx<upper_.size()); return upper_[idx]; } 
+  const bound_t &get_upper_bound() const {
+    assert(upper_.size() > 0);
+    return get_upper_bound(0);
+  }
+  const bound_t &get_upper_bound(const uint &idx) const {
+    assert(idx < upper_.size());
+    return upper_[idx];
+  }
 
-  ConstraintStore create_range_constraint(symbolic_expression::node_sptr to_be_compared);
+  ConstraintStore
+  create_range_constraint(symbolic_expression::node_sptr to_be_compared);
 
-  void set_upper_bound(const value_t& val, const bool& include)
-  {
+  void set_upper_bound(const value_t &val, const bool &include) {
     upper_.clear();
     add_upper_bound(val, include);
   }
 
-  void set_lower_bound(const value_t& val, const bool& include)
-  {
+  void set_lower_bound(const value_t &val, const bool &include) {
     lower_.clear();
     add_lower_bound(val, include);
   }
 
-  void add_lower_bound(const value_t& val, const bool& include)
-  {
-    if (!val.undefined())
-    {
+  void add_lower_bound(const value_t &val, const bool &include) {
+    if (!val.undefined()) {
       lower_.push_back(bound_t(val, include));
     }
   }
 
-  void add_upper_bound(const value_t& val, const bool& include)
-  {
-    if (!val.undefined())
-    {
+  void add_upper_bound(const value_t &val, const bool &include) {
+    if (!val.undefined()) {
       upper_.push_back(bound_t(val, include));
     }
   }
 
-  ValueRange get_numerized_range()const;
-  
-  std::ostream& dump(std::ostream& s) const  
-  {
+  ValueRange get_numerized_range() const;
+
+  std::ostream &dump(std::ostream &s) const {
     s << get_string();
     return s;
   }
 
-  private:
+private:
   std::vector<bound_t> lower_, upper_;
   value_t unique_value_;
 };
 
-std::ostream& operator<<(std::ostream& s, const ValueRange & val);
+std::ostream &operator<<(std::ostream &s, const ValueRange &val);
 
 } // namespace simulator
 } // namespace hydla

@@ -8,10 +8,12 @@ using namespace boost;
 using namespace std;
 
 #define DEFINE_FACTOR_VISIT(TYPE)                                              \
-  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) { new_child = node; }
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {  \
+    new_child = node;                                                          \
+  }
 
 #define DEFINE_ARBITRARY_VISIT(TYPE)                                           \
-  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {  \
     for (int i = 0; i < node->get_arguments_size(); i++) {                     \
       accept(node->get_argument(i));                                           \
       if (new_child) {                                                         \
@@ -23,7 +25,7 @@ using namespace std;
   }
 
 #define DEFINE_UNARY_VISIT(TYPE)                                               \
-  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {  \
     accept(node->get_child());                                                 \
     if (new_child) {                                                           \
       node->set_child(new_child);                                              \
@@ -33,7 +35,7 @@ using namespace std;
   }
 
 #define DEFINE_BINARY_VISIT(TYPE)                                              \
-  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {  \
     accept(node->get_lhs());                                                   \
     if (new_child) {                                                           \
       node->set_lhs(new_child);                                                \
@@ -84,7 +86,8 @@ symbolic_expression::node_sptr ListExpander::circular_check(
   return definition->get_child();
 }
 
-node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::SumOfList> node) {
+node_sptr ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::SumOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Plus>(new_child);
   // 要素が2つ以上のとき
@@ -98,7 +101,8 @@ node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::SumOfLi
   return std::shared_ptr<Number>(new Number("0"));
 }
 
-node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::MulOfList> node) {
+node_sptr ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::MulOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Times>(new_child);
   // 要素が2つ以上のとき
@@ -112,14 +116,14 @@ node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::MulOfLi
   return std::shared_ptr<Number>(new Number("1"));
 }
 
-std::shared_ptr<Number>
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::SizeOfList> node) {
+std::shared_ptr<Number> ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::SizeOfList> node) {
   accept(node);
   return std::dynamic_pointer_cast<Number>(new_child);
 }
 
-node_sptr
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::ExpressionListElement> node) {
+node_sptr ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::ExpressionListElement> node) {
   accept(node);
   node_sptr ret;
   if (new_child) {
@@ -129,8 +133,8 @@ ListExpander::expand_list(std::shared_ptr<symbolic_expression::ExpressionListEle
   return ret;
 }
 
-node_sptr
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::ProgramListElement> node) {
+node_sptr ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::ProgramListElement> node) {
   accept(node);
   node_sptr ret;
   if (new_child) {
@@ -140,15 +144,15 @@ ListExpander::expand_list(std::shared_ptr<symbolic_expression::ProgramListElemen
   return ret;
 }
 
-std::shared_ptr<ExpressionList>
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node) {
+std::shared_ptr<ExpressionList> ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::ConditionalExpressionList> node) {
   std::shared_ptr<ExpressionList> ret =
       std::shared_ptr<ExpressionList>(new ExpressionList());
   expand_conditional_list(ret, node->get_expression(), node, 0);
   return ret;
 }
-std::shared_ptr<ProgramList>
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::ConditionalProgramList> node) {
+std::shared_ptr<ProgramList> ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::ConditionalProgramList> node) {
   std::shared_ptr<ProgramList> ret =
       std::shared_ptr<ProgramList>(new ProgramList());
   expand_conditional_list(ret, node->get_program(), node, 0);
@@ -227,8 +231,7 @@ ListExpander::expand_list(std::shared_ptr<symbolic_expression::Union> node) {
       rhs = std::dynamic_pointer_cast<ExpressionList>(new_child->clone());
       new_child.reset();
     } else {
-      rhs =
-          std::dynamic_pointer_cast<ExpressionList>(node->get_rhs()->clone());
+      rhs = std::dynamic_pointer_cast<ExpressionList>(node->get_rhs()->clone());
     }
     bool not_in = true;
     for (int i = 0; i < rhs->get_arguments_size(); i++) {
@@ -282,8 +285,8 @@ ListExpander::expand_list(std::shared_ptr<symbolic_expression::Union> node) {
   return ret;
 }
 
-std::shared_ptr<VariadicNode>
-ListExpander::expand_list(std::shared_ptr<symbolic_expression::Intersection> node) {
+std::shared_ptr<VariadicNode> ListExpander::expand_list(
+    std::shared_ptr<symbolic_expression::Intersection> node) {
   std::shared_ptr<VariadicNode> ret;
   std::shared_ptr<ExpressionList> el;
   accept(node->get_lhs());
@@ -301,8 +304,7 @@ ListExpander::expand_list(std::shared_ptr<symbolic_expression::Intersection> nod
       rhs = std::dynamic_pointer_cast<ExpressionList>(new_child->clone());
       new_child.reset();
     } else {
-      rhs =
-          std::dynamic_pointer_cast<ExpressionList>(node->get_rhs()->clone());
+      rhs = std::dynamic_pointer_cast<ExpressionList>(node->get_rhs()->clone());
     }
     bool not_in = true;
     for (int i = 0; i < rhs->get_arguments_size(); i++) {
@@ -404,15 +406,13 @@ void ListExpander::expand_conditional_list(std::shared_ptr<VariadicNode> ret,
   }
 
   // EachElement
-  bn = std::dynamic_pointer_cast<EachElement>(
-      list->get_argument(idx)->clone());
+  bn = std::dynamic_pointer_cast<EachElement>(list->get_argument(idx)->clone());
   if (bn) {
     node_sptr local_var = bn->get_lhs();
     std::shared_ptr<VariadicNode> each_list;
     accept(bn->get_rhs());
     if (new_child) {
-      each_list =
-          std::dynamic_pointer_cast<ExpressionList>(new_child->clone());
+      each_list = std::dynamic_pointer_cast<ExpressionList>(new_child->clone());
       new_child.reset();
     } else {
       each_list =
@@ -420,8 +420,7 @@ void ListExpander::expand_conditional_list(std::shared_ptr<VariadicNode> ret,
     }
     if (!each_list) {
       if (new_child) {
-        each_list =
-            std::dynamic_pointer_cast<ProgramList>(new_child->clone());
+        each_list = std::dynamic_pointer_cast<ProgramList>(new_child->clone());
         new_child.reset();
       } else {
         each_list =
@@ -453,8 +452,7 @@ void ListExpander::visit(std::shared_ptr<symbolic_expression::Weaker> node) {
   }
   new_child = node;
 }
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::Parallel> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::Parallel> node) {
   accept(node->get_lhs());
   if (new_child) {
     node->set_lhs(new_child);
@@ -503,8 +501,7 @@ void ListExpander::visit(
   new_child = node->clone();
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::Variable> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::Variable> node) {
   for (auto map : local_variable_map) {
     if (node->is_same_struct(*(map.first), true)) {
       new_child = map.second;
@@ -584,8 +581,7 @@ void ListExpander::visit(std::shared_ptr<symbolic_expression::Plus> node) {
     new_child = node;
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::Subtract> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::Subtract> node) {
   std::shared_ptr<Number> lhs, rhs;
   accept(node->get_lhs());
   if (new_child) {
@@ -685,8 +681,7 @@ void ListExpander::visit(std::shared_ptr<symbolic_expression::Power> node) {
     new_child = node;
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::Positive> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::Positive> node) {
   std::shared_ptr<Number> child;
   accept(node->get_child());
   if (new_child) {
@@ -706,8 +701,7 @@ void ListExpander::visit(
     new_child = node;
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::Negative> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::Negative> node) {
   std::shared_ptr<Number> child;
   accept(node->get_child());
   if (new_child) {
@@ -738,8 +732,7 @@ void ListExpander::visit(
     list = std::dynamic_pointer_cast<ExpressionList>(new_child->clone());
     new_child.reset();
   } else
-    list =
-        std::dynamic_pointer_cast<ExpressionList>(node->get_lhs()->clone());
+    list = std::dynamic_pointer_cast<ExpressionList>(node->get_lhs()->clone());
   accept(node->get_rhs()->clone());
   if (new_child) {
     num = std::dynamic_pointer_cast<Number>(new_child->clone());
@@ -853,15 +846,13 @@ void ListExpander::visit(
     list = std::dynamic_pointer_cast<VariadicNode>(new_child->clone());
     new_child.reset();
   } else {
-    list =
-        std::dynamic_pointer_cast<VariadicNode>(node->get_child()->clone());
+    list = std::dynamic_pointer_cast<VariadicNode>(node->get_child()->clone());
   }
   new_child = std::shared_ptr<Number>(
       new Number(std::to_string(list->get_arguments_size())));
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::SumOfList> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::SumOfList> node) {
   node_sptr ret;
   accept(node->get_child());
   std::shared_ptr<ExpressionList> list;
@@ -882,8 +873,7 @@ void ListExpander::visit(
   new_child = ret;
 }
 
-void ListExpander::visit(
-    std::shared_ptr<symbolic_expression::MulOfList> node) {
+void ListExpander::visit(std::shared_ptr<symbolic_expression::MulOfList> node) {
   node_sptr ret;
   accept(node->get_child());
   std::shared_ptr<ExpressionList> list;

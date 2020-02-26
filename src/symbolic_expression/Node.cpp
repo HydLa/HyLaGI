@@ -542,10 +542,11 @@ node_sptr ConstraintCaller::clone() {
 
   n->actual_args_.resize(actual_args_.size());
   auto it_dest = n->actual_args_.begin();
-  for(auto it = actual_args_.begin(); it != actual_args_.end(); it++, it_dest++) {
+  for (auto it = actual_args_.begin(); it != actual_args_.end();
+       it++, it_dest++) {
     *it_dest = (*it)->clone();
   }
-  //copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
+  // copy(actual_args_.begin(), actual_args_.end(), n->actual_args_.begin());
 
   if (child_)
     n->child_ = child_->clone();
@@ -598,7 +599,7 @@ Parameter::Parameter(const simulator::Parameter &p)
 #define DEFINE_ACCEPT_FUNC(CLASS, VISITOR)                                     \
   void CLASS::accept(node_sptr own, VISITOR *visitor) {                        \
     assert(this == own.get());                                                 \
-    visitor->visit(std::dynamic_pointer_cast<CLASS>(own));                   \
+    visitor->visit(std::dynamic_pointer_cast<CLASS>(own));                     \
   }
 
 /// BaseNodeVisitorのaccept関数定義

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <map>
 #include "ModuleSetContainer.h"
+#include <map>
 
 namespace hydla {
 namespace hierarchy {
@@ -10,18 +10,16 @@ namespace hierarchy {
  * 解候補モジュール集合の集合をインクリメンタルに生成していくクラス
  *
  */
-class IncrementalModuleSet : public ModuleSetContainer
-{
+class IncrementalModuleSet : public ModuleSetContainer {
 public:
-
   typedef ModuleSet::module_t module_t;
   typedef ModuleSet::module_list_const_iterator module_list_const_iterator;
 
   typedef std::map<module_t, ModuleSet> node_relations_data_t;
-  
+
   IncrementalModuleSet();
   IncrementalModuleSet(ModuleSet ms);
-  IncrementalModuleSet(const IncrementalModuleSet& im);
+  IncrementalModuleSet(const IncrementalModuleSet &im);
   virtual ~IncrementalModuleSet();
 
   /**
@@ -29,52 +27,53 @@ public:
    * @param ms 矛盾の原因となるモジュール集合
    * msを使って取り除くことのできるモジュールの集合を返す
    */
-  std::set<ModuleSet> get_removable_module_sets(ModuleSet &current_ms, const ModuleSet &ms);
+  std::set<ModuleSet> get_removable_module_sets(ModuleSet &current_ms,
+                                                const ModuleSet &ms);
 
   /**
    * 並列合成として集合を合成する
    */
-  void add_parallel(IncrementalModuleSet&);
+  void add_parallel(IncrementalModuleSet &);
 
   /**
    * 並列合成として集合を合成する（required制約扱い）
    */
-  void add_required_parallel(IncrementalModuleSet& im) { add_parallel(im); }
-  
+  void add_required_parallel(IncrementalModuleSet &im) { add_parallel(im); }
+
   /**
    * 弱合成として集合を合成する
    */
-  void add_weak(IncrementalModuleSet&);
+  void add_weak(IncrementalModuleSet &);
 
   /**
    * 集合の集合(このクラス)の名前
-   */ 
+   */
   std::string get_name() const;
 
   /**
    * dump priority data in dot language
    */
-  virtual std::ostream& dump_module_sets_for_graphviz(std::ostream& s);
-  
+  virtual std::ostream &dump_module_sets_for_graphviz(std::ostream &s);
+
   /**
    * dump priority data in dot language
    */
-  virtual std::ostream& dump_priority_data_for_graphviz(std::ostream& s) const;
-  
+  virtual std::ostream &dump_priority_data_for_graphviz(std::ostream &s) const;
+
   /**
    * 集合の集合のダンプ
    */
-  virtual std::ostream& dump(std::ostream& s) const;
+  virtual std::ostream &dump(std::ostream &s) const;
 
   /**
    * 名前表現によるダンプ
    */
-  std::ostream& dump_node_names(std::ostream& s) const;
-  
+  std::ostream &dump_node_names(std::ostream &s) const;
+
   /**
    * ツリー表現によるダンプ
    */
-  std::ostream& dump_node_trees(std::ostream& s) const;
+  std::ostream &dump_node_trees(std::ostream &s) const;
 
   ModuleSet unadopted_module_set();
 
@@ -82,11 +81,10 @@ public:
 
   bool has_next() { return !ms_to_visit_.empty(); }
 
-  ModuleSet get_module_set()
-  { 
+  ModuleSet get_module_set() {
     ModuleSet ret = get_max_module_set();
     ret.erase(unadopted_module_set());
-    return ret; 
+    return ret;
   }
 
   void remove_included_ms_by_current_ms();
@@ -97,7 +95,8 @@ public:
    * ms_to_visit_の先頭モジュールセットからmsを包含しないモジュールセットで
    * 要素が一つ少ないものをms_to_visit_に追加する
    */
-  virtual void generate_new_ms(const module_set_set_t& mss, const ModuleSet& ms);
+  virtual void generate_new_ms(const module_set_set_t &mss,
+                               const ModuleSet &ms);
 
   /**
    * 探索対象をmssが示すモジュール集合とする
@@ -115,7 +114,7 @@ public:
   virtual ModuleSet get_max_module_set() const;
 
   /**
-   * initialize 
+   * initialize
    */
   virtual void init();
 
@@ -125,23 +124,22 @@ private:
   /**
    * add << data
    */
-  virtual void add_order_data(IncrementalModuleSet&);
+  virtual void add_order_data(IncrementalModuleSet &);
 
   /**
    * check same module set was generated
    */
-  virtual bool check_same_ms_generated(module_set_set_t&, ModuleSet&); 
+  virtual bool check_same_ms_generated(module_set_set_t &, ModuleSet &);
 
   /**
    * update ms_to_visit_ by generated module sets
    */
-  virtual void update_by_new_mss(module_set_set_t&);
+  virtual void update_by_new_mss(module_set_set_t &);
 
   /// stronger_data_[module_t ms] is a map which has stronger modules than ms.
   node_relations_data_t stronger_modules_;
   /// children_data_[module_t ms] is a map which has weaker modules than ms.
   node_relations_data_t weaker_modules_;
-   
 };
 
 } // namespace hierarchy

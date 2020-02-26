@@ -48,7 +48,8 @@ void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Plus> node) {
   return;
 }
 
-void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Subtract> node) {
+void ValueNumerizer::visit(
+    std::shared_ptr<symbolic_expression::Subtract> node) {
   accept(node->get_lhs());
   Value lhs = current_value;
   bool lhs_numerized = fully_numerized;
@@ -156,7 +157,8 @@ void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Power> node) {
   return;
 }
 
-void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Negative> node) {
+void ValueNumerizer::visit(
+    std::shared_ptr<symbolic_expression::Negative> node) {
 
   accept(node->get_child());
   if (!fully_numerized)
@@ -185,7 +187,8 @@ void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Float> node) {
   return;
 }
 
-void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Function> node) {
+void ValueNumerizer::visit(
+    std::shared_ptr<symbolic_expression::Function> node) {
   std::string name = node->get_name();
   if (name == "sin") {
     if (node->get_arguments_size() != 1) {
@@ -241,13 +244,15 @@ void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Function> node) 
   return;
 }
 
-void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::SymbolicT> node) {
+void ValueNumerizer::visit(
+    std::shared_ptr<symbolic_expression::SymbolicT> node) {
   current_value = Value(node);
   fully_numerized = false;
   return;
 }
 
-void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Parameter> node) {
+void ValueNumerizer::visit(
+    std::shared_ptr<symbolic_expression::Parameter> node) {
   current_value = Value(node);
   fully_numerized = false;
 }

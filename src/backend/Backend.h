@@ -92,7 +92,7 @@ public:
 
   void dsolve_by_maple(std::string &s);
 
-  void set_variable_set(variable_set_t& v) {
+  void set_variable_set(variable_set_t &v) {
     call("resetVariables", false, 0, "", "");
     for (variable_set_t::iterator it = v.begin(); it != v.end(); it++) {
       std::string name = var_prefix + it->get_name();
@@ -231,8 +231,7 @@ private:
   // 無限大
   virtual void visit(std::shared_ptr<symbolic_expression::Infinity> node);
 
-  virtual void
-  visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
+  virtual void visit(std::shared_ptr<symbolic_expression::ImaginaryUnit> node);
 
   virtual void
   visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);

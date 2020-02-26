@@ -145,7 +145,8 @@ ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase,
     }
     if (s != "overConstrained")
       backend->call("finMaple", true, 0, "", "s", &s);
-    backend->call("checkConsistencyInterval", true, 1, "cst", "cc", &tmp_cons, &ret);
+    backend->call("checkConsistencyInterval", true, 1, "cst", "cc", &tmp_cons,
+                  &ret);
   }
   backend_check_consistency_time += timer.get_elapsed_us();
   return ret;
@@ -313,8 +314,9 @@ void ConsistencyChecker::check_consistency_foreach(
       }
       if (s != "overConstrained")
         backend->call("finMaple", true, 0, "", "s", &s);
-      backend->call("createVariableMapInterval", true, 1, "vst", "cv", &send_vars, &create_result);
-    }else{
+      backend->call("createVariableMapInterval", true, 1, "vst", "cv",
+                    &send_vars, &create_result);
+    } else {
       std::string s;
       backend->call("getEquation", true, 0, "", "s", &s);
       while (true) {
@@ -328,7 +330,8 @@ void ConsistencyChecker::check_consistency_foreach(
       }
       if (s != "overConstrained")
         backend->call("finMaple", true, 0, "", "s", &s);
-      backend->call("createVariableMapInterval", true, 0, "", "cv", &create_result);
+      backend->call("createVariableMapInterval", true, 0, "", "cv",
+                    &create_result);
     }
 
     profile["CreateVMInCC"] += timer.get_elapsed_us();
