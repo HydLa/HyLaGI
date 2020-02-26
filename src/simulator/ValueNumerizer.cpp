@@ -21,7 +21,7 @@ void ValueNumerizer::numerize(Value &val) {
     val = current_value;
 }
 
-void ValueNumerizer::visit(shared_ptr<Plus> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Plus> node) {
   accept(node->get_lhs());
   Value lhs = current_value;
   bool lhs_numerized = fully_numerized;
@@ -48,7 +48,7 @@ void ValueNumerizer::visit(shared_ptr<Plus> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Subtract> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Subtract> node) {
   accept(node->get_lhs());
   Value lhs = current_value;
   bool lhs_numerized = fully_numerized;
@@ -75,7 +75,7 @@ void ValueNumerizer::visit(shared_ptr<Subtract> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Times> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Times> node) {
 
   accept(node->get_lhs());
   Value lhs = current_value;
@@ -103,7 +103,7 @@ void ValueNumerizer::visit(shared_ptr<Times> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Divide> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Divide> node) {
   accept(node->get_lhs());
   Value lhs = current_value;
   bool lhs_numerized = fully_numerized;
@@ -129,7 +129,7 @@ void ValueNumerizer::visit(shared_ptr<Divide> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Power> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Power> node) {
   accept(node->get_lhs());
   Value lhs = current_value;
   bool lhs_numerized = fully_numerized;
@@ -156,7 +156,7 @@ void ValueNumerizer::visit(shared_ptr<Power> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Negative> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Negative> node) {
 
   accept(node->get_child());
   if (!fully_numerized)
@@ -165,27 +165,27 @@ void ValueNumerizer::visit(shared_ptr<Negative> node) {
     current_double = -current_double;
 }
 
-void ValueNumerizer::visit(shared_ptr<Pi> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Pi> node) {
   current_value = Value(M_PI);
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<E> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::E> node) {
   current_value = Value(M_E);
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Number> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Number> node) {
   current_double = atof(node->get_number().c_str());
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Float> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Float> node) {
   current_double = node->get_number();
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<Function> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Function> node) {
   std::string name = node->get_name();
   if (name == "sin") {
     if (node->get_arguments_size() != 1) {
@@ -241,13 +241,13 @@ void ValueNumerizer::visit(shared_ptr<Function> node) {
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<SymbolicT> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::SymbolicT> node) {
   current_value = Value(node);
   fully_numerized = false;
   return;
 }
 
-void ValueNumerizer::visit(shared_ptr<symbolic_expression::Parameter> node) {
+void ValueNumerizer::visit(std::shared_ptr<symbolic_expression::Parameter> node) {
   current_value = Value(node);
   fully_numerized = false;
 }

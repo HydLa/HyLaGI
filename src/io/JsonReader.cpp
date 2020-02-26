@@ -24,7 +24,7 @@ simulator::phase_result_sptr_t JsonReader::read_phase(const std::string &name)
   return read_phase(json.get<object>() );
 }
 
-JsonReader::phase_result_sptr_t JsonReader::read_phase(object &json_object)
+JsonReader::phase_result_sptr_t JsonReader::read_phase(picojson::object &json_object)
 { 
   //TODO: positive_asksとかnegative_asksとかparameter_mapとかも読む
   phase_result_sptr_t phase(new phase_result_t());

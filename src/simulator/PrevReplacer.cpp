@@ -35,7 +35,7 @@ void PrevReplacer::replace_node(symbolic_expression::node_sptr &node) {
 }
 
 void PrevReplacer::visit(
-    std::shared_ptr<hydla::symbolic_expression::Previous> node) {
+    std::shared_ptr<symbolic_expression::Previous> node) {
   assert(!in_prev);
   in_prev = true;
   accept(node->get_child());
@@ -43,7 +43,7 @@ void PrevReplacer::visit(
 }
 
 void PrevReplacer::visit(
-    std::shared_ptr<hydla::symbolic_expression::Variable> node) {
+    std::shared_ptr<symbolic_expression::Variable> node) {
   if (in_prev) {
     HYDLA_LOGGER_DEBUG_VAR(*node);
     string v_name = node->get_name();
@@ -104,14 +104,14 @@ ConstraintStore PrevReplacer::get_parameter_constraint() const {
 }
 
 void PrevReplacer::visit(
-    std::shared_ptr<hydla::symbolic_expression::Differential> node) {
+    std::shared_ptr<symbolic_expression::Differential> node) {
   differential_cnt++;
   accept(node->get_child());
   differential_cnt--;
 }
 
 #define DEFINE_DEFAULT_VISIT_ARBITRARY(NODE_NAME)                              \
-  void PrevReplacer::visit(std::shared_ptr<NODE_NAME> node) {                \
+  void PrevReplacer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {                \
     for (int i = 0; i < node->get_arguments_size(); i++) {                     \
       accept(node->get_argument(i));                                           \
       if (new_child) {                                                         \
@@ -122,18 +122,18 @@ void PrevReplacer::visit(
   }
 
 #define DEFINE_DEFAULT_VISIT_BINARY(NODE_NAME)                                 \
-  void PrevReplacer::visit(std::shared_ptr<NODE_NAME> node) {                \
+  void PrevReplacer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {                \
     dispatch_lhs(node);                                                        \
     dispatch_rhs(node);                                                        \
   }
 
 #define DEFINE_DEFAULT_VISIT_UNARY(NODE_NAME)                                  \
-  void PrevReplacer::visit(std::shared_ptr<NODE_NAME> node) {                \
+  void PrevReplacer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {                \
     dispatch_child(node);                                                      \
   }
 
 #define DEFINE_DEFAULT_VISIT_FACTOR(NODE_NAME)                                 \
-  void PrevReplacer::visit(std::shared_ptr<NODE_NAME> node) {}
+  void PrevReplacer::visit(std::shared_ptr<symbolic_expression::NODE_NAME> node) {}
 
 DEFINE_DEFAULT_VISIT_ARBITRARY(Function)
 DEFINE_DEFAULT_VISIT_ARBITRARY(UnsupportedFunction)
@@ -178,7 +178,7 @@ DEFINE_DEFAULT_VISIT_FACTOR(False)
 
 DEFINE_DEFAULT_VISIT_FACTOR(Pi)
 DEFINE_DEFAULT_VISIT_FACTOR(E)
-DEFINE_DEFAULT_VISIT_FACTOR(symbolic_expression::Parameter)
+DEFINE_DEFAULT_VISIT_FACTOR(Parameter)
 DEFINE_DEFAULT_VISIT_FACTOR(SymbolicT)
 DEFINE_DEFAULT_VISIT_FACTOR(Number)
 DEFINE_DEFAULT_VISIT_FACTOR(SVtimer)

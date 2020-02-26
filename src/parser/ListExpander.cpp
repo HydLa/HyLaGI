@@ -8,10 +8,10 @@ using namespace boost;
 using namespace std;
 
 #define DEFINE_FACTOR_VISIT(TYPE)                                              \
-  void ListExpander::visit(std::shared_ptr<TYPE> node) { new_child = node; }
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) { new_child = node; }
 
 #define DEFINE_ARBITRARY_VISIT(TYPE)                                           \
-  void ListExpander::visit(std::shared_ptr<TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
     for (int i = 0; i < node->get_arguments_size(); i++) {                     \
       accept(node->get_argument(i));                                           \
       if (new_child) {                                                         \
@@ -23,7 +23,7 @@ using namespace std;
   }
 
 #define DEFINE_UNARY_VISIT(TYPE)                                               \
-  void ListExpander::visit(std::shared_ptr<TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
     accept(node->get_child());                                                 \
     if (new_child) {                                                           \
       node->set_child(new_child);                                              \
@@ -33,7 +33,7 @@ using namespace std;
   }
 
 #define DEFINE_BINARY_VISIT(TYPE)                                              \
-  void ListExpander::visit(std::shared_ptr<TYPE> node) {                     \
+  void ListExpander::visit(std::shared_ptr<symbolic_expression::TYPE> node) {                     \
     accept(node->get_lhs());                                                   \
     if (new_child) {                                                           \
       node->set_lhs(new_child);                                                \
@@ -84,8 +84,7 @@ symbolic_expression::node_sptr ListExpander::circular_check(
   return definition->get_child();
 }
 
-/// リストの総和
-node_sptr ListExpander::expand_list(std::shared_ptr<SumOfList> node) {
+node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::SumOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Plus>(new_child);
   // 要素が2つ以上のとき
@@ -99,8 +98,7 @@ node_sptr ListExpander::expand_list(std::shared_ptr<SumOfList> node) {
   return std::shared_ptr<Number>(new Number("0"));
 }
 
-/// リストの総積
-node_sptr ListExpander::expand_list(std::shared_ptr<MulOfList> node) {
+node_sptr ListExpander::expand_list(std::shared_ptr<symbolic_expression::MulOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Times>(new_child);
   // 要素が2つ以上のとき
@@ -115,13 +113,13 @@ node_sptr ListExpander::expand_list(std::shared_ptr<MulOfList> node) {
 }
 
 std::shared_ptr<Number>
-ListExpander::expand_list(std::shared_ptr<SizeOfList> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::SizeOfList> node) {
   accept(node);
   return std::dynamic_pointer_cast<Number>(new_child);
 }
 
 node_sptr
-ListExpander::expand_list(std::shared_ptr<ExpressionListElement> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::ExpressionListElement> node) {
   accept(node);
   node_sptr ret;
   if (new_child) {
@@ -132,7 +130,7 @@ ListExpander::expand_list(std::shared_ptr<ExpressionListElement> node) {
 }
 
 node_sptr
-ListExpander::expand_list(std::shared_ptr<ProgramListElement> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::ProgramListElement> node) {
   accept(node);
   node_sptr ret;
   if (new_child) {
@@ -143,14 +141,14 @@ ListExpander::expand_list(std::shared_ptr<ProgramListElement> node) {
 }
 
 std::shared_ptr<ExpressionList>
-ListExpander::expand_list(std::shared_ptr<ConditionalExpressionList> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node) {
   std::shared_ptr<ExpressionList> ret =
       std::shared_ptr<ExpressionList>(new ExpressionList());
   expand_conditional_list(ret, node->get_expression(), node, 0);
   return ret;
 }
 std::shared_ptr<ProgramList>
-ListExpander::expand_list(std::shared_ptr<ConditionalProgramList> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::ConditionalProgramList> node) {
   std::shared_ptr<ProgramList> ret =
       std::shared_ptr<ProgramList>(new ProgramList());
   expand_conditional_list(ret, node->get_program(), node, 0);
@@ -158,7 +156,7 @@ ListExpander::expand_list(std::shared_ptr<ConditionalProgramList> node) {
 }
 
 std::shared_ptr<VariadicNode>
-ListExpander::expand_list(std::shared_ptr<Range> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::Range> node) {
   bool original_in_list_element = in_list_element;
   in_list_element = true;
   std::shared_ptr<VariadicNode> ret;
@@ -212,7 +210,7 @@ ListExpander::expand_list(std::shared_ptr<Range> node) {
 }
 
 std::shared_ptr<VariadicNode>
-ListExpander::expand_list(std::shared_ptr<Union> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::Union> node) {
   std::shared_ptr<VariadicNode> ret;
   std::shared_ptr<ExpressionList> el;
   accept(node->get_lhs());
@@ -285,7 +283,7 @@ ListExpander::expand_list(std::shared_ptr<Union> node) {
 }
 
 std::shared_ptr<VariadicNode>
-ListExpander::expand_list(std::shared_ptr<Intersection> node) {
+ListExpander::expand_list(std::shared_ptr<symbolic_expression::Intersection> node) {
   std::shared_ptr<VariadicNode> ret;
   std::shared_ptr<ExpressionList> el;
   accept(node->get_lhs());

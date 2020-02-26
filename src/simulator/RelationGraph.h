@@ -174,23 +174,23 @@ public:
 
   /**
    * Get constraints related to given variable
-   * @parameter list of connectedconstraints for output
-   * @parameter modules for output
+   * @param list of connectedconstraints for output
+   * @param modules for output
    */
   void get_related_constraints(const Variable &variable,
                                ConstraintStore &constraints);
 
   /**
    * Get constraints and modules related to given constraint
-   * @parameter constraints for output
+   * @param constraints for output
    */
   void get_related_constraints(constraint_t constraint,
                                ConstraintStore &constraints);
 
   /**
    * Get vector of constraints and modules related to given constraints
-   * @parameter vector of connected constraints for output
-   * @parameter vector of modules for output
+   * @param vector of connected constraints for output
+   * @param vector of modules for output
    */
   void get_related_constraints_vector(
       const ConstraintStore &constraints,
@@ -200,8 +200,8 @@ public:
   /**
    * Get vector of constraints and modules related to given variables or
    * constraints
-   * @parameter list of connectedconstraints for output
-   * @parameter modules for output
+   * @param list of connectedconstraints for output
+   * @param modules for output
    */
   void get_related_constraints_vector(
       const ConstraintStore &constraints, const variable_set_t &variables,
