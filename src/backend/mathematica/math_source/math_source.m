@@ -1038,6 +1038,10 @@ Module[
     ini = Union[ini, createPrevRules[derivatives[[i]] ] ]
   ];
   tmp = expr;
+  (*リストiniの要素はux[0] == prev[px, 0]のような初期条件式である
+  与える初期条件が多すぎると解が存在しなくなる方程式（微分代数方程式）
+  が存在するので解けるようになるまで初期条件の数を減らしてゆき最初に
+  解けたものが解である*)
   For[i = Length[ini], i >= 0, i--,
     inis = Subsets[ini, {i}];
     For[j = 1, j <= Length[inis], j++,
@@ -1082,6 +1086,7 @@ Module[
   tmp = expr;
   (*simplePrint[expr];*)
   (*simplePrint[vars];*)
+  (*一般解を求める*)
   solwithconstant = Quiet[
     Check[
       DSolve[expr, vars, t],
@@ -1100,6 +1105,7 @@ Module[
     ];
     inis = Subsets[ini,{Length[constants]}];
     (*simplePrint[inis];*)
+    (*一般解とux[0] == prev[px, 0]のような初期条件式を連立させて任意定数（C[1]など）を消去*)
     For[j = 1, j <= Length[inis], j++,
       solofconstant = Quiet[
         Check[

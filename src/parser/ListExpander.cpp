@@ -84,25 +84,33 @@ symbolic_expression::node_sptr ListExpander::circular_check(
   return definition->get_child();
 }
 
+/// リストの総和
 node_sptr ListExpander::expand_list(std::shared_ptr<SumOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Plus>(new_child);
+  // 要素が2つ以上のとき
   if (ret)
     return ret;
   ret = std::dynamic_pointer_cast<Number>(new_child);
+  // 要素が1つのとき
   if (ret)
     return ret;
+  // 要素が無いリストの総和は0とする
   return std::shared_ptr<Number>(new Number("0"));
 }
 
+/// リストの総積
 node_sptr ListExpander::expand_list(std::shared_ptr<MulOfList> node) {
   accept(node);
   node_sptr ret = std::dynamic_pointer_cast<Times>(new_child);
+  // 要素が2つ以上のとき
   if (ret)
     return ret;
   ret = std::dynamic_pointer_cast<Number>(new_child);
+  // 要素が1つのとき
   if (ret)
     return ret;
+  // 要素が無いリストの総積は0とする
   return std::shared_ptr<Number>(new Number("1"));
 }
 
@@ -631,6 +639,7 @@ void ListExpander::visit(std::shared_ptr<symbolic_expression::Times> node) {
     new_child = node;
 }
 
+/// リストの添字に割り算がある場合例外を返す
 void ListExpander::visit(std::shared_ptr<symbolic_expression::Divide> node) {
   accept(node->get_lhs());
   if (new_child) {
