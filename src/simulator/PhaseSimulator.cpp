@@ -716,6 +716,10 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum,
   return result;
 }
 
+/**
+ * trigger_asks（離散変化のトリガーとなるガード達）に対し，成立・不成立を計算
+ * @sa http://www.doxygen.jp/docblocks.html
+ */
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
                                        asks_t &trigger_asks,
                                        ConstraintStore &diff_sum,
