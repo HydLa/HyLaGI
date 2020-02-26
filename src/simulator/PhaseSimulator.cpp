@@ -57,7 +57,6 @@ PhaseSimulator::PhaseSimulator(Simulator* simulator,const Opts& opts)
 
 PhaseSimulator::~PhaseSimulator() {}
 
-// メインの処理
 phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
 {
   timer::Timer phase_timer;
@@ -237,6 +236,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
         ask_t ask = trigger.first;
         bool entailed = relation_graph_->get_entailed(ask);
 
+        /// 離散変化の発生のトリガーとなるガード条件がprevのみを参照している場合, calculate_closureまで持っていく必要なく成立が確定する.
         if (relation_graph_->entail_if_prev(ask, !entailed))
         {
           todo->always_list.add_constraint_store(relation_graph_->get_always_list(ask));
@@ -282,7 +282,7 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
   }
 
   // 極大無矛盾集合をトップレベルから探索していく。
-  // 河野さんの最適化で、探索すべきモジュール集合を動的に生成している
+  // その際、探索すべきモジュール集合を動的に生成している
   while (module_set_container->has_next())
   {
     // TODO: unadopted_ms も差分をとるようにして使いたい
@@ -382,7 +382,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
 
   consistency_checker->clear_inconsistent_constraints();
   // backend_->call("resetAssumption", false, 0, "", "");
-  // CaculateClosureの処理は、松本さんの博論参照
   // 基本的には、モジュールセットにおいて、ガードが成り立つかどうかを収束するまで判定し、
   // ガード成立の有無が判明したら、その時点で展開されている制約の充足性判定を行い、解候補モジュール集合が充足可能かを判定する関数
   bool consistent = calculate_closure(phase, trigger_asks, local_diff_sum, ms_local_positives, ms_local_negatives, ms_local_always);
@@ -405,7 +404,6 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     {
       timer::Timer gen_timer;
       // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
-      // ロジックを知りたければ、河野さんの論文参照
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
       phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();
     }
