@@ -98,7 +98,8 @@ public:
   }
 
 private:
-  symbolic_expression::node_sptr node_;  /// symbolic expression
+  /// symbolic expression
+  symbolic_expression::node_sptr node_;
 };
 
 bool operator<(const Value& lhs, const Value& rhs);

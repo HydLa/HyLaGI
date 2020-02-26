@@ -3,9 +3,7 @@
 namespace hydla {
 namespace logger {
 
-Logger::Logger() :
-  log_level_(Warn)
-{
+Logger::Logger() : log_level_(Warn) {
   debug_.push(std::cerr);
   warn_.push(std::cerr);
   error_.push(std::cerr);
@@ -13,11 +11,9 @@ Logger::Logger() :
   standard_.push(std::cout);
 }
 
-Logger::~Logger()
-{
-  hydla::logger::Logger& i = hydla::logger::Logger::instance();
-  if (!i.is_html_mode())
-  {
+Logger::~Logger() {
+  hydla::logger::Logger &i = hydla::logger::Logger::instance();
+  if (!i.is_html_mode()) {
     return;
   }
 
@@ -175,17 +171,23 @@ function closeAll() {
 })*");
 
   i.debug_ << "</div>" << std::endl;
-  i.debug_ << R"(<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>)" << std::endl;
-  i.debug_ << R"(<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/css/perfect-scrollbar.min.css"/>)" << std::endl;
-  i.debug_ << R"(<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/perfect-scrollbar.min.js"></script>)" << std::endl;
+  i.debug_
+      << R"(<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>)"
+      << std::endl;
+  i.debug_
+      << R"(<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/css/perfect-scrollbar.min.css"/>)"
+      << std::endl;
+  i.debug_
+      << R"(<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/perfect-scrollbar.min.js"></script>)"
+      << std::endl;
   i.debug_ << R"(<script type="text/javascript">)" << std::endl;
   i.debug_ << inlineScript << std::endl;
   i.debug_ << "</script>" << std::endl;
-  
+
   i.debug_ << "</body>\n</html>" << std::endl;
 }
 
-Logger& Logger::instance() {
+Logger &Logger::instance() {
   static Logger inst;
   return inst;
 }

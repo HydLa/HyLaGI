@@ -30,6 +30,7 @@
 
 #include "SymbolicTrajPrinter.h"
 
+#include "VariableRenamer.h"
 #include "../hierarchy/IncrementalModuleSet.h"
 
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
@@ -141,7 +142,7 @@ phase_list_t PhaseSimulator::process_todo(phase_result_sptr_t &todo)
       for (auto var: *variable_set_)
       {
 
-        if (var.get_differential_count() == 0 && !phase->variable_map.count(var)){
+        if (var.get_differential_count() == 0 && !phase->variable_map.count(var) && var.get_name().back() != '$'){
           warning_var_str += var.get_string() + " ";
           warning_var.insert(var);
         }
@@ -247,7 +248,22 @@ std::list<phase_result_sptr_t> PhaseSimulator::make_results_from_todo(phase_resu
           }else
           {
             todo->add_diff_positive_ask(ask);
+
+            pair<std::map<Variable, Variable>, constraint_t>
+            p = clone_exists_constraint(ask, todo->id);
+            if(!p.first.empty()){
+              map<Variable, Variable> vm = p.first;
+              constraint_t conseq = p.second;
+              todo->diff_sum.add_constraint(conseq);
+              todo->diff_sum.erase(ask->get_child());
+              for(auto entry: todo->variable_map) {
+                if(vm.count(entry.first.name) > 0){
+                  todo->variable_map.insert(entry);
+                }
+              }
+            }
           }
+
         }
 
         else
@@ -388,7 +404,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     for (auto module_set : consistency_checker->get_inconsistent_module_sets())
     {
       timer::Timer gen_timer;
-　     // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
+      // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
       // ロジックを知りたければ、河野さんの論文参照
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
       phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();
@@ -446,6 +462,8 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
       }
     }
 
+    relation_graph_->disable_exists_nonalways();
+
     phase->profile["# of CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_count();
     phase->profile["CheckConsistency(Backend)"] += consistency_checker->get_backend_check_consistency_time();
     consistency_checker->reset_count();
@@ -459,6 +477,7 @@ list<phase_result_sptr_t> PhaseSimulator::simulate_ms(const module_set_t& unadop
     phase->diff_sum = local_diff_sum;
     phase->unadopted_ms = unadopted_ms;
     phase->module_diff = module_diff;
+
     result_list.push_back(phase);
 
     if (phase->phase_type == POINT_PHASE && phase->in_following_step())
@@ -608,7 +627,8 @@ void PhaseSimulator::initialize(variable_set_t &v,
                                 parameter_map_t &p,
                                 variable_map_t &m,
                                 module_set_container_sptr &msc,
-                                phase_result_sptr_t root)
+                                phase_result_sptr_t root,
+                                parser::ParseTreeSemanticAnalyzer* analyzer)
 {
   variable_set_ = &v;
   parameter_map_ = &p;
@@ -617,10 +637,19 @@ void PhaseSimulator::initialize(variable_set_t &v,
   time_id = 0;
   module_set_container = msc;
   result_root = root;
+  analyzer_ = analyzer;
 
   simulator::module_set_t ms = module_set_container->get_max_module_set();
+  auto it = variable_set_->begin();
+  while(it != variable_set_->end()){
+    if(it->name.back() == '$'){
+      it = variable_set_->erase(it);
+    }else{
+      it++;
+    }
+  }
 
-  relation_graph_.reset(new RelationGraph(ms));
+  relation_graph_.reset(new RelationGraph(ms, analyzer));
 
   if (opts_->dump_relation)
   {
@@ -736,7 +765,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
     set<ask_t> adjacents;
     if (phase->parent == result_root.get() && first)
     {
-      adjacents = relation_graph_->get_all_asks();
+      adjacents = relation_graph_->get_expanded_asks();
       first = false;
     }
     else if (phase->phase_type == POINT_PHASE || !phase->in_following_step()){
@@ -806,6 +835,29 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t& phase, asks_t &trigg
           }
           local_diff_sum.add_constraint(ask->get_child());
           relation_graph_->set_entailed(ask, true);
+
+          pair<std::map<Variable, Variable>, constraint_t>
+          p = clone_exists_constraint(ask, phase->id);
+          if(!p.first.empty()){
+            map<Variable, Variable> vm = p.first;
+            constraint_t conseq = p.second;
+            for(auto entry: vm) {
+              discrete_variables.insert(entry.second);
+              discrete_variables.erase(entry.first);
+            }
+            diff_sum.add_constraint(conseq);
+            diff_sum.erase(ask->get_child());
+            local_diff_sum.add_constraint(conseq);
+            local_diff_sum.erase(ask->get_child());
+
+            /*
+            for(auto entry: phase->variable_map) {
+              if(vm.count(entry.first.name) > 0){
+                phase->variable_map[Variable(vm[entry.first.name], entry.first.get_differential_count())] = entry.second;
+              }
+            }
+            */
+          }
         }
         expanded = true;
         ask_it = unknown_asks.erase(ask_it);
@@ -885,6 +937,9 @@ variable_map_t PhaseSimulator::get_related_vm(const node_sptr &node, const varia
 
   for (auto related_variable : related_variables)
   {
+    if(related_variable.name.back() == '$') {
+      continue;
+    }
     auto vm_it = vm.find(related_variable);
     if (vm_it != vm.end())
       related_vm[related_variable] = vm_it->second;
@@ -1700,7 +1755,7 @@ PhaseSimulator::make_next_todo(phase_result_sptr_t& phase)
       set<ask_t> asks;
       if (phase->parent->parent == result_root.get())
       {
-        asks = relation_graph_->get_all_asks();
+        asks = relation_graph_->get_expanded_asks();
       }
       else
       {
@@ -2121,6 +2176,13 @@ void PhaseSimulator::add_parameter_constraint(const phase_result_sptr_t phase, c
   backend_->call("resetConstraintForParameter", false, 1, "csn", "", &new_store);
 }
 
+/**
+ * 矛盾原因のマップに対し，requiredでないモジュールを除去する
+ * @brief この関数はexecution stuck(unsatisfiable constraints)時に原因となったモジュールを求めるときに呼ばれるため，requiredでないモジュールは除去する
+ * @param (causes) 引数の説明
+ * @return フィルター後のマップ
+ * @sa hydla::simulator::PhaseResult::unsat_cons_causes
+ */
 std::map<variable_set_t,module_set_t> PhaseSimulator::filter_required(std::map<variable_set_t,module_set_t> causes){
   auto ims = std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
   for(auto&& p : causes){
@@ -2151,6 +2213,37 @@ void PhaseSimulator::print_possible_causes(const map<variable_set_t,module_set_t
 		cout << "}" << endl;
 	}
 	cout << endl;
+}
+
+// 後件にexistsがあったら後件の束縛変数をリネームして、後件の制約を丸々複製
+pair<std::map<Variable, Variable>, constraint_t>
+PhaseSimulator::clone_exists_constraint(ask_t positive, int phase_num) {
+  VariableFinder finder;
+  VariableRenamer renamer;
+  map<Variable,Variable> ret;
+  constraint_t cloned_conseq;
+
+  constraint_t conseq = positive->get_child();
+  finder.visit_node(conseq);
+  variable_set_t exists_variables = finder.get_exists_variable_set();
+  if(exists_variables.empty()) {
+    return make_pair(ret, cloned_conseq);
+  }
+  relation_graph_->expand_caller(positive);
+  std::cout << "expand_caller end" << std::endl;
+
+  cloned_conseq = conseq->clone();
+  renamer.rename_exists(cloned_conseq, phase_num);
+  map<Variable,Variable> tmp = renamer.get_renamed_variable_map();
+  for(auto entry: tmp){
+    ret.insert(entry);
+    variable_set_->insert(entry.second);
+  }
+  relation_graph_->clone_exists_constraint(positive, cloned_conseq);
+  relation_graph_->set_expanded_recursive(conseq, false);
+
+  backend_->set_variable_set(*variable_set_);
+  return make_pair(ret, cloned_conseq);
 }
 
 void PhaseSimulator::update_condition(const variable_set_t &vs, const module_set_t &ms){

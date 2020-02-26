@@ -19,3 +19,4 @@ workspace/
 *.pyc
 ./.DS_Store
 src/debug/*.pyc
+doc/html

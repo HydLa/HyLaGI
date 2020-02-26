@@ -1,7 +1,7 @@
 #!/bin/bash
-
+echo "testing loat_test..."
 if [ $(./load.m | grep -c '') -ne 0 ] ; then
-  echo "load_math_source failed..."
+  printf "%s \033[31m%s\033[m\n" "load_math_source" "failed"
   exit 1
 fi
-echo "load_math_source succeeded"
+printf "%s \033[32m%s\033[m\n" "load_math_source" "succeeded"
