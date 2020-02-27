@@ -79,8 +79,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  std::cout << "const char* "
-            << argv[1]
+  std::cout << "const char* " << argv[1]
             << "() {\n"
                "  return \n";
   conv();
