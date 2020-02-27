@@ -25,3 +25,6 @@
 math_source.cpp
 
 /src/math_source_converter/msc
+/backend_sample/backend_sample
+/backend_sample/backend_sample.h
+/backend_sample/msc
