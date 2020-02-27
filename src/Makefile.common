@@ -9,7 +9,8 @@ AR       := ar #@AR@
 RM	 := rm #@RM@
 LN       := ln #@LN@
 
-LIBS += -lpthread -luuid
+LIBS += -lpthread
+# LIBS += -lpthread -luuid
 
 UNAME := $(shell uname)
 
@@ -22,8 +23,8 @@ LIBS_STATIC += -lboost_thread
 INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
-# CXX_OPT  += -Wall --input-charset=cp932 -O2 -pg
+CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
+# CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 ifeq ($(UNAME),Darwin)
 LIBS_STATIC += -lboost_thread-mt
@@ -31,7 +32,6 @@ LIBS_STATIC += -lboost_thread-mt
 INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 INCLUDES += `python3-config --includes`
 LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-# LDFLAGS += -L/usr/local/Wolfram/Mathematica/12.0/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
 CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
@@ -63,7 +63,8 @@ ifeq ($(MAKE_TYPE),library)
 else ifeq ($(UNAME),Darwin)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC)
 else
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS) $(INCLUDES)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
+	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS) $(INCLUDES)
 endif
 
 $(COMPILE_COMMANDS_JSON): $(OBJECT)
@@ -79,8 +80,8 @@ endif
 	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 .cc.o .cpp.o:
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-#	$(CXX) $(CXXFLAGS) -MJ $@.json -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -MJ $@.json -c -o $@ $<
+	# $(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
