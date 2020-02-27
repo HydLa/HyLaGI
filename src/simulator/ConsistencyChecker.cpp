@@ -244,8 +244,8 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
           // 分岐
           HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
-        }
-        ce_result = BRANCH_VAR;
+        } else
+          ce_result = BRANCH_VAR;
       } else {
         // 必ず充足できる
         ce_result = ENTAILED;

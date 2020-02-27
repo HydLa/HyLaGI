@@ -168,6 +168,7 @@ value_t PhaseSimulator::calculate_middle_value(const phase_result_sptr_t &phase,
   return mid_val;
 }
 
+/// todoとなっているフェーズを計算
 std::list<phase_result_sptr_t>
 PhaseSimulator::make_results_from_todo(phase_result_sptr_t &todo) {
   auto detail = logger::Detail(__FUNCTION__);
@@ -342,6 +343,7 @@ module_diff_t PhaseSimulator::get_module_diff(module_set_t unadopted_ms,
 }
 
 // phase = todo
+/// モジュール集合を決め打ちして採用できるか計算
 list<phase_result_sptr_t>
 PhaseSimulator::simulate_ms(const module_set_t &unadopted_ms,
                             phase_result_sptr_t phase, asks_t trigger_asks) {
@@ -387,7 +389,7 @@ PhaseSimulator::simulate_ms(const module_set_t &unadopted_ms,
     for (auto module_set :
          consistency_checker->get_inconsistent_module_sets()) {
       timer::Timer gen_timer;
-      // 失敗したときに、採用されていないモジュールセットから、次の解候補モジュール集合を導出する
+      /// 失敗したら採用されていないモジュールセットから、次の解候補モジュール集合を導出しておく
       module_set_container->generate_new_ms(phase->unadopted_mss, module_set);
       phase->profile["GenerateNewMS"] += gen_timer.get_elapsed_us();
     }
@@ -718,7 +720,7 @@ variable_set_t get_discrete_variables(ConstraintStore &diff_sum,
 
 /**
  * trigger_asks（離散変化のトリガーとなるガード達）に対し，成立・不成立を計算
- * @sa http://www.doxygen.jp/docblocks.html
+ *
  */
 bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
                                        asks_t &trigger_asks,
@@ -735,6 +737,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
       get_discrete_variables(diff_sum, phase_type);
   bool first = true;
 
+  // できるだけガードの成否を計算する
   do {
     HYDLA_LOGGER_DEBUG_VAR(diff_sum);
     expanded = false;
@@ -769,8 +772,9 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
       unknown_asks.insert(adjacent);
     }
 
+    // 成否が分かっていないガードに対して計算
     for (auto ask_it = unknown_asks.begin();
-         ask_it != unknown_asks.end() && !expanded;) {
+         ask_it != unknown_asks.end() && !expanded;) { // !expandedいる？
       const auto ask = *ask_it;
 
       if (phase_type == POINT_PHASE
@@ -786,14 +790,15 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
       switch (consistency_checker->check_entailment(
           *relation_graph_, check_consistency_result, ask->get_guard(),
           ask->get_child(), unknown_asks, phase_type,
-          phase->parent && phase->parent->parent, phase->profile)) {
-      case BRANCH_PAR:
+          phase->parent && phase->parent->parent,
+          phase->profile)) { // 成否を計算
+      case BRANCH_PAR: // パラメータの値によって成否が変わる場合
         HYDLA_LOGGER_DEBUG(
             "%% entailablity depends on conditions of parameters\n");
         push_branch_states(phase, check_consistency_result);
         // Since we choose entailed case in push_branch_states, we go down
         // without break.
-      case ENTAILED:
+      case ENTAILED: // 成立する場合
         HYDLA_LOGGER_DEBUG("\n--- entailed ask ---\n", get_infix_string(ask));
         if (!relation_graph_->get_entailed(ask)) {
 
@@ -832,10 +837,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
             */
           }
         }
-        expanded = true;
+        expanded = true; // ガードの成否が分かった
         ask_it = unknown_asks.erase(ask_it);
         break;
-      case CONFLICTING:
+      case CONFLICTING: // 成立すると矛盾する（成立しない）場合
         HYDLA_LOGGER_DEBUG("\n--- conflicted ask ---\n", get_infix_string(ask));
         if (relation_graph_->get_entailed(ask)) {
           if (positive_asks.erase(ask)) {
@@ -847,10 +852,10 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
           local_diff_sum.add_constraint(ask->get_child());
           relation_graph_->set_entailed(ask, false);
         }
-        expanded = true;
+        expanded = true; // ガードの成否が分かった
         ask_it = unknown_asks.erase(ask_it);
         break;
-      case BRANCH_VAR:
+      case BRANCH_VAR: //他の変数の値によって成否が変わる
         HYDLA_LOGGER_DEBUG("\n--- branched ask ---\n", get_infix_string(ask));
         ask_it++;
         break;
@@ -860,8 +865,9 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
     phase->profile["CheckEntailment"] += entailment_timer.get_elapsed_us();
     // loop until no branching occurs
     discrete_variables = get_discrete_variables(local_diff_sum, phase_type);
-  } while (expanded);
+  } while (expanded); // 1つも成否が分からなくなまで続ける
 
+  // できるだけ計算した結果について無矛盾性を確認
   while (true) {
     timer::Timer consistency_timer;
     CheckConsistencyResult cc_result;
@@ -879,19 +885,22 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
     }
   }
 
-  if (!unknown_asks.empty()) {
+  if (!unknown_asks.empty()) { /// 最後まで成否が分からないガードがあった場合，
     phase_result_sptr_t branch_state_false = clone_branch_state(phase);
-    constraint_t unknown_guard = (*unknown_asks.begin())->get_guard();
-    branch_state_false->additional_constraint_store.add_constraint(
-        constraint_t(new Not(unknown_guard)));
+    constraint_t unknown_guard =
+        (*unknown_asks.begin())->get_guard(); /// 分からなかったガードを1つ取り
+    branch_state_false->additional_constraint_store.add_constraint(constraint_t(
+        new Not(unknown_guard))); /// その否定を仮定した分岐を作成．
     phase->parent->todo_list.push_back(branch_state_false);
-    phase->additional_constraint_store.add_constraint(unknown_guard);
+    phase->additional_constraint_store.add_constraint(
+        unknown_guard); /// 今のフェーズにはガードが成り立つという仮定を追加し，
     HYDLA_LOGGER_DEBUG_VAR(branch_state_false->additional_constraint_store);
     backend_->call("addAssumption", true, 1,
                    phase->phase_type == INTERVAL_PHASE ? "et" : "en", "",
                    &unknown_guard);
     return calculate_closure(phase, trigger_asks, diff_sum, positive_asks,
-                             negative_asks, expanded_always);
+                             negative_asks,
+                             expanded_always); /// 再び閉包を計算．
   }
   return true;
 }
@@ -921,6 +930,7 @@ ValueRange PhaseSimulator::create_range_from_interval(itvd itv) {
   return ValueRange(lower, upper);
 }
 
+/// 1つのガードに対して最小離散変化時刻を導出
 find_min_time_result_t PhaseSimulator::find_min_time(
     const constraint_t &guard, MinTimeCalculator &min_time_calculator,
     guard_time_map_t &guard_time_map, variable_map_t &original_vm,
