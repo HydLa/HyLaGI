@@ -73,6 +73,10 @@ void ConsistencyChecker::send_init_equation(Variable &var, string fmt) {
   backend->call("addInitEquation", true, 2, fmt.c_str(), "", &var, &var);
 }
 
+/**
+ * constraint_for_default_continuity中の変数について，連続性の制約を追加する\n
+ * n回微分まである場合，n-1回微分までの変数の連続性を追加
+ */
 void ConsistencyChecker::add_continuity(
     VariableFinder &finder, const PhaseType &phase,
     const constraint_t &constraint_for_default_continuity) {
@@ -98,7 +102,7 @@ void ConsistencyChecker::add_continuity(
     if (dm_entry.first.back() == '$') {
       continue;
     }
-    for (int i = 0; i < dm_entry.second; i++) {
+    for (int i = 0; i < dm_entry.second; i++) { // n-1回微分までの連続性を追加
       variable_t var(dm_entry.first, i);
       send_init_equation(var, fmt);
     }
@@ -118,6 +122,7 @@ void ConsistencyChecker::reset_count() {
   backend_check_consistency_time = 0;
 }
 
+/// checkConsistencyPP/IPを呼ぶだけ
 CheckConsistencyResult
 ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase,
                                                    ConstraintStore tmp_cons) {
@@ -139,9 +144,10 @@ ConsistencyChecker::call_backend_check_consistency(const PhaseType &phase,
   return ret;
 }
 
+/// 変数の集合から各変数が何回微分まであるかの対応を作る
 map<string, int>
 ConsistencyChecker::get_differential_map(const variable_set_t &vs) {
-  map<string, int> dm;
+  map<string, int> dm; // 変数と何回微分まであるか
 
   for (auto variable : vs) {
     string name = variable.get_name();
@@ -204,6 +210,11 @@ CheckEntailmentResult ConsistencyChecker::check_entailment(
   return check_entailment_essential(cc_result, guard, phase, profile);
 }
 
+/**
+ * ガード条件が成り立つか成り立たないか，どちらもありえるかを判定する\n
+ * ガードがinconsistentにならないなら採用，consistentにならないなら不採用\n
+ * ガードがinconsistentになりうる，もしくはガードの否定がconsistentになりうる場合は分岐する\n
+ */
 CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
     CheckConsistencyResult &cc_result, const constraint_t &guard,
     const PhaseType &phase, profile_t &profile) {
@@ -211,28 +222,37 @@ CheckEntailmentResult ConsistencyChecker::check_entailment_essential(
 
   cc_result = call_backend_check_consistency(phase, ConstraintStore(guard));
 
-  if (cc_result.consistent_store.consistent()) {
+  if (cc_result.consistent_store
+          .consistent()) { // ガードがconsistentになりうる場合
     HYDLA_LOGGER_DEBUG("%% entailable");
-    if (cc_result.inconsistent_store.consistent()) {
+    if (cc_result.inconsistent_store
+            .consistent()) { // ガードがinconsistentになりうる場合
+      // 分岐
       HYDLA_LOGGER_DEBUG(
           "%% entailablity depends on conditions of parameters\n");
       ce_result = BRANCH_PAR;
     } else {
+      // ガードの否定を考える
       node_sptr not_node = node_sptr(new Not(guard));
       cc_result =
           call_backend_check_consistency(phase, ConstraintStore(not_node));
-      if (cc_result.consistent_store.consistent()) {
+      if (cc_result.consistent_store
+              .consistent()) { // ガードの否定がconsistentになりうる場合
         HYDLA_LOGGER_DEBUG("%% entailablity branches");
-        if (cc_result.inconsistent_store.consistent()) {
+        if (cc_result.inconsistent_store
+                .consistent()) { // ガードの否定がinconsistentになりうる場合
+          // 分岐
           HYDLA_LOGGER_DEBUG("%% branches by parameters");
           ce_result = BRANCH_PAR;
-        }
-        ce_result = BRANCH_VAR;
+        } else
+          ce_result = BRANCH_VAR;
       } else {
+        // 必ず充足できる
         ce_result = ENTAILED;
       }
     }
   } else {
+    // 必ず充足できない
     ce_result = CONFLICTING;
   }
   return ce_result;
