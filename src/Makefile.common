@@ -45,16 +45,14 @@ OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
 	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
 			$(subst .cpp,.o,$(filter %.cpp,$(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
-
 COMPILE_COMMANDS_SRC := $(OBJECT:.o=.o.json)
-COMPILE_COMMANDS_JSON := compile_commands.json
 
 .PHONY : all
-all: $(DEP_PROJECTS) $(TARGET) $(COMPILE_COMMANDS_JSON)
+all: $(DEP_PROJECTS) $(TARGET)
 
 .PHONY : clean
 clean:
-	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES) $(COMPILE_COMMANDS_SRC) $(COMPILE_COMMANDS_JSON)
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES) $(COMPILE_COMMANDS_SRC)
 
 $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
@@ -67,11 +65,6 @@ else
 	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS) $(INCLUDES)
 endif
 
-$(COMPILE_COMMANDS_JSON): $(OBJECT)
-	cat $(COMPILE_COMMANDS_SRC) |  $(SED) -e '1s/^/[\n/' -e '$$s/,$$/\n]/' > $(COMPILE_COMMANDS_JSON)
-#$(DEP_OBJECTS):
-#	$(MAKE) --directory=$(dir $@)
-
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
 endif
@@ -80,8 +73,7 @@ endif
 	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 .cc.o .cpp.o:
-	$(CXX) $(CXXFLAGS) -MJ $@.json -c -o $@ $<
-	# $(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \
