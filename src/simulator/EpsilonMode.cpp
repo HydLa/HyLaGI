@@ -37,7 +37,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend *backend_,
                      &diff_cnt, &value_ret);
       phase->variable_map[var] = value_ret;
     } else {
-      for (uint i = 0; i < range.get_lower_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
         ValueRange::bound_t bd = range.get_lower_bound(i);
         value_t val = bd.value;
         value_t ret;
@@ -45,7 +45,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend *backend_,
                        &par, &diff_cnt, &ret);
         range.set_lower_bound(ret, bd.include_bound);
       }
-      for (uint i = 0; i < range.get_upper_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
         ValueRange::bound_t bd = range.get_upper_bound(i);
         value_t val = bd.value;
         value_t ret;

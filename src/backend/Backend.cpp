@@ -411,7 +411,7 @@ int Backend::send_variable_map(const variable_map_t &vm, const VariableForm &vf,
       send_variable(var, vf);
       send_value(range.get_unique_value(), vf);
     } else {
-      for (uint i = 0; i < range.get_lower_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
         const value_range_t::bound_t &bnd = range.get_lower_bound(i);
         if (bnd.include_bound) {
           link_->put_converted_function("GreaterEqual", 2);
@@ -422,7 +422,7 @@ int Backend::send_variable_map(const variable_map_t &vm, const VariableForm &vf,
         send_value(bnd.value, vf);
       }
 
-      for (uint i = 0; i < range.get_upper_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
         const value_range_t::bound_t &bnd = range.get_upper_bound(i);
         if (bnd.include_bound) {
           link_->put_converted_function("LessEqual", 2);
@@ -469,7 +469,7 @@ int Backend::send_parameter_map(const parameter_map_t &parameter_map) {
                            param.get_phase_id());
       send_value(value, VF_PREV);
     } else {
-      for (uint i = 0; i < it->second.get_lower_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < it->second.get_lower_cnt(); i++) {
         const value_range_t::bound_t &bnd = it->second.get_lower_bound(i);
         const value_t &value = bnd.value;
         const parameter_t &param = it->first;
@@ -483,7 +483,7 @@ int Backend::send_parameter_map(const parameter_map_t &parameter_map) {
                              param.get_phase_id());
         send_value(value, VF_PREV);
       }
-      for (uint i = 0; i < it->second.get_upper_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < it->second.get_upper_cnt(); i++) {
         const value_range_t::bound_t &bnd = it->second.get_upper_bound(i);
         const value_t &value = bnd.value;
         const parameter_t &param = it->first;

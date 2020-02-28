@@ -49,10 +49,10 @@ string replace(string original, const string &substr, const string &dest) {
 
 string remove_comment(string &src) {
   std::string comment;
-  for (uint i = 0; i < src.length(); i++) {
+  for (unsigned int i = 0; i < src.length(); i++) {
     if (src[i] == '/' && (i + 1) < src.length() && src[i + 1] == '/') {
       i += 2;
-      uint start_point = i;
+      unsigned int start_point = i;
       while (i < src.length() && src[i] != '\n')
         i++;
       comment += src.substr(start_point, i - start_point);
@@ -61,7 +61,7 @@ string remove_comment(string &src) {
       i = start_point - 2;
     } else if (src[i] == '/' && (i + 1) < src.length() && src[i + 1] == '*') {
       i += 2;
-      uint start_point = i;
+      unsigned int start_point = i;
       while (i < src.length() &&
              !(src[i] == '*' && (i + 1) < src.length() && src[i + 1] == '/'))
         i++;

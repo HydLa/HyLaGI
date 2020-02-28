@@ -26,12 +26,12 @@ ValueRange ValueModifier::apply_function(const std::string &function,
       result_range.set_unique_value(
           apply_function(function, time, range.get_unique_value()));
     } else {
-      for (uint i = 0; i < range.get_lower_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
         ValueRange::bound_t bd = range.get_lower_bound(i);
         result_range.add_lower_bound(apply_function(function, time, bd.value),
                                      bd.include_bound);
       }
-      for (uint i = 0; i < range.get_upper_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
 
         ValueRange::bound_t bd = range.get_upper_bound(i);
         result_range.add_upper_bound(apply_function(function, time, bd.value),
@@ -69,12 +69,12 @@ ValueRange ValueModifier::apply_function(const std::string &function,
       result_range.set_unique_value(
           apply_function(function, range.get_unique_value(), fmt));
     } else {
-      for (uint i = 0; i < range.get_lower_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
         ValueRange::bound_t bd = range.get_lower_bound(i);
         result_range.add_lower_bound(apply_function(function, bd.value, fmt),
                                      bd.include_bound);
       }
-      for (uint i = 0; i < range.get_upper_cnt(); i++) {
+      for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
 
         ValueRange::bound_t bd = range.get_upper_bound(i);
         result_range.add_upper_bound(apply_function(function, bd.value, fmt),
