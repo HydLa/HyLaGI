@@ -1,39 +1,32 @@
-.SUFFIXES: 
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CC       := clang
-CXX      := clang++
-SED      := sed #@SED@
-MV       := mv #@MV@
-AR       := ar #@AR@
-RM	 := rm #@RM@
-LN       := ln #@LN@
-
-LIBS += -lpthread
-# LIBS += -lpthread -luuid
+CC	:= clang
+CXX	:= clang++
+SED	:= sed
+MV	:= mv
+AR	:= ar
+RM	:= rm
+LN	:= ln
 
 UNAME := $(shell uname)
 
-LIBS_STATIC += -lboost_regex
 MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
 
 ifeq ($(UNAME),Linux)
-LIBS_STATIC += -lboost_thread
+	LIBS += -luuid
 
-INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
-LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
-CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
-# CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
+	# CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
+	CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 ifeq ($(UNAME),Darwin)
-LIBS_STATIC += -lboost_thread-mt
+	INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+	INCLUDES += `python3-config --includes`
+	LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
-INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-INCLUDES += `python3-config --includes`
-LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-
-CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
+	CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 
 ARFLAGS  := cru
@@ -42,35 +35,29 @@ CXXFLAGS += $(INCLUDES) $(DEFINES) $(CXX_OPT)
 SRC_DIR  += .
 SRC      += $(foreach dir,$(SRC_DIR), $(wildcard $(dir)/*.c) $(wildcard $(dir)/*.cc) $(wildcard $(dir)/*.cpp)) 
 OBJECT   := $(subst .c,.o,$(filter %.c,$(SRC))) \
-	    $(subst .cc,.o,$(filter %.cc,$(SRC))) \
-			$(subst .cpp,.o,$(filter %.cpp,$(SRC)))
+						$(subst .cc,.o,$(filter %.cc,$(SRC))) \
+						$(subst .cpp,.o,$(filter %.cpp,$(SRC)))
 DEP_FILE := $(OBJECT:.o=.d)
-
 COMPILE_COMMANDS_SRC := $(OBJECT:.o=.o.json)
-COMPILE_COMMANDS_JSON := compile_commands.json
 
 .PHONY : all
-all: $(DEP_PROJECTS) $(TARGET) $(COMPILE_COMMANDS_JSON)
+all: $(DEP_PROJECTS) $(TARGET)
 
 .PHONY : clean
 clean:
-	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES) $(COMPILE_COMMANDS_SRC) $(COMPILE_COMMANDS_JSON)
+	-$(RM) -fr $(TARGET) $(OBJECT) $(DEP_FILE) $(CLEAN_FILES) $(COMPILE_COMMANDS_SRC)
 
 $(TARGET): $(DEP_OBJECTS) $(OBJECT)
 ifeq ($(MAKE_TYPE),library)
 	$(AR) $(ARFLAGS) $@ $(OBJECT)
 	ranlib $@
 else ifeq ($(UNAME),Darwin)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC)
+	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) $(LIBS) $(LIBS_STATIC) $(INCLUDES)
 else
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
-	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS) $(INCLUDES)
+	# $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECT) -Wl,-Bstatic $(LIBS_STATIC) -Wl,-Bdynamic $(LIBS) $(INCLUDES)
 endif
-
-$(COMPILE_COMMANDS_JSON): $(OBJECT)
-	cat $(COMPILE_COMMANDS_SRC) |  $(SED) -e '1s/^/[\n/' -e '$$s/,$$/\n]/' > $(COMPILE_COMMANDS_JSON)
-#$(DEP_OBJECTS):
-#	$(MAKE) --directory=$(dir $@)
 
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEP_FILE)
@@ -80,8 +67,7 @@ endif
 	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 .cc.o .cpp.o:
-	$(CXX) $(CXXFLAGS) -MJ $@.json -c -o $@ $<
-	# $(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .c.d .cc.d .cpp.d:
 	$(CXX) $(CXXFLAGS) $(TARGET_ARCH) -M $< | \

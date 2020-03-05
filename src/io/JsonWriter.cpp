@@ -104,7 +104,7 @@ value JsonWriter::for_range(const value_range_t &range) {
     range_object["unique_value"] = value(range.get_unique_value().get_string());
   } else {
     picojson::array lbs;
-    for (uint i = 0; i < range.get_lower_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
       const value_range_t::bound_t &bound = range.get_lower_bound(i);
       object lb;
       lb["value"] = value(bound.value.get_string());
@@ -114,7 +114,7 @@ value JsonWriter::for_range(const value_range_t &range) {
     range_object["lower_bounds"] = value(lbs);
 
     picojson::array ubs;
-    for (uint i = 0; i < range.get_upper_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
       const value_range_t::bound_t &bound = range.get_upper_bound(i);
       object ub;
       ub["value"] = value(bound.value.get_string());
@@ -177,7 +177,7 @@ value JsonWriter::for_range_diff(const value_range_t &range) {
     range_object["unique_value"] = value(ret.get_string());
   } else {
     picojson::array lbs;
-    for (uint i = 0; i < range.get_lower_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
       const value_range_t::bound_t &bound = range.get_lower_bound(i);
       object lb;
       tmp = bound.value;
@@ -189,7 +189,7 @@ value JsonWriter::for_range_diff(const value_range_t &range) {
     range_object["lower_bounds"] = value(lbs);
 
     picojson::array ubs;
-    for (uint i = 0; i < range.get_upper_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
       const value_range_t::bound_t &bound = range.get_upper_bound(i);
       object ub;
       tmp = bound.value;

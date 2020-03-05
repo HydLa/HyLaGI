@@ -65,7 +65,7 @@ public:
 
 private:
   int differential_cnt;
-  uint replace_cnt;
+  unsigned int replace_cnt;
   const variable_map_t &variable_map;
   const bool v_to_par;
 

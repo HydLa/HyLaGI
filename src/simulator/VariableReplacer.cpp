@@ -32,12 +32,12 @@ void VariableReplacer::replace_range(ValueRange &range) {
     value_t val = range.get_unique_value();
     replace_value(val);
   } else {
-    for (uint i = 0; i < range.get_lower_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_lower_cnt(); i++) {
       value_t val = range.get_lower_bound(i).value;
       replace_value(val);
       range.set_lower_bound(val, range.get_lower_bound(i).include_bound);
     }
-    for (uint i = 0; i < range.get_upper_cnt(); i++) {
+    for (ValueRange::uint i = 0; i < range.get_upper_cnt(); i++) {
       value_t val = range.get_upper_bound(i).value;
       replace_value(val);
       range.set_upper_bound(val, range.get_upper_bound(i).include_bound);
@@ -80,7 +80,7 @@ void VariableReplacer::visit(
 void VariableReplacer::visit(
     std::shared_ptr<hydla::symbolic_expression::Parameter> parameter) {
   if (v_to_par) {
-    new_child_ = symbolic_expression::node_sptr(parameter);
+    new_child_ = static_pointer_cast<symbolic_expression::Node>(parameter);
   }
 }
 
