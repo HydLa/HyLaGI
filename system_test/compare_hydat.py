@@ -12,24 +12,26 @@ def same_expr(e1, e2, assum='True'):
   if e1 == e2:
     return True
   
-  code = 'Simplify[Simplify[{}]-Simplify[{}],{}]'.format(e1, e2, assum)
+  code = 'Simplify[Simplify[{}]==Simplify[{}],{}]'.format(e1, e2, assum)
   command = ['wolframscript', '-code', code]
   res = subprocess.check_output(command)
-  return res == b'0\n'
+  return res == b'True\n'
 
 def paramaps2assum(paramaps):
-  assum = 'True'
+  assum = 'False'
   for paramap in paramaps:
     for k, v in paramap.items():
       tmp = 'True'
       if 'unique_value' in v:
         tmp += ' && {} == {}'.format(k, v['unique_value'])
-        continue
-      for lb in v['lower_bounds']:
-        tmp += ' && {} <{} {}'.format(lb['value'], '=' if lb['closed'] else '', k)
-      for ub in v['upper_bounds']:
-        tmp += ' && {} <{} {}'.format(k, '=' if ub['closed'] else '', ub['value'])
+      else:
+        for lb in v['lower_bounds']:
+          tmp += ' && {} <{} {}'.format(lb['value'], '=' if lb['closed'] else '', k)
+        for ub in v['upper_bounds']:
+          tmp += ' && {} <{} {}'.format(k, '=' if ub['closed'] else '', ub['value'])
       assum += ' || ' + tmp
+  if assum == 'False':
+    assum = 'True'
   return assum
 
 def time2assum(p):
@@ -59,7 +61,7 @@ def same_phase(p1, p2):
     if not same_expr(p1['time']['start_time'], p2['time']['start_time'], assum):
       print('different phase: different start_time')
       return False
-    print(' check start time:\n  {}\n  {}\n  with {}'.format(p1['time']['end_time'], p2['time']['end_time'], assum))
+    print(' check end time:\n  {}\n  {}\n  with {}'.format(p1['time']['end_time'], p2['time']['end_time'], assum))
     if not same_expr(p1['time']['end_time'], p2['time']['end_time'], assum):
       print('different phase: different end_time')
       return False
@@ -107,15 +109,20 @@ def iso(g1, idx1, g2, idx2):
   while q1:
     p1 = q1.pop()
     p2 = q2.pop()
+    print('children len: ', len(g1[p1]), len(g2[p2]))
     if len(g1[p1]) != len(g2[p2]):
       print('differen children size')
       return False
     for n1 in g1[p1]:
+      if idx1[n1]['simulation_state'] == 'NOT_SIMULATED':
+        continue
       f = True
       for n2 in g2[p2]:
+        if idx2[n2]['simulation_state'] == 'NOT_SIMULATED':
+          continue
         print('start find same child')
         if same_phase(idx1[n1], idx2[n2]):
-          print('find same child')
+          print('find same child: ', n1, n2)
           q1.append(n1)
           q2.append(n2)
           f = False
@@ -146,6 +153,6 @@ if __name__=='__main__':
   idx = idxs.pop()
   for i in range(len(gs)):
     if not iso(g, idx, gs[i], idxs[i]):
-      print('different result')
+      print('\033[31mdifferent result\033[0m')
       sys.exit(1)
-  print('same result')
+  print('\033[32msame result\033[0m')

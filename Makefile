@@ -6,6 +6,11 @@ all: $(src_directory)
 	@mkdir -p bin && cd src && $(MAKE)
 	@printf "%s \033[32m%s\033[m\n" "build" "succeeded"
 
+# execute system test
+.PHONY : test
+test: $(src_directory)
+	@cd system_test && ./system_test.sh
+
 # execute unit test
 .PHONY : check
 check: $(src_directory)
