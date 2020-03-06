@@ -9,6 +9,9 @@ g = None
 idx = None
 
 def same_expr(e1, e2, assum='True'):
+  if e1 == e2:
+    return True
+  
   code = 'Simplify[Simplify[{}]-Simplify[{}],{}]'.format(e1, e2, assum)
   command = ['wolframscript', '-code', code]
   res = subprocess.check_output(command)
@@ -105,6 +108,7 @@ def iso(g1, idx1, g2, idx2):
     p1 = q1.pop()
     p2 = q2.pop()
     if len(g1[p1]) != len(g2[p2]):
+      print('differen children size')
       return False
     for n1 in g1[p1]:
       f = True
@@ -142,6 +146,6 @@ if __name__=='__main__':
   idx = idxs.pop()
   for i in range(len(gs)):
     if not iso(g, idx, gs[i], idxs[i]):
-      print('not same result')
-      exit
+      print('different result')
+      sys.exit(1)
   print('same result')
