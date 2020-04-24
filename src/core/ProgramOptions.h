@@ -43,4 +43,7 @@ public:
   boost::program_options::options_description cmdline_desc_;
 };
 
+/// git branchがmasterか
+bool is_master();
+
 } // namespace hydla

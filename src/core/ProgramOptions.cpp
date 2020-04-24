@@ -1,3 +1,7 @@
+#include <fstream>
+#include <iostream>
+#include <random>
+
 #include "ProgramOptions.h"
 
 #define LINE_LENGTH 30
@@ -35,92 +39,72 @@ void ProgramOptions::init_descriptions() {
   generic_desc.add_options()("help,h", "display help message (this option)")(
       "version,v", "display version")
 
-      ("parse_only", "only try to parse given program")(
-          "dump_parse_tree", "only output parse tree")(
-          "dump_parse_tree_json", "only output parse tree in JSON format")(
-          "debug_constraint", "debugging program")
+      ("parse_only", "only try to parse given program");
 
-          ("dump_module_set_graph",
-           "only output candidate sets of module sets\n"
-           "  in graph representation")("dump_module_priority_graph",
-                                        "only output priorities of modules\n"
-                                        "  in graphviz format")(
-              "dump_relation_graph",
-              "only output relation of constraints and variables\n"
-              "  in graphviz format")
+  if (not is_master())
+    generic_desc.add_options()("dump_parse_tree", "only output parse tree")(
+        "dump_parse_tree_json", "only output parse tree in JSON format")(
+        "debug_constraint", "debugging program")
 
-              ("simplify,s", value<int>()->default_value(1),
-               "the level of simplification at each phase\n"
-               "  0 - no simplification\n"
-               "  1 - use \"Simplify\"\n"
-               "  2 or others - use \"FullSimplify\"")
+        ("dump_module_set_graph", "only output candidate sets of module sets\n"
+                                  "  in graph representation")(
+            "dump_module_priority_graph", "only output priorities of modules\n"
+                                          "  in graphviz format")(
+            "dump_relation_graph",
+            "only output relation of constraints and variables\n"
+            "  in graphviz format")
 
-                  ("dsolve", value<int>()->default_value(0),
-                   "the method of differential equation in exDSolve\n"
-                   "  0 - Try to get initial value problem directly\n"
-                   "  1 - Try to get initial value problem via constant\n")
+            ("simplify,s", value<int>()->default_value(1),
+             "the level of simplification at each phase\n"
+             "  0 - no simplification\n"
+             "  1 - use \"Simplify\"\n"
+             "  2 or others - use \"FullSimplify\"")
 
-                      ("tm", value<std::string>()->default_value("n"),
-                       "time measurement:\n"
-                       "  n - not measured\n"
-                       "  s - output in standard format\n"
-                       "  c - output in csv format\n")
+                ("dsolve", value<int>()->default_value(0),
+                 "the method of differential equation in exDSolve\n"
+                 "  0 - Try to get initial value problem directly\n"
+                 "  1 - Try to get initial value problem via constant\n")
 
-                          ("csv", value<std::string>()->default_value(""),
-                           "name of csv file for \"--tm c\":\n"
-                           " empty - standard out\n")
+                    ("tm", value<std::string>()->default_value("n"),
+                     "time measurement:\n"
+                     "  n - not measured\n"
+                     "  s - output in standard format\n"
+                     "  c - output in csv format\n")
 
-                              ("output_name,o",
-                               value<std::string>()->default_value(""),
-                               "file name for hydat output (if empty "
-                               "\"./hydat/<program_name>.hydat)\"")
+                        ("csv", value<std::string>()->default_value(""),
+                         "name of csv file for \"--tm c\":\n"
+                         " empty - standard out\n");
 
-                                  ("debug,d", "display debug trace\n")
+  generic_desc.add_options()(
+      "output_name,o", value<std::string>()->default_value(""),
+      "file name for hydat output (if empty \"./hydat/<program_name>.hydat)\"");
 
-                                      ("simplify_time",
-                                       value<std::string>()->default_value("1"),
-                                       "time limit of simplifying expressions "
-                                       "in the backend")
+  if (not is_master())
+    generic_desc.add_options()("debug,d", "display debug trace\n")
 
-                                          ("math_name",
-                                           value<std::string>()->default_value(
-                                               "math"),
-                                           "name of the command to execute "
-                                           "mathematica")
+        ("simplify_time", value<std::string>()->default_value("1"),
+         "time limit of simplifying expressions in the backend")
 
-                                              ("time,t",
-                                               value<std::string>()
-                                                   ->default_value("Infinity"),
-                                               "time limit of the model")
+            ("math_name", value<std::string>()->default_value("math"),
+             "name of the command to execute mathematica");
 
-                                                  ("phase,p",
-                                                   value<int>()->default_value(
-                                                       -1),
-                                                   "simulation limit for "
-                                                   "number of phases in model\n"
-                                                   "  positive value: number "
-                                                   "of phases\n"
-                                                   "  negative value: infinity")
+  generic_desc.add_options()("time,t",
+                             value<std::string>()->default_value("Infinity"),
+                             "time limit of the model")
 
-                                                      ("epsilon,e",
-                                                       value<int>()
-                                                           ->default_value(-1),
-                                                       "perform 2 additional "
-                                                       "processes below\n"
-                                                       "1. prune branches "
-                                                       "where the value of "
-                                                       "epsilon is not in "
-                                                       "neighborhood of 0\n"
-                                                       "2. approximate "
-                                                       "expressions by cutting "
-                                                       "off higher order terms "
-                                                       "about epsilon\n"
-                                                       "  non-negative value: "
-                                                       "order of "
-                                                       "approximation\n"
-                                                       "  negative value: "
-                                                       "invalidate this "
-                                                       "option\n");
+      ("phase,p", value<int>()->default_value(-1),
+       "simulation limit for number of phases in model\n"
+       "  positive value: number of phases\n"
+       "  negative value: infinity")
+
+          ("epsilon,e", value<int>()->default_value(-1),
+           "perform 2 additional processes below\n"
+           "1. prune branches where the value of epsilon is not in "
+           "neighborhood of 0\n"
+           "2. approximate expressions by cutting off higher order terms about "
+           "epsilon\n"
+           "  non-negative value: order of approximation\n"
+           "  negative value: invalidate this option\n");
 
   options_description toggle_desc(
       "Flag options\n"
@@ -129,83 +113,90 @@ void ProgramOptions::init_descriptions() {
   toggle_desc.add_options()("nd", value<char>()->default_value('n'),
                             "nondeterministic mode")
 
-      ("ha", value<char>()->default_value('n'), "convert to HA")
+      ("ha", value<char>()->default_value('n'), "convert to HA");
 
-          ("hs", value<char>()->default_value('n'), "simulate using HA")
+  if (not is_master())
+    toggle_desc.add_options()("hs", value<char>()->default_value('n'),
+                              "simulate using HA")
 
-              ("ltl,l", value<char>()->default_value('n'),
-               "ltl model checking mode")
+        ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
-                  ("affine", value<char>()->default_value('n'),
-                   "use affine arithmetic to approximate expressions")
+            ("affine", value<char>()->default_value('n'),
+             "use affine arithmetic to approximate expressions");
 
-                      ("fail_on_stop", value<char>()->default_value('n'),
-                       "stop all simulation cases when assertion fails")
+  toggle_desc.add_options()("fail_on_stop", value<char>()->default_value('n'),
+                            "stop all simulation cases when assertion fails");
 
-                          ("static_generation_of_module_sets",
-                           value<char>()->default_value('n'),
-                           "simulate with static generation of module sets")
+  if (not is_master())
+    toggle_desc.add_options()("static_generation_of_module_sets",
+                              value<char>()->default_value('n'),
+                              "simulate with static generation of module sets")
 
-                              ("ignore_warnings",
-                               value<char>()->default_value('n'),
-                               "ignore warnings created by backend solvers. \n"
-                               "current canidates: Solve::incnst, Solve::ifun, "
-                               "DSolve::bvnul, Reduce::ztest1, "
-                               "Minimize::ztest1, Reduce::ztest, "
-                               "Minimize::ztest\n"
-                               "Note: Warnings from HyLaGI itself are always "
-                               "activated")
+        ("ignore_warnings", value<char>()->default_value('n'),
+         "ignore warnings created by backend solvers. \n"
+         "current canidates: Solve::incnst, Solve::ifun, DSolve::bvnul, "
+         "Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
+         "Note: Warnings from HyLaGI itself are always activated")
 
-                                  ("interval,i",
-                                   value<char>()->default_value('n'),
-                                   "use interval method")(
-                                      "numerize_without_validation",
-                                      value<char>()->default_value('n'),
-                                      "numerize values of variables at the end "
-                                      "of each PointPhase")(
-                                      "eager_approximation",
-                                      value<char>()->default_value('n'),
-                                      "approximate values in advance of each "
-                                      "Point Phase")(
-                                      "approximation_step",
-                                      value<int>()->default_value(1),
-                                      "the interval of step to approximate "
-                                      "value of variable")(
-                                      "extra_dummy_num",
-                                      value<int>()->default_value(0),
-                                      "the number of extra dummy parameters in "
-                                      "affine arithmetic.")
+            ("interval,i", value<char>()->default_value('n'),
+             "use interval method")(
+                "numerize_without_validation",
+                value<char>()->default_value('n'),
+                "numerize values of variables at the end of each PointPhase")(
+                "eager_approximation", value<char>()->default_value('n'),
+                "approximate values in advance of each Point Phase")(
+                "approximation_step", value<int>()->default_value(1),
+                "the interval of step to approximate value of variable")(
+                "extra_dummy_num", value<int>()->default_value(0),
+                "the number of extra dummy parameters in affine arithmetic.");
 
-                                      ("dump_in_progress",
-                                       value<char>()->default_value('n'),
-                                       "output each phase in progress")(
-                                          "use_shorthand",
+  toggle_desc.add_options()("dump_in_progress",
+                            value<char>()->default_value('n'),
+                            "output each phase in progress");
+
+  if (not is_master())
+    toggle_desc.add_options()(
+        "use_shorthand", value<char>()->default_value('n'),
+        "use shorthands for arithmetic expressions (only for parameters)\n")(
+        "vars_to_approximate", value<std::string>()->default_value(""),
+        "variables to approximate (delimited by \",\")")(
+        "guards_to_interval_newton", value<std::string>()->default_value(""),
+        "guards to be solved by interval newton method(delimited by \",\")")(
+        "step_by_step", value<char>()->default_value('n'),
+        "use find_min_time_step_by_step")("solve_over_reals",
                                           value<char>()->default_value('n'),
-                                          "use shorthands for arithmetic "
-                                          "expressions (only for "
-                                          "parameters)\n")(
-                                          "vars_to_approximate",
-                                          value<std::string>()->default_value(
-                                              ""),
-                                          "variables to approximate (delimited "
-                                          "by \",\")")(
-                                          "guards_to_interval_newton",
-                                          value<std::string>()->default_value(
-                                              ""),
-                                          "guards to be solved by interval "
-                                          "newton method(delimited by \",\")")(
-                                          "step_by_step",
-                                          value<char>()->default_value('n'),
-                                          "use find_min_time_step_by_step")(
-                                          "solve_over_reals",
-                                          value<char>()->default_value('n'),
-                                          "solve constrants over the reals")(
-                                          "html",
-                                          value<char>()->default_value('n'),
-                                          "output log with HTML format");
+                                          "solve constrants over the reals");
+  toggle_desc.add_options()("html", value<char>()->default_value('n'),
+                            "output log with HTML format");
 
   options_description hidden_desc("Hidden options");
   hidden_desc.add_options()("input-file", value<std::string>(), "input file");
+  if (is_master())
+    hidden_desc.add_options()("dump_parse_tree", "")(
+        "dump_parse_tree_json", "")("debug_constraint", "")(
+        "dump_module_set_graph", "")("dump_module_priority_graph",
+                                     "")("dump_relation_graph", "")(
+        "simplify,s", value<int>()->default_value(1),
+        "")("dsolve", value<int>()->default_value(0),
+            "")("tm", value<std::string>()->default_value("n"), "")(
+        "csv", value<std::string>()->default_value(""), "")("debug,d", "")(
+        "simplify_time", value<std::string>()->default_value("1"),
+        "")("math_name", value<std::string>()->default_value("math"),
+            "")("hs", value<char>()->default_value('n'),
+                "")("ltl,l", value<char>()->default_value('n'),
+                    "")("affine", value<char>()->default_value('n'), "")(
+        "static_generation_of_module_sets", value<char>()->default_value('n'),
+        "")("ignore_warnings", value<char>()->default_value('n'),
+            "")("interval,i", value<char>()->default_value('n'), "")(
+        "numerize_without_validation", value<char>()->default_value('n'),
+        "")("eager_approximation", value<char>()->default_value('n'),
+            "")("approximation_step", value<int>()->default_value(1),
+                "")("extra_dummy_num", value<int>()->default_value(0),
+                    "")("use_shorthand", value<char>()->default_value('n'), "")(
+        "vars_to_approximate", value<std::string>()->default_value(""), "")(
+        "guards_to_interval_newton", value<std::string>()->default_value(""),
+        "")("step_by_step", value<char>()->default_value('n'),
+            "")("solve_over_reals", value<char>()->default_value('n'), "");
 
   visible_desc_.add(generic_desc).add(toggle_desc);
   cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
@@ -242,5 +233,7 @@ void ProgramOptions::parse(std::string src_str) {
 
   parse(argc, argv);
 }
+
+bool is_master() { return BRANCH_NAME == "master"; }
 
 } // namespace hydla

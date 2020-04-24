@@ -30,7 +30,7 @@ endif
 
 CXX_OPT  += 
 
-DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\"
+DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\" -DBRANCH_NAME=\"$(shell git rev-parse --abbrev-ref HEAD)\"
 
 DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 
