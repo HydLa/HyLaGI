@@ -21,10 +21,10 @@
 !*.py
 !*.rb
 !*.sh
+!*.hydat.master
 # ただし次のcppファイルは例外
 math_source.cpp
 
-/src/math_source_converter/msc
+msc
 /backend_sample/backend_sample
 /backend_sample/backend_sample.h
-/backend_sample/msc
