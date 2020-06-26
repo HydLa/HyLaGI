@@ -41,44 +41,44 @@ def time2assum(p):
     return '{} < t < {}'.format(p['time']['start_time'], p['time']['end_time'])
 
 def same_phase(p1, p2):
-  print('start check new phase')
+  #print('start check new phase')
 
   p1assum = paramaps2assum(p1['parameter_maps'])
   p2assum = paramaps2assum(p2['parameter_maps'])
-  print(' check assum:\n  {}\n  {}'.format(p1assum, p2assum))
+  #print(' check assum:\n  {}\n  {}'.format(p1assum, p2assum))
   if not same_expr(p1assum, p2assum):
-    print('different phase: different assum')
+    #print('different phase: different assum')
     return False
   assum = p1assum
 
   if p1['type'] == 'PP':
-    print(' check time:\n  {}\n  {}\n  with {}'.format(p1['time']['time_point'], p2['time']['time_point'], assum))
+    #print(' check time:\n  {}\n  {}\n  with {}'.format(p1['time']['time_point'], p2['time']['time_point'], assum))
     if not same_expr(p1['time']['time_point'], p2['time']['time_point'], assum):
-      print('different phase: different time_point')
+      #print('different phase: different time_point')
       return False
   else:
-    print(' check start time:\n  {}\n  {}\n  with {}'.format(p1['time']['start_time'], p2['time']['start_time'], assum))
+    #print(' check start time:\n  {}\n  {}\n  with {}'.format(p1['time']['start_time'], p2['time']['start_time'], assum))
     if not same_expr(p1['time']['start_time'], p2['time']['start_time'], assum):
-      print('different phase: different start_time')
+      #print('different phase: different start_time')
       return False
-    print(' check end time:\n  {}\n  {}\n  with {}'.format(p1['time']['end_time'], p2['time']['end_time'], assum))
+    #print(' check end time:\n  {}\n  {}\n  with {}'.format(p1['time']['end_time'], p2['time']['end_time'], assum))
     if not same_expr(p1['time']['end_time'], p2['time']['end_time'], assum):
-      print('different phase: different end_time')
+      #print('different phase: different end_time')
       return False
   tassum = time2assum(p1)
   assum = '({}) && {}'.format(assum, tassum)
 
   if p1['variable_map'].keys() != p2['variable_map'].keys():
-    print('different phase: different variable set')
+    #print('different phase: different variable set')
     return False
   for k, v1 in p1['variable_map'].items():
     v2 = p2['variable_map'][k]
     # TODO: 'unique_value'とは？
-    print(' check variable {}:\n  {}\n  {}\n  with {}'.format(k, v1['unique_value'], v2['unique_value'], assum))
+    #print(' check variable {}:\n  {}\n  {}\n  with {}'.format(k, v1['unique_value'], v2['unique_value'], assum))
     if not same_expr(v1['unique_value'], v2['unique_value'], assum):
-      print('different phase: different value:', k)
+      #print('different phase: different value:', k)
       return False
-  print('same phase')
+  #print('same phase')
   return True
 
 def init_graph(firsts):
@@ -109,9 +109,9 @@ def iso(g1, idx1, g2, idx2):
   while q1:
     p1 = q1.pop()
     p2 = q2.pop()
-    print('children len: ', len(g1[p1]), len(g2[p2]))
+    #print('children len: ', len(g1[p1]), len(g2[p2]))
     if len(g1[p1]) != len(g2[p2]):
-      print('differen children size')
+      #print('differen children size')
       return False
     for n1 in g1[p1]:
       if idx1[n1]['simulation_state'] == 'NOT_SIMULATED':
@@ -120,15 +120,15 @@ def iso(g1, idx1, g2, idx2):
       for n2 in g2[p2]:
         if idx2[n2]['simulation_state'] == 'NOT_SIMULATED':
           continue
-        print('start find same child')
+        #print('start find same child')
         if same_phase(idx1[n1], idx2[n2]):
-          print('find same child: ', n1, n2)
+          #print('find same child: ', n1, n2)
           q1.append(n1)
           q2.append(n2)
           f = False
           break
       if f:
-        print('can\'t find same child')
+        #print('can\'t find same child')
         return False
   return True
 
@@ -137,9 +137,9 @@ if __name__=='__main__':
 
   gs = []
   idxs = []
-  print('compare target:')
+  msg = 'compare target:\n'
   for i in range(1, len(args)):
-    print('', args[i])
+    msg += ' ' + args[i] + '\n'
     with open(args[i]) as f:
       s = f.read()
       d = json.loads(s)
@@ -153,6 +153,6 @@ if __name__=='__main__':
   idx = idxs.pop()
   for i in range(len(gs)):
     if not iso(g, idx, gs[i], idxs[i]):
-      print('\033[31mdifferent result\033[0m')
+      print(msg + '\033[31mdifferent result\033[0m')
       sys.exit(1)
-  print('\033[32msame result\033[0m')
+  print(msg + '\033[32msame result\033[0m')

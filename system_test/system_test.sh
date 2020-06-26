@@ -1,7 +1,7 @@
 echo "testing system_test..."
 fnum=`ls ../examples/*.hydla | grep -c ''`
 
-ls ../examples/*.hydla | xargs -L 1 -P $fnum hylagi
+ls ../examples/*.hydla | xargs -L 1 -P $fnum -I {} bash -c 'hylagi {} 1> /dev/null && printf "hylagi %s finished\n" {}'
 if [ $? -ne 0 ] ; then
   printf "%s \033[31m%s\033[m\n" "hylagi" "failed"
   exit 1
