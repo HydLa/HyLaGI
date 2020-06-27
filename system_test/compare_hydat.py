@@ -1,7 +1,6 @@
 import subprocess
 import sys
 import json
-from pprint import pprint
 from collections import defaultdict
 from collections import deque
 
@@ -78,7 +77,9 @@ def same_phase(p1, p2):
     if not same_expr(v1['unique_value'], v2['unique_value'], assum):
       #print('different phase: different value:', k)
       return False
-  #print('same phase')
+  if p1['simulation_state'] != p2['simulation_state']:
+    print('different simulation_state')
+    return False
   return True
 
 def init_graph(firsts):

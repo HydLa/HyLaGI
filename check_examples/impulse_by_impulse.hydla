@@ -6,3 +6,4 @@ CFLAT  <=> [](c=0).
 CPULSE <=> [](b=1 => c=1).
 
 INIT, TIMER, (BFLAT << BPULSE), (CFLAT << CPULSE).
+// #hylagi --fnd -p4
