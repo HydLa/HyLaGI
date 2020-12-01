@@ -1,7 +1,7 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CC	:= clang
-CXX	:= clang++
+CC	?= clang
+CXX	?= clang++
 SED	:= sed
 MV	:= mv
 AR	:= ar
@@ -10,7 +10,8 @@ LN	:= ln
 
 UNAME := $(shell uname)
 
-INCLUDES += `python3-config --embed 1> /dev/null && python3-config --includes --libs --embed || python3-config --includes --ldflags`
+PYTHON_CONFIG ?= python3-config
+INCLUDES += `$(PYTHON_CONFIG) --embed 1> /dev/null 2> /dev/null && $(PYTHON_CONFIG) --includes --ldflags --embed || $(PYTHON_CONFIG) --includes --ldflags`
 
 ifeq ($(UNAME),Linux)
 	LIBS += -luuid
@@ -23,8 +24,9 @@ ifeq ($(UNAME),Linux)
 	CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 ifeq ($(UNAME),Darwin)
-	INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-	LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+	MATHPATH ?= /Applications/Mathematica\ 2.app/Contents
+	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+	LDFLAGS  += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
 	CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
