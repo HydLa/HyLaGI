@@ -6,7 +6,6 @@ INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica
 INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
-INCLUDES += `python3-config --includes --ldflags`
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
 LDFLAGS	 += -L/usr/local/lib

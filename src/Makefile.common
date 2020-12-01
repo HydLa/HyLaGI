@@ -10,11 +10,12 @@ LN	:= ln
 
 UNAME := $(shell uname)
 
-MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
+INCLUDES += `python3-config --embed 1> /dev/null && python3-config --includes --libs --embed || python3-config --includes --ldflags`
 
 ifeq ($(UNAME),Linux)
 	LIBS += -luuid
 
+	MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
 	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
 
@@ -23,7 +24,6 @@ ifeq ($(UNAME),Linux)
 endif
 ifeq ($(UNAME),Darwin)
 	INCLUDES += -I/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-	INCLUDES += `python3-config --includes`
 	LDFLAGS  += -L/Applications/Mathematica\ 2.app/Contents/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
 
 	CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
