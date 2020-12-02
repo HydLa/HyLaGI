@@ -1,0 +1,32 @@
+name: build-on-ubuntu
+on:
+  push:
+    branches:
+      - '*'
+jobs:
+  ubuntu18-clang:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: print version
+      run: |
+        g++ --version
+        clang++ --version
+        python3 --version
+    - name: install boost
+      run: |
+        sudo apt install libboost-all-dev
+    - name: install mathematica
+      run: |
+        wget https://files.wolframcdn.com/WolframEngine/12.1.1.0/WolframEngine_12.1.1_LINUX.sh
+        sudo bash WolframEngine_12.1.1_LINUX.sh
+    - name: setting libraries
+      run: |
+        cd /lib/x86_64-linux-gnu
+        sudo ln -s libuuid.so.1.3.0 libuuid.so
+        sudo chmod 777 /etc/ld.so.conf
+        echo "/usr/local/Wolfram/WolframEngine/12.1/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf
+        sudo ldconfig
+    - name: build
+      run: |
+        make -j
