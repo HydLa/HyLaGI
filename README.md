@@ -1,15 +1,20 @@
 # HyLaGI - HydLa Guaranteed Implementation
 
+![build-on-ubuntu](https://github.com/HydLa/HyLaGI/workflows/build-on-ubuntu/badge.svg)
+
 HyLaGI is a C++ implementation of hybrid constraint language HydLa.
 
-Email address :
+Email address:
 hydla@ueda.info.waseda.ac.jp
 
-More information about HydLa :
+More information about HydLa:
 http://www.ueda.info.waseda.ac.jp/hydla/
 
-## Install
-### Ubuntu
+## Build
+
+Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
+
+### Ubuntu 18.04
 
 1. Install required packages
    ```
