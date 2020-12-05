@@ -2,8 +2,8 @@
 
 #include <string>
 
-namespace hydla{
-namespace utility{
+namespace hydla {
+namespace utility {
 
 /**
  * get string of numerator and denominator
@@ -14,24 +14,19 @@ namespace utility{
  * @param numerator numerator string (output variable)
  * @param denominator denominator string (output variable)
  */
-bool num_denom_str(double val,
-                   std::string &numerator,
+bool num_denom_str(double val, std::string &numerator,
                    std::string &denominator);
 /**
  * string version
  */
-bool num_denom_str(std::string val_str,
-                   std::string &numerator,
+bool num_denom_str(std::string val_str, std::string &numerator,
                    std::string &denominator);
-
 
 /**
  * return string whose substrs are replaced to dest
  */
-std::string replace(std::string original,
-                    const std::string &substr,
+std::string replace(std::string original, const std::string &substr,
                     const std::string &dest);
-
 
 /**
  * remove comment from given string
@@ -43,5 +38,5 @@ std::string cr_to_lf(std::string str);
 
 std::string extract_file_name(const std::string &str);
 
-}  //  namespace utility
-}  //  namespace hydla
+} //  namespace utility
+} //  namespace hydla

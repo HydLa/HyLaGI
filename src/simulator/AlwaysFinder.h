@@ -1,37 +1,40 @@
 #pragma once
 
 #include "Node.h"
-#include "TreeVisitorForAtomicConstraint.h"
 #include "PhaseResult.h"
+#include "TreeVisitorForAtomicConstraint.h"
 
 namespace hydla {
 namespace simulator {
 
-class AlwaysFinder : public symbolic_expression::TreeVisitorForAtomicConstraint
-{
+class AlwaysFinder
+    : public symbolic_expression::TreeVisitorForAtomicConstraint {
 public:
   AlwaysFinder();
 
   virtual ~AlwaysFinder();
-  
-  /** 
+
+  /**
    * find all always included by this node
    */
-  void find_always(symbolic_expression::node_sptr node, always_set_t* always_set, ConstraintStore* non_al, asks_t* pos, asks_t *nonal_asks);
+  void find_always(symbolic_expression::node_sptr node,
+                   always_set_t *always_set, ConstraintStore *non_al,
+                   asks_t *pos, asks_t *nonal_asks);
 
   using TreeVisitorForAtomicConstraint::visit; // suppress warnings
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
   // Always
   virtual void visit(std::shared_ptr<symbolic_expression::Always> node);
 
-  virtual void visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> node);
+  virtual void
+  visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> node);
 
 private:
   always_set_t *always_set;
   ConstraintStore *non_always;
-  asks_t           *positive_asks;
-  asks_t           *nonalways_asks;
+  asks_t *positive_asks;
+  asks_t *nonalways_asks;
 };
 
-} //namespace simulator
-} //namespace hydla 
+} // namespace simulator
+} // namespace hydla

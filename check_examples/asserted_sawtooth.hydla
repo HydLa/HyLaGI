@@ -1,0 +1,9 @@
+INIT <=> line >= 0 & tm = 0.
+LINE_SPEED <=> [](line' = 1).
+TM_SPEED <=> [](tm' = 1).
+UP <=> [](tm- = 100 => tm = 0 & line = line- - 110).
+
+ASSERT(line >= 0).
+
+INIT, (TM_SPEED, LINE_SPEED) << UP.
+// #hylagi --fnd -p4

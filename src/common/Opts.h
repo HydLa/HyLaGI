@@ -1,18 +1,21 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
-namespace hydla{
+namespace hydla {
 
-namespace symbolic_expression
-{
+namespace symbolic_expression {
 class Node;
 typedef std::shared_ptr<Node> node_sptr;
-}
+} // namespace symbolic_expression
 
 struct Opts {
-  enum EOutputMode { None, Omit, Output, };
+  enum EOutputMode {
+    None,
+    Omit,
+    Output,
+  };
   std::string wstp;
   std::string simplify_time;
   bool debug_mode;
@@ -47,4 +50,4 @@ struct Opts {
   std::set<std::string> guards_to_interval_newton;
 };
 
-}
+} // namespace hydla

@@ -2,14 +2,14 @@
 
 #include "TreeVisitor.h"
 
-namespace hydla { 
+namespace hydla {
 namespace symbolic_expression {
-  
+
 /**
  * 各ノードに対して全子ノードを走査するクラス．
  * 継承先で各visitをオーバーライドして新たなVisitorを作る．
  */
-class DefaultTreeVisitor: public TreeVisitor {
+class DefaultTreeVisitor : public TreeVisitor {
 public:
   DefaultTreeVisitor();
 
@@ -17,13 +17,13 @@ public:
 
   // 制約定義
   virtual void visit(std::shared_ptr<ConstraintDefinition> node);
-  
+
   // プログラム定義
   virtual void visit(std::shared_ptr<ProgramDefinition> node);
 
   // 制約呼び出し
   virtual void visit(std::shared_ptr<ConstraintCaller> node);
-  
+
   // プログラム呼び出し
   virtual void visit(std::shared_ptr<ProgramCaller> node);
 
@@ -32,6 +32,9 @@ public:
 
   // Ask制約
   virtual void visit(std::shared_ptr<Ask> node);
+
+  // Exists
+  virtual void visit(std::shared_ptr<Exists> node);
 
   // Tell制約
   virtual void visit(std::shared_ptr<Tell> node);
@@ -47,46 +50,46 @@ public:
   // 論理演算子
   virtual void visit(std::shared_ptr<LogicalAnd> node);
   virtual void visit(std::shared_ptr<LogicalOr> node);
-  
+
   // 算術二項演算子
   virtual void visit(std::shared_ptr<Plus> node);
   virtual void visit(std::shared_ptr<Subtract> node);
   virtual void visit(std::shared_ptr<Times> node);
   virtual void visit(std::shared_ptr<Divide> node);
   virtual void visit(std::shared_ptr<Power> node);
-  
+
   // 算術単項演算子
   virtual void visit(std::shared_ptr<Negative> node);
   virtual void visit(std::shared_ptr<Positive> node);
-  
+
   // 制約階層定義演算子
   virtual void visit(std::shared_ptr<Weaker> node);
   virtual void visit(std::shared_ptr<Parallel> node);
 
   // 時相演算子
   virtual void visit(std::shared_ptr<Always> node);
-  
+
   // 微分
   virtual void visit(std::shared_ptr<Differential> node);
 
   // 左極限
   virtual void visit(std::shared_ptr<Previous> node);
-  
-  //Print
+
+  // Print
   virtual void visit(std::shared_ptr<Print> node);
   virtual void visit(std::shared_ptr<PrintPP> node);
   virtual void visit(std::shared_ptr<PrintIP> node);
-    
+
   virtual void visit(std::shared_ptr<Scan> node);
   virtual void visit(std::shared_ptr<Exit> node);
   virtual void visit(std::shared_ptr<Abort> node);
 
-  //SystemVariable
+  // SystemVariable
   virtual void visit(std::shared_ptr<SVtimer> node);
 
   // 否定
   virtual void visit(std::shared_ptr<Not> node);
-  
+
   // 円周率
   virtual void visit(std::shared_ptr<Pi> node);
   // 自然対数の底
@@ -95,11 +98,10 @@ public:
   virtual void visit(std::shared_ptr<True> node);
   // False
   virtual void visit(std::shared_ptr<False> node);
-  
+
   //関数
   virtual void visit(std::shared_ptr<Function> node);
   virtual void visit(std::shared_ptr<UnsupportedFunction> node);
-
 
   // 変数
   virtual void visit(std::shared_ptr<Variable> node);
@@ -107,10 +109,10 @@ public:
   // 数字
   virtual void visit(std::shared_ptr<Number> node);
   virtual void visit(std::shared_ptr<Float> node);
-  
+
   // 記号定数
   virtual void visit(std::shared_ptr<Parameter> node);
-  
+
   // t（時間）
   virtual void visit(std::shared_ptr<SymbolicT> node);
 
@@ -137,34 +139,34 @@ public:
   // DifferentVariable
   virtual void visit(std::shared_ptr<DifferentVariable> node);
 
-  // ProgramListDefinition 
+  // ProgramListDefinition
   virtual void visit(std::shared_ptr<ProgramListDefinition> node);
 
-  // ExpressionListDefinition 
+  // ExpressionListDefinition
   virtual void visit(std::shared_ptr<ExpressionListDefinition> node);
 
-  // ExpressionListCaller 
+  // ExpressionListCaller
   virtual void visit(std::shared_ptr<ExpressionListCaller> node);
 
-  // ExpressionListElement 
+  // ExpressionListElement
   virtual void visit(std::shared_ptr<ExpressionListElement> node);
 
-  // ProgramListCaller 
+  // ProgramListCaller
   virtual void visit(std::shared_ptr<ProgramListCaller> node);
 
-  // ProgramListElement 
+  // ProgramListElement
   virtual void visit(std::shared_ptr<ProgramListElement> node);
 
-  // Union 
+  // Union
   virtual void visit(std::shared_ptr<Union> node);
 
-  // Intersection 
+  // Intersection
   virtual void visit(std::shared_ptr<Intersection> node);
 
-  // Range 
+  // Range
   virtual void visit(std::shared_ptr<Range> node);
 
-  // SizeOfLIst 
+  // SizeOfLIst
   virtual void visit(std::shared_ptr<SizeOfList> node);
 
   // SumOfList
@@ -172,9 +174,7 @@ public:
 
   // MulOfList
   virtual void visit(std::shared_ptr<MulOfList> node);
-
 };
 
-} //namespace symbolic_expression
-} //namespace hydla
-
+} // namespace symbolic_expression
+} // namespace hydla

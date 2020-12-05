@@ -1,18 +1,16 @@
 #pragma once
 
 #include "Node.h"
-#include "TreeVisitor.h"
 #include "ParseTree.h"
+#include "TreeVisitor.h"
 
-namespace hydla { 
+namespace hydla {
 namespace parser {
-  
+
 /**
  * ParseTreeをdot言語形式でダンプする
  */
-class ParseTreeGraphvizDumper : 
-  public symbolic_expression::TreeVisitor
-{
+class ParseTreeGraphvizDumper : public symbolic_expression::TreeVisitor {
 public:
   typedef symbolic_expression::node_sptr node_sptr;
 
@@ -23,14 +21,18 @@ public:
   /**
    * dot言語形式での出力をおこなう
    */
-  std::ostream& dump(std::ostream& s, const symbolic_expression::node_sptr& node);
-  
+  std::ostream &dump(std::ostream &s,
+                     const symbolic_expression::node_sptr &node);
+
   // 定義
-  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
-  virtual void visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ConstraintDefinition> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ProgramDefinition> node);
 
   // 呼び出し
-  virtual void visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ConstraintCaller> node);
   virtual void visit(std::shared_ptr<symbolic_expression::ProgramCaller> node);
 
   // 制約式
@@ -38,6 +40,9 @@ public:
 
   // Ask制約
   virtual void visit(std::shared_ptr<symbolic_expression::Ask> node);
+
+  // Exists
+  virtual void visit(std::shared_ptr<symbolic_expression::Exists> node);
 
   // Tell制約
   virtual void visit(std::shared_ptr<symbolic_expression::Tell> node);
@@ -54,32 +59,32 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Not> node);
-  
+
   // 算術二項演算子
   virtual void visit(std::shared_ptr<symbolic_expression::Plus> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Subtract> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Times> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Divide> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Power> node);
-  
+
   // 算術単項演算子
   virtual void visit(std::shared_ptr<symbolic_expression::Negative> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Positive> node);
-  
+
   // 制約階層定義演算子
   virtual void visit(std::shared_ptr<symbolic_expression::Weaker> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Parallel> node);
-  
+
   // 時相演算子
   virtual void visit(std::shared_ptr<symbolic_expression::Always> node);
-  
+
   // 微分
   virtual void visit(std::shared_ptr<symbolic_expression::Differential> node);
 
   // 左極限
   virtual void visit(std::shared_ptr<symbolic_expression::Previous> node);
- 
-  //Print 
+
+  // Print
   virtual void visit(std::shared_ptr<symbolic_expression::Print> node);
   virtual void visit(std::shared_ptr<symbolic_expression::PrintPP> node);
   virtual void visit(std::shared_ptr<symbolic_expression::PrintIP> node);
@@ -87,16 +92,17 @@ public:
   virtual void visit(std::shared_ptr<symbolic_expression::Exit> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Abort> node);
 
-  //SystemVariable
+  // SystemVariable
   virtual void visit(std::shared_ptr<symbolic_expression::SVtimer> node);
 
   virtual void visit(std::shared_ptr<symbolic_expression::True> node);
-  
+
   virtual void visit(std::shared_ptr<symbolic_expression::False> node);
   //関数
   virtual void visit(std::shared_ptr<symbolic_expression::Function> node);
-  virtual void visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);
-  
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::UnsupportedFunction> node);
+
   // 円周率
   virtual void visit(std::shared_ptr<symbolic_expression::Pi> node);
   // 自然対数の底
@@ -119,34 +125,43 @@ public:
   // ExpressionList
   virtual void visit(std::shared_ptr<symbolic_expression::ExpressionList> node);
   // ConditionalExpressionList
-  virtual void visit(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ConditionalExpressionList> node);
   // ProgramList
   virtual void visit(std::shared_ptr<symbolic_expression::ProgramList> node);
   // ConditionalProgramList
-  virtual void visit(std::shared_ptr<symbolic_expression::ConditionalProgramList> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ConditionalProgramList> node);
   // EachElement
   virtual void visit(std::shared_ptr<symbolic_expression::EachElement> node);
   // DifferentVariable
-  virtual void visit(std::shared_ptr<symbolic_expression::DifferentVariable> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::DifferentVariable> node);
   // ExpressionListElement
-  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ExpressionListElement> node);
   // ExpressionListCaller
-  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListCaller> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ExpressionListCaller> node);
   // ExpressionListDefinition
-  virtual void visit(std::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ExpressionListDefinition> node);
   // ProgramListCaller
-  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListCaller> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ProgramListCaller> node);
   // ProgramListDefinition
-  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListDefinition> node);
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ProgramListDefinition> node);
   // ProgramListElement
-  virtual void visit(std::shared_ptr<symbolic_expression::ProgramListElement> node);
-  // Union 
+  virtual void
+  visit(std::shared_ptr<symbolic_expression::ProgramListElement> node);
+  // Union
   virtual void visit(std::shared_ptr<symbolic_expression::Union> node);
-  // Intersection 
+  // Intersection
   virtual void visit(std::shared_ptr<symbolic_expression::Intersection> node);
-  // Range 
+  // Range
   virtual void visit(std::shared_ptr<symbolic_expression::Range> node);
-  // SizeOfList 
+  // SizeOfList
   virtual void visit(std::shared_ptr<symbolic_expression::SizeOfList> node);
   // SumOfList
   virtual void visit(std::shared_ptr<symbolic_expression::SumOfList> node);
@@ -159,14 +174,13 @@ private:
   void dump_node(std::shared_ptr<symbolic_expression::BinaryNode> node);
   void dump_node(std::shared_ptr<symbolic_expression::VariadicNode> node);
 
-  typedef int         node_id_t;
+  typedef int node_id_t;
   typedef std::string graph_node_info_t;
 
   node_id_t node_id_;
-  std::map<node_id_t, graph_node_info_t>    nodes_;
+  std::map<node_id_t, graph_node_info_t> nodes_;
   std::multimap<node_id_t, node_id_t> edges_;
 };
 
-} //namespace parser
-} //namespace hydla
-
+} // namespace parser
+} // namespace hydla

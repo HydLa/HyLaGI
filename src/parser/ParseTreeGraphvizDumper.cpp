@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "ParseTreeGraphvizDumper.h"
 
 using namespace hydla::symbolic_expression;
@@ -8,50 +6,42 @@ using namespace std;
 
 using std::make_pair;
 
-namespace hydla { 
+namespace hydla {
 namespace parser {
 
-ParseTreeGraphvizDumper::ParseTreeGraphvizDumper()
-{}
+ParseTreeGraphvizDumper::ParseTreeGraphvizDumper() {}
 
-ParseTreeGraphvizDumper::~ParseTreeGraphvizDumper()
-{}
+ParseTreeGraphvizDumper::~ParseTreeGraphvizDumper() {}
 
 namespace {
 
-  struct NodeDumper {
-    NodeDumper(std::ostream& s) :
-      s_(s)
-    {}
+struct NodeDumper {
+  NodeDumper(std::ostream &s) : s_(s) {}
 
-    template<typename T>
-    void operator()(const T& n) {
-      s_ << "  "
-         << "n" << n.first 
-         << " [label = \"" << n.second << "\"];\n";      
-    }
+  template <typename T> void operator()(const T &n) {
+    s_ << "  "
+       << "n" << n.first << " [label = \"" << n.second << "\"];\n";
+  }
 
-    std::ostream& s_;
-  };
-  
-  struct EdgeDumper {
-    EdgeDumper(std::ostream& s) :
-      s_(s)
-    {}
+  std::ostream &s_;
+};
 
-    template<typename T>
-    void operator()(const T& n) {
-      s_ << "  "
-         << "n" << n.first << " -> "
-         << "n" << n.second << ";\n";      
-    }
+struct EdgeDumper {
+  EdgeDumper(std::ostream &s) : s_(s) {}
 
-    std::ostream& s_;
-  };
-}
+  template <typename T> void operator()(const T &n) {
+    s_ << "  "
+       << "n" << n.first << " -> "
+       << "n" << n.second << ";\n";
+  }
 
-std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const symbolic_expression::node_sptr& node)
-{
+  std::ostream &s_;
+};
+} // namespace
+
+std::ostream &
+ParseTreeGraphvizDumper::dump(std::ostream &s,
+                              const symbolic_expression::node_sptr &node) {
   node_id_ = 0;
   nodes_.clear();
   edges_.clear();
@@ -64,23 +54,21 @@ std::ostream& ParseTreeGraphvizDumper::dump(std::ostream& s, const symbolic_expr
 
   std::for_each(nodes_.begin(), nodes_.end(), NodeDumper(s));
   s << "\n";
-  
+
   std::for_each(edges_.begin(), edges_.end(), EdgeDumper(s));
   s << "}" << std::endl;
 
   return s;
 }
 
-
-
-void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<FactorNode> node)
-{
+void ParseTreeGraphvizDumper::dump_node(
+    std::shared_ptr<symbolic_expression::FactorNode> node) {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 }
 
-void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<UnaryNode> node)
-{
+void ParseTreeGraphvizDumper::dump_node(
+    std::shared_ptr<symbolic_expression::UnaryNode> node) {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 
@@ -88,8 +76,8 @@ void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<UnaryNode> node)
   accept(node->get_child());
 }
 
-void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<BinaryNode> node)
-{
+void ParseTreeGraphvizDumper::dump_node(
+    std::shared_ptr<symbolic_expression::BinaryNode> node) {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_node_type_name()));
 
@@ -100,398 +88,395 @@ void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<BinaryNode> node)
   accept(node->get_rhs());
 }
 
-
-void ParseTreeGraphvizDumper::dump_node(std::shared_ptr<VariadicNode> node)
-{
+void ParseTreeGraphvizDumper::dump_node(
+    std::shared_ptr<symbolic_expression::VariadicNode> node) {
   node_id_t own_id = node_id_;
   nodes_.insert(make_pair(own_id, node->get_string()));
 
-  for(int i=0; i< node->get_arguments_size();i++){
+  for (int i = 0; i < node->get_arguments_size(); i++) {
     edges_.insert(make_pair(own_id, ++node_id_));
     accept(node->get_argument(i));
   }
 }
 
-
 // 制約定義
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ConstraintDefinition> node)  
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ConstraintDefinition> node) {
   dump_node(node);
 }
 
 // プログラム定義
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramDefinition> node)     
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramDefinition> node) {
   dump_node(node);
 }
 
 // 制約呼び出し
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ConstraintCaller> node)      
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ConstraintCaller> node) {
   dump_node(node);
 }
 
 // プログラム呼び出し
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramCaller> node)         
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramCaller> node) {
   dump_node(node);
 }
 
 // 制約式
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Constraint> node)            
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Constraint> node) {
   dump_node(node);
 }
 
 // Ask制約
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Ask> node)                   
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Ask> node) {
+  dump_node(node);
+}
+
+// Ask制約
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Exists> node) {
   dump_node(node);
 }
 
 // Tell制約
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Tell> node)                  
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Tell> node) {
   dump_node(node);
 }
 
 // 算術単項演算子
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Negative> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Negative> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Positive> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Positive> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Equal> node)                 
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Equal> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<UnEqual> node)               
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::UnEqual> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Less> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Less> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<LessEqual> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::LessEqual> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Greater> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Greater> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<GreaterEqual> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::GreaterEqual> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Plus> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Plus> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Subtract> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Subtract> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Times> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Times> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Divide> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Divide> node) {
   dump_node(node);
 }
 
-
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Power> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Power> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<LogicalAnd> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::LogicalAnd> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<LogicalOr> node)
-{
-  dump_node(node);
-}  
-
-
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Not> node)
-{
-  dump_node(node);
-}  
-
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Weaker> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::LogicalOr> node) {
   dump_node(node);
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Parallel> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Not> node) {
   dump_node(node);
 }
-  
+
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Weaker> node) {
+  dump_node(node);
+}
+
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Parallel> node) {
+  dump_node(node);
+}
+
 // 時相演算子
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Always> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Always> node) {
   dump_node(node);
 }
-  
+
 // 微分
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Differential> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Differential> node) {
   dump_node(node);
 }
 
 // 左極限
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Previous> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Previous> node) {
   dump_node(node);
 }
 
-//Print 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Print> node)
-{
+// Print
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Print> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<PrintPP> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::PrintPP> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<PrintIP> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::PrintIP> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Scan> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Scan> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Exit> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Exit> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Abort> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Abort> node) {
   dump_node(node);
 }
 // SystemVariable
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<SVtimer> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::SVtimer> node) {
   dump_node(node);
 }
 // 関数
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Function> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Function> node) {
   dump_node(node);
 }
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<UnsupportedFunction> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::UnsupportedFunction> node) {
   dump_node(node);
 }
 
 // 円周率
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Pi> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Pi> node) {
   dump_node(node);
 }
 
 // 自然対数の底
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<E> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::E> node) {
   dump_node(node);
 }
 
 // True
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<True> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::True> node) {
   dump_node(node);
 }
 
 // False
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<False> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::False> node) {
   dump_node(node);
 }
 
 // 変数
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Variable> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Variable> node) {
   node_id_t own_id = node_id_;
-  nodes_.insert(make_pair(own_id, 
-    "{" + node->get_node_type_name() + " | " + node->get_name() + "}"));
+  nodes_.insert(make_pair(own_id, "{" + node->get_node_type_name() + " | " +
+                                      node->get_name() + "}"));
 }
 
 // 数字
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Number> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Number> node) {
   node_id_t own_id = node_id_;
-  nodes_.insert(make_pair(own_id, 
-    "{" + node->get_node_type_name() + " | " + node->get_number() + "}"));
+  nodes_.insert(make_pair(own_id, "{" + node->get_node_type_name() + " | " +
+                                      node->get_number() + "}"));
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Float> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Float> node) {
   stringstream sstr;
   sstr << node->get_number();
   node_id_t own_id = node_id_;
-  nodes_.insert(make_pair(own_id, 
-               "{" + node->get_node_type_name()
-               + " | " + sstr.str() + "}"));
+  nodes_.insert(make_pair(own_id, "{" + node->get_node_type_name() + " | " +
+                                      sstr.str() + "}"));
 }
 
-
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ImaginaryUnit> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ImaginaryUnit> node) {
   dump_node(node);
 }
 
-
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Infinity> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Infinity> node) {
   dump_node(node);
 }
 
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Parameter> node) {
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Parameter> node)
-{
-  
   node_id_t own_id = node_id_;
   stringstream sstr;
-  sstr << "{" << node->get_node_type_name() << " | " << node->get_name() << ", " << node->get_differential_count() << ", " << node->get_phase_id() << "}";
+  sstr << "{" << node->get_node_type_name() << " | " << node->get_name() << ", "
+       << node->get_differential_count() << ", " << node->get_phase_id() << "}";
   nodes_.insert(make_pair(own_id, sstr.str()));
 }
 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<SymbolicT> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::SymbolicT> node) {
   dump_node(node);
 }
 
 // ExpressionList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ExpressionList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ExpressionList> node) {
   dump_node(node);
 }
 
 // ConditionalExpressionList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ConditionalExpressionList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ConditionalExpressionList> node) {
   dump_node(node);
 }
 
 // ProgramList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramList> node) {
   dump_node(node);
 }
 
 // ConditionalProgramList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ConditionalProgramList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ConditionalProgramList> node) {
   dump_node(node);
 }
 
 // EachElement
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<EachElement> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::EachElement> node) {
   dump_node(node);
 }
 
 // DifferentVariable
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<DifferentVariable> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::DifferentVariable> node) {
   dump_node(node);
 }
 
-// ExpressionListElement 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ExpressionListElement> node)
-{
+// ExpressionListElement
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ExpressionListElement> node) {
   dump_node(node);
 }
 
 // ExpressionListCaller
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ExpressionListCaller> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ExpressionListCaller> node) {
   dump_node(node);
 }
 
-// ProgramListElement 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramListElement> node)
-{
+// ProgramListElement
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramListElement> node) {
   dump_node(node);
 }
 
 // ExpressionListDefinition
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ExpressionListDefinition> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ExpressionListDefinition> node) {
   dump_node(node);
 }
 
 // ProgramListDefinition
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramListDefinition> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramListDefinition> node) {
   dump_node(node);
 }
 
-// ProgramListCaller 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<ProgramListCaller> node)
-{
+// ProgramListCaller
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::ProgramListCaller> node) {
   dump_node(node);
 }
 
-// Union 
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Union> node)
-{
+// Union
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Union> node) {
   dump_node(node);
 }
 
 // Intersection
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Intersection> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Intersection> node) {
   dump_node(node);
 }
 
 // Range
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<Range> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::Range> node) {
   dump_node(node);
 }
 
 // SizeOfList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<SizeOfList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::SizeOfList> node) {
   dump_node(node);
 }
 
 // SumOfList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<SumOfList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::SumOfList> node) {
   dump_node(node);
 }
 
 // MulOfList
-void ParseTreeGraphvizDumper::visit(std::shared_ptr<MulOfList> node)
-{
+void ParseTreeGraphvizDumper::visit(
+    std::shared_ptr<symbolic_expression::MulOfList> node) {
   dump_node(node);
 }
 
-
-
-} //namespace parser
-} //namespace hydla
+} // namespace parser
+} // namespace hydla

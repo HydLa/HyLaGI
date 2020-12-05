@@ -5,23 +5,16 @@
 namespace hydla {
 namespace interval {
 
-typedef kv::affine<double>                    affine_t;
-typedef kv::interval<double>                  itvd;
+typedef kv::affine<double> affine_t;
+typedef kv::interval<double> itvd;
 
-
-typedef enum
-{
-  INTEGER,
-  INTERVAL,
-  AFFINE
-}ValueType;
+typedef enum { INTEGER, INTERVAL, AFFINE } ValueType;
 
 /**
  * A class to keep integer as long as possible
  */
-class AffineMixedValue
-{
-  public:
+class AffineMixedValue {
+public:
   affine_t affine_value;
   int integer;
   itvd interval;
@@ -35,16 +28,18 @@ class AffineMixedValue
   AffineMixedValue operator+(const AffineMixedValue &rhs) const;
   AffineMixedValue operator-(const AffineMixedValue &rhs) const;
   AffineMixedValue operator*(const AffineMixedValue &rhs) const;
-  AffineMixedValue operator/(const AffineMixedValue &rhs) const;;
-  AffineMixedValue operator^(const AffineMixedValue &rhs) const;;
-  
+  AffineMixedValue operator/(const AffineMixedValue &rhs) const;
+  ;
+  AffineMixedValue operator^(const AffineMixedValue &rhs) const;
+  ;
+
   AffineMixedValue operator-() const;
 
   itvd to_interval() const;
   affine_t to_affine() const;
 };
 
-std::ostream& operator<<(std::ostream &ost, const AffineMixedValue &val);
+std::ostream &operator<<(std::ostream &ost, const AffineMixedValue &val);
 
-} //namespace interval
-} //namespace hydla
+} // namespace interval
+} // namespace hydla

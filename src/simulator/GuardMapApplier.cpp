@@ -4,70 +4,60 @@
 
 using namespace std;
 
-namespace hydla
-{
-namespace simulator
-{
+namespace hydla {
+namespace simulator {
 
 using namespace symbolic_expression;
 
-GuardMapApplier::GuardMapApplier()
-{
-}
+GuardMapApplier::GuardMapApplier() {}
 
-GuardMapApplier::~GuardMapApplier()
-{
-}
-  
-constraint_t GuardMapApplier::apply(constraint_t guard, const map<constraint_t, bool> *map)
-{
+GuardMapApplier::~GuardMapApplier() {}
+
+constraint_t GuardMapApplier::apply(constraint_t guard,
+                                    const map<constraint_t, bool> *map) {
   atomic_guards_map = map;
   accept(guard);
   return applied_node;
 }
 
-void GuardMapApplier::visit_atomic_constraint(std::shared_ptr<Node> node)
-{
+void GuardMapApplier::visit_atomic_constraint(
+    std::shared_ptr<symbolic_expression::Node> node) {
   auto it = atomic_guards_map->find(node);
   HYDLA_LOGGER_DEBUG_VAR(get_infix_string(node));
   HYDLA_ASSERT(it != atomic_guards_map->end());
-  if(it->second)applied_node = constraint_t(new True());
-  else applied_node = constraint_t(new False());
+  if (it->second)
+    applied_node = constraint_t(new True());
+  else
+    applied_node = constraint_t(new False());
 }
 
-
-void GuardMapApplier::visit(std::shared_ptr<LogicalAnd> node)
-{
+void GuardMapApplier::visit(
+    std::shared_ptr<symbolic_expression::LogicalAnd> node) {
   accept(node->get_lhs());
   constraint_t lhs_node = applied_node;
   accept(node->get_rhs());
   applied_node = constraint_t(new LogicalAnd(lhs_node, applied_node));
 }
 
-void GuardMapApplier::visit(std::shared_ptr<LogicalOr> node)
-{
+void GuardMapApplier::visit(
+    std::shared_ptr<symbolic_expression::LogicalOr> node) {
   accept(node->get_lhs());
   constraint_t lhs_node = applied_node;
   accept(node->get_rhs());
   applied_node = constraint_t(new LogicalOr(lhs_node, applied_node));
 }
 
-void GuardMapApplier::visit(std::shared_ptr<Not> node)
-{
+void GuardMapApplier::visit(std::shared_ptr<symbolic_expression::Not> node) {
   accept(node->get_child());
   applied_node = constraint_t(new Not(applied_node));
 }
 
-void GuardMapApplier::visit(std::shared_ptr<False> node)
-{
+void GuardMapApplier::visit(std::shared_ptr<symbolic_expression::False> node) {
   applied_node = constraint_t(new False());
 }
-void GuardMapApplier::visit(std::shared_ptr<True> node)
-{
+void GuardMapApplier::visit(std::shared_ptr<symbolic_expression::True> node) {
   applied_node = constraint_t(new True());
 }
 
-
-
-}
-}
+} // namespace simulator
+} // namespace hydla

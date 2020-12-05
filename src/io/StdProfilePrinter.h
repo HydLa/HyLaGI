@@ -10,14 +10,13 @@ namespace io {
  * とりあえず時間だけ
  */
 
-class StdProfilePrinter
-{
+class StdProfilePrinter {
 public:
   /**
    * 解軌道木全体を出力する関数
    */
-  virtual void print_profile(const entire_profile_t&) const;
+  virtual void print_profile(const entire_profile_t &) const;
 };
 
-} // namespace output
+} // namespace io
 } // namespace hydla

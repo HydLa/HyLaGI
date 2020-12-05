@@ -1,21 +1,30 @@
-*.o
-*.d
-*.a
-*.dot
-*.png
-*.csv
-*.o.json
-**/*.o.tmp
-compile_commands.json
-bin/
-*.txt
-src/math_source_converter/msc
-src/reduce_source_converter/rsc
-*math_source.cpp
-*reduce_source.cpp
-*.hydat
-*~
-workspace/
-*.pyc
-./.DS_Store
-src/debug/*.pyc
+# ディレクトリは基本ブラックリスト
+/bin/
+/workspace/
+/doc/html/
+
+# ファイルは基本ホワイトリスト
+# (1文字以上).(0文字以上)のファイルはignore
+?*.*
+# ただし以下の拡張子は追跡
+!*.bat
+!Makefile.common
+!doxygen.conf
+!*.cpp
+!*.h
+!*.hpp
+!*.html
+!*.hydla
+!*.m
+!*.md
+!*.pl
+!*.py
+!*.rb
+!*.sh
+!*.hydat.master
+# ただし次のcppファイルは例外
+math_source.cpp
+
+msc
+/backend_sample/backend_sample
+/backend_sample/backend_sample.h

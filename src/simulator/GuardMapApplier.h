@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Node.h"
-#include "TreeVisitorForAtomicConstraint.h"
 #include "PhaseResult.h"
+#include "TreeVisitorForAtomicConstraint.h"
 
 namespace hydla {
 namespace simulator {
 
-class GuardMapApplier : public symbolic_expression::TreeVisitorForAtomicConstraint
-{
+class GuardMapApplier
+    : public symbolic_expression::TreeVisitorForAtomicConstraint {
 public:
   GuardMapApplier();
 
@@ -17,11 +17,13 @@ public:
   /**
    * substitute true or false for each atomic_guards in guard
    */
-  constraint_t apply(constraint_t guard, const std::map<constraint_t, bool> *map);
-  
-  virtual void visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> node);
+  constraint_t apply(constraint_t guard,
+                     const std::map<constraint_t, bool> *map);
 
-  using TreeVisitorForAtomicConstraint::visit; // suppress warnings  
+  virtual void
+  visit_atomic_constraint(std::shared_ptr<symbolic_expression::Node> node);
+
+  using TreeVisitorForAtomicConstraint::visit; // suppress warnings
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalAnd> node);
   virtual void visit(std::shared_ptr<symbolic_expression::LogicalOr> node);
   virtual void visit(std::shared_ptr<symbolic_expression::Not> node);
@@ -34,4 +36,4 @@ private:
 };
 
 } // namespace simulator
-} // namespace hydla 
+} // namespace hydla

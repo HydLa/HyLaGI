@@ -1,40 +1,36 @@
 #pragma once
 
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 #include "Node.h"
 
-namespace hydla { 
+namespace hydla {
 namespace symbolic_expression {
-  
+
 /**
  * ParseTreeのノード集合に対するVisitorクラス
  */
 class TreeVisitor {
 public:
-  TreeVisitor(){}
+  TreeVisitor() {}
 
-  virtual ~TreeVisitor(){}
+  virtual ~TreeVisitor() {}
 
   /**
    * Nodeクラスのaccept関数呼び出し用ヘルパ関数
    */
 
-  virtual void accept(const std::shared_ptr<Node>& n)
-  {
-    n->accept(n, this);
-  }
-
+  virtual void accept(const std::shared_ptr<Node> &n) { n->accept(n, this); }
 
   // 制約定義
   virtual void visit(std::shared_ptr<ConstraintDefinition> node) = 0;
-  
+
   // プログラム定義
   virtual void visit(std::shared_ptr<ProgramDefinition> node) = 0;
 
   // 制約呼び出し
   virtual void visit(std::shared_ptr<ConstraintCaller> node) = 0;
-  
+
   // プログラム呼び出し
   virtual void visit(std::shared_ptr<ProgramCaller> node) = 0;
 
@@ -43,6 +39,9 @@ public:
 
   // Ask制約
   virtual void visit(std::shared_ptr<Ask> node) = 0;
+
+  // Exists
+  virtual void visit(std::shared_ptr<Exists> node) = 0;
 
   // Tell制約
   virtual void visit(std::shared_ptr<Tell> node) = 0;
@@ -58,51 +57,51 @@ public:
   // 論理演算子
   virtual void visit(std::shared_ptr<LogicalAnd> node) = 0;
   virtual void visit(std::shared_ptr<LogicalOr> node) = 0;
-  
+
   // 算術二項演算子
   virtual void visit(std::shared_ptr<Plus> node) = 0;
   virtual void visit(std::shared_ptr<Subtract> node) = 0;
   virtual void visit(std::shared_ptr<Times> node) = 0;
   virtual void visit(std::shared_ptr<Divide> node) = 0;
   virtual void visit(std::shared_ptr<Power> node) = 0;
-  
+
   // 算術単項演算子
   virtual void visit(std::shared_ptr<Negative> node) = 0;
   virtual void visit(std::shared_ptr<Positive> node) = 0;
-  
+
   // 制約階層定義演算子
   virtual void visit(std::shared_ptr<Weaker> node) = 0;
   virtual void visit(std::shared_ptr<Parallel> node) = 0;
 
   // 時相演算子
   virtual void visit(std::shared_ptr<Always> node) = 0;
-  
+
   // 微分
   virtual void visit(std::shared_ptr<Differential> node) = 0;
 
   // 左極限
   virtual void visit(std::shared_ptr<Previous> node) = 0;
-  
-  //Print
+
+  // Print
   virtual void visit(std::shared_ptr<Print> node) = 0;
   virtual void visit(std::shared_ptr<PrintPP> node) = 0;
   virtual void visit(std::shared_ptr<PrintIP> node) = 0;
-    
+
   virtual void visit(std::shared_ptr<Scan> node) = 0;
   virtual void visit(std::shared_ptr<Exit> node) = 0;
   virtual void visit(std::shared_ptr<Abort> node) = 0;
 
-  //SystemVariable
+  // SystemVariable
   virtual void visit(std::shared_ptr<SVtimer> node) = 0;
-  
+
   // 否定
   virtual void visit(std::shared_ptr<Not> node) = 0;
-  
+
   // 円周率
   virtual void visit(std::shared_ptr<Pi> node) = 0;
   // 自然対数の底
   virtual void visit(std::shared_ptr<E> node) = 0;
-  
+
   // 関数
   virtual void visit(std::shared_ptr<Function> node) = 0;
   virtual void visit(std::shared_ptr<UnsupportedFunction> node) = 0;
@@ -117,13 +116,13 @@ public:
 
   // 浮動小数点数
   virtual void visit(std::shared_ptr<Float> node) = 0;
-  
+
   // 記号定数
   virtual void visit(std::shared_ptr<Parameter> node) = 0;
-  
+
   // t（時間）
   virtual void visit(std::shared_ptr<SymbolicT> node) = 0;
-  
+
   // 無限大
   virtual void visit(std::shared_ptr<Infinity> node) = 0;
 
@@ -159,7 +158,7 @@ public:
 
   // ExpressionListDefinition
   virtual void visit(std::shared_ptr<ExpressionListDefinition> node) = 0;
-  
+
   // ProgramListCaller
   virtual void visit(std::shared_ptr<ProgramListCaller> node) = 0;
 
@@ -169,13 +168,13 @@ public:
   // ProgramListElement
   virtual void visit(std::shared_ptr<ProgramListElement> node) = 0;
 
-  // SumOfList 
+  // SumOfList
   virtual void visit(std::shared_ptr<SumOfList> node) = 0;
 
-  // MulOfList 
+  // MulOfList
   virtual void visit(std::shared_ptr<MulOfList> node) = 0;
 
-  // SizeOfList 
+  // SizeOfList
   virtual void visit(std::shared_ptr<SizeOfList> node) = 0;
 
   // Range
@@ -184,10 +183,9 @@ public:
   // Union
   virtual void visit(std::shared_ptr<Union> node) = 0;
 
-  // Intersection 
+  // Intersection
   virtual void visit(std::shared_ptr<Intersection> node) = 0;
-
 };
 
-} //namespace symbolic_expression
-} //namespace hydla
+} // namespace symbolic_expression
+} // namespace hydla
