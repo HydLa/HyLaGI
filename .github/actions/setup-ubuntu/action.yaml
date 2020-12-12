@@ -1,0 +1,24 @@
+runs:
+  using: "composite"
+  steps:
+    - name: print version
+      run: |
+        g++ --version | head -n 1
+        clang++ --version | head -n 1
+        python3 --version
+      shell: bash
+    - name: install boost
+      run: |
+        sudo apt install libboost-all-dev
+      shell: bash
+    - name: install mathematica
+      run: |
+        wget https://files.wolframcdn.com/WolframEngine/12.1.1.0/WolframEngine_12.1.1_LINUX.sh
+        sudo bash WolframEngine_12.1.1_LINUX.sh
+      shell: bash
+    - name: setting libraries
+      run: |
+        sudo chmod 777 /etc/ld.so.conf
+        echo "/usr/local/Wolfram/WolframEngine/12.1/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf
+        sudo ldconfig
+      shell: bash
