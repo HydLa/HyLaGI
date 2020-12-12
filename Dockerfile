@@ -6,7 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y wget make g++ clang libboost-all-dev
 RUN wget https://files.wolframcdn.com/WolframEngine/12.1.1.0/WolframEngine_12.1.1_LINUX.sh && bash WolframEngine_12.1.1_LINUX.sh && rm WolframEngine_12.1.1_LINUX.sh
 # create Wolfram ID at https://account.wolfram.com/login/create and fill in username and password below
-RUN wolframscript -username example-user@wolfram.com -password XXXXXX && wolframscript -activate
+ARG USERNAME=example-user@wolfram.com
+ARG PASSWORD=XXXXXX
+RUN wolframscript -username ${USERNAME} -password ${PASSWORD} && wolframscript -activate
 
 # settings about libraries
 WORKDIR /lib/x86_64-linux-gnu

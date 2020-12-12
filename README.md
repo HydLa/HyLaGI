@@ -20,7 +20,8 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
    ```
    sudo apt update && sudo apt install -y git make clang libboost-all-dev
    ```
-1. Install Mathematica
+1. Install and activate Mathematica  
+   If you don't have Wolfram's license, you can use [Free Wolfram Engine for Developers](https://www.wolfram.com/engine/index.php).
 1. Library settings  
    e.g. Mathematica 11.3
    ```
@@ -30,9 +31,11 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 1. Build HyLaGI
    ```
    git clone https://github.com/HydLa/HyLaGI.git
+   cd HyLaGI
    make -j 4
+   export PATH="$PATH:/usr/local/Wolfram/Mathematica/11.3/Executables:$(pwd)/bin"
    ```
-   Then, a binary `bin/hylagi` is made.
+   Then, you can use `hylagi` command.
 
 ### Other environments
 
