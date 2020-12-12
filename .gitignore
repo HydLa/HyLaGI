@@ -22,6 +22,7 @@
 !*.rb
 !*.sh
 !*.hydat.master
+!*.yaml
 # ただし次のcppファイルは例外
 math_source.cpp
 
