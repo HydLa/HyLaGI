@@ -179,64 +179,60 @@ void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
   IF_SPECIFIED("html")
   opts.html = po.count("html") > 0 && po.get<char>("html") == 'y';
 
-  if (not is_master()) {
-    if (po.count("debug")) {
-      opts.debug_mode = true;
-    }
-    IF_SPECIFIED("simplify_time")
-    opts.simplify_time = po.get<string>("simplify_time");
-    IF_SPECIFIED("static_generation_of_module_sets")
-    opts.static_generation_of_module_sets =
-        po.count("static_generation_of_module_sets") &&
-        po.get<char>("static_generation_of_module_sets") == 'y';
-    opts.dump_relation = po.count("dump_relation_graph") > 0;
-    IF_SPECIFIED("ignore_warnings")
-    opts.ignore_warnings = po.count("ignore_warnings") > 0 &&
-                           po.get<char>("ignore_warnings") == 'y';
-    IF_SPECIFIED("use_shorthand")
-    TreeInfixPrinter::set_use_shorthand(po.count("use_shorthand") > 0 &&
-                                        po.get<char>("use_shorthand") == 'y');
-    IF_SPECIFIED("hs")
-    opts.ha_simulator_mode = po.count("hs") > 0 && po.get<char>("hs") == 'y';
-    IF_SPECIFIED("ltl")
-    opts.ltl_model_check_mode =
-        po.count("ltl") > 0 && po.get<char>("ltl") == 'y';
-    IF_SPECIFIED("affine")
-    opts.affine = po.count("affine") > 0 && po.get<char>("affine") == 'y';
-    IF_SPECIFIED("interval")
-    opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
-    IF_SPECIFIED("numerize_without_validation")
-    opts.numerize_mode = po.count("numerize_without_validation") > 0 &&
-                         po.get<char>("numerize_without_validation") == 'y';
-    IF_SPECIFIED("eager_approximation")
-    opts.eager_approximation = po.count("eager_approximation") > 0 &&
-                               po.get<char>("eager_approximation") == 'y';
-    IF_SPECIFIED("approximation_step")
-    opts.approximation_step = po.get<int>("approximation_step");
-    IF_SPECIFIED("extra_dummy")
-    opts.extra_dummy_num = po.get<int>("extra_dummy_num");
-
-    IF_SPECIFIED("vars_to_approximate") {
-      add_vars_from_string(po.get<string>("vars_to_approximate"),
-                           opts.vars_to_approximate, "");
-    }
-    IF_SPECIFIED("guards_to_interval_newton") {
-      std::stringstream sstr(po.get<string>("guards_to_interval_newton"));
-      string buffer;
-      while (std::getline(sstr, buffer, ',')) {
-        buffer = utility::replace(buffer, " ", "");
-        opts.guards_to_interval_newton.insert(buffer);
-      }
-    }
-    IF_SPECIFIED("step_by_step")
-    opts.step_by_step =
-        po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
-    IF_SPECIFIED("simplify") opts.simplify = po.get<int>("simplify");
-    IF_SPECIFIED("dsolve") opts.dsolve = po.get<int>("dsolve");
-    IF_SPECIFIED("solve_over_reals")
-    opts.solve_over_reals = po.count("solve_over_reals") > 0 &&
-                            po.get<char>("solve_over_reals") == 'y';
+  if (po.count("debug")) {
+    opts.debug_mode = true;
   }
+  IF_SPECIFIED("simplify_time")
+  opts.simplify_time = po.get<string>("simplify_time");
+  IF_SPECIFIED("static_generation_of_module_sets")
+  opts.static_generation_of_module_sets =
+      po.count("static_generation_of_module_sets") &&
+      po.get<char>("static_generation_of_module_sets") == 'y';
+  opts.dump_relation = po.count("dump_relation_graph") > 0;
+  IF_SPECIFIED("ignore_warnings")
+  opts.ignore_warnings =
+      po.count("ignore_warnings") > 0 && po.get<char>("ignore_warnings") == 'y';
+  IF_SPECIFIED("use_shorthand")
+  TreeInfixPrinter::set_use_shorthand(po.count("use_shorthand") > 0 &&
+                                      po.get<char>("use_shorthand") == 'y');
+  IF_SPECIFIED("hs")
+  opts.ha_simulator_mode = po.count("hs") > 0 && po.get<char>("hs") == 'y';
+  IF_SPECIFIED("ltl")
+  opts.ltl_model_check_mode = po.count("ltl") > 0 && po.get<char>("ltl") == 'y';
+  IF_SPECIFIED("affine")
+  opts.affine = po.count("affine") > 0 && po.get<char>("affine") == 'y';
+  IF_SPECIFIED("interval")
+  opts.interval = po.count("interval") > 0 && po.get<char>("interval") == 'y';
+  IF_SPECIFIED("numerize_without_validation")
+  opts.numerize_mode = po.count("numerize_without_validation") > 0 &&
+                       po.get<char>("numerize_without_validation") == 'y';
+  IF_SPECIFIED("eager_approximation")
+  opts.eager_approximation = po.count("eager_approximation") > 0 &&
+                             po.get<char>("eager_approximation") == 'y';
+  IF_SPECIFIED("approximation_step")
+  opts.approximation_step = po.get<int>("approximation_step");
+  IF_SPECIFIED("extra_dummy")
+  opts.extra_dummy_num = po.get<int>("extra_dummy_num");
+  IF_SPECIFIED("vars_to_approximate") {
+    add_vars_from_string(po.get<string>("vars_to_approximate"),
+                         opts.vars_to_approximate, "");
+  }
+  IF_SPECIFIED("guards_to_interval_newton") {
+    std::stringstream sstr(po.get<string>("guards_to_interval_newton"));
+    string buffer;
+    while (std::getline(sstr, buffer, ',')) {
+      buffer = utility::replace(buffer, " ", "");
+      opts.guards_to_interval_newton.insert(buffer);
+    }
+  }
+  IF_SPECIFIED("step_by_step")
+  opts.step_by_step =
+      po.count("step_by_step") > 0 && po.get<char>("step_by_step") == 'y';
+  IF_SPECIFIED("simplify") opts.simplify = po.get<int>("simplify");
+  IF_SPECIFIED("dsolve") opts.dsolve = po.get<int>("dsolve");
+  IF_SPECIFIED("solve_over_reals")
+  opts.solve_over_reals = po.count("solve_over_reals") > 0 &&
+                          po.get<char>("solve_over_reals") == 'y';
 }
 
 int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree) {
