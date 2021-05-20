@@ -44,12 +44,8 @@ publicMethod[
   Module[
     {cpTrue, cpFalse, initRsPrevs, initRules, initSubsituted, sol, solved = False},
     initRsPrevs = Map[(#[[1]])&, prevRs];
-    debugPrint[initRsPrevs];
     initRules = Select[applyList[init], (!isPrevVariable[#[[2]]] || MemberQ[initRsPrevs, #[[2]]])&];
-    debugPrint[initRules];
     initRules = Map[(Rule@@#)&, initRules ];
-    debugPrint["assum: ", assum];
-    debugPrint["cons:", cons];
     initSubsituted = And@@Map[(Assuming[assum, timeConstrainedSimplify[# /. t->current /. initRules]])&, applyList[cons]];
     {sol, solved} = trySolve[initSubsituted, vars];
     resultConstraint = And@@Map[(Assuming[assum, timeConstrainedSimplify[# //. prevRs]])&, applyList[(sol /. Element[_,_] -> True)]];
@@ -131,48 +127,46 @@ publicMethod[
   cons, initCons, assum, vars, prevRs, prevCons, pCons, pars,
   Module[
     {sol, timeVars, prevVars, tCons, tRules, i, j, conj, cpTrue, eachCpTrue, cpFalse, initRules, substitutedInit},
+      debugPrint["enter checkConsistencyInterval"];
       If[cons === True,
         toReturnForm[{{LogicalExpand[pCons]}, {False}}],
         Assuming[assum,
-        sol = exDSolve[Simplify[cons], prevRs, assum];
-        simplePrint[sol];
-        prevVars = Map[makePrevVar, vars];
-        debugPrint["sol after exDSolve", sol];
-        If[sol === overConstrained,
-          toReturnForm[{{False}, {LogicalExpand[pCons]}}],
-          debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
-          tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
-          simplePrint[tRules];
-          substitutedInit = initCons /. prevRs;
-          debugPrint["hoge"];
-          debugPrint[cons];
-          debugPrint[initCons];
-          debugPrint[prevRs];
-          debugPrint[substitutedInit];
-          debugPrint[tRules];
-          debugPrint[(initCons /. (tRules /. t -> 0))];
-          debugPrint[(substitutedInit /. (tRules /. t -> 0))];
-          If[(substitutedInit /. (tRules /. t -> 0)) === False, 
+          sol = exDSolve[Simplify[cons], prevRs, assum];
+          simplePrint["sol: ", sol];
+          prevVars = Map[makePrevVar, vars];
+          If[sol === overConstrained,
             toReturnForm[{{False}, {LogicalExpand[pCons]}}],
-            tCons = sol[[2]] /. tRules;
-            initRules = makeRulesForVariable[substitutedInit];
-            simplePrint[tCons];
-            cpTrue = False;
-            For[i = 1, i <= Length[tCons], i++,
-              conj = tCons[[i]];
-              eachCpTrue = prevCons && pCons;
-              For[j = 1, j <= Length[conj], j++,
-                eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
+            debugPrint[Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ]];
+            tRules = Map[((Rule[#[[1]], #[[2]]]))&, createDifferentiatedEquations[vars, sol[[3]] ] ];
+            simplePrint["tRules: ", tRules];
+            substitutedInit = initCons /. prevRs;
+            (* debugPrint["constraint: ", cons];
+            debugPrint["initConstraint: ", initCons];
+            debugPrint["prevRs: ", prevRs];
+            debugPrint["substitutedInit: ", substitutedInit];
+            debugPrint["tRules: ", tRules];
+            debugPrint["(initCons /. (tRules /. t -> 0)): ", (initCons /. (tRules /. t -> 0))];
+            debugPrint["(substitutedInit /. (tRules /. t -> 0)): ", (substitutedInit /. (tRules /. t -> 0))]; *)
+            If[(substitutedInit /. (tRules /. t -> 0)) === False, 
+              toReturnForm[{{False}, {LogicalExpand[pCons]}}],
+              tCons = sol[[2]] /. tRules;
+              initRules = makeRulesForVariable[substitutedInit];
+              simplePrint[tCons];
+              cpTrue = False;
+              For[i = 1, i <= Length[tCons], i++,
+                conj = tCons[[i]];
+                eachCpTrue = prevCons && pCons;
+                For[j = 1, j <= Length[conj], j++,
+                  eachCpTrue = eachCpTrue && ccIntervalForEach[conj[[j]], initRules, eachCpTrue]
+                ];
+                cpTrue = cpTrue || eachCpTrue
               ];
-              cpTrue = cpTrue || eachCpTrue
-            ];
-			debugPrint["cpFalse", cpFalse];
-            cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
-            toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+              cpFalse = Reduce[!cpTrue && pCons && prevCons, Join[pars, prevVars], Reals];
+              toReturnForm[{{LogicalExpand[cpTrue]}, {LogicalExpand[cpFalse]}}]
+            ]
           ]
         ]
       ]
-    ]
   ]
 ];
 
@@ -200,33 +194,95 @@ freeFromInequalities[expr_] := FreeQ[expr, Less] && FreeQ[expr, LessEqual] && Fr
                        (the meaning is equal to cons)
            succeeded: True if it succeeded in transformation, otherwise False
  *)
+
+list2Conjunction[consList_] := (
+    Module[
+        {ret = True},
+        For[i = 1, i <= Length[consList], i++,
+            ret = ret && consList[[i]];
+        ];
+        ret
+    ]
+)
+
+addSingleConsInSimplifiedForm[constraint_, singleCons_] := (
+    Module[
+        {retConstraint = {}, consMerged = False, workList = {}},
+        For[j = 1, j <= Length[constraint], j++,
+            tempRes = Simplify[constraint[[j]] && singleCons];
+            containSingleCons = False;
+            For[k = 1, k <= Length[tempRes], k++,
+                If[tempRes[[k]] === singleCons,
+                    containSingleCons = True
+                ];
+            ];
+            If[tempRes === False,
+                Return[False],
+                If[containSingleCons === False,
+                    workList = Append[ workList, tempRes ];
+                    consMerged = True,
+                    workList = Append[ workList, constraint[[j]] ]
+                ];
+            ];
+        ];
+        If[consMerged === False,
+            workList = Append[ workList, singleCons ]
+        ];
+        For[j = 1, j <= Length[workList], j++,
+            retConstraint = Append[ retConstraint, workList[[j]]];
+        ];
+        retConstraint
+    ]
+)
+
+
 tryToTransformConstraints[consList_, vars_] :=
 Module[
-  {i, processedVars = {}, newVars, resultCons = True, listToProcess = consList, tmpCons},
+  {i, processedVars = {}, newVars, resultCons = True, resultConsList = {}, listToProcess = consList, tmpCons},
+  debugPrint["enter tryToTransformConstraints: ", listToProcess];
   For[i = 1, i <= Length[listToProcess], ++i, 
     newVars = Complement[getVariablesWithDerivatives[listToProcess[[i]] ], processedVars];
+    (* ignore listToProcess[[i]] if Length[newVars] >= 2 *)
     If[Length[newVars] == 1,
       processedVars = Append[processedVars, newVars[[1]] ];
       simplePrint[listToProcess[[i]], newVars[[1]] ];
-      tmpCons = Quiet[Check[If[listToProcess[[i]] =!= newVars[[1]],
-        newVars[[1]] == Solve[listToProcess[[i]], newVars[[1]]][[1, 1, 2]],
-        listToProcess[[i]]
-      ], listToProcess[[i]] ] ];
+      debugPrint[listToProcess[[i]] =!= newVars[[1]]];
+      tmpCons = 
+        Quiet[
+          Check[
+            If[
+              listToProcess[[i]] =!= newVars[[1]], 
+              newVars[[1]] == ( Solve[listToProcess[[i]], newVars[[1]]] )[[1, 1, 2]],
+              listToProcess[[i]]
+            ], 
+            listToProcess[[i]] 
+          ] 
+        ];
+      debugPrint["newVars: ", newVars];
       If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
       simplePrint[tmpCons];
+      debugPrint[resultConsList, listToProcess[[i]]];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
-      resultCons = resultCons && tmpCons;
+      (* resultCons = resultCons && listToProcess[[i]]; *)
+      resultConsList = addSingleConsInSimplifiedForm[resultConsList, listToProcess[[i]]];
+      debugPrint["resultConsList after kanyaku: ", resultConsList];
+
       listToProcess = Drop[listToProcess, {i}];
       i = 0;
     ];
     If[Length[newVars] == 0,
-      resultCons = resultCons && listToProcess[[i]];
+      debugPrint["Length[newVars] == 0, apply && to {resultCons, listToProcess[[i]]}."];
+      debugPrint[resultConsList, listToProcess[[i]]];
+      (* resultCons = resultCons && listToProcess[[i]]; *)
+      resultConsList = addSingleConsInSimplifiedForm[resultConsList, listToProcess[[i]]];
+      debugPrint["resultConsList after kanyaku: ", resultConsList];
+
       listToProcess = Drop[listToProcess, {i}];
       --i;
     ];
   ];
   succeeded = If[Length[listToProcess] =!= 0, False, True];
-  {resultCons, succeeded}
+  {list2Conjunction[resultConsList], succeeded}
 ];
 
 publicMethod[
@@ -246,17 +302,19 @@ publicMethod[
     If[!succeeded,
       (* try to solve with parameters *)
       tmpCons = consToDoubleList[cons];
-      debugPrint["tmpCons before createMap in createVariableMap", tmpCons];
       tmpCons = Union[Flatten[Map[(createMapForEachCons[#, isVariable, getVariablesWithDerivatives[cons], getParameters[cons]])&, tmpCons], 1]];
-      debugPrint["tmpCons after createMap in createVariableMap", tmpCons];
       , tmpCons = applyListToOr[tmpCons];
       tmpCons = Map[(applyList[#])&, tmpCons];
     ];
     tmpCons = Map[(adjustExprs[#, isVariable])&, tmpCons];
     debugPrint["tmpCons after adjustExprs in createVariableMap", tmpCons];
     map = Map[(convertExprs[#])&, tmpCons];
+    debugPrint["Map after convertExprs", map];
     map = Map[(Cases[#, Except[{p[___], _, _}] ])&, map];
+    debugPrint["Map after Case-Except", map];
+    
     map = ruleOutException[map];
+    debugPrint["Map after ruleOutException", map];
     simplePrint[map];
     map
   ]
@@ -505,6 +563,9 @@ publicMethod[
   Module[
     {cons},
     cons = If[Head[co] === List, And@@co, co];
+    debugPrint["cons: ", cons];
+    debugPrint["assumptions: ", assumptions];
+    debugPrint["timeConstrainedSimplify[cons]: ", timeConstrainedSimplify[cons]];
     cons = Assuming[assumptions, timeConstrainedSimplify[cons]];
     constraint = constraint && cons;
   ]
