@@ -207,7 +207,7 @@ list2Conjunction[consList_] := (
 
 addSingleConsInSimplifiedForm[constraint_, singleCons_] := (
     Module[
-        {retConstraint = {}, consMerged = False, workList = {}},
+        {retConstraint = {}, tempRes, containSingleCons},
         For[j = 1, j <= Length[constraint], j++,
             tempRes = Simplify[constraint[[j]] && singleCons];
             containSingleCons = False;
@@ -219,18 +219,12 @@ addSingleConsInSimplifiedForm[constraint_, singleCons_] := (
             If[tempRes === False,
                 Return[False],
                 If[containSingleCons === False,
-                    workList = Append[ workList, tempRes ];
-                    consMerged = True,
-                    workList = Append[ workList, constraint[[j]] ]
+                    retConstraint = Append[ retConstraint, tempRes ],
+                    retConstraint = Append[ retConstraint, constraint[[j]] ]
                 ];
             ];
         ];
-        If[consMerged === False,
-            workList = Append[ workList, singleCons ]
-        ];
-        For[j = 1, j <= Length[workList], j++,
-            retConstraint = Append[ retConstraint, workList[[j]]];
-        ];
+        retConstraint = Append[ retConstraint, singleCons ];
         retConstraint
     ]
 )
