@@ -240,7 +240,6 @@ Module[
     If[Length[newVars] == 1,
       processedVars = Append[processedVars, newVars[[1]] ];
       simplePrint[listToProcess[[i]], newVars[[1]] ];
-      debugPrint[listToProcess[[i]] =!= newVars[[1]]];
       tmpCons = 
         Quiet[
           Check[
@@ -252,10 +251,10 @@ Module[
             listToProcess[[i]] 
           ] 
         ];
+      simplePrint[tmpCons];
       debugPrint["newVars: ", newVars];
       If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
       simplePrint[tmpCons];
-      debugPrint[resultConsList, listToProcess[[i]]];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
       (* resultCons = resultCons && listToProcess[[i]]; *)
       resultConsList = addSingleConsInSimplifiedForm[resultConsList, listToProcess[[i]]];
