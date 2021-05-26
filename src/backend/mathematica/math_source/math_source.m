@@ -257,7 +257,7 @@ Module[
       simplePrint[tmpCons];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
       (* resultCons = resultCons && listToProcess[[i]]; *)
-      resultConsList = addSingleConsInSimplifiedForm[resultConsList, listToProcess[[i]]];
+      resultConsList = addSingleConsInSimplifiedForm[resultConsList, tmpCons];
       debugPrint["resultConsList after kanyaku: ", resultConsList];
 
       listToProcess = Drop[listToProcess, {i}];
