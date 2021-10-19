@@ -13,12 +13,12 @@ runs:
       shell: bash
     - name: install mathematica
       run: |
-        wget https://files.wolframcdn.com/WolframEngine/12.1.1.0/WolframEngine_12.1.1_LINUX.sh
-        sudo bash WolframEngine_12.1.1_LINUX.sh
+        wget https://account.wolfram.com/download/public/wolfram-engine/desktop/LINUX -O WolframEngine_LINUX.sh
+        sudo bash WolframEngine_LINUX.sh
       shell: bash
     - name: setting libraries
       run: |
         sudo chmod 777 /etc/ld.so.conf
-        echo "/usr/local/Wolfram/WolframEngine/12.1/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf
+        echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf
         sudo ldconfig
       shell: bash
