@@ -19,7 +19,7 @@ jobs:
         sudo ln -s libuuid.so.1.3.0 libuuid.so
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1 CC=clang CXX=clang++
+        make -j 4 CC=clang CXX=clang++
   ubuntu18_04-gcc7_5_0-python3_6_9:
     runs-on: ubuntu-18.04
     steps:
@@ -31,7 +31,7 @@ jobs:
         sudo ln -s libuuid.so.1.3.0 libuuid.so
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1 CC=gcc CXX=g++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.3 CC=gcc CXX=g++
   ubuntu20_04-clang10_0_0-python3_8_5:
     runs-on: ubuntu-20.04
     steps:
@@ -39,7 +39,7 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1 CC=clang CXX=clang++
+        make -j 4 CC=clang CXX=clang++
   ubuntu20_04-gcc9_3_0-python3_8_5:
     runs-on: ubuntu-20.04
     steps:
@@ -47,4 +47,4 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1 CC=gcc CXX=g++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.3 CC=gcc CXX=g++
