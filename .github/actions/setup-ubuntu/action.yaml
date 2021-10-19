@@ -15,7 +15,6 @@ runs:
       run: |
         wget https://account.wolfram.com/download/public/wolfram-engine/desktop/LINUX -O WolframEngine_LINUX.sh
         sudo bash WolframEngine_LINUX.sh
-        export MATHPATH="/usr/local/Wolfram/WolframEngine/12.3"
       shell: bash
     - name: setting libraries
       run: |
