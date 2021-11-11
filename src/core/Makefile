@@ -5,12 +5,13 @@ LIB_DIRS := backend simulator hierarchy parser common io interval debug symbolic
 INCLUDES += -I. $(addprefix -I../,$(LIB_DIRS))
 INCLUDES += -I/usr/local/include/boost
 INCLUDES +=  -I../backend/mathematica
-INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error
+INCLUDES += -I../simulator/symbolic_simulator -I../simulator/hybrid_automata -I../parser/error -I..parser/never_claim
 
 LDFLAGS  += -L. $(addprefix -L../,$(LIB_DIRS))
+LDFLAGS  += -L../parser/never_claim
 LDFLAGS	 += -L/usr/local/lib
 
-LIBS     += $(addprefix -lhydla_,$(LIB_DIRS)) $(addprefix -lhydla_,$(LIB_DIRS)) #2回やって順序による依存関係の問題を解消
+LIBS     += ../parser/never_claim/libhydla_nc_parser.a $(addprefix -lhydla_,$(LIB_DIRS)) ../parser/never_claim/libhydla_nc_parser.a $(addprefix -lhydla_,$(LIB_DIRS)) #2回やって順序による依存関係の問題を解消
 
 ARCH := $(shell getconf LONG_BIT)
 
@@ -31,6 +32,7 @@ CXX_OPT  +=
 
 DEFINES += -DCOMMIT_ID=\"$(shell git show -s --format="%h")\" -DBRANCH_NAME=\"$(shell git rev-parse --abbrev-ref HEAD)\"
 
-DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
+DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a) ../parser/never_claim/libhydla_nc_parser.a
+# DEP_OBJECTS  := $(foreach dir,$(LIB_DIRS),../$(dir)/libhydla_$(dir).a)
 
 include ../Makefile.common

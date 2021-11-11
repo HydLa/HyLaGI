@@ -8,4 +8,6 @@ LIBS	 +=
 DEFINES  += 
 CXX_OPT  += 
 
+DEP_OBJECTS  := ../parser/never_claim/libhydla_nc_parser.a
+
 include ../Makefile.common

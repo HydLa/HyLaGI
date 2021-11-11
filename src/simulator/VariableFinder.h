@@ -3,7 +3,7 @@
 #include <set>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "DefaultTreeVisitor.h"
 #include "Node.h"

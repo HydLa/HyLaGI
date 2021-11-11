@@ -16,11 +16,16 @@
 
 using namespace std;
 
+#include "../parser/never_claim/y.tab.hpp"
+#include <memory>
+std::shared_ptr<hydla::simulator::Automaton> nc_parse();
+
 namespace hydla {
 namespace simulator {
 
 using namespace std;
 using namespace symbolic_expression;
+using namespace never_claim;
 
 LTLModelChecker::LTLModelChecker(Opts &opts)
     : Simulator(opts), printer(backend) {}

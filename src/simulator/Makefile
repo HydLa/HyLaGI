@@ -6,6 +6,10 @@ LIBS	 += -lWSTP64i4 -lm -lrt
 DEFINES  += 
 CXX_OPT  += 
 
+LIBS     += ../parser/never_claim/libhydla_nc_parser.a
+LDFLAGS  += -L../parser/never_claim
+DEP_OBJECTS  := ../parser/never_claim/libhydla_nc_parser.a
+
 SRC_DIR += symbolic_simulator hybrid_automata
 
 include ../Makefile.common

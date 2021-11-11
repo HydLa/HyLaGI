@@ -4,7 +4,6 @@ namespace hydla {
 namespace parser {
 
 using namespace symbolic_expression;
-using namespace boost;
 using namespace std;
 
 #define DEFINE_FACTOR_VISIT(TYPE)                                              \
