@@ -13,6 +13,8 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string>
+#include "../parser/never_claim/NeverClaim.h"
+
 
 using namespace std;
 
@@ -42,158 +44,11 @@ phase_result_sptr_t LTLModelChecker::simulate() {
     int id = 0;
     id_counter = 0;
 
-    // [True loop]
-    // : For making Hybrid Automaton test
-    // : if we detect a acceptance cycle, the cycle is HA
-    // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // node_sptr true_node = node_sptr(new True());
-    // property_init->add_edge(property_init,true_node);
+    auto property = nc_parse();
+    auto property_init = (PropertyNode *)(property->initial_node);
 
-    // [bouncing ball 1]
-    // : Checking []<>(y=0) & []<>(y!=0)
-    // : ball is bouncing repeatedly
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // PropertyNode *node2 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-    // node_sptr y_neq_0 = node_sptr(new Not(node_sptr(new Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("0"))))));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(node1,y_eq_0);
-    // property_init->add_edge(node2,y_neq_0);
-    // node1->add_edge(node1,y_eq_0);
-    // node2->add_edge(node2,y_neq_0);
-
-    // [bouncing ball 2]
-    // : Checking []<>(y>7)
-    // : ball is always eventually y>7
-    // : for case devide (find acceptance cycle or not find)
-    property_init = new PropertyNode(id++, NORMAL);
-    PropertyNode *node1 = new PropertyNode(id++, ACCEPTANCE_CYCLE);
-    node_sptr true_node = node_sptr(new True());
-    node_sptr y_leq_7 = node_sptr(
-        new LessEqual(node_sptr(new symbolic_expression::Variable("y")),
-                      node_sptr(new Number("7"))));
-    property_init->add_edge(property_init, true_node);
-    property_init->add_edge(node1, y_leq_7);
-    node1->add_edge(node1, y_leq_7);
-
-    // [bouncing ball 3]
-    // : test <>y!=0
-    // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-    // property_init->add_edge(property_init,y_eq_0);
-
-    // [bouncing ball 4]
-    // : test []!(y<0)
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr y_less_0 = node_sptr(new  Less(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(property_init,y_less_0);
-    // node1->add_edge(node1,true_node);
-
-    // [bouncing ball hole 1]
-    // : []y!=-1
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr y_eq_0 = node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("-1"))));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(node1,y_eq_0);
-    // node1->add_edge(node1,true_node);
-
-    // [triangle sawtooth 1]
-    // : [](y>=0 && y<=10)
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr y_less_0 = node_sptr(new  Less(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("0"))));
-    // node_sptr y_great_10 = node_sptr(new  Greater(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("10"))));
-    // node_sptr guard1 = node_sptr(new LogicalOr(y_less_0,y_great_10));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(node1,guard1);
-    // node1->add_edge(node1,true_node);
-
-    // [triangle sawtooth 2]
-    // : <>[](<>f=11 || []f=-1)
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // PropertyNode *node2 = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node3 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // PropertyNode *node4 = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node5 = new PropertyNode(id++,NORMAL);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("f")),node_sptr(new Number("11"))))));
-    // node_sptr q = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("f")),node_sptr(new Number("-1"))))));
-    // node_sptr guard1 = node_sptr(new LogicalAnd(p,q));
-    // property_init->add_edge(node5,true_node);
-    // property_init->add_edge(node4,p);
-    // property_init->add_edge(node1,guard1);
-    // node1->add_edge(node4,p);
-    // node1->add_edge(node2,p);
-    // node1->add_edge(node1,guard1);
-    // node2->add_edge(node2,p);
-    // node2->add_edge(node3,p);
-    // node2->add_edge(node1,guard1);
-    // node3->add_edge(node4,p);
-    // node3->add_edge(node1,guard1);
-    // node4->add_edge(node4,p);
-    // node4->add_edge(node1,guard1);
-    // node5->add_edge(node5,true_node);
-    // node5->add_edge(node3,p);
-    // node5->add_edge(node1,guard1);
-
-    // [bouncing auto abstract]
-    // :
-    // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // // PropertyNode *node1 = PropertyNode(id++,ACCEPTANCE_CYCLE)
-    // node_sptr true_node = node_sptr(new True());
-    // property_init->add_edge(property_init,true_node);
-
-    // [Artificial Example]
-    // : For testing wheter I can deal with the inclusion of phase correctly
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_STATE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr y_geq_3 = node_sptr(new GreaterEqual(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("3"))));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(node1,y_geq_3);
-    // node1->add_edge(node1,true_node);
-
-    // [water tank 1]
-    // :<>p
-    // PropertyNode *property_init = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("12"))))));
-    // property_init->add_edge(property_init,p);
-
-    // [water tank 2]
-    // :[]<>p
-    // PropertyNode *property_init = new PropertyNode(id++,NORMAL);
-    // PropertyNode *node1 = new PropertyNode(id++,ACCEPTANCE_CYCLE);
-    // node_sptr true_node = node_sptr(new True());
-    // node_sptr p = node_sptr(new Not(node_sptr(new  Equal(node_sptr(new
-    // symbolic_expression::Variable("y")),node_sptr(new Number("6"))))));
-    // property_init->add_edge(property_init,true_node);
-    // property_init->add_edge(node1,p);
-    // node1->add_edge(node1,p);
-
-    Automaton property;
-    property.initial_node = property_init;
     cout << "===== Property Automaton =====" << endl;
-    property.dump(cout);
+    property->dump(cout);
 
     LTLNode *LTL_init =
         new LTLNode("init", result_root_, property_init, id_counter++);
@@ -234,6 +89,7 @@ phase_result_sptr_t LTLModelChecker::simulate() {
   return result_root_;
 }
 
+// 再帰型DFSでシミュレーションを実行
 void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
                                 current_checking_node_list_t checking_list,
                                 phase_list_t phase_list) {
@@ -256,13 +112,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
     // }
     result_automata.push_back(result_automaton);
   }
-  // if(opts_->max_phase >= 0 && current->step >= opts_->max_phase){
-  //   cout << "come here " << endl;
-  // }
   int count = 0;
   while (!current->todo_list.empty()) {
-    // cout << "ltlserch count" << count << endl;
-    // cout << "phase list num " << phase_list.size() << endl;
     phase_result_sptr_t todo = current->todo_list.front();
     current->todo_list.pop_front();
     profile_vector_->insert(todo);
@@ -279,7 +130,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
 
     /* TODO: assertion違反が検出された場合の対応 */
     current_checking_node_list_t next_node_list =
-        transition(checking_list, todo);
+        transition(checking_list, todo); //遷移関数でLTLモデル検査の挙動を特徴づける
     LTLsearch(todo, next_node_list, phase_list);
     count++;
   }
@@ -698,12 +549,6 @@ bool LTLModelChecker::check_edge_guard_wP(phase_result_sptr_t phase,
   // ConstraintStore par_cons = phase->get_parameter_constraint();
   HYDLA_LOGGER_DEBUG("parameter condition : ", par_cons);
 
-  // backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
-  //               &(larger->phase->current_time),
-  //               &(larger->phase->variable_map), &larger_cons,
-  //               &(smaller->phase->current_time),
-  //               &(smaller->phase->variable_map), &smaller_cons,
-  //               &include_ret);
   if (phase->phase_type == POINT_PHASE) {
     backend->call("checkEdgeGuard", true, 3, "etmvtcsn", "b", &guard,
                   &related_vm, &par_cons, &ret);
@@ -716,21 +561,6 @@ bool LTLModelChecker::check_edge_guard_wP(phase_result_sptr_t phase,
     // cout << "phase " << phase->id << " : " << get_infix_string(guard) << " :
     // " << ret << endl;
   }
-  // CheckConsistencyResult cc_result;
-  // switch(consistency_checker->check_entailment(related_vm, cc_result, guard,
-  // phase->phase_type, phase->profile)){ case ENTAILED:
-  //   ret = true;
-  //   HYDLA_LOGGER_DEBUG("guard condition : true");
-  //   break;
-  // case BRANCH_PAR:
-  // case CONFLICTING:
-  // case BRANCH_VAR:
-  //   ret = false;
-  //   HYDLA_LOGGER_DEBUG("guard condition : false");
-  //   break;
-  // }
-  // return ret;
-  // cout << "check_edge_gurad wp end" << endl;
 
   return ret;
 }

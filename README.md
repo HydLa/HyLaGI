@@ -1,88 +1,26 @@
-# HyLaGI - HydLa Guaranteed Implementation
+# How to execute LTL model checking on HyLaGI
 
-![build-on-ubuntu](https://github.com/HydLa/HyLaGI/workflows/build-on-ubuntu/badge.svg)
+1. 検証式を ​LTL2BA で never claim に変換し、テキストファイルに保存する（検査式ファイル）
 
-HyLaGI is a C++ implementation of hybrid constraint language HydLa.
+2. never claim 内の論理記号に対し、状態変数を用いた論理式を割り当てる
 
-Email address:
-hydla@ueda.info.waseda.ac.jp
-
-More information about HydLa:
-http://www.ueda.info.waseda.ac.jp/hydla/
-
-## Build
-
-Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
-
-### Ubuntu 18.04
-
-1. Install required packages
-   ```
-   sudo apt update && sudo apt install -y git make clang libboost-all-dev
-   ```
-
-1. Install and activate Mathematica  
-   If you don't have Wolfram's license, you can use [Free Wolfram Engine for Developers](https://www.wolfram.com/engine/index.php).
+   - 以下は ```![]<>(y > 7)``` の記述をするにあたり, ```![]<>p``` をLTL2BAに入力して得られた出力の冒頭に ```p := y>7 ``` を加えたもの
+  
+```
+p := y>7
+never { /* !GFp */
+T0_init :    /* init */
+	if
+	:: (1) -> goto T0_init
+	:: (!p) -> goto accept_S2
+	fi;
+accept_S2 :    /* 1 */
+	if
+	:: (!p) -> goto accept_S2
+	fi;
+}
+```
+ 
+3. --fltl オプション、および適当なフェーズ数を指定し、標準入力から検査式ファイルを与えて実行する
    
-1. Mathematica PATH settings  
-   e.g. Mathematica 11.3 is installed in /usr/local
-   ```
-   export MATHPATH="/usr/local/Wolfram/Mathematica/11.3"
-   ```
-   Since this setting is necessary whenever you rebuild HyLaGI, it might be good to make MATHPATH permanent environment variable.
-   
-2. Library settings  
-   e.g. Mathematica 11.3
-   ```
-   cd /lib/x86_64-linux-gnu && sudo ln -s libuuid.so.1.3.0 libuuid.so
-   echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
-   ```
-3. Build HyLaGI
-   ```
-   git clone https://github.com/HydLa/HyLaGI.git
-   cd HyLaGI
-   make -j 4
-   export PATH="$PATH:$MATHPATH/Executables:$(pwd)/bin"
-   ```
-   Then, you can use `hylagi` command.
-
-### Other environments
-
-HyLaGI supports several environments.
-
-- OS: Ubuntu and macOS
-- C++ compiler: Clang (default) and GCC
-
-<details>
-<summary>Build confirmed environment</summary>
-
-- Ubuntu 18.04.3, GCC 7.5.0, Python 3.6.9
-- Ubuntu 18.04.3, Clang 6.0.0, Python 3.6.9
-- Ubuntu 20.04.1, GCC 9.3.0, Python 3.8.5
-- Ubuntu 20.04.1, Clang 10.0.0, Python 3.8.5
-- macOS 10.15.7, Apple clang 12.0.0, Python 3.6.9
-- macOS 10.15.7, Apple clang 12.0.0, Python 3.8.5
-</details>
-
-### Make options
-
-To build several environments,
-you can set environment variables when you exec `make`.  
-
-- Using GCC:
-  ```
-  make -j 4 CC=gcc CXX=g++
-  ```
-- Other path/to/Mathematica:
-  - in other version:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
-    ```
-  - using WolframEngine:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
-    ```
-- When using Python3 with `python` command:
-  ```
-  make -j 4 PYTHON_CONFIG=python-config
-  ```
+   ``` hylagi model.hydla < models_ltl.txt -fltl -p15 ```

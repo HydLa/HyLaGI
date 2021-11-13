@@ -39,7 +39,7 @@ void AutomatonNode::set_peripheries(int num) { this->peripheries = num; }
 
 void AutomatonNode::dump(ostream &ost) {
   string name = this->name;
-  if (this->node_vm_write)
+  if (this->node_vm_write && this->phase != NULL)
     name += "\n" + (*this->phase).get_vm_string();
 
   if (this->peripheries > 0) {
@@ -55,7 +55,7 @@ void AutomatonNode::dump(ostream &ost) {
   if (this->edge_guard_write) {
     for (auto it = edges.begin(); it != edges.end(); it++) {
       string nextname = (*it).first->name;
-      if ((*it).first->node_vm_write)
+      if ((*it).first->node_vm_write && (*it).first->phase != NULL)
         nextname += "\n" + (*(*it).first->phase).get_vm_string();
 
       if (this->color == (*it).first->color) {
@@ -74,7 +74,7 @@ void AutomatonNode::dump(ostream &ost) {
   } else {
     for (auto it = edges.begin(); it != edges.end(); it++) {
       string nextname = (*it).first->name;
-      if ((*it).first->node_vm_write)
+      if ((*it).first->node_vm_write && (*it).first->phase != NULL)
         nextname += "\n" + (*(*it).first->phase).get_vm_string();
 
       if (this->color == (*it).first->color) {
