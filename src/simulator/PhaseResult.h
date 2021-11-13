@@ -26,17 +26,17 @@ class PrevReplacer;
  * type for cause of termination of simulation
  */
 typedef enum {
-  TIME_LIMIT,
-  STEP_LIMIT,
+  TIME_LIMIT, //time reached limit
+  STEP_LIMIT, //number of phases reached limit
   SOME_ERROR,
   INCONSISTENCY,
   ASSERTION,
   TIME_OUT_REACHED,
-  NOT_UNIQUE_IN_INTERVAL,
+  NOT_UNIQUE_IN_INTERVAL, //some variables are not unique in IP
   NOT_SIMULATED,
   SIMULATED,
   INTERRUPTED,
-  NONE
+  NONE //unknown error occured
 } SimulationState;
 
 /**

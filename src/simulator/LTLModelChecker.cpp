@@ -59,8 +59,9 @@ phase_result_sptr_t LTLModelChecker::simulate() {
     current_checking_node_list_t search_list;
     search_list.push_back(search_starting_node);
     phase_list_t phase_list;
-    // phase_list.push_back(result_root_);
     LTLsearch(result_root_, search_list, phase_list);
+
+    //dump result
     int automaton_count = 1;
     for (auto automaton : result_automata) {
       cout << "===== Automaton" << automaton_count++ << " =====" << endl;
@@ -104,12 +105,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
   if (current->todo_list.empty() & !checking_list.empty()) {
     // TODO
     // The simulation for this case is terminated
-    // current_checking_node_list_t next_node_list = transition(checking_list,
-    // current);
+    // current_checking_node_list_t next_node_list = transition(checking_list, current);
     Automaton result_automaton = current_automaton.clone();
-    // for(auto checked_node : next_node_list){
-    //   checked_node.node->remove();
-    // }
     result_automata.push_back(result_automaton);
   }
   int count = 0;
@@ -123,6 +120,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
         printer.output_one_phase(todo);
       }
     }
+    // count は枝を一本辿ったら +1 されるわけだが, count >= 1 だった時に refresh する必要があるのか？（枝分かれはすなわちパラメタの条件が異なること、というのを意図しているのは分かるが）
+    // refresh では（transition でもやるが）受理サイクルの探索も行っている
     if (count >= 1) {
       ConstraintStore par_cons = todo->get_parameter_constraint();
       checking_list = refresh(phase_list, par_cons);
@@ -229,49 +228,41 @@ LTLModelChecker::transition(current_checking_node_list_t checking_list,
 }
 
 bool LTLModelChecker::check_including(LTLNode *larger, LTLNode *smaller) {
+  //同期積オートマトンのノード間状態包含関係のチェック
+  //1: 性質オートマトンの状態
+  //2: フェーズタイプの比較
+  //3: 変数表の大きさの比較
+  //4: epsilon.m の checkInclude 
+  //これらが全て true の時に包含が成立する
   bool include_ret;
-  // property_automaton
   string larger_property = larger->property->name;
   string smaller_property = smaller->property->name;
   if (larger_property != smaller_property) {
-    // cout << "different property automaton :\n\t \"" << larger->id << "\" :
-    // \"" << smaller->id << "\"" << endl;
     return false;
   }
-  // phase typeの比較
   if (larger->phase->phase_type != smaller->phase->phase_type) {
-    // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" <<
-    // smaller->id << "\"" << endl;
     return false;
   }
-  // phase の変数表の大きさの比較
-  if (larger->phase->variable_map.size() !=
-      smaller->phase->variable_map.size()) {
-    // cout << "different size of variable map :\n\t \"" << larger->id << "\" :
-    // \"" << smaller->id << "\"" << endl;
+  if (larger->phase->variable_map.size() != smaller->phase->variable_map.size()) {
     return false;
   }
 
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
-  // compareing set of variables
+  // comparing set of variables
   backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
-                &(larger->phase->current_time), &(larger->phase->variable_map),
-                &larger_cons, &(smaller->phase->current_time),
-                &(smaller->phase->variable_map), &smaller_cons, &include_ret);
-  if (include_ret) {
-    // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n"
-    // << endl;
-  } else {
-    // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id
-    // << "\"" << endl;
-  }
+                &(larger->phase->current_time),  &(larger->phase->variable_map),  &larger_cons, 
+                &(smaller->phase->current_time), &(smaller->phase->variable_map), &smaller_cons, 
+                &include_ret);
+  
+  // if (include_ret) cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
+  // else             cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
+  
   return include_ret;
 }
 
-LTLNode *
-LTLModelChecker::detect_acceptance_cycle(LTLNode *new_node,
-                                         ltl_path_list_t acceptance_path_list) {
+LTLNode *LTLModelChecker::detect_acceptance_cycle(LTLNode *new_node,
+                                                  ltl_path_list_t acceptance_path_list) {
   LTLNode *ret = NULL;
   for (ltl_path_list_t::iterator acceptance_path = acceptance_path_list.begin();
        acceptance_path != acceptance_path_list.end(); acceptance_path++) {
@@ -342,8 +333,7 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
 //   return ret;
 // }
 
-current_checking_node_list_t
-LTLModelChecker::refresh(phase_list_t phase_list, ConstraintStore par_cons) {
+current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, ConstraintStore par_cons) {
   // cout << "reflesh start" << endl;
   // init
   LTLNode *LTL_init =
@@ -463,38 +453,25 @@ bool LTLModelChecker::check_including_wP(LTLNode *larger, LTLNode *smaller,
   string larger_property = larger->property->name;
   string smaller_property = smaller->property->name;
   if (larger_property != smaller_property) {
-    // cout << "different property automaton :\n\t \"" << larger->id << "\" :
-    // \"" << smaller->id << "\"" << endl;
     return false;
   }
-  // phase typeの比較
   if (larger->phase->phase_type != smaller->phase->phase_type) {
-    // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" <<
-    // smaller->id << "\"" << endl;
     return false;
   }
-  // phase の変数表の大きさの比較
-  if (larger->phase->variable_map.size() !=
-      smaller->phase->variable_map.size()) {
-    // cout << "different size of variable map :\n\t \"" << larger->id << "\" :
-    // \"" << smaller->id << "\"" << endl;
+  if (larger->phase->variable_map.size() != smaller->phase->variable_map.size()) {
     return false;
   }
 
   ConstraintStore larger_cons = larger->phase->get_parameter_constraint();
   ConstraintStore smaller_cons = smaller->phase->get_parameter_constraint();
-  // compareing set of variables
+  // comparing set of variables
   backend->call("checkInclude", true, 6, "vlnmvtcsnvlnmvtcsn", "b",
-                &(larger->phase->current_time), &(larger->phase->variable_map),
-                &par_cons, &(smaller->phase->current_time),
-                &(smaller->phase->variable_map), &par_cons, &include_ret);
-  if (include_ret) {
-    // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n"
-    // << endl;
-  } else {
-    // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id
-    // << "\"" << endl;
-  }
+                &(larger->phase->current_time), &(larger->phase->variable_map), &par_cons, 
+                &(smaller->phase->current_time),&(smaller->phase->variable_map), &par_cons, 
+                &include_ret);
+
+  // if (include_ret) cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n" << endl;
+  // else             cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id << "\"" << endl;
   return include_ret;
 }
 
