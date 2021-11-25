@@ -59,34 +59,33 @@ private:
   void LTLsearch(phase_result_sptr_t current,
                  current_checking_node_list_t checking_list,
                  phase_list_t phase_list);
-  current_checking_node_list_t
-  transition(current_checking_node_list_t checking_list,
-             phase_result_sptr_t phase);
   bool check_including(LTLNode *larger, LTLNode *smaller);
+  bool check_edge_guard(phase_result_sptr_t phase, node_sptr guard);
+  bool check_including_wP(LTLNode *larger, LTLNode *smaller,
+                          ConstraintStore par_cons);
+  bool check_edge_guard_wP(phase_result_sptr_t phase, node_sptr guard,
+                           ConstraintStore par_cons);
+
+  current_checking_node_list_t transition(current_checking_node_list_t checking_list,
+                                          phase_result_sptr_t phase);
+  current_checking_node_list_t refresh(phase_list_t phase_list,
+                                       ConstraintStore par_cons);
   LTLNode *detect_acceptance_cycle(LTLNode *new_node,
                                    ltl_path_list_t acceptance_path_list);
   LTLNode *detect_loop_in_path(LTLNode *new_node, ltl_node_list_t path);
-  bool check_edge_guard(phase_result_sptr_t phase, node_sptr guard);
-  Automaton current_automaton;
-  std::list<Automaton> result_automata;
-  int id_counter;
-  PropertyNode *property_init;
-  current_checking_node_list_t refresh(phase_list_t phase_list,
-                                       ConstraintStore par_cons);
-  bool check_including_wP(LTLNode *larger, LTLNode *smaller,
-                          ConstraintStore par_cons);
   LTLNode *detect_acceptance_cycle_wP(LTLNode *new_node,
                                       ltl_path_list_t acceptance_path_list,
                                       ConstraintStore par_cons);
   LTLNode *detect_loop_in_path_wP(LTLNode *new_node, ltl_node_list_t path,
                                   ConstraintStore par_cons);
-  bool check_edge_guard_wP(phase_result_sptr_t phase, node_sptr guard,
-                           ConstraintStore par_cons);
 
   /* phase_list_t get_path(phase_result_sptr_t phase); */
 
-  io::SymbolicTrajPrinter printer;
+  Automaton current_automaton;
+  std::list<Automaton> result_automata;
+  int id_counter;
   std::shared_ptr<ConsistencyChecker> consistency_checker;
+  PropertyNode *property_init;
 };
 
 } // namespace simulator

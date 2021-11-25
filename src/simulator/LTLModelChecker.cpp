@@ -30,7 +30,7 @@ using namespace symbolic_expression;
 using namespace never_claim;
 
 LTLModelChecker::LTLModelChecker(Opts &opts)
-    : Simulator(opts), printer(backend) {}
+    : Simulator(opts) {}
 
 LTLModelChecker::~LTLModelChecker() {}
 
@@ -44,8 +44,10 @@ phase_result_sptr_t LTLModelChecker::simulate() {
     int id = 0;
     id_counter = 0;
 
+    cout << "parse start" << endl;
     auto property = nc_parse();
-    auto property_init = (PropertyNode *)(property->initial_node);
+    cout << "parse finish" << endl;
+    property_init = (PropertyNode *)(property->initial_node);
 
     cout << "===== Property Automaton =====" << endl;
     property->dump(cout);
@@ -106,8 +108,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
     // TODO
     // The simulation for this case is terminated
     // current_checking_node_list_t next_node_list = transition(checking_list, current);
-    Automaton result_automaton = current_automaton.clone();
-    result_automata.push_back(result_automaton);
+    // 実装案1: t -> inf の時に自己ループとする？
+    result_automata.push_back(current_automaton.clone());
   }
   int count = 0;
   while (!current->todo_list.empty()) {
@@ -123,8 +125,11 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
     // count は枝を一本辿ったら +1 されるわけだが, count >= 1 だった時に refresh する必要があるのか？（枝分かれはすなわちパラメタの条件が異なること、というのを意図しているのは分かるが）
     // refresh では（transition でもやるが）受理サイクルの探索も行っている
     if (count >= 1) {
+      cout << "other branch " << count << endl;
       ConstraintStore par_cons = todo->get_parameter_constraint();
+      HYDLA_LOGGER_STANDARD(par_cons);
       checking_list = refresh(phase_list, par_cons);
+      cout << "yeah" << endl;
     }
 
     /* TODO: assertion違反が検出された場合の対応 */
@@ -145,7 +150,7 @@ LTLModelChecker::transition(current_checking_node_list_t checking_list,
   current_checking_node_list_t next_search;
   for (auto current : checking_list) {
     for (auto property_node_edge : current.node->property->edges) {
-      // phase と property_edge->second(edgeのguard条件) で成否判定する
+      // phase と property_node_edge->second(edgeのguard条件) で成否判定する
       if (check_edge_guard_wP(phase, property_node_edge.second,
                               phase->get_parameter_constraint())) {
         LTLNode *next_node;
@@ -334,7 +339,7 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
 // }
 
 current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, ConstraintStore par_cons) {
-  // cout << "reflesh start" << endl;
+  cout << "refresh start" << endl;
   // init
   LTLNode *LTL_init =
       new LTLNode("init", result_root_, property_init, id_counter++);
@@ -358,6 +363,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
     for (auto current_LTL : checking_list) {
       for (auto property_node_edge : current_LTL.node->property->edges) {
         // phase と property_edge->second(edgeのguard条件) で成否判定する
+        cout << "judge transition" << endl;
         if (check_edge_guard_wP(current_phase, property_node_edge.second,
                                 par_cons)) {
           LTLNode *next_node;
@@ -372,6 +378,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
                                     id_counter++);
           }
           // acceptance cycleの探索
+          cout << "detect acceptance cycle" << endl;
           LTLNode *loop_node = detect_acceptance_cycle_wP(
               next_node, current_LTL.acceptance_path_list, par_cons);
           if (loop_node != NULL) { // acceptance cycle を発見した場合
@@ -392,6 +399,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
             return next_search;
           }
           //通常ループの探索
+          cout << "detect normal loop" << endl;
           loop_node = detect_loop_in_path_wP(
               next_node, current_LTL.created_nodes, par_cons);
           if (loop_node != NULL) { //ループの場合
@@ -403,7 +411,6 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
               current_LTL.node->add_edge(next_node);
             }
             if (next_node->acceptanceState()) { // acceptance stateの場合
-              // next_node->set_color_to_trace_path("red");
               for (auto path : current_LTL.created_nodes) {
                 path->set_color("red");
               }
@@ -438,11 +445,6 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
       result_automata.push_back(current_automaton.clone());
     }
   }
-  // cout << "new automaton" << endl;
-  // new_automaton.dump(cout);
-  // cout << "new automaton" << endl;
-
-  // cout << "reflesh end" << endl;
   return next_search;
 }
 
