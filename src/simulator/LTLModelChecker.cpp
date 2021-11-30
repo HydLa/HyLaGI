@@ -44,9 +44,7 @@ phase_result_sptr_t LTLModelChecker::simulate() {
     int id = 0;
     id_counter = 0;
 
-    cout << "parse start" << endl;
     auto property = nc_parse();
-    cout << "parse finish" << endl;
     property_init = (PropertyNode *)(property->initial_node);
 
     cout << "===== Property Automaton =====" << endl;
@@ -93,10 +91,18 @@ phase_result_sptr_t LTLModelChecker::simulate() {
 }
 
 // 再帰型DFSでシミュレーションを実行
+/// current: 現在取り扱うフェーズ. これに続く後続フェーズを計算する
+/// checking_list: 現在取り扱う, LTLNode とそこに至るパスおよびパス上の受理状態に至るパスのリストの構造体を要素に持つリスト
+/// phase_list: これまでのフェーズ計算結果のリスト
 void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
                                 current_checking_node_list_t checking_list,
                                 phase_list_t phase_list) {
   io::SymbolicTrajPrinter printer(backend);
+  cout << "########" << endl;
+  cout << "current:" << endl;
+  printer.output_one_phase(current);
+  cout << "checking_list_size: " << checking_list.size() << endl;
+  cout << "########" << endl;
   if (signal_handler::interrupted) {
     current->simulation_state = INTERRUPTED;
     return;
@@ -109,6 +115,8 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
     // The simulation for this case is terminated
     // current_checking_node_list_t next_node_list = transition(checking_list, current);
     // 実装案1: t -> inf の時に自己ループとする？
+    cout << "emptyyyy" << endl;
+    cout << "checking list size: " << checking_list.size() << endl;
     result_automata.push_back(current_automaton.clone());
   }
   int count = 0;
@@ -118,6 +126,7 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
     profile_vector_->insert(todo);
     if (todo->simulation_state == NOT_SIMULATED) {
       phase_list_t result_list = process_one_todo(todo);
+      cout << "result_list size: " << result_list.size() << endl;
       if (opts_->dump_in_progress) {
         printer.output_one_phase(todo);
       }
@@ -128,13 +137,18 @@ void LTLModelChecker::LTLsearch(phase_result_sptr_t current,
       cout << "other branch " << count << endl;
       ConstraintStore par_cons = todo->get_parameter_constraint();
       HYDLA_LOGGER_STANDARD(par_cons);
-      checking_list = refresh(phase_list, par_cons);
-      cout << "yeah" << endl;
+      checking_list = refresh(phase_list, par_cons, printer);
     }
 
     /* TODO: assertion違反が検出された場合の対応 */
     current_checking_node_list_t next_node_list =
         transition(checking_list, todo); //遷移関数でLTLモデル検査の挙動を特徴づける
+    for(auto next_node_list_elem: next_node_list){
+      cout << "created nodes: " << next_node_list_elem.created_nodes.size() << endl;
+      for(auto ltlnode: next_node_list_elem.created_nodes){
+        cout << "id: " << ltlnode->property->id << endl;
+      }
+    }
     LTLsearch(todo, next_node_list, phase_list);
     count++;
   }
@@ -151,7 +165,7 @@ LTLModelChecker::transition(current_checking_node_list_t checking_list,
   for (auto current : checking_list) {
     for (auto property_node_edge : current.node->property->edges) {
       // phase と property_node_edge->second(edgeのguard条件) で成否判定する
-      if (check_edge_guard_wP(phase, property_node_edge.second,
+      if (check_edge_guard_parameter(phase, property_node_edge.second,
                               phase->get_parameter_constraint())) {
         LTLNode *next_node;
         LTLNode *exist_node = (LTLNode *)current_automaton.exist_node(
@@ -209,13 +223,10 @@ LTLModelChecker::transition(current_checking_node_list_t checking_list,
             return next_search;
           }
           //次の探索の準備
-          current_checking_node_t next_search_candidate;
-          next_search_candidate.node = next_node;
+          //created_nodes: パスを記録する役割を持つので, current.created_nodes に next_node を付け加えたものが新しいパスとなる
           ltl_node_list_t tmp_created_nodes = current.created_nodes;
           tmp_created_nodes.push_back(next_node);
-          next_search_candidate.created_nodes = tmp_created_nodes;
-          next_search_candidate.acceptance_path_list =
-              current.acceptance_path_list;
+          current_checking_node_t next_search_candidate(next_node, tmp_created_nodes, current.acceptance_path_list);
           if (next_node->acceptanceCycle()) { // acceptance
                                               // cycleの受理状態の場合
             (next_search_candidate.acceptance_path_list)
@@ -291,44 +302,6 @@ LTLNode *LTLModelChecker::detect_loop_in_path(LTLNode *new_node,
   return ret;
 }
 
-bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
-                                       node_sptr guard) {
-  bool ret;
-  if (guard->get_node_type_name() == "True") {
-    return true;
-  }
-  HYDLA_LOGGER_DEBUG("checking guard condition : ", get_infix_string(guard));
-  VariableFinder var_finder;
-  var_finder.visit_node(guard);
-  variable_set_t related_variables = var_finder.get_all_variable_set();
-  variable_map_t related_vm;
-  variable_map_t vm = phase->variable_map;
-  for (auto related_variable : related_variables) {
-    auto vm_it = vm.find(related_variable);
-    if (vm_it != vm.end())
-      related_vm[related_variable] = vm_it->second;
-  }
-  HYDLA_LOGGER_DEBUG("variable map : ", related_vm);
-  ConstraintStore par_cons = phase->get_parameter_constraint();
-  HYDLA_LOGGER_DEBUG("parameter condition : ", par_cons);
-
-  CheckConsistencyResult cc_result;
-  switch (consistency_checker->check_entailment(
-      related_vm, cc_result, guard, phase->phase_type, phase->profile)) {
-  case ENTAILED:
-    ret = true;
-    HYDLA_LOGGER_DEBUG("guard condition : true");
-    break;
-  case BRANCH_PAR:
-  case CONFLICTING:
-  case BRANCH_VAR:
-    ret = false;
-    HYDLA_LOGGER_DEBUG("guard condition : false");
-    break;
-  }
-  return ret;
-}
-
 // phase_list_t LTLModelChecker::get_path(PhaseResult &phase){
 //   phase_list_t ret;
 //   if(*phase != result_root_){
@@ -338,7 +311,9 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
 //   return ret;
 // }
 
-current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, ConstraintStore par_cons) {
+
+/// phase_list から
+current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, ConstraintStore par_cons, io::SymbolicTrajPrinter printer) {
   cout << "refresh start" << endl;
   // init
   LTLNode *LTL_init =
@@ -359,12 +334,10 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
       c++;
       continue;
     }
-    // cout << "current phase " << current_phase->id << endl;
     for (auto current_LTL : checking_list) {
       for (auto property_node_edge : current_LTL.node->property->edges) {
         // phase と property_edge->second(edgeのguard条件) で成否判定する
-        cout << "judge transition" << endl;
-        if (check_edge_guard_wP(current_phase, property_node_edge.second,
+        if (check_edge_guard_parameter(current_phase, property_node_edge.second,
                                 par_cons)) {
           LTLNode *next_node;
           LTLNode *exist_node = (LTLNode *)new_automaton.exist_node(
@@ -378,8 +351,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
                                     id_counter++);
           }
           // acceptance cycleの探索
-          cout << "detect acceptance cycle" << endl;
-          LTLNode *loop_node = detect_acceptance_cycle_wP(
+          LTLNode *loop_node = detect_acceptance_cycle_parameter(
               next_node, current_LTL.acceptance_path_list, par_cons);
           if (loop_node != NULL) { // acceptance cycle を発見した場合
             if (!current_automaton.exist_edge(current_LTL.node, loop_node)) {
@@ -399,8 +371,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
             return next_search;
           }
           //通常ループの探索
-          cout << "detect normal loop" << endl;
-          loop_node = detect_loop_in_path_wP(
+          loop_node = detect_loop_in_path_parameter(
               next_node, current_LTL.created_nodes, par_cons);
           if (loop_node != NULL) { //ループの場合
             if (!current_automaton.exist_edge(current_LTL.node, loop_node)) {
@@ -448,7 +419,7 @@ current_checking_node_list_t LTLModelChecker::refresh(phase_list_t phase_list, C
   return next_search;
 }
 
-bool LTLModelChecker::check_including_wP(LTLNode *larger, LTLNode *smaller,
+bool LTLModelChecker::check_including_parameter(LTLNode *larger, LTLNode *smaller,
                                          ConstraintStore par_cons) {
   bool include_ret;
   // property_automaton
@@ -477,13 +448,14 @@ bool LTLModelChecker::check_including_wP(LTLNode *larger, LTLNode *smaller,
   return include_ret;
 }
 
-LTLNode *LTLModelChecker::detect_acceptance_cycle_wP(
-    LTLNode *new_node, ltl_path_list_t acceptance_path_list,
-    ConstraintStore par_cons) {
+/// 新しい状態 new_node がどこかの acceptance_path の中に含まれているかを判定
+LTLNode *LTLModelChecker::detect_acceptance_cycle_parameter(LTLNode *new_node, 
+                                                            ltl_path_list_t acceptance_path_list,
+                                                            ConstraintStore par_cons) {
   LTLNode *ret = NULL;
   for (ltl_path_list_t::iterator acceptance_path = acceptance_path_list.begin();
        acceptance_path != acceptance_path_list.end(); acceptance_path++) {
-    ret = detect_loop_in_path_wP(new_node, *acceptance_path, par_cons);
+    ret = detect_loop_in_path_parameter(new_node, *acceptance_path, par_cons);
     if (ret != NULL) {
       return ret;
     }
@@ -491,12 +463,13 @@ LTLNode *LTLModelChecker::detect_acceptance_cycle_wP(
   return ret;
 }
 
-LTLNode *LTLModelChecker::detect_loop_in_path_wP(LTLNode *new_node,
-                                                 ltl_node_list_t path,
-                                                 ConstraintStore par_cons) {
+/// 新しい状態 new_node が包含されるようなノードが path に存在するかを判定
+LTLNode *LTLModelChecker::detect_loop_in_path_parameter(LTLNode *new_node,
+                                                        ltl_node_list_t path,
+                                                        ConstraintStore par_cons) {
   LTLNode *ret = NULL;
   for (ltl_node_list_t::iterator it = path.begin(); it != path.end(); it++) {
-    if (check_including_wP((LTLNode *)*it, new_node, par_cons)) {
+    if (check_including_parameter((LTLNode *)*it, new_node, par_cons)) {
       ret = (LTLNode *)*it;
       return ret;
     }
@@ -504,15 +477,13 @@ LTLNode *LTLModelChecker::detect_loop_in_path_wP(LTLNode *new_node,
   return ret;
 }
 
-bool LTLModelChecker::check_edge_guard_wP(phase_result_sptr_t phase,
+bool LTLModelChecker::check_edge_guard_parameter(phase_result_sptr_t phase,
                                           node_sptr guard,
                                           ConstraintStore par_cons) {
   // cout << "check_edge_gurad wp " << endl;
+  if (guard->get_node_type_name() == "True") return true;
+
   bool ret;
-  if (guard->get_node_type_name() == "True") {
-    // cout << "check_edge_gurad wp end" << endl;
-    return true;
-  }
   HYDLA_LOGGER_DEBUG("checking guard condition : ", get_infix_string(guard));
   VariableFinder var_finder;
   var_finder.visit_node(guard);
@@ -525,20 +496,15 @@ bool LTLModelChecker::check_edge_guard_wP(phase_result_sptr_t phase,
       related_vm[related_variable] = vm_it->second;
   }
   HYDLA_LOGGER_DEBUG("variable map : ", related_vm);
-  // ConstraintStore par_cons = phase->get_parameter_constraint();
   HYDLA_LOGGER_DEBUG("parameter condition : ", par_cons);
 
   if (phase->phase_type == POINT_PHASE) {
     backend->call("checkEdgeGuard", true, 3, "etmvtcsn", "b", &guard,
                   &related_vm, &par_cons, &ret);
-    // cout << "phase " << phase->id << " : " << get_infix_string(guard) << " :
-    // " << ret << endl;
   } else {
     backend->call("checkEdgeGuardWt", true, 5, "etmvtcsnvlnvln", "b", &guard,
                   &related_vm, &par_cons, &(phase->current_time),
                   &(phase->end_time), &ret);
-    // cout << "phase " << phase->id << " : " << get_infix_string(guard) << " :
-    // " << ret << endl;
   }
 
   return ret;

@@ -42,6 +42,8 @@ typedef struct current_checking_node {
   LTLNode *node;
   ltl_node_list_t created_nodes;
   ltl_path_list_t acceptance_path_list;
+  current_checking_node(){}
+  current_checking_node(LTLNode *ln, ltl_node_list_t cn, ltl_path_list_t apl) : node(ln), created_nodes(cn), acceptance_path_list(apl) {}
 } current_checking_node_t;
 
 typedef std::vector<current_checking_node_t> current_checking_node_list_t;
@@ -60,23 +62,23 @@ private:
                  current_checking_node_list_t checking_list,
                  phase_list_t phase_list);
   bool check_including(LTLNode *larger, LTLNode *smaller);
-  bool check_edge_guard(phase_result_sptr_t phase, node_sptr guard);
-  bool check_including_wP(LTLNode *larger, LTLNode *smaller,
+  bool check_including_parameter(LTLNode *larger, LTLNode *smaller,
                           ConstraintStore par_cons);
-  bool check_edge_guard_wP(phase_result_sptr_t phase, node_sptr guard,
+  bool check_edge_guard_parameter(phase_result_sptr_t phase, node_sptr guard,
                            ConstraintStore par_cons);
 
   current_checking_node_list_t transition(current_checking_node_list_t checking_list,
                                           phase_result_sptr_t phase);
   current_checking_node_list_t refresh(phase_list_t phase_list,
-                                       ConstraintStore par_cons);
+                                       ConstraintStore par_cons,
+                                       io::SymbolicTrajPrinter printer);
   LTLNode *detect_acceptance_cycle(LTLNode *new_node,
                                    ltl_path_list_t acceptance_path_list);
   LTLNode *detect_loop_in_path(LTLNode *new_node, ltl_node_list_t path);
-  LTLNode *detect_acceptance_cycle_wP(LTLNode *new_node,
+  LTLNode *detect_acceptance_cycle_parameter(LTLNode *new_node,
                                       ltl_path_list_t acceptance_path_list,
                                       ConstraintStore par_cons);
-  LTLNode *detect_loop_in_path_wP(LTLNode *new_node, ltl_node_list_t path,
+  LTLNode *detect_loop_in_path_parameter(LTLNode *new_node, ltl_node_list_t path,
                                   ConstraintStore par_cons);
 
   /* phase_list_t get_path(phase_result_sptr_t phase); */
