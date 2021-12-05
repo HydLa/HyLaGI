@@ -2,7 +2,7 @@
 
 ## ビルド時の注意事項
 
-- sss
+- ```HyLaGI``` 直下で ```make -j``` をすると ```parser/never_claim/y.tab.hpp``` が見つからない旨のエラーが生じることがある. その時は一旦 ```make clean``` して, ```parser/never_claim``` に行ってビルドすれば ```y.tab.hpp``` が生成される（はず）. 生成されたことを確認したら ```HyLaGI``` 直下に戻って再度 ```make -j```.
 
 ## ビルド成功後の実行手順
 
