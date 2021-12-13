@@ -46,12 +46,12 @@ void AutomatonNode::dump(ostream &ost) {
   if (this->peripheries > 0) {
     ost << "\"" << name << "\""
         << " "
-        << "[color=\"" << this->color << "\",peripheries=" << this->peripheries
+        << "[color=\"" << this->color << "\",shape=\"" << node_shape << "\",peripheries=" << this->peripheries
         << "];" << endl;
   } else {
     ost << "\"" << name << "\""
         << " "
-        << "[color=\"" << this->color << "\"];" << endl;
+        << "[color=\"" << this->color << "\",shape=\"" << node_shape << "\"];" << endl;
   }
   if (this->edge_guard_write) {
     for (auto it = edges.begin(); it != edges.end(); it++) {
