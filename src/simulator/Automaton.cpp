@@ -39,6 +39,7 @@ void AutomatonNode::set_peripheries(int num) { this->peripheries = num; }
 
 void AutomatonNode::dump(ostream &ost) {
   string name = this->name;
+  string node_shape = (this->phase->phase_type == POINT_PHASE) ? "box" : "";
   if (this->node_vm_write)
     name += "\n" + (*this->phase).get_vm_string();
 
