@@ -1,0 +1,9 @@
+INIT <=> temp = 25 & switch = 0.
+ON   <=> [](switch- = 0 => temp' = 1).
+OFF  <=> [](switch- = 1 => temp' = -0.5).
+TEMP <=> [](temp' = 0).
+CONST <=> [](switch' = 0).
+TURNON <=> [](switch- = 0 & temp- = 23 => switch = 1).
+TURNOFF <=> [](switch- = 1 & temp- = 27 => switch = 0).
+
+INIT, ON, OFF, TEMP, CONST << (TURNON, TURNOFF).
