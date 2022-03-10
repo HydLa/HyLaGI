@@ -116,12 +116,13 @@ void ProgramOptions::init_descriptions() {
       ("ha", value<char>()->default_value('n'), "convert to HA");
 
   if (not is_master())
-    toggle_desc.add_options()
-      // ("hs", value<char>()->default_value('n'), "simulate using HA")
+    toggle_desc.add_options()("hs", value<char>()->default_value('n'),
+                              "simulate using HA")
 
-      ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
+        ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
-      ("affine", value<char>()->default_value('n'), "use affine arithmetic to approximate expressions");
+            ("affine", value<char>()->default_value('n'),
+             "use affine arithmetic to approximate expressions");
 
   toggle_desc.add_options()("fail_on_stop", value<char>()->default_value('n'),
                             "stop all simulation cases when assertion fails");

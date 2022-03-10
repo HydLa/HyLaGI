@@ -195,8 +195,8 @@ void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
   IF_SPECIFIED("use_shorthand")
   TreeInfixPrinter::set_use_shorthand(po.count("use_shorthand") > 0 &&
                                       po.get<char>("use_shorthand") == 'y');
-  // IF_SPECIFIED("hs")
-  // opts.ha_simulator_mode = po.count("hs") > 0 && po.get<char>("hs") == 'y';
+  IF_SPECIFIED("hs")
+  opts.ha_simulator_mode = po.count("hs") > 0 && po.get<char>("hs") == 'y';
   IF_SPECIFIED("ltl")
   opts.ltl_model_check_mode = po.count("ltl") > 0 && po.get<char>("ltl") == 'y';
   IF_SPECIFIED("affine")

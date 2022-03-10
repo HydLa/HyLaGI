@@ -30,7 +30,7 @@ struct Opts {
   bool nd_mode;
   bool static_generation_of_module_sets;
   bool ha_convert_mode;
-  // bool ha_simulator_mode;
+  bool ha_simulator_mode;
   bool dump_relation;
   bool dump_in_progress;
   bool stop_at_failure;
