@@ -1,0 +1,15 @@
+INIT(x,y,px,py,vx,vy) <=> x=px & y=py & x'=vx & y'=vy.
+FALL(x,y) <=> [](y''=-10 & x''=0).
+BOUNCE(x,y) <=> [](y-=0 => x'=x'- & y'=-4/5*y'-).
+BREAK <=>
+  y-=0 => {
+    \nx.\ny.(
+      INIT(nx,ny,x-,y-,1/2*x'-,-3/4*y'-), FALL(nx,ny) << BOUNCE(nx,ny)
+    )
+  }.
+INIT(x,y,0,10,1,0), FALL(x,y) << BOUNCE(x,y),
+BREAK.
+
+// #hylagi -p8
+// bouncing particle that splits into two particles when bounces to the floor
+// parse error as of 03/11/2022.
