@@ -114,10 +114,10 @@ void output_result(Simulator &ss, Opts &opts) {
     writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
 
-  if (cmdline_options.get<std::string>("tm") == "s") {
+  if (cmdline_options.get<std::vector<string>>("tm").at(0) == "s") {
     hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
-  } else if (cmdline_options.get<std::string>("tm") == "c") {
-    std::string csv_name = cmdline_options.get<std::string>("csv");
+  } else if (cmdline_options.get<std::vector<string>>("tm").at(0) == "c") {
+    std::string csv_name = cmdline_options.get<std::vector<string>>("tm").at(1);
     if (csv_name == "") {
       hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
     } else {
@@ -184,6 +184,7 @@ void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
   }
   IF_SPECIFIED("simplify_time")
   opts.simplify_time = po.get<string>("simplify_time");
+
   IF_SPECIFIED("static_generation_of_module_sets")
   opts.static_generation_of_module_sets =
       po.count("static_generation_of_module_sets") &&
