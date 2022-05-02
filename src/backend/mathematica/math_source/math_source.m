@@ -208,10 +208,18 @@ Module[
     If[Length[newVars] == 1,
       processedVars = Append[processedVars, newVars[[1]] ];
       simplePrint[listToProcess[[i]], newVars[[1]] ];
-      tmpCons = Quiet[Check[If[listToProcess[[i]] =!= newVars[[1]],
-        newVars[[1]] == Solve[listToProcess[[i]], newVars[[1]]][[1, 1, 2]],
-        listToProcess[[i]]
-      ], listToProcess[[i]] ] ];
+      tmpCons = 
+        Quiet[
+          Check[
+            If[
+              listToProcess[[i]] =!= newVars[[1]],
+              newVars[[1]] == Solve[listToProcess[[i]], newVars[[1]]][[1, 1, 2]],
+              listToProcess[[i]]
+            ],
+            (* Issue #9: Solve generates message for inequalities, so handle them with Reduce *)
+            Reduce[listToProcess[[i]], newVars[[1]] ] 
+          ] 
+        ];
       If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
       simplePrint[tmpCons];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
