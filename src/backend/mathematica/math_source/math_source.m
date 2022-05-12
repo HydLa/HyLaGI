@@ -731,7 +731,7 @@ publicMethod[
     simplePrint[necessaryPCons];
     simplePrint[restPCons];
 
-    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 3],
+    Quiet[Check[minT = TimeConstrained[Minimize[{t, t > startingTime && tCons && necessaryPCons && maxCons}, {t}], 300],
          onTime = False,
          Minimize::wksol
        ],

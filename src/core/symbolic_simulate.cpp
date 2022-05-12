@@ -172,6 +172,8 @@ void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
                           po.get<char>("dump_in_progress") == 'y';
   IF_SPECIFIED("ha")
   opts.ha_convert_mode = po.count("ha") > 0 && po.get<char>("ha") == 'y';
+  IF_SPECIFIED("init_abstraction")
+  opts.init_abstraction = po.count("init_abstraction") > 0 && po.get<char>("init_abstraction") == 'y';
   IF_SPECIFIED("epsilon") opts.epsilon_mode = po.get<int>("epsilon");
   IF_SPECIFIED("fail_on_stop")
   opts.stop_at_failure =

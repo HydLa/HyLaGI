@@ -121,18 +121,15 @@ HybridAutomatonConverter::transition(AutomatonNode *current_HA_node,
 
 AutomatonNode *HybridAutomatonConverter::detect_loop(AutomatonNode *new_node,
                                                      HA_node_list_t path) {
-  for (auto node : path) {
-    if (check_including(node, new_node)) {
-      return node;
-    }
-  }
-  return nullptr;
+
+  return already_calculated(new_node, path, 3.0, 2000, 600);                  
 }
 
 bool HybridAutomatonConverter::check_including(AutomatonNode *larger,
                                                AutomatonNode *smaller) {
   bool include_ret;
   // phase typeの比較
+
   if (larger->phase->phase_type != smaller->phase->phase_type) {
     // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" <<
     // smaller->id << "\"" << endl;
@@ -161,6 +158,35 @@ bool HybridAutomatonConverter::check_including(AutomatonNode *larger,
     // << "\"" << endl;
   }
   return include_ret;
+}
+AutomatonNode* HybridAutomatonConverter::already_calculated
+                                                            (
+                                                              AutomatonNode *current, 
+                                                              HA_node_list_t trace_path, 
+                                                              double abstractTL, 
+                                                              double T0, double T1
+                                                            ) {
+  cout << "here is already_calculated" << endl;
+  for(auto node: trace_path){
+    if(check_including(node, current))
+      return node;
+  }                                                            
+  return nullptr;
+}
+
+double calculate_inclusion_score(
+                                  AutomatonNode *big_state, 
+                                  AutomatonNode *small_state, 
+                                  ConstraintStore new_param_cons
+                                ){
+  return 0.0;
+}
+
+ConstraintStore HybridAutomatonConverter::abstractCP(
+                                                      AutomatonNode *current, 
+                                                      ConstraintStore current_param_cons
+                                                    ){
+  return current_param_cons;
 }
 
 } // namespace simulator

@@ -116,8 +116,10 @@ void ProgramOptions::init_descriptions() {
       ("ha", value<char>()->default_value('n'), "convert to HA");
 
   if (not is_master())
+
     toggle_desc.add_options()
         // ("hs", value<char>()->default_value('n'), "simulate using HA")
+        ("init_abstraction", value<char>()->default_value('n'), "calculate fixed point using initial value abstraction in ha mode")
 
         ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
