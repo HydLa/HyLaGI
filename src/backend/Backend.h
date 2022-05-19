@@ -61,25 +61,31 @@ public:
    *    gm: map<constraint_t, bool> : map of guard satisfaction
    *    i: int: integer
    *    s: const char*: symbol (send only)
-   *    e(n, p, c, z, t): symbolic_expression::node_sptr: expression (Variables
-   * are handled like n:x, c:x (ignoring prev), p:prev[x], z:x[0], t:x[t],
-   * needed only for sending) vl(n, p, z, t): value_t: value (following n,p,z
-   * and t are only for sending) cs(n, p, z, t): constraint_store_t: constraint
-   * store cc: check_consistency_result_t (receive only) cv: create_vm_t
-   * (receive only) mv[0](n, p, z, t): variable_map_t: variable map (If '0' is
-   * appended, derivatives are not sent. Characters after them are the same as
-   * 'e') lp: std::list<parameter_t> : send only mp: parameter_map_t : send only
-   *    mps: std::vector<parameter_map_t> : receive only
+   *    e(n, p, c, z, t): symbolic_expression::node_sptr: expression 
+   *      (Variables are handled like 
+   *        n:x, c:x (ignoring prev), p:prev[x], z:x[0], t:x[t],
+   *      needed only for sending) 
+   *    vl(n, p, z, t): value_t: value (following n,p,z and t are only for sending) 
+   *    cs(n, p, z, t): constraint_store_t: constraint store 
+   *    cc: check_consistency_result_t (receive only) 
+   *    cv: create_vm_t (receive only) 
+   *    mv[0](n, p, z, t): variable_map_t: variable map (If '0' is appended, 
+   *      derivatives are not sent. Characters after them are the same as 'e') 
+   *    lp: std::list<parameter_t> : send only mp: parameter_map_t : (send only)
+   *    mps: std::vector<parameter_map_t> : (receive only)
    *    r: MidpointRadius: midpoint_radius form (receive only)
    *    ct: CalculateTLinearResult: (receive only)
    *    f: find_min_time_result_t (receive only)
    *    p: parameter_t (send only)
    *    tl: std::vector<simulator::TimeListElement> (send only)
-   *    v(n, p, z, t): variable_t: variable (Characters after them are the same
-   * as 'e') (send only) vs(n, p, z, t): variable_set_t: variable set example:
-   * call("add", true, 2, "ii", "i", &lhs, &rhs, &res) Caution: In Mathematica,
-   * '_' cannot be used as name of symbols REDUCE doesn't distinguish whether
-   * characters are in upper cases or not.
+   *    v(n, p, z, t): variable_t: 
+   *      variable (Characters after them are the same as 'e') (send only) 
+   *    vs(n, p, z, t): variable_set_t: variable set 
+   * example:
+   *    call("add", true, 2, "ii", "i", &lhs, &rhs, &res) 
+   * Caution: 
+   *    In Mathematica, '_' cannot be used as name of symbols REDUCE doesn't 
+   *    distinguish whether characters are in upper cases or not.
    */
   int call(const char *name, bool trace, int arg_cnt, const char *args_fmt,
            const char *ret_fmt, ...);

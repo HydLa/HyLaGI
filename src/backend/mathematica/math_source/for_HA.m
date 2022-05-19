@@ -132,3 +132,66 @@ publicMethod[
   expr, time,
   integerString[expr + time]
 ];
+
+publicMethod[
+  abstractCP,
+  cons,
+  Module[
+    {ret=True, param, tmpCons},
+    For[i = 1, i <= Length[cons], i++,
+      simplePrint[cons[[i]]];
+      simplePrint[getParameters[ cons[[i]] ] ]
+    ];
+    For[i = 1, i <= Length[cons], i++,
+      param = getParameters[cons[[i]]][[1]];
+      tmpCons = cons[[i]];
+      If[ToString[Head[cons[[i]]] ] == "Greater" || ToString[Head[cons[[i]]] ] == "GreaterEqual",
+        If[
+          ToString[param] == ToString[cons[[i, 1]]],
+          tmpCons[[2]] = tmpCons[[2]] - 1,
+          tmpCons[[1]] = tmpCons[[1]] + 1
+        ],
+        (* case [Head[cons[[i]]]  == Less || Head[cons[[i]]] == LessEqual *)
+        If[
+          ToString[param] == ToString[cons[[i, 1]]],
+          tmpCons[[2]] = tmpCons[[2]] + 1,
+          tmpCons[[1]] = tmpCons[[1]] - 1;
+        ]
+      ];
+      ret = ret && tmpCons
+    ];
+    ret
+  ]
+]
+
+publicMethod[
+  calculateInclusionScore, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
+  Module[
+    {ret = True,score = 0.0, i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+    tmpLargeVm = largeVm /. p -> pL;
+    tmpLargeTime = largeTime /. p -> pL;
+    (* compare variable num *)
+    allExpr = True;
+    For[i = 1, i <= Length[tmpLargeVm], i++,
+        (* compare variable name *)
+        If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]], Return[False];];
+        
+        (* correct expr : large.2 == small.2 *)
+        tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
+        simplePrint[tmp];
+        allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime] ];
+    ];
+    allExpr = Simplify[allExpr];
+    If[allExpr === False, Return[False];];
+    tmpLargePm = largePm /. p -> pL;
+    tmpSmallPm = smallPm;
+    
+    listLarge = Union[getParameters[largePm], getParameters[largeVm] ] /. p -> pL;
+    listSmall = Union[getParameters[smallPm], getParameters[smallVm] ];
+    simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+    ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr] ],Reals];
+    If[ret == True, score = 1.0];
+    simplePrint[score];
+    score
+  ]
+];

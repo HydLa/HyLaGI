@@ -626,9 +626,7 @@ publicMethod[
 publicMethod[
   addParameterConstraint,
   pCons,
-  pConstraint = Reduce[pConstraint && pCons, Union[getParameters[pConstraint], getParameters[pCons]], Reals];
-  debugPrint["pConstraint", pConstraint];
-  debugPrint["pCons", pCons]
+  pConstraint = Reduce[pConstraint && pCons, Union[getParameters[pConstraint], getParameters[pCons]], Reals]
 ];
 
 

@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 
 namespace hydla {
@@ -121,8 +123,17 @@ HybridAutomatonConverter::transition(AutomatonNode *current_HA_node,
 
 AutomatonNode *HybridAutomatonConverter::detect_loop(AutomatonNode *new_node,
                                                      HA_node_list_t path) {
-
-  return already_calculated(new_node, path, 3.0, 2000, 600);                  
+  for (auto node : path) {
+    if(opts_->init_abstraction){
+      if (check_including_abstraction(node, new_node)){
+        return node;
+      }
+    }
+    else if (check_including(node, new_node)) {
+      return node;
+    }
+  } 
+  return nullptr;               
 }
 
 bool HybridAutomatonConverter::check_including(AutomatonNode *larger,
@@ -159,34 +170,82 @@ bool HybridAutomatonConverter::check_including(AutomatonNode *larger,
   }
   return include_ret;
 }
-AutomatonNode* HybridAutomatonConverter::already_calculated
-                                                            (
-                                                              AutomatonNode *current, 
-                                                              HA_node_list_t trace_path, 
-                                                              double abstractTL, 
-                                                              double T0, double T1
-                                                            ) {
-  cout << "here is already_calculated" << endl;
-  for(auto node: trace_path){
-    if(check_including(node, current))
-      return node;
-  }                                                            
-  return nullptr;
+
+
+bool HybridAutomatonConverter::check_including_abstraction(AutomatonNode *larger,
+                                               AutomatonNode *smaller) {
+  // phase typeの比較
+  if (larger->phase->phase_type != smaller->phase->phase_type) {
+    // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" <<
+    // smaller->id << "\"" << endl;
+    return false;
+  }
+  // phase の変数表の大きさの比較
+  if (larger->phase->variable_map.size() !=
+      smaller->phase->variable_map.size()) {
+    // cout << "different size of variable map :\n\t \"" << larger->id << "\" :
+    // \"" << smaller->id << "\"" << endl;
+    return false;
+  }
+
+  double inclusion_score = maximize_inclusion(smaller, larger, 3.0, 2000, 600);
+
+  if (inclusion_score >= 1.0) {
+    // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n"
+    // << endl;
+  } else {
+    // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id
+    // << "\"" << endl;
+  }
+  return inclusion_score >= 1.0;
 }
 
-double calculate_inclusion_score(
-                                  AutomatonNode *big_state, 
-                                  AutomatonNode *small_state, 
-                                  ConstraintStore new_param_cons
+double HybridAutomatonConverter::maximize_inclusion(
+                                                    AutomatonNode *current, 
+                                                    AutomatonNode *past, 
+                                                    double abstractTL, 
+                                                    double T0, double T1
+                                                   ) {
+  cout << "here is maximize_inclusion" << endl;
+  bool include_ret;
+  double include_score;                         
+  ConstraintStore past_cons = past->phase->get_parameter_constraint();
+  ConstraintStore current_cons = current->phase->get_parameter_constraint();
+  ConstraintStore abstracted_parameter_constraint = abstract_cp(current, current->phase->get_parameter_constraint());
+  // compareing set of variables
+  backend->call("calculateInclusionScore", true, 6, "vlnmvtcsnvlnmvtcsn", "db",
+                &(past->phase->current_time), &(past->phase->variable_map),
+                &abstracted_parameter_constraint, &(current->phase->current_time),
+                &(current->phase->variable_map), &abstracted_parameter_constraint, &include_score);
+  return include_score >= 1.0;
+}
+
+double HybridAutomatonConverter::calculate_inclusion_score(
+                                  AutomatonNode *current, ConstraintStore current_param_cons,
+                                  AutomatonNode *past, ConstraintStore past_param_cons 
                                 ){
-  return 0.0;
+  double ret = 0.0;
+  /** backend->call("calculateInclusionScore", true, 6, "vlnmvtcsnvlnmvtcsn", "d",
+   *             &(past->phase->current_time), &(current->phase->variable_map),
+   *             &past_param_cons, &(current->phase->current_time),
+   *             &(current->phase->variable_map), &current_param_cons, &ret)
+   */
+  return ret;
 }
 
-ConstraintStore HybridAutomatonConverter::abstractCP(
-                                                      AutomatonNode *current, 
-                                                      ConstraintStore current_param_cons
+ConstraintStore HybridAutomatonConverter::abstract_cp(
+                                                      AutomatonNode *state, 
+                                                      ConstraintStore param_cons
                                                     ){
-  return current_param_cons;
+  variable_map_t vmap = state->phase->variable_map;
+  vector<variable_t> abstractCandidate;
+  ConstraintStore ret_param_cons;
+  
+  cout << "bef_cons: " << param_cons << endl;
+  if(param_cons.size() >= 1)
+    backend->call("abstractCP", true, 1, "csn", "cs", &param_cons, &ret_param_cons);
+  cout << "aft_cons: " << ret_param_cons << endl;
+  return param_cons; //後で ret_param_cons に書き換え
 }
 
 } // namespace simulator

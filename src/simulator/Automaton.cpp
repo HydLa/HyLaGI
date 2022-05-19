@@ -39,18 +39,19 @@ void AutomatonNode::set_peripheries(int num) { this->peripheries = num; }
 
 void AutomatonNode::dump(ostream &ost) {
   string name = this->name;
+  string node_shape = (this->phase->phase_type == POINT_PHASE) ? "box" : "";
   if (this->node_vm_write)
     name += "\n" + (*this->phase).get_vm_string();
 
   if (this->peripheries > 0) {
     ost << "\"" << name << "\""
         << " "
-        << "[color=\"" << this->color << "\",peripheries=" << this->peripheries
+        << "[color=\"" << this->color << "\",shape=\"" << node_shape << "\",peripheries=" << this->peripheries
         << "];" << endl;
   } else {
     ost << "\"" << name << "\""
         << " "
-        << "[color=\"" << this->color << "\"];" << endl;
+        << "[color=\"" << this->color << "\",shape=\"" << node_shape << "\"];" << endl;
   }
   if (this->edge_guard_write) {
     for (auto it = edges.begin(); it != edges.end(); it++) {
