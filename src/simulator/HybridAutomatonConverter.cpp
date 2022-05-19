@@ -28,6 +28,10 @@ HybridAutomatonConverter::HybridAutomatonConverter(Opts &opts)
 HybridAutomatonConverter::~HybridAutomatonConverter() {}
 
 phase_result_sptr_t HybridAutomatonConverter::simulate() {
+  if(opts_->init_abstraction){
+    engine = mt19937(seed_gen());
+  }
+
   std::string error_str = "";
   make_initial_todo();
   try {
@@ -175,6 +179,7 @@ bool HybridAutomatonConverter::check_including(AutomatonNode *larger,
 bool HybridAutomatonConverter::check_including_abstraction(AutomatonNode *larger,
                                                AutomatonNode *smaller) {
   // phase typeの比較
+  const double included = 1.0;
   if (larger->phase->phase_type != smaller->phase->phase_type) {
     // cout << "different phase type :\n\t \"" << larger->id << "\" : \"" <<
     // smaller->id << "\"" << endl;
@@ -188,16 +193,16 @@ bool HybridAutomatonConverter::check_including_abstraction(AutomatonNode *larger
     return false;
   }
 
-  double inclusion_score = maximize_inclusion(smaller, larger, 3.0, 2000, 600);
+  double inclusion_score = maximize_inclusion(smaller, larger, 2.0, 2000, 600);
 
-  if (inclusion_score >= 1.0) {
+  if (inclusion_score >= included) {
     // cout << "\n\"" << larger->id << "\" includes \"" << smaller->id << "\"\n"
     // << endl;
   } else {
     // cout << "not included :\n\t \"" << larger->id << "\" : \"" << smaller->id
     // << "\"" << endl;
   }
-  return inclusion_score >= 1.0;
+  return inclusion_score >= included;
 }
 
 double HybridAutomatonConverter::maximize_inclusion(
@@ -207,17 +212,47 @@ double HybridAutomatonConverter::maximize_inclusion(
                                                     double T0, double T1
                                                    ) {
   cout << "here is maximize_inclusion" << endl;
-  bool include_ret;
-  double include_score;                         
+  double inclusion_score = 0.0;
+  const double included = 1.0;
+  uniform_real_distribution<> dist(0.0, 1.0);
   ConstraintStore past_cons = past->phase->get_parameter_constraint();
   ConstraintStore current_cons = current->phase->get_parameter_constraint();
-  ConstraintStore abstracted_parameter_constraint = abstract_cp(current, current->phase->get_parameter_constraint());
-  // compareing set of variables
-  backend->call("calculateInclusionScore", true, 6, "vlnmvtcsnvlnmvtcsn", "db",
-                &(past->phase->current_time), &(past->phase->variable_map),
-                &abstracted_parameter_constraint, &(current->phase->current_time),
-                &(current->phase->variable_map), &abstracted_parameter_constraint, &include_score);
-  return include_score >= 1.0;
+
+  //------------------- 仮置き, ここを焼きなましにする -----------------//
+  // ConstraintStore abstracted_parameter_constraint = abstract_cp(current, current->phase->get_parameter_constraint());
+  // inclusion_score = max(inclusion_score, calculate_inclusion_score(current, abstracted_parameter_constraint, past, abstracted_parameter_constraint));
+  //------------------- 仮置き, ここを焼きなましにする -----------------//
+
+  // 焼きなましによる包含スコアの最大化
+  auto abstract_start = chrono::system_clock::now();
+  auto elapsed = 0;
+  do{
+    /// 経過時間を測定
+    auto now = chrono::system_clock::now();
+    elapsed = chrono::duration_cast<chrono::milliseconds>(now - abstract_start).count();
+
+    double t = elapsed/abstractTL;
+    double temp = std::pow(T0, 1-t) * std::pow(T1, t);
+
+    ConstraintStore updated_cons = abstract_cp(current, current_cons);
+    double new_inclusion_score = calculate_inclusion_score(current, updated_cons, past, past_cons);
+
+    if(new_inclusion_score >= included){
+      return new_inclusion_score;
+    }
+    double delta = new_inclusion_score - inclusion_score;
+    if(delta > 0){
+      current_cons = updated_cons;
+    }
+    else{
+      if(exp(delta/temp) > dist(engine)){ ///スコアが悪くなる抽象化を一定の確率で受け入れる
+        current_cons = updated_cons;
+      }
+    }
+    inclusion_score = max(inclusion_score, new_inclusion_score);
+  } while(inclusion_score < included && elapsed <= abstractTL*1000);
+  
+  return inclusion_score;
 }
 
 double HybridAutomatonConverter::calculate_inclusion_score(
@@ -225,11 +260,10 @@ double HybridAutomatonConverter::calculate_inclusion_score(
                                   AutomatonNode *past, ConstraintStore past_param_cons 
                                 ){
   double ret = 0.0;
-  /** backend->call("calculateInclusionScore", true, 6, "vlnmvtcsnvlnmvtcsn", "d",
-   *             &(past->phase->current_time), &(current->phase->variable_map),
-   *             &past_param_cons, &(current->phase->current_time),
-   *             &(current->phase->variable_map), &current_param_cons, &ret)
-   */
+  backend->call("calculateInclusionScore", true, 6, "vlnmvtcsnvlnmvtcsn", "db",
+                &(past->phase->current_time), &(past->phase->variable_map),
+                &past_param_cons, &(current->phase->current_time),
+                &(current->phase->variable_map), &current_param_cons, &ret);
   return ret;
 }
 

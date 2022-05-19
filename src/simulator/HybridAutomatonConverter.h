@@ -4,6 +4,8 @@
 #include "ConsistencyChecker.h"
 #include "Simulator.h"
 
+#include <random>
+
 namespace hydla {
 namespace simulator {
 
@@ -81,6 +83,8 @@ private:
   Automaton current_automaton;
   std::list<Automaton> result_automata;
   double abstractionTL;
+  std::random_device seed_gen;
+  std::mt19937 engine;
 };
 
 } // namespace simulator
