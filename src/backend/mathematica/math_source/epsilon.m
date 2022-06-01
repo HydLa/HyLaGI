@@ -1,71 +1,77 @@
 (* ガード条件を満たしているか判定する *)
 publicMethod[checkEdgeGuard, guard, relatedVm, relatedPm,
-             Module[{ret,i,tmp,newCondition},
-                    tmp = guard;
-                    newCondition = relatedPm;
-                    For[i=1, i<=Length[relatedVm], i++,
-                        debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
-                        If[relatedVm[[i]][[0]] === Equal,
-                           tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];,
-                           newCondition = And[newCondition, relatedVm[[i]]];
-                           ];
-                        ];
-                    debugPrint["#check edge guard : checking guard : ", tmp];
-                    debugPrint["#check edge guard : conditions : ", newCondition];
-                    ret = Quiet[timeConstrainedSimplify[tmp,newCondition]];
-                    debugPrint["#check edge guard : ret : ",ret];
-                    TrueQ[ret]
-                    ]
-             ];
+  Module[{ret,i,tmp,newCondition},
+    tmp = guard;
+    newCondition = relatedPm;
+    For[i=1, i<=Length[relatedVm], i++,
+      debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
+      If[relatedVm[[i]][[0]] === Equal,
+        tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];,
+        newCondition = And[newCondition, relatedVm[[i]]];
+      ];
+    ];
+    debugPrint["#check edge guard : checking guard : ", tmp];
+    debugPrint["#check edge guard : conditions : ", newCondition];
+    ret = Quiet[timeConstrainedSimplify[tmp,newCondition] ];
+    debugPrint["#check edge guard : ret : ",ret];
+    TrueQ[ret]
+  ]
+];
 
 publicMethod[checkEdgeGuardWt, guard, relatedVm, relatedPm, startTime, endTime,
-             Module[{ret,i,tmp,newCondition},
-                    tmp = guard;
-                    For[i=1, i<=Length[relatedVm], i++,
-                        debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
-                        tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];
-                        ];
-                    debugPrint["#check edge guard : checking guard : ", tmp];
-                    newCondition = And[relatedPm, t > startTime && t <= endTime];
-                    debugPrint["#check edge guard : conditions : ", newCondition];
-                    ret = Quiet[timeConstrainedSimplify[tmp,newCondition]];
-                    debugPrint["#check edge guard : ret : ",ret];
-                    TrueQ[ret]
-                    ]
-             ];
+  Module[{ret,i,tmp,newCondition},
+    tmp = guard;
+    For[i=1, i<=Length[relatedVm], i++,
+      debugPrint["#check edge guard : relatedVm ", i ," : ", relatedVm[[i]]];
+      tmp = tmp /. relatedVm[[i]][[1]] -> relatedVm[[i]][[2]];
+    ];
+    debugPrint["#check edge guard : checking guard : ", tmp];
+    newCondition = And[relatedPm, t > startTime && t <= endTime];
+    debugPrint["#check edge guard : conditions : ", newCondition];
+    ret = Quiet[timeConstrainedSimplify[tmp,newCondition] ];
+    debugPrint["#check edge guard : ret : ",ret];
+    TrueQ[ret]
+  ]
+];
 
 (* phaseの包含を判定する *)
 publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
-             Module[{ret,i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
-                    ret = True;
-
-                    tmpLargeVm = largeVm /. p -> pL;
-                    tmpLargeTime = largeTime /. p -> pL;
-                    (* compare variable num *)
-                    allExpr = True;
-                    For[i = 1, i <= Length[tmpLargeVm], i++,
-                        (* compare variable name *)
-                        If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]], Return[False];];
-												
-                        (* correct expr : large.2 == small.2 *)
-												tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
-												simplePrint[tmp];
-                        allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime]];
-                    ];
-                    allExpr = Simplify[allExpr];
-                    If[allExpr === False, Return[False];];
-                    tmpLargePm = largePm /. p -> pL;
-                    tmpSmallPm = smallPm;
-                    
-                    listLarge = Union[getParameters[largePm], getParameters[largeVm]] /. p -> pL;
-                    listSmall = Union[getParameters[smallPm], getParameters[smallVm]];
-                    simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
-                    ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr]],Reals];
-                    simplePrint[ret];
-                    If[ret =!= True,ret = False];
-                    ret
-             ]
-       ];
+  Module[{ret,i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+    ret = True;
+    tmpLargeVm = largeVm /. p -> pL;
+    tmpLargeTime = largeTime /. p -> pL;
+    (* compare variable num *)
+    allExpr = True;
+    For[i = 1, i <= Length[tmpLargeVm], i++,
+      (* compare variable name *)
+      If[tmpLargeVm[[i]][[1]] != smallVm[[i]][[1]], Return[False];];
+      (* correct expr : large.2 == small.2 *)
+      tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
+      simplePrint[tmp];
+      (* IP では開始時刻のみ見るので, 時刻 t は tmpLargeTime や smallTime で置き換える *)
+      allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime] ];
+    ];
+    allExpr = Simplify[allExpr];
+    simplePrint[allExpr];
+    If[allExpr === False, Return[False];];
+    tmpLargePm = largePm /. p -> pL;
+    tmpSmallPm = smallPm;
+    
+    listLarge = Union[getParameters[largePm], getParameters[largeVm] ] /. p -> pL;
+    listSmall = Union[getParameters[smallPm], getParameters[smallVm] ];
+    simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+    ret = Reduce[
+            ForAll[
+              Evaluate[listSmall], tmpSmallPm, 
+              Exists[Evaluate[listLarge],tmpLargePm,allExpr] 
+            ],
+            Reals
+          ];
+    simplePrint[ret];
+    If[ret =!= True,ret = False];
+    ret
+  ]
+];
 
 
 (* check whether the pCons includes case where the p[peps, 0, 1] = 0 *)
