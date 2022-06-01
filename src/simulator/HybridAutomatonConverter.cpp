@@ -211,7 +211,6 @@ double HybridAutomatonConverter::maximize_inclusion(
                                                     double abstractTL, 
                                                     double T0, double T1
                                                    ) {
-  cout << "here is maximize_inclusion" << endl;
   double inclusion_score = 0.0;
   const double included = 1.0;
   uniform_real_distribution<> dist(0.0, 1.0);
@@ -275,10 +274,8 @@ ConstraintStore HybridAutomatonConverter::abstract_cp(
   vector<variable_t> abstractCandidate;
   ConstraintStore ret_param_cons;
   
-  cout << "bef_cons: " << param_cons << endl;
   if(param_cons.size() >= 1)
     backend->call("abstractCP", true, 1, "csn", "cs", &param_cons, &ret_param_cons);
-  cout << "aft_cons: " << ret_param_cons << endl;
   return param_cons; //後で ret_param_cons に書き換え
 }
 

@@ -133,6 +133,7 @@ publicMethod[
   integerString[expr + time]
 ];
 
+(* パラメタの抽象化を行う関数 *)
 publicMethod[
   abstractCP,
   cons,
@@ -143,24 +144,22 @@ publicMethod[
       listCons = cons,
       listCons = {cons}
     ];
-    For[i = 1, i <= Length[listCons], i++,
-      simplePrint[listCons[[i]]];
-      simplePrint[getParameters[ listCons[[i]] ] ]
-    ];
-    For[i = 1, i <= Length[listCons], i++,
-      param = getParameters[listCons[[i]]][[1]];
-      tmpCons = listCons[[i]];
-      If[ToString[Head[listCons[[i]]] ] == "Greater" || ToString[Head[listCons[[i]]] ] == "GreaterEqual",
+    For[i = 1, i <= Length[listCons[[1]]], i++,
+      tmpCons = listCons[[1]][[i]];
+      param = getParameters[tmpCons][[1]];
+      debugPrint["param, ", param];
+      debugPrint["tmpCons[[1]]", tmpCons[[1]]];
+      If[ToString[Head[tmpCons] ] == "Greater" || ToString[Head[tmpCons] ] == "GreaterEqual",
         If[
-          ToString[param] == ToString[listCons[[i, 1]]],
+          ToString[param] == ToString[tmpCons[[1]]],
           tmpCons[[2]] = tmpCons[[2]] - 1,
           tmpCons[[1]] = tmpCons[[1]] + 1
         ],
         (* case [Head[cons[[i]]]  == Less || Head[cons[[i]]] == LessEqual *)
         If[
-          ToString[param] == ToString[listCons[[i, 1]]],
+          ToString[param] == ToString[tmpCons[[1]]],
           tmpCons[[2]] = tmpCons[[2]] + 1,
-          tmpCons[[1]] = tmpCons[[1]] - 1;
+          tmpCons[[1]] = tmpCons[[1]] - 1
         ]
       ];
       ret = ret && tmpCons
@@ -169,10 +168,12 @@ publicMethod[
   ]
 ]
 
+(* C++ から呼び出される, 領域同士の重なりのスコアを算出する関数 *)
 publicMethod[
   calculateInclusionScore, largeTime, largeVm, largePm, smallTime, smallVm, smallPm,
   Module[
     {ret = True,score = 0.0, i,tmp,tmpLargeTime,tmpLargeVm,tmpSmallPar,tmpLargePar,allExpr,listLarge,listSmall},
+
     tmpLargeVm = largeVm /. p -> pL;
     tmpLargeTime = largeTime /. p -> pL;
     (* compare variable num *)
@@ -186,17 +187,168 @@ publicMethod[
         allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime] ];
     ];
     allExpr = Simplify[allExpr];
-    If[allExpr === False, Return[score];];
+    If[allExpr === False, Return[score];]; (* ここは絶対値の大きい負の値を返して, 抽象化する意味もないことを伝える *)
     tmpLargePm = largePm /. p -> pL;
     tmpSmallPm = smallPm;
-    
     listLarge = Union[getParameters[largePm], getParameters[largeVm] ] /. p -> pL;
     listSmall = Union[getParameters[smallPm], getParameters[smallVm] ];
-    debugPrint["yep"];
-    simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+    
+    gravPlots = 900;
+    largeParamMin = 
+      If[
+        Length[listLarge] == 2,
+        {MinValue[{listLarge[[1]], tmpLargePm}, listLarge], MinValue[{listLarge[[2]], tmpLargePm}, listLarge]},
+        {MinValue[{listLarge[[1]], tmpLargePm}, listLarge]}
+      ];
+    largeParamMax = 
+      If[
+        Length[listLarge] == 2,
+        {MaxValue[{listLarge[[1]], tmpLargePm}, listLarge], MaxValue[{listLarge[[2]], tmpLargePm}, listLarge]},
+        {MaxValue[{listLarge[[1]], tmpLargePm}, listLarge]}
+      ];
+    smallParamMin = 
+      If[
+        Length[listSmall] == 2,
+        {MinValue[{listSmall[[1]], tmpSmallPm}, listSmall], MinValue[{listSmall[[2]], tmpSmallPm}, listSmall]},
+        {MinValue[{listSmall[[1]], tmpSmallPm}, listSmall]}
+      ];
+    smallParamMax = 
+      If[
+        Length[listSmall] == 2,
+        {MaxValue[{listSmall[[1]], tmpSmallPm}, listSmall], MaxValue[{listSmall[[2]], tmpSmallPm}, listSmall]},
+        {MaxValue[{listSmall[[1]], tmpSmallPm}, listSmall]}
+      ];
+    {gTime, garbage} = AbsoluteTiming[
+        {gLarge, rLarge} = calcCenterOfGravity[gravPlots, tmpLargeVm, listLarge, largeParamMin, largeParamMax, largeTime];
+    ];
+    debugPrint["calculate gS and rS time with ", gravPlots, " plots: ", gTime, "[s]"];
+
+    (* {gLarge, rLarge} = calculateGfromNPoints[900]; 重心と半径は 500 個のプロットから求めたものとする *)
+
+    samplePlots = 900;
+    {scoreTime2, garbage} = AbsoluteTiming[
+        ans = calcNumOfNearPlots[samplePlots, smallVm, listSmall, smallParamMin, smallParamMax, gLarge, rLarge, smallTime];
+    ];
+    debugPrint["T's ", ans, "/", samplePlots, " (", N[100*ans/samplePlots], "[%]) plot is near to S, time: ", scoreTime2];
+
+
     ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr] ],Reals];
     If[ret == True, score = 1.0];
     simplePrint[score];
     score
   ]
+];
+
+
+dist[p1_][p2_] := Module[
+    {i, acc = 0},
+    For[
+        i = 1, i <= Length[p1], i++,
+        acc += (p1[[i]] - p2[[i]])^2
+    ];
+    Sqrt[N[acc] ]
+]
+
+(* 領域 S の重心と半径を指定したサンプル数から求める *)
+calcCenterOfGravity[num_, vm_, paramNameList_, paramMinValList_, paramMaxValList_, phaseStartTime_] := Module[
+    {
+        grav = {}, rad = 0, rMax = 0, rMin = Infinity, plot, plotList = {}, valP1, valP2,
+        i, varIdx, plotIdx
+    },
+    For[
+        i = 1, i <= Length[vm], i++,
+        grav = Append[grav, 0];
+    ];
+    debugPrint["vm: ", vm];
+    debugPrint["paramNameList: ", paramNameList];
+    debugPrint["paramMinValList: ", paramMinValList];
+    debugPrint["paramMaxValList: ", paramMaxValList];
+    debugPrint["phaseStartTime: ", phaseStartTime];
+    If[
+        Length[paramNameList] == 2,
+        (* パラメタが二個のケース *)
+        For[
+            valP1 = paramMinValList[[1]], valP1 <= paramMaxValList[[1]], valP1 += (paramMaxValList[[1]] - paramMinValList[[1]])/(Sqrt[num] - 1),
+            For[
+                valP2 = paramMinValList[[2]], valP2 <= paramMaxValList[[2]], valP2 += (paramMaxValList[[2]] - paramMinValList[[2]])/(Sqrt[num] - 1),
+                plot = {};
+                For[
+                    varIdx = 1, varIdx <= Length[vm], varIdx++,
+                    plot = Append[plot, N[vm[[varIdx]][[2]] /. {paramNameList[[1]] -> valP1, paramNameList[[2]] -> valP2, t -> phaseStartTime}] ];
+                ];
+                grav += N[plot/num];
+                plotList = Append[plotList, plot];
+            ];
+        ];
+        For[
+            plotIdx = 1, plotIdx <= Length[plotList], plotIdx++,
+            rMax = Max[rMax, dist[plotList[[plotIdx]]][grav] ];
+            rMin = Min[rMin, dist[plotList[[plotIdx]]][grav] ];
+        ],
+        (* パラメタが一個のケース *)
+        For[
+            valP1 = paramMinValList[[1]], valP1 <= paramMaxValList[[1]], valP1 += (paramMaxValList[[1]] - paramMinValList[[1]])/(num - 1),
+            plot = {};
+            For[
+                varIdx = 1, varIdx <= Length[vm], varIdx++,
+                plot = Append[plot, N[vm[[varIdx]][[2]] /. {paramNameList[[1]] -> valP1, t -> phaseStartTime}] ];
+            ];
+            grav += N[plot/num];
+            plotList = Append[plotList, plot];
+        ];
+        For[
+            i = 1, i <= Length[plotList], i++,
+            rMax = Max[rMax, dist[grav][plotList[[i]]] ];
+            rMin = Min[rMin, dist[grav][plotList[[i]]] ];
+        ];
+    ];
+    debugPrint["rMax: ", rMax, " rMin: ", rMin];
+    rad = rMax;
+    (* rad = (9*rMax + rMin)/10; *)
+    (* rad = (7.5*rMax + 2*rMin)/10; *)
+    (* rad = (6*rMax + 4*rMin)/10; *)
+    (* rad = (2.5*rMax + 7.5*rMin)/10; *)
+    (* rad = rMin; *)
+    {grav, rad}
+];
+
+(* 領域 T からサンプリングした点で, 領域 S の重心からその半径以上離れているものはいくつあるか *)
+calcNumOfNearPlots[num_, vm_, paramNameList_, paramMinValList_, paramMaxValList_, grav_, rad_, phaseStartTime_] := Module[
+    {
+        ans = 0, valP1, valP2, plot,
+        i, varIdx
+    },
+    If[
+        Length[paramNameList] == 2,
+        (* パラメタが二個のケース *)
+        For[
+            valP1 = paramMinValList[[1]], valP1 <= paramMaxValList[[1]], valP1 += (paramMaxValList[[1]] - paramMinValList[[1]])/(Sqrt[num] - 1),
+            For[
+                valP2 = paramMinValList[[2]], valP2 <= paramMaxValList[[2]], valP2 += (paramMaxValList[[2]] - paramMinValList[[2]])/(Sqrt[num] - 1),
+                plot = {};
+                For[
+                    varIdx = 1, varIdx <= Length[vm], varIdx++,
+                    plot = Append[plot, N[vm[[varIdx]][[2]] /. {paramNameList[[1]] -> valP1, paramNameList[[2]] -> valP2, t -> phaseStartTime}] ];
+                ];
+                If[
+                    dist[plot][grav] <= rad,
+                    ans += 1
+                ];
+            ];
+        ],
+        (* パラメタが一個のケース *)
+        For[
+            valP1 = paramMinValList[[1]], valP1 <= paramMaxValList[[1]], valP1 += (paramMaxValList[[1]] - paramMinValList[[1]])/(num - 1),
+            plot = {};
+            For[
+                varIdx = 1, varIdx <= Length[vm], varIdx++,
+                plot = Append[plot, N[vm[[varIdx]][[2]] /. {paramNameList[[1]] -> valP1, t -> phaseStartTime}] ];
+                If[
+                    dist[plot][grav] <= rad,
+                    ans += 1
+                ];
+            ];
+        ]
+    ];
+    ans
 ];
