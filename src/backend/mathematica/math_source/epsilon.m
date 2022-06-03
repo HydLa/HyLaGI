@@ -60,6 +60,7 @@ publicMethod[checkInclude, largeTime, largeVm, largePm, smallTime, smallVm, smal
     listLarge = Union[getParameters[largePm], getParameters[largeVm] ] /. p -> pL;
     listSmall = Union[getParameters[smallPm], getParameters[smallVm] ];
     simplePrint[listSmall, tmpSmallPm, listLarge, tmpLargePm, allExpr];
+    debugPrint["listSmall: ", listSmall, "evaled: ", Evaluate[listSmall] ];
     ret = Reduce[
             ForAll[
               Evaluate[listSmall], tmpSmallPm, 

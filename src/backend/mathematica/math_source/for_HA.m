@@ -166,6 +166,87 @@ publicMethod[
     ];
     ret
   ]
+];
+
+publicMethod[
+  abstractCPDirect, currentVM, currentParamList, currentPCons, currentTime,
+  pastVM, pastParamList, pastPCons, pastTime,
+  Module[
+    {
+        abstVals = {}, allExpr = True, abstCurrentPCons = True, abstPastPCons = True,
+        abstLeftP1, abstRightP1, abstLeftP2, abstRightP2, abstBorderList,
+        i, j, ops, states, val, workPCons, numChange, tm, gomi, ret
+    },
+    If[
+        Length[currentParamList] == 2,
+        abstBorderList = {abstLeftP1, abstRightP1, abstLeftP2, abstRightP2};
+        abstCurrentPCons = abstLeftP1 <= currentParamList[[1]] && currentParamList[[1]] <= abstRightP1 &&
+                           abstLeftP2 <= currentParamList[[2]] && currentParamList[[2]] <= abstRightP2;
+        abstPastPCons    = abstLeftP1 <= pastParamList[[1]] && pastParamList[[1]] <= abstRightP1 &&
+                           abstLeftP2 <= pastParamList[[2]] && pastParamList[[2]] <= abstRightP2,
+        abstBorderList = {abstLeftP1, abstRightP1};
+        abstCurrentPCons = abstLeftP1 <= currentParamList[[1]] && currentParamList[[1]] <= abstRightP1;
+        abstPastPCons    = abstLeftP1 <= pastParamList[[1]] && pastParamList[[1]] <= abstRightP1
+    ];
+
+    For[
+        i = 1, i <= Length[currentParamList], i++,
+        abstVals = Append[abstVals, MinValue[{currentParamList[[i]], currentPCons}, currentParamList] ];
+        abstVals = Append[abstVals, MaxValue[{currentParamList[[i]], currentPCons}, currentParamList] ];
+    ];
+
+    For[i = 1, i <= Length[pastVM], i++,
+        allExpr = And[allExpr,Simplify[pastVM[[i]][[2]] /. t -> pastTime] == Simplify[currentVM[[i]][[2]] /. t -> currentTime] ];
+    ];
+    debugPrint["problem is to solve: ", allExpr];
+
+    If[
+        Length[currentParamList] == 2, 
+        ops = {Less, Greater, Less, Greater};
+        states = 16,
+        ops = {Less, Greater};
+        states = 4;
+    ];
+    For[
+      i = 0, i < states, i++,
+      numChange = 0;
+      workPCons = True;
+      val = i;
+      For[
+          j = 1, j <= Length[ops], j++,
+          If[
+              Mod[val, 2] == 0,
+              workPCons = And[workPCons, Equal[abstBorderList[[j]] , abstVals[[j]]] ],
+              workPCons = And[workPCons, ops[[j]][abstBorderList[[j]] , abstVals[[j]]] ];
+              numChange += 1 
+          ];
+          val = Floor[val/2];
+      ];
+      If[
+          numChange <= 2, 
+          {tm, gomi} = AbsoluteTiming[
+              ret = TimeConstrained[
+                  FindInstance[
+                      ForAll[
+                          Evaluate[currentParamList], abstCurrentPCons,
+                          Exists[
+                              Evaluate[pastParamList], abstPastPCons, allExpr
+                          ]
+                      ] && workPCons,
+                      abstBorderList,
+                      Reals
+                  ],
+                  300,
+                  {}
+              ];
+          ];
+      ];
+      If[
+        ret =!= {}, Return[ret]
+      ];
+    ];
+    ret
+  ]
 ]
 
 (* C++ から呼び出される, 領域同士の重なりのスコアを算出する関数 *)
@@ -185,6 +266,7 @@ publicMethod[
         (* correct expr : large.2 == small.2 *)
         tmp = Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime];
         allExpr = And[allExpr,Simplify[tmpLargeVm[[i]][[2]] /. t -> tmpLargeTime] == Simplify[smallVm[[i]][[2]] /. t -> smallTime] ];
+        debugPrint[allExpr];
     ];
     allExpr = Simplify[allExpr];
     If[allExpr === False, Return[score];]; (* ここは絶対値の大きい負の値を返して, 抽象化する意味もないことを伝える *)
@@ -192,6 +274,16 @@ publicMethod[
     tmpSmallPm = smallPm;
     listLarge = Union[getParameters[largePm], getParameters[largeVm] ] /. p -> pL;
     listSmall = Union[getParameters[smallPm], getParameters[smallVm] ];
+
+    directAbstResult = abstractCPDirect[
+      smallVm, listSmall, tmpSmallPm, smallTime,
+      tmpLargeVm, listLarge, tmpLargePm, tmpLargeTime
+    ];
+    If[
+      directAbstResult =!= {},
+      debugPrint[directAbstResult];
+      Return[1.0];
+    ];
     
     gravPlots = 900;
     largeParamMin = 
@@ -231,8 +323,18 @@ publicMethod[
     ];
     debugPrint["T's ", ans, "/", samplePlots, " (", N[100*ans/samplePlots], "[%]) plot is near to S, time: ", scoreTime2];
 
+    debugPrint["listSmall: ", Evaluate[listSmall] ];
+    debugPrint["tmpSmallPm: ", tmpSmallPm];
+    debugPrint["listLarge: ", Evaluate[listLarge] ];
+    debugPrint["tmpLargePm: ", tmpLargePm];
+    debugPrint["allExpr: ", allExpr];
 
-    ret = Reduce[ForAll[Evaluate[listSmall],tmpSmallPm,Exists[Evaluate[listLarge],tmpLargePm,allExpr] ],Reals];
+    ret = Reduce[
+      ForAll[
+        Evaluate[listSmall], tmpSmallPm,
+        Exists[Evaluate[listLarge],tmpLargePm,allExpr] ],
+      Reals
+    ];
     If[ret == True, score = 1.0];
     simplePrint[score];
     score
