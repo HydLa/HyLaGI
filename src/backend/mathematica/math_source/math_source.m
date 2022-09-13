@@ -217,12 +217,13 @@ Module[
               listToProcess[[i]]
             ],
             (* Issue #9: Solve generates message for inequalities, so handle them with Reduce *)
-            Reduce[listToProcess[[i]], newVars[[1]] ] 
+            Reduce[listToProcess[[i]], newVars[[1]], Reals ] 
           ] 
         ];
       If[Head[tmpCons] === ConditionalExpression, tmpCons = listToProcess[[i]] ]; (* revert tmpCons *)
       simplePrint[tmpCons];
       If[!MemberQ[{Unequal, Less, LessEqual, Equal, Greater, GreaterEqual}, tmpCons], succeeded = false];
+      If[MemberQ[getVariablesWithDerivatives[tmpCons[[2]]], newVars[[1]]], tmpCons = swapExpr[tmpCons] ];
       resultCons = resultCons && tmpCons;
       listToProcess = Drop[listToProcess, {i}];
       i = 0;
