@@ -283,3 +283,23 @@ solveOverRorC[consToSolve_,vars_] :=
   If[optSolveOverReals === True, Solve[consToSolve,vars,Reals], Solve[consToSolve,vars]]
 
 derivativePrefix = "d";
+
+swapExpr[expr_] := Module[
+  {newLHS = expr[[2]], newRHS = expr[[1]], ret = expr},
+  If[
+    Head[expr] == Equal, ret = Equal[newLHS, newRHS]
+  ];
+  If[
+    Head[expr] == LessEqual, ret = GreaterEqual[newLHS, newRHS]
+  ];
+  If[
+    Head[expr] == Less, ret = Greater[newLHS, newRHS]
+  ];
+  If[
+    Head[expr] == GreaterEqual, ret = LessEqual[newLHS, newRHS]
+  ];
+  If[
+    Head[expr] == Greater, ret = Less[newLHS, newRHS]
+  ];
+  ret
+];
