@@ -14,7 +14,7 @@ http://www.ueda.info.waseda.ac.jp/hydla/
 
 Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
 
-### Ubuntu 18.04
+### Ubuntu 22.04
 
 1. Install required packages
    ```
@@ -34,7 +34,6 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 2. Library settings  
    e.g. Mathematica 11.3
    ```
-   cd /lib/x86_64-linux-gnu && sudo ln -s libuuid.so.1.3.0 libuuid.so
    echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
    ```
 3. Build HyLaGI
@@ -56,10 +55,10 @@ HyLaGI supports several environments.
 <details>
 <summary>Build confirmed environment</summary>
 
-- Ubuntu 18.04.3, GCC 7.5.0, Python 3.6.9
-- Ubuntu 18.04.3, Clang 6.0.0, Python 3.6.9
 - Ubuntu 20.04.1, GCC 9.3.0, Python 3.8.5
 - Ubuntu 20.04.1, Clang 10.0.0, Python 3.8.5
+- Ubuntu 22.04.1, GCC 11.3.0, Python 3.10.6
+- Ubuntu 22.04.1, Clang 14.0.0, Python 3.10.6
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.6.9
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.8.5
 </details>
