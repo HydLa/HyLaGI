@@ -103,3 +103,13 @@ You can see it in [$InstallationDirectory](https://reference.wolfram.com/languag
 ```
 make -j 4 PYTHON_CONFIG=python-config
 ```
+
+## Known issues
+
+### libc++abi: terminating with uncaught exception of type hydla::backend::LinkError: math link error: can not link : 1
+
+HyLaGI uses the wolfram system to calculate constraints.
+It uses WSTP communication with the `math` command to make the call.
+
+If you see this error, please make sure that the `math` command is installed and in the path.
+If the `math` command does not exist (as confirmed when using WolframEngine on MacOS), create a symbolic link to `WolframKernel` named math.
