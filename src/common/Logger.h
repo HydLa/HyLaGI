@@ -111,8 +111,8 @@ public:
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.html_mode) {
       i.debug_
-          << R"(timer elapsed: <span class="timer" style="background-color:#f09b3b">)"
-          << timer.get_elapsed_us() << "</span>[us]<br>" << std::endl;
+          << R"(timer elapsed: )"
+          << timer.get_elapsed_us() << "[us]<br><br>" << std::endl;
     } else {
       if (i.valid_level(LogLevel::Debug)) {
         i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]"
@@ -247,7 +247,9 @@ private:
       }
     }
 
-    new_str.append("<br>");
+    if (new_str.find("trace") != std::string::npos && new_str.find("publicRet") == std::string::npos) {
+      new_str = "<span style=\"padding-left: 1em;\">" + new_str + " </span>";
+    }
 
     return new_str;
   }

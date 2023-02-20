@@ -136,7 +136,7 @@ bool MathematicaLink::receive_to_return_packet() {
           HYDLA_LOGGER_DEBUG("input: \n", str);
       } else {
         if (trace)
-          HYDLA_LOGGER_DEBUG("trace: ", str);
+          HYDLA_LOGGER_DEBUG_INTERNAL("trace: ", str);
         debug_print_ += str + "\n";
       }
       break;
