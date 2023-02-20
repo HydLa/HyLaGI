@@ -2,7 +2,7 @@
 
 /HyLaGI で`make test`すると統合テストが走る．
 ただしデフォルトでは約 40 並列でテストを行うので，
-ローカルで行う場合は`fnum=1 make test`などとする
+ローカルで行う場合は`fnum=2 make test`などとする
 
 ## Files
 - system_test.sh:  
