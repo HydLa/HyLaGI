@@ -14,6 +14,14 @@ http://www.ueda.info.waseda.ac.jp/hydla/
 
 Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
 
+### Required packages
+
+- Git
+- Make
+- GCC or Clang, and Boost library
+- Python
+- Wolfram system (Mathematica, or WolframEngine)
+
 ### Ubuntu 22.04
 
 1. Install required packages
