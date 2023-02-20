@@ -247,7 +247,9 @@ private:
       }
     }
 
-    new_str.append("<br>");
+    if (new_str.find("trace") != std::string::npos && new_str.find("publicRet") == std::string::npos) {
+      new_str = "<span style=\"padding-left: 1em;\">" + new_str + " </span>";
+    }
 
     return new_str;
   }
