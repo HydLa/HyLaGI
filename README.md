@@ -68,20 +68,25 @@ HyLaGI supports several environments.
 To build several environments,
 you can set environment variables when you exec `make`.  
 
-- Using GCC:
+#### Using GCC:
+
+```
+make -j 4 CC=gcc CXX=g++
+```
+
+#### Other path/to/Mathematica:
+
+- in other version:
   ```
-  make -j 4 CC=gcc CXX=g++
+  make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
   ```
-- Other path/to/Mathematica:
-  - in other version:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
-    ```
-  - using WolframEngine:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
-    ```
-- When using Python3 with `python` command:
+- using WolframEngine:
   ```
-  make -j 4 PYTHON_CONFIG=python-config
+  make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
   ```
+
+#### When using Python3 with `python` command:
+
+```
+make -j 4 PYTHON_CONFIG=python-config
+```
