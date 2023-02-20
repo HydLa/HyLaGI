@@ -85,6 +85,11 @@ make -j 4 CC=gcc CXX=g++
   make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
   ```
 
+##### What is `MATHPATH`?
+
+Actually, `MATHPATH` is the path to the directory where the Wolfram system is installed.<br>
+You can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html).
+
 #### When using Python3 with `python` command:
 
 ```
