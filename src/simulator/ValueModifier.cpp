@@ -5,7 +5,7 @@ using namespace std;
 namespace hydla {
 namespace simulator {
 
-ValueModifier::ValueModifier(backend::Backend &b) : backend(b) {}
+ValueModifier::ValueModifier(backend_sptr_t b) : backend(b) {}
 
 variable_map_t ValueModifier::apply_function(const std::string &function,
                                              const Value &time,
@@ -45,8 +45,8 @@ ValueRange ValueModifier::apply_function(const std::string &function,
 Value ValueModifier::apply_function(const std::string &function,
                                     const Value &time, const Value &value) {
   Value result_value;
-  backend.call(function.c_str(), false, 2, "vltvlt", "vl", &value, &time,
-               &result_value);
+  backend->call(function.c_str(), false, 2, "vltvlt", "vl", &value, &time,
+                &result_value);
   return result_value;
 }
 
@@ -88,8 +88,8 @@ ValueRange ValueModifier::apply_function(const std::string &function,
 Value ValueModifier::apply_function(const std::string &function,
                                     const Value &value, const string &fmt) {
   Value result_value;
-  backend.call(function.c_str(), false, 1, fmt.empty() ? "vlt" : fmt.c_str(),
-               "vl", &value, &result_value);
+  backend->call(function.c_str(), false, 1, fmt.empty() ? "vlt" : fmt.c_str(),
+                "vl", &value, &result_value);
   return result_value;
 }
 

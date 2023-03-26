@@ -17,7 +17,7 @@ using namespace hydla::logger;
 using namespace hydla::symbolic_expression;
 using namespace hydla::backend;
 
-void hydla::simulator::cut_high_order_epsilon(Backend *backend_,
+void hydla::simulator::cut_high_order_epsilon(backend_sptr_t backend_,
                                               phase_result_sptr_t &phase,
                                               int diff_cnt) {
   Parameter par("eps", 0, 1);
@@ -60,7 +60,7 @@ void hydla::simulator::cut_high_order_epsilon(Backend *backend_,
 
 pp_time_result_t
 hydla::simulator::reduce_unsuitable_case(pp_time_result_t original_result,
-                                         Backend *backend_,
+                                         backend_sptr_t backend_,
                                          phase_result_sptr_t &phase) {
   pp_time_result_t ret;
   bool unsuitable;
@@ -79,7 +79,7 @@ hydla::simulator::reduce_unsuitable_case(pp_time_result_t original_result,
 
 find_min_time_result_t
 hydla::simulator::reduce_unsuitable_case(find_min_time_result_t original_result,
-                                         Backend *backend_,
+                                         backend_sptr_t backend_,
                                          phase_result_sptr_t &phase) {
   find_min_time_result_t ret;
   bool unsuitable;
@@ -96,11 +96,10 @@ hydla::simulator::reduce_unsuitable_case(find_min_time_result_t original_result,
   return ret;
 }
 
-find_min_time_result_t
-hydla::simulator::calculate_tmp_result(phase_result_sptr_t &phase,
-                                       value_t time_limit,
-                                       symbolic_expression::node_sptr trigger,
-                                       Backend *backend, variable_map_t vm) {
+find_min_time_result_t hydla::simulator::calculate_tmp_result(
+    phase_result_sptr_t &phase, value_t time_limit,
+    symbolic_expression::node_sptr trigger, backend_sptr_t backend,
+    variable_map_t vm) {
   bool iszero = false;
   bool same_id = false;
 
@@ -114,16 +113,16 @@ hydla::simulator::calculate_tmp_result(phase_result_sptr_t &phase,
     value_t time = find_candidate.time;
     backend->call("isZero", true, 1, "vln", "b", &time, &iszero);
 
-    //前回の離散変化条件のidとの比較
+    // 前回の離散変化条件のidとの比較
     for (auto entry : phase->parent->parent->discrete_asks) {
       if (trigger == entry.first) {
         same_id = true;
         break;
       }
     }
-    //時刻をずらす場合
+    // 時刻をずらす場合
     if (iszero && same_id) {
-      //時刻ずらし
+      // 時刻ずらし
       find_min_time_result_t tmp_time_result;
 
       node_sptr tmp_val;
@@ -131,14 +130,14 @@ hydla::simulator::calculate_tmp_result(phase_result_sptr_t &phase,
       tmp_val = node_sptr(new Times(tmp_val, find_candidate.time.get_node()));
 
       variable_map_t shifted_vm;
-      ValueModifier modifier(*backend);
+      ValueModifier modifier(backend);
       shifted_vm = modifier.apply_function("exprTimeshift", tmp_val, vm);
 
       backend->call("resetConstraintForVariable", true, 0, "", "");
       backend->call("addConstraint", true, 1, "mv0t", "", &shifted_vm);
       value_t eps_time_limit = time_limit;
       eps_time_limit -= find_candidate.time;
-      //二回目
+      // 二回目
       tmp_time_result = calculate_tmp_result(phase, eps_time_limit, trigger,
                                              backend, shifted_vm);
 
