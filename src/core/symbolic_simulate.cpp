@@ -269,5 +269,6 @@ int simulate(std::shared_ptr<hydla::parse_tree::ParseTree> parse_tree) {
   }
   int simulation_status = simulator_->get_exit_status();
   delete simulator_;
+  backend_.reset();
   return simulation_status;
 }
