@@ -10,7 +10,7 @@ namespace simulator {
 
 class ValueModifier {
 public:
-  ValueModifier(backend::Backend &b);
+  ValueModifier(backend_sptr_t b);
 
   variable_map_t substitute_time(const Value &time, const variable_map_t &map);
   ValueRange substitute_time(const Value &time, const ValueRange &range);
@@ -47,7 +47,7 @@ public:
                        const std::string &fmt = "");
 
 private:
-  backend::Backend backend;
+  backend_sptr_t backend;
 };
 
 } // namespace simulator
