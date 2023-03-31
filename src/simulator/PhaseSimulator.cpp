@@ -426,7 +426,7 @@ PhaseSimulator::simulate_ms(const module_set_t &unadopted_ms,
       // cut_high_order : approx count n > 0.(n=1,2,3...)
       variable_map_t before_map = phase->variable_map;
       value_t before_time = phase->current_time;
-      cut_high_order_epsilon(backend_.get(), phase, opts_->epsilon_mode);
+      cut_high_order_epsilon(backend_, phase, opts_->epsilon_mode);
 
       HYDLA_LOGGER_DEBUG("#epsilon before : time : ", before_time);
 
@@ -656,7 +656,7 @@ void PhaseSimulator::initialize(variable_set_t &v, parameter_map_t &p,
   aborting = false;
 
   backend_->set_variable_set(*variable_set_);
-  value_modifier.reset(new ValueModifier(*backend_));
+  value_modifier.reset(new ValueModifier(backend_));
 }
 
 void PhaseSimulator::replace_prev2parameter(PhaseResult &phase,
@@ -854,7 +854,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
         expanded = true; // ガードの成否が分かった
         ask_it = unknown_asks.erase(ask_it);
         break;
-      case BRANCH_VAR: //他の変数の値によって成否が変わる
+      case BRANCH_VAR: // 他の変数の値によって成否が変わる
         HYDLA_LOGGER_DEBUG("\n--- branched ask ---\n", get_infix_string(ask));
         ask_it++;
         break;
@@ -1838,8 +1838,7 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase) {
                 find_min_time_result_t &f_result =
                     candidate_map[discrete_ask.first];
                 if (opts_->epsilon_mode >= 0)
-                  f_result =
-                      reduce_unsuitable_case(f_result, backend_.get(), phase);
+                  f_result = reduce_unsuitable_case(f_result, backend_, phase);
                 HYDLA_ASSERT(f_result.size() == 1);
                 HYDLA_LOGGER_DEBUG_VAR(f_result.front().discrete_guards.size());
                 for (auto guard : f_result.front().discrete_guards) {
@@ -1859,8 +1858,7 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase) {
                     HYDLA_LOGGER_DEBUG("#epsilon DC before : ",
                                        entry.parameter_constraint);
                   }
-                  f_result =
-                      reduce_unsuitable_case(f_result, backend_.get(), phase);
+                  f_result = reduce_unsuitable_case(f_result, backend_, phase);
                   for (auto entry : time_result) {
                     HYDLA_LOGGER_DEBUG("#epsilon DC after : ",
                                        entry.parameter_constraint);

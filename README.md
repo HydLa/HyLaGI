@@ -104,3 +104,6 @@ It uses WSTP communication with the `math` command to make the call.
 
 If you see this error, please make sure that the `math` command is installed and in the path.
 If the `math` command does not exist (as confirmed when using WolframEngine on MacOS), create a symbolic link to `WolframKernel` named math.
+
+## CI
+CI supports only build (not include testing examples). If you want to test them, do ``` make test ``` after building HyLaGI on your terminal.
