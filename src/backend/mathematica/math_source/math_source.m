@@ -1053,14 +1053,9 @@ Module[
   解けたものが解である*)
   For[i = Length[ini], i >= 0, i--,
     inis = Subsets[ini, {i}];
-    debugPrint[Length[inis]];
     For[j = 1, j <= Length[inis], j++,
       (*simplePrint[Union[expr, inis[[j]]]];*)
       (*simplePrint[tVars];*)
-      If[
-        Length[tVars] == 0,
-        Continue[]
-      ];
       sol = Quiet[
         Check[
           DSolve[Union[expr, inis[[j]]], tVars, t],
@@ -1069,7 +1064,6 @@ Module[
         ],
         {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
       ];
-      debugPrint[sol == overConstrained];
       If[Length[sol] > 0,
         Break[]
       ]
@@ -1102,19 +1096,14 @@ Module[
   (*simplePrint[expr];*)
   (*simplePrint[vars];*)
   (*一般解を求める*)
-  If[
-    Length[vars] == 0,
-    solwithConstant = overConstrained,
-    solwithconstant = Quiet[
-      Check[
-        DSolve[expr, vars, t],
-            overConstrained,
-        {DSolve::overdet, DSolve::bvimp}
-      ],
-      {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
-    ];
+  solwithconstant = Quiet[
+    Check[
+      DSolve[expr, vars, t],
+          overConstrained,
+      {DSolve::overdet, DSolve::bvimp}
+    ],
+    {DSolve::overdet, DSolve::bvimp, DSolve::bvnul, Solve::svars, PolynomialGCD::lrgexp}
   ];
-
   (*simplePrint[solwithconstant];*)
   For[i = 1, i <= Length[solwithconstant], i++,
     ini = {};
