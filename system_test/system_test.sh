@@ -2,8 +2,12 @@
 
 set -e
 
-echo "testing system_test..."
-fnum=`ls ../examples/*.hydla | grep -c ''`
+echo -n "testing system_test"
+if [ -z "$fnum" ]; then
+  # fnumが未定義ならファイル数
+  fnum=`ls ../examples/*.hydla | grep -c ''`
+fi
+echo " in $fnum parallel..."
 
 ls ../examples/*.hydla | xargs -L 1 -P $fnum -I {} bash -c 'hylagi {} &> /dev/null && printf "hylagi %s \033[32m%s\033[m\n" {} "finished" || printf "hylagi %s \033[31m%s\033[m\n" {} "failed"'
 printf "%s \033[32m%s\033[m\n" "exec examples" "succeeded"

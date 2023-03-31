@@ -1,0 +1,17 @@
+R(vin,vout,i,r) <=> [](vin-vout = r*i).
+C(vin,vout,i,c) <=> \q.(q=0 & [](q=c*(vin-vout) & i=q')).
+E(e,e0) <=> [](e=e0).
+TIMER(timer) <=> timer=0 & []timer'=1.
+SWITCH(vin,on,vout) <=>
+  [](on=0 => vout=0) & [](on=1 => vin=vout).
+
+STEP(time,on) <=> 
+  \timer.(TIMER(timer) & [](timer<time => on=0) & [](timer>=time => on=1)).
+TIMER_SWITCH(vin,vout,time) <=>
+  \on.(STEP(time,on) & SWITCH(vin,on,vout)).
+
+RC(vin,vout,i,r,c,vc) <=> 
+  \vtmp.(R(vin,vtmp,i,r) & C(vtmp,vout,i,c) & [](vc=vtmp-vout)).
+
+E(e,5), TIMER_SWITCH(e,vin,1), RC(vin,0,i,100,0.1,vc).
+// #hylagi -p8
