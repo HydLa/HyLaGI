@@ -1,0 +1,11 @@
+INIT <=> p = 65 & mode = 0.
+OFF <=> [](mode = 0 => p' = -2).
+ON <=> [](mode = 1 => p' = 1).
+MODE(l,r,m) <=> 
+  \x.(l < x < r & [](x' = -1) & [](x- = 0 => mode = m)).
+SWITCHOFF <=> [](p- = 68 & mode = 1 => MODE(0.1,0.5,0)).
+SWITCHON <=> [](p- = 62 & mode = 0 => MODE(0.1,0.5,1)).
+
+INIT, [](mode' = 0) << (SWITCHON, SWITCHOFF).
+OFF, ON.
+//#hylagi -p8

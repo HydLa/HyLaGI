@@ -14,7 +14,15 @@ http://www.ueda.info.waseda.ac.jp/hydla/
 
 Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
 
-### Ubuntu 18.04
+### Required packages
+
+- Git
+- Make
+- GCC or Clang, and Boost library
+- Python
+- Wolfram system (Mathematica, or WolframEngine)
+
+### Ubuntu 22.04
 
 1. Install required packages
    ```
@@ -25,8 +33,7 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 1. Library settings  
    e.g. Mathematica 11.3
    ```
-   cd /lib/x86_64-linux-gnu && sudo ln -s libuuid.so.1.3.0 libuuid.so
-   echo "/usr/local/Wolfram/Mathematica/11.3/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
+   echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
    ```
 1. Build HyLaGI
    ```
@@ -47,10 +54,10 @@ HyLaGI supports several environments.
 <details>
 <summary>Build confirmed environment</summary>
 
-- Ubuntu 18.04.3, GCC 7.5.0, Python 3.6.9
-- Ubuntu 18.04.3, Clang 6.0.0, Python 3.6.9
 - Ubuntu 20.04.1, GCC 9.3.0, Python 3.8.5
 - Ubuntu 20.04.1, Clang 10.0.0, Python 3.8.5
+- Ubuntu 22.04.1, GCC 11.3.0, Python 3.10.6
+- Ubuntu 22.04.1, Clang 14.0.0, Python 3.10.6
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.6.9
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.8.5
 </details>
@@ -60,20 +67,40 @@ HyLaGI supports several environments.
 To build several environments,
 you can set environment variables when you exec `make`.  
 
-- Using GCC:
+#### Using GCC:
+
+```
+make -j 4 CC=gcc CXX=g++
+```
+
+#### Other path/to/Mathematica:
+
+- in other version:
   ```
-  make -j 4 CC=gcc CXX=g++
+  make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
   ```
-- Other path/to/Mathematica:
-  - in other version:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
-    ```
-  - using WolframEngine:
-    ```
-    make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
-    ```
-- When using Python3 with `python` command:
+- using WolframEngine:
   ```
-  make -j 4 PYTHON_CONFIG=python-config
+  make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
   ```
+
+##### What is `MATHPATH`?
+
+Actually, `MATHPATH` is the path to the directory where the Wolfram system is installed.<br>
+You can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html).
+
+#### When using Python3 with `python` command:
+
+```
+make -j 4 PYTHON_CONFIG=python-config
+```
+
+## Known issues
+
+### libc++abi: terminating with uncaught exception of type hydla::backend::LinkError: math link error: can not link : 1
+
+HyLaGI uses the wolfram system to calculate constraints.
+It uses WSTP communication with the `math` command to make the call.
+
+If you see this error, please make sure that the `math` command is installed and in the path.
+If the `math` command does not exist (as confirmed when using WolframEngine on MacOS), create a symbolic link to `WolframKernel` named math.

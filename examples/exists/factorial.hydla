@@ -1,0 +1,7 @@
+FACTORIAL(ans, n) <=> 
+  (n = 0 => ans = 1) & 
+  (n > 0 => \x.(ans = n * x & FACTORIAL(x, n-1))).
+CALC_F <=> [](timer- = 1 => FACTORIAL(x, 5) & [](x'=1)).
+TIMER <=> timer = 0 & [](timer' = 1).
+
+TIMER, CALC_F.

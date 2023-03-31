@@ -60,20 +60,23 @@ void ProgramOptions::init_descriptions() {
              "  1 - use \"Simplify\"\n"
              "  2 or others - use \"FullSimplify\"")
 
-                ("dsolve", value<int>()->default_value(0),
-                 "the method of differential equation in exDSolve\n"
-                 "  0 - Try to get initial value problem directly\n"
-                 "  1 - Try to get initial value problem via constant\n")
+                ("simplify_time", value<std::string>()->default_value("1"),
+                 "time limit of simplifying expressions in the backend")
 
-                    ("tm", value<std::string>()->default_value("n"),
-                     "time measurement:\n"
-                     "  n - not measured\n"
-                     "  s - output in standard format\n"
-                     "  c - output in csv format\n")
+                    ("dsolve", value<int>()->default_value(0),
+                     "the method of differential equation in exDSolve\n"
+                     "  0 - Try to get initial value problem directly\n"
+                     "  1 - Try to get initial value problem via "
+                     "constant\n")
 
-                        ("csv", value<std::string>()->default_value(""),
-                         "name of csv file for \"--tm c\":\n"
-                         " empty - standard out\n");
+                        ("tm",
+                         value<std::vector<std::string>>()
+                             ->multitoken()
+                             ->default_value(std::vector<string>{"n"}, ""),
+                         "time measurement:\n"
+                         "  n - not measured\n"
+                         "  s - output in standard format\n"
+                         "  c - output in csv format\n");
 
   generic_desc.add_options()(
       "output_name,o", value<std::string>()->default_value(""),
@@ -82,11 +85,8 @@ void ProgramOptions::init_descriptions() {
   if (not is_master())
     generic_desc.add_options()("debug,d", "display debug trace\n")
 
-        ("simplify_time", value<std::string>()->default_value("1"),
-         "time limit of simplifying expressions in the backend")
-
-            ("math_name", value<std::string>()->default_value("math"),
-             "name of the command to execute mathematica");
+        ("math_name", value<std::string>()->default_value("math"),
+         "name of the command to execute mathematica");
 
   generic_desc.add_options()("time,t",
                              value<std::string>()->default_value("Infinity"),
@@ -116,39 +116,94 @@ void ProgramOptions::init_descriptions() {
       ("ha", value<char>()->default_value('n'), "convert to HA");
 
   if (not is_master())
-    toggle_desc.add_options()("hs", value<char>()->default_value('n'),
-                              "simulate using HA")
+    toggle_desc.add_options()
+        // ("hs", value<char>()->default_value('n'), "simulate using HA")
 
         ("ltl,l", value<char>()->default_value('n'), "ltl model checking mode")
 
-            ("affine", value<char>()->default_value('n'),
-             "use affine arithmetic to approximate expressions");
+        /*("affine", value<char>()->default_value('n'),
+         "use affine arithmetic to approximate expressions")*/
+        ;
+
+  // toggle_desc.add_options()("fail_on_stop",
+  // value<char>()->default_value('n'),
+  //                           "stop all simulation cases when assertion
+  //                           fails");
+
+  if (not is_master())
+    toggle_desc.add_options()
+
+        // ("static_generation_of_module_sets",
+        // value<char>()->default_value('n'),
+        //  "simulate with static generation of module sets")
+
+        //     ("ignore_warnings", value<char>()->default_value('n'),
+        //      "ignore warnings created by backend solvers. \n"
+        //      "current canidates: Solve::incnst, Solve::ifun, DSolve::bvnul, "
+        //      "Reduce::ztest1, Minimize::ztest1, Reduce::ztest, "
+        //      "Minimize::ztest\n"
+        //      "Note: Warnings from HyLaGI itself are always activated")
+
+        ("interval,i", value<char>()->default_value('n'), "use interval method")
+
+            ("step_by_step", value<char>()->default_value('n'),
+             "use find_min_time_step_by_step")
+
+                ("guards_to_interval_newton",
+                 value<std::string>()->default_value(""),
+                 "guards to be solved by interval newton "
+                 "method(delimited "
+                 "by "
+                 "\",\")")
+
+                    ("affine", value<char>()->default_value('n'),
+                     "use affine arithmetic to approximate expressions")
+
+                        ("numerize_without_validation",
+                         value<char>()->default_value('n'),
+                         "numerize values of variables at the end of "
+                         "each "
+                         "PointPhase")
+
+                            ("eager_approximation",
+                             value<char>()->default_value('n'),
+                             "approximate values in advance of each "
+                             "Point Phase")
+
+                                ("approximation_step",
+                                 value<int>()->default_value(1),
+                                 "the interval of step to approximate "
+                                 "value of "
+                                 "variable")
+
+                                    ("extra_dummy_num",
+                                     value<int>()->default_value(0),
+                                     "the number of extra dummy "
+                                     "parameters "
+                                     "in "
+                                     "affine "
+                                     "arithmetic.")
+
+                                        ("static_generation_of_module_sets",
+                                         value<char>()->default_value('n'),
+                                         "simulate with static generation of "
+                                         "module sets")
+
+                                            ("ignore_warnings",
+                                             value<char>()->default_value('n'),
+                                             "ignore warnings created by "
+                                             "backend solvers. \n"
+                                             "current canidates: "
+                                             "Solve::incnst, Solve::ifun, "
+                                             "DSolve::bvnul, "
+                                             "Reduce::ztest1, "
+                                             "Minimize::ztest1, Reduce::ztest, "
+                                             "Minimize::ztest\n"
+                                             "Note: Warnings from HyLaGI "
+                                             "itself are always activated");
 
   toggle_desc.add_options()("fail_on_stop", value<char>()->default_value('n'),
                             "stop all simulation cases when assertion fails");
-
-  if (not is_master())
-    toggle_desc.add_options()("static_generation_of_module_sets",
-                              value<char>()->default_value('n'),
-                              "simulate with static generation of module sets")
-
-        ("ignore_warnings", value<char>()->default_value('n'),
-         "ignore warnings created by backend solvers. \n"
-         "current canidates: Solve::incnst, Solve::ifun, DSolve::bvnul, "
-         "Reduce::ztest1, Minimize::ztest1, Reduce::ztest, Minimize::ztest\n"
-         "Note: Warnings from HyLaGI itself are always activated")
-
-            ("interval,i", value<char>()->default_value('n'),
-             "use interval method")(
-                "numerize_without_validation",
-                value<char>()->default_value('n'),
-                "numerize values of variables at the end of each PointPhase")(
-                "eager_approximation", value<char>()->default_value('n'),
-                "approximate values in advance of each Point Phase")(
-                "approximation_step", value<int>()->default_value(1),
-                "the interval of step to approximate value of variable")(
-                "extra_dummy_num", value<int>()->default_value(0),
-                "the number of extra dummy parameters in affine arithmetic.");
 
   toggle_desc.add_options()("dump_in_progress",
                             value<char>()->default_value('n'),
@@ -157,46 +212,222 @@ void ProgramOptions::init_descriptions() {
   if (not is_master())
     toggle_desc.add_options()(
         "use_shorthand", value<char>()->default_value('n'),
-        "use shorthands for arithmetic expressions (only for parameters)\n")(
-        "vars_to_approximate", value<std::string>()->default_value(""),
-        "variables to approximate (delimited by \",\")")(
-        "guards_to_interval_newton", value<std::string>()->default_value(""),
-        "guards to be solved by interval newton method(delimited by \",\")")(
-        "step_by_step", value<char>()->default_value('n'),
-        "use find_min_time_step_by_step")("solve_over_reals",
-                                          value<char>()->default_value('n'),
-                                          "solve constrants over the reals");
+        "use shorthands for arithmetic expressions (only for parameters)\n")
+
+        ("vars_to_approximate", value<std::string>()->default_value(""),
+         "variables to approximate (delimited by \",\")")
+
+        // ("guards_to_interval_newton",
+        //  value<std::string>()->default_value(""),
+        //  "guards to be solved by interval newton method(delimited by "
+        //  "\",\")")
+
+        // ("step_by_step", value<char>()->default_value('n'),
+        //  "use find_min_time_step_by_step")
+
+        ("solve_over_reals", value<char>()->default_value('n'),
+         "solve constrants over the reals");
+
   toggle_desc.add_options()("html", value<char>()->default_value('n'),
                             "output log with HTML format");
 
   options_description hidden_desc("Hidden options");
   hidden_desc.add_options()("input-file", value<std::string>(), "input file");
   if (is_master())
-    hidden_desc.add_options()("dump_parse_tree", "")(
-        "dump_parse_tree_json", "")("debug_constraint", "")(
-        "dump_module_set_graph", "")("dump_module_priority_graph",
-                                     "")("dump_relation_graph", "")(
-        "simplify,s", value<int>()->default_value(1),
-        "")("dsolve", value<int>()->default_value(0),
-            "")("tm", value<std::string>()->default_value("n"), "")(
-        "csv", value<std::string>()->default_value(""), "")("debug,d", "")(
-        "simplify_time", value<std::string>()->default_value("1"),
-        "")("math_name", value<std::string>()->default_value("math"),
-            "")("hs", value<char>()->default_value('n'),
-                "")("ltl,l", value<char>()->default_value('n'),
-                    "")("affine", value<char>()->default_value('n'), "")(
-        "static_generation_of_module_sets", value<char>()->default_value('n'),
-        "")("ignore_warnings", value<char>()->default_value('n'),
-            "")("interval,i", value<char>()->default_value('n'), "")(
-        "numerize_without_validation", value<char>()->default_value('n'),
-        "")("eager_approximation", value<char>()->default_value('n'),
-            "")("approximation_step", value<int>()->default_value(1),
-                "")("extra_dummy_num", value<int>()->default_value(0),
-                    "")("use_shorthand", value<char>()->default_value('n'), "")(
-        "vars_to_approximate", value<std::string>()->default_value(""), "")(
-        "guards_to_interval_newton", value<std::string>()->default_value(""),
-        "")("step_by_step", value<char>()->default_value('n'),
-            "")("solve_over_reals", value<char>()->default_value('n'), "");
+    hidden_desc.add_options()("dump_parse_tree", "")
+
+        ("dump_parse_tree_json", "")
+
+            ("debug_constraint", "")
+
+                ("dump_module_set_graph", "")
+
+                    ("dump_module_priority_graph", "")
+
+                        ("dump_relation_graph", "")
+
+                            ("simplify,s", value<int>()->default_value(1), "")
+
+                                ("dsolve", value<int>()->default_value(0), "")
+
+                                    ("tm",
+                                     value<std::string>()->default_value("n"),
+                                     "")
+
+                                        ("csv",
+                                         value<std::string>()->default_value(
+                                             ""),
+                                         "")
+
+                                            ("debug,d", "")
+
+                                                ("simplify_time",
+                                                 value<std::string>()
+                                                     ->default_value("1"),
+                                                 "")
+
+                                                    ("math_name",
+                                                     value<std::string>()
+                                                         ->default_value(
+                                                             "math"),
+                                                     "")
+
+                                                        ("hs",
+                                                         value<char>()
+                                                             ->default_value(
+                                                                 'n'),
+                                                         "")
+
+                                                            ("ltl,l",
+                                                             value<char>()
+                                                                 ->default_value(
+                                                                     'n'),
+                                                             "")
+
+                                                                ("affin"
+                                                                 "e",
+                                                                 value<char>()
+                                                                     ->default_value(
+                                                                         'n'),
+                                                                 "")
+
+                                                                    ("s"
+                                                                     "t"
+                                                                     "a"
+                                                                     "t"
+                                                                     "i"
+                                                                     "c"
+                                                                     "_"
+                                                                     "g"
+                                                                     "e"
+                                                                     "n"
+                                                                     "e"
+                                                                     "r"
+                                                                     "a"
+                                                                     "t"
+                                                                     "i"
+                                                                     "o"
+                                                                     "n"
+                                                                     "_"
+                                                                     "o"
+                                                                     "f"
+                                                                     "_"
+                                                                     "m"
+                                                                     "o"
+                                                                     "d"
+                                                                     "u"
+                                                                     "l"
+                                                                     "e"
+                                                                     "_"
+                                                                     "s"
+                                                                     "e"
+                                                                     "t"
+                                                                     "s",
+                                                                     value<
+                                                                         char>()
+                                                                         ->default_value(
+                                                                             'n'),
+                                                                     "")
+
+                                                                        ("ignor"
+                                                                         "e_"
+                                                                         "warni"
+                                                                         "ngs",
+                                                                         value<
+                                                                             char>()
+                                                                             ->default_value(
+                                                                                 'n'),
+                                                                         "")
+
+                                                                            ("i"
+                                                                             "n"
+                                                                             "t"
+                                                                             "e"
+                                                                             "r"
+                                                                             "v"
+                                                                             "a"
+                                                                             "l"
+                                                                             ","
+                                                                             "i",
+                                                                             value<
+                                                                                 char>()
+                                                                                 ->default_value(
+                                                                                     'n'),
+                                                                             "")
+
+                                                                                ("numerize_"
+                                                                                 "without_"
+                                                                                 "validation",
+                                                                                 value<
+                                                                                     char>()
+                                                                                     ->default_value(
+                                                                                         'n'),
+                                                                                 "")
+
+                                                                                    ("eager_"
+                                                                                     "approximation",
+                                                                                     value<
+                                                                                         char>()
+                                                                                         ->default_value(
+                                                                                             'n'),
+                                                                                     "")
+
+                                                                                        ("approximation_"
+                                                                                         "step",
+                                                                                         value<
+                                                                                             int>()
+                                                                                             ->default_value(
+                                                                                                 1),
+                                                                                         "")
+
+                                                                                            ("extra_dummy_"
+                                                                                             "num",
+                                                                                             value<
+                                                                                                 int>()
+                                                                                                 ->default_value(
+                                                                                                     0),
+                                                                                             "")
+
+                                                                                                ("use_shorthand",
+                                                                                                 value<
+                                                                                                     char>()
+                                                                                                     ->default_value(
+                                                                                                         'n'),
+                                                                                                 "")
+
+                                                                                                    ("vars_to_"
+                                                                                                     "approximate",
+                                                                                                     value<
+                                                                                                         std::
+                                                                                                             string>()
+                                                                                                         ->default_value(
+                                                                                                             ""),
+                                                                                                     "")
+
+                                                                                                        ("guards_to_"
+                                                                                                         "interval_"
+                                                                                                         "newton",
+                                                                                                         value<
+                                                                                                             std::
+                                                                                                                 string>()
+                                                                                                             ->default_value(
+                                                                                                                 ""),
+                                                                                                         "")
+
+                                                                                                            ("step_by_step",
+                                                                                                             value<
+                                                                                                                 char>()
+                                                                                                                 ->default_value(
+                                                                                                                     'n'),
+                                                                                                             "")
+
+                                                                                                                (
+                                                                                                                    "solve_over_"
+                                                                                                                    "reals",
+                                                                                                                    value<char>()
+                                                                                                                        ->default_value(
+                                                                                                                            'n'),
+                                                                                                                    "");
 
   visible_desc_.add(generic_desc).add(toggle_desc);
   cmdline_desc_.add(generic_desc).add(toggle_desc).add(hidden_desc);
