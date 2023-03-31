@@ -56,7 +56,8 @@ public:
   template <typename... As> static void debug_write(const As &... args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Debug)) {
-      i.debug_ << i.format(args...) << std::endl;
+      i.debug_ << i.format(args...) << "\n";
+      // i.debug_ << i.format(args...) << std::endl;
     }
   }
 
@@ -111,12 +112,11 @@ public:
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.html_mode) {
       i.debug_
-          << R"(timer elapsed: <span class="timer" style="background-color:#f09b3b">)"
-          << timer.get_elapsed_us() << "</span>[us]<br>" << std::endl;
+          << R"(timer elapsed: )"
+          << timer.get_elapsed_us() << "[us]<br><br>" << std::endl;
     } else {
       if (i.valid_level(LogLevel::Debug)) {
-        i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]"
-                 << std::endl;
+        i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]\n\n";
       }
     }
   }
@@ -247,6 +247,9 @@ private:
       }
     }
 
+    if (new_str.find("trace") != std::string::npos && new_str.find("publicRet") == std::string::npos) {
+      new_str = "<span style=\"padding-left: 1em;\">" + new_str + " </span>";
+    }
     new_str.append("<br>");
 
     return new_str;

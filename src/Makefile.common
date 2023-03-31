@@ -9,6 +9,11 @@ RM	:= rm
 LN	:= ln
 
 UNAME := $(shell uname)
+ifeq ($(shell uname -m),x86_64)
+	MACHINE := x86-64
+else
+	MACHINE := ARM64
+endif
 
 PYTHON_CONFIG ?= python3-config
 INCLUDES += `$(PYTHON_CONFIG) --embed 1> /dev/null 2> /dev/null && $(PYTHON_CONFIG) --includes --ldflags --embed || $(PYTHON_CONFIG) --includes --ldflags`
@@ -17,16 +22,16 @@ ifeq ($(UNAME),Linux)
 	LIBS += -luuid
 
 	MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
-	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
-	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions/
+	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
+	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
 
 	# CXX_OPT  += -Wall -std=c++2a -luuid -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 	CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 ifeq ($(UNAME),Darwin)
 	MATHPATH ?= /Applications/Mathematica\ 2.app/Contents
-	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
-	LDFLAGS  += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-x86-64/CompilerAdditions/
+	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-$(MACHINE)/CompilerAdditions/
+	LDFLAGS  += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-$(MACHINE)/CompilerAdditions/
 
 	CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
