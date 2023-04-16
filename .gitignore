@@ -2,6 +2,8 @@
 /bin/
 /workspace/
 /doc/html/
+/.xmake/
+/build/
 
 # ファイルは基本ホワイトリスト
 # (1文字以上).(0文字以上)のファイルはignore
@@ -23,6 +25,7 @@
 !*.sh
 !*.hydat.master
 !*.yaml
+!*.lua
 # ただし次のcppファイルは例外
 math_source.cpp
 

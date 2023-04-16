@@ -17,7 +17,7 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 ### Required packages
 
 - Git
-- Make
+- Make or [xmake](https://github.com/xmake-io/xmake/)
 - GCC or Clang, and Boost library
 - Python
 - Wolfram system (Mathematica, or WolframEngine)
@@ -25,21 +25,21 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 ### Ubuntu 22.04
 
 1. Install required packages
-   ```
+   ```bash
    sudo apt update && sudo apt install -y git make clang libboost-all-dev
    ```
-1. Install and activate Mathematica  
+2. Install and activate Mathematica  
    If you don't have Wolfram's license, you can use [Free Wolfram Engine for Developers](https://www.wolfram.com/engine/index.php).
-1. Library settings  
+3. Library settings  
    e.g. Mathematica 11.3
-   ```
+   ```bash
    echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
    ```
-1. Build HyLaGI
-   ```
+4. Build HyLaGI
+   ```bash
    git clone https://github.com/HydLa/HyLaGI.git
    cd HyLaGI
-   make -j 4
+   make -j 4 # or xmake build
    export PATH="$PATH:/usr/local/Wolfram/Mathematica/11.3/Executables:$(pwd)/bin"
    ```
    Then, you can use `hylagi` command.
@@ -58,6 +58,7 @@ HyLaGI supports several environments.
 - Ubuntu 20.04.1, Clang 10.0.0, Python 3.8.5
 - Ubuntu 22.04.1, GCC 11.3.0, Python 3.10.6
 - Ubuntu 22.04.1, Clang 14.0.0, Python 3.10.6
+- Ubuntu 22.04.1, Clang 15.0.7, Python 3.10.6
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.6.9
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.8.5
 </details>
