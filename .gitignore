@@ -23,9 +23,12 @@
 !*.sh
 !*.hydat.master
 !*.yaml
+!CMakeLists.txt
+!*.cmake
 # ただし次のcppファイルは例外
 math_source.cpp
 
 msc
 /backend_sample/backend_sample
 /backend_sample/backend_sample.h
+build/
