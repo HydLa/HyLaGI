@@ -1,13 +1,14 @@
-#pragma once
+#include "solve_sym.h"
 
-#include "boost_algo_str.h"
-#include "debug_main.h"
-#include <Python.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 
+#include <Python.h>
+
 #include "IncrementalModuleSet.h"
+#include "boost_algo_str.h"
+#include "debug_main.h"
 
 using namespace hydla::debug;
 

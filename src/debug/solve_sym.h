@@ -1,9 +1,12 @@
 #pragma once
 
-#include <Python.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
 #include <string>
+#include <vector>
+
+#include <Python.h>
 
 namespace hydla {
 namespace debug {
