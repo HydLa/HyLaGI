@@ -13,7 +13,7 @@ runs:
       shell: bash
     - name: install mathematica
       run: |
-        wget https://account.wolfram.com/dl/WolframEngine?version=14.0&platform=Linux&downloadManager=false&includesDocumentation=false -O WolframEngine_LINUX.sh
+        wget 'https://account.wolfram.com/dl/WolframEngine?version=14.0&platform=Linux&downloadManager=false&includesDocumentation=false' -O WolframEngine_LINUX.sh
         sudo bash WolframEngine_LINUX.sh
       shell: bash
     - name: setting libraries
