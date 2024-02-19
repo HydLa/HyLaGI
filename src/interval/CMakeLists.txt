@@ -12,7 +12,7 @@ target_sources(hydla_interval
 )
 
 # -lm -lrt
-target_link_libraries(hydla_interval PRIVATE m rt)
+target_link_libraries(hydla_interval PRIVATE m)
 
 target_compile_definitions(hydla_interval
     PRIVATE
