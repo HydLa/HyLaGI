@@ -148,7 +148,7 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add,
   string buffer;
   while (std::getline(sstr, buffer, ',')) {
     trim_front_and_behind_space(buffer);
-    regex re("^\l[\l\d]*'*$");
+    regex re(R"(^[a-z][a-z\d]*'*$)");
     smatch match;
     if (!regex_search(buffer, match, re)) {
       cout << warning_prefix << " warning : \"" << buffer
