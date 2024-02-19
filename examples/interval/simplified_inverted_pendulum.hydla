@@ -16,4 +16,6 @@ LAW(1,1,1,10,0),
 SCONST << (SR, SL),
 FORCE(1, 15), FORCE(2, -15), FORCE(0, 0).
 
-// #hylagi -p10 --fignore_warnings --finterval --guards_to_interval_newton angle-=threshold,angle-=-threshold --fdump_in_progress --fstep_by_step
+//#hylagi -p9 --fignore_warnings --finterval --guards_to_interval_newton angle-=threshold,angle-=-threshold --fdump_in_progress --fstep_by_step
+//#hylagi -p10 --fignore_warnings --finterval --guards_to_interval_newton angle-=threshold,angle-=-threshold --fdump_in_progress --fstep_by_step --faffine 
+//#hylagi -p10 --fignore_warnings 

@@ -9,4 +9,6 @@ BOUNCE <=> []((x-)^2 + (y-)^2 = 1 => cont = 0 &
 ).
 INIT, RUN, [](cont = 1) << BOUNCE.
 
-//#hylagi -p15 --fnd --guards_to_interval_newton x-^2+y-^2=1 --finterval --fstep_by_step --approximation_step 1 --vars_to_approximate x,y,x',y'
+//#hylagi -p15 --guards_to_interval_newton x-^2+y-^2=1 --finterval --fstep_by_step --approximation_step 1 --vars_to_approximate x,y,x',y' 
+//#hylagi -p15 --guards_to_interval_newton x-^2+y-^2=1 --finterval --fstep_by_step --approximation_step 1 --vars_to_approximate x,y,x',y' --faffine 
+
