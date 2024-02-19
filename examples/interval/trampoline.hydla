@@ -3,3 +3,7 @@ FALL <=> [](x'' = -m*g).
 TRAMPOLINE <=> [](x < 0 => x'' = -k*x - m*g).
 
 INIT, FALL<<TRAMPOLINE.
+
+//#hylagi -p7 --finterval --fstep_by_step --guards_to_interval_newton x<0 --vars_to_approximate x x' --approximation_step 1
+//#hylagi -p5 --finterval --fstep_by_step --guards_to_interval_newton x<0 --vars_to_approximate x x' --approximation_step 1 --faffine
+//#hylagi -p3
