@@ -251,7 +251,9 @@ void ProgramOptions::init_descriptions() {
                                 ("dsolve", value<int>()->default_value(0), "")
 
                                     ("tm",
-                                     value<std::string>()->default_value("n"),
+                                     value<std::vector<std::string>>()
+                                      ->multitoken()
+                                      ->default_value(std::vector<string>{"n"}, ""),
                                      "")
 
                                         ("csv",

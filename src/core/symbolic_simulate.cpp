@@ -114,19 +114,22 @@ void output_result(Simulator &ss, Opts &opts) {
     writer.write(*simulator_, of_name, input_file_name + "_diff");
   }
 
-  if (cmdline_options.get<std::vector<string>>("tm").at(0) == "s") {
-    hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
-  } else if (cmdline_options.get<std::vector<string>>("tm").at(0) == "c") {
-    std::string csv_name = cmdline_options.get<std::vector<string>>("tm").at(1);
-    if (csv_name == "") {
-      hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
-    } else {
-      std::ofstream ofs;
-      ofs.open(csv_name.c_str());
-      hydla::io::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
-      ofs.close();
+  if (not is_master()) {
+    if (cmdline_options.get<std::vector<string>>("tm").at(0) == "s") {
+      hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
+    } else if (cmdline_options.get<std::vector<string>>("tm").at(0) == "c") {
+      std::string csv_name = cmdline_options.get<std::vector<string>>("tm").at(1);
+      if (csv_name == "") {
+        hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
+      } else {
+        std::ofstream ofs;
+        ofs.open(csv_name.c_str());
+        hydla::io::CsvProfilePrinter(ofs).print_profile(ss.get_profile());
+        ofs.close();
+      }
     }
   }
+  
 }
 
 void trim_front_and_behind_space(std::string &buffer) {
