@@ -6,6 +6,12 @@
 INIT <=> x = 0 & x' = 0 & y = 10 & y' = 0 & e = 1 & [](e' = 0).
 FALL <=> [](cont = 1 => y'' = -10).
 CONSTX <=> [](cont = 1 => x'' = 0).
+/**
+*     sin = f'(x) / (1+f'(x)^2)^(1/2)
+*     cos =     1 / (1+f'(x)^2)^(1/2)
+*  new x' = (-k * sin^2 + cos^2) * x' + (k+1) * sin * cos      * y'
+*  new y' = (k+1) * sin * cos    * x' + (sin^2 + (-k) * cos^2) * y'
+*/
 CONST <=> [](s = cos(x)/(1 + cos(x)^2)^(1/2) &
              c = 1      /(1 + cos(x)^2)^(1/2)).
 BOUNCE <=> []( y- = sin(x-) => cont = 0 &
