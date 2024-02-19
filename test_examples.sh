@@ -7,9 +7,9 @@
 # If your hylagi is not in PATH, 
 # set the absolute path to hylagi here
 # e.g., hylagi="/path/to/hylagi"
-hylagi="/home/yamamoto/202402camp/hylagi/build/src/core/hylagi"
+hylagi="hylagi"
 
-# The output is in CSV style:
+# stdout is in CSV style:
 #   '<example_file_path>', <exitcode>
 
 # About <exitcode>:
@@ -23,17 +23,22 @@ hylagi="/home/yamamoto/202402camp/hylagi/build/src/core/hylagi"
 # If there are no comment lines containing "#hylagi",
 # <exitcode> = -1.
 
+# If there are multiple options,
+# it chooses the first one.
+
+# Log files are generated in logs/ folder
+
 cd "$(dirname $0)/examples"
 
 for f in $(find . -name "*.hydla"); do
   opts="$(grep -c "#hylagi" $f)"
-  if [[ $opts -ne 1 ]]; then
+  if [[ $opts -eq 0 ]]; then
     # echo "[$f] $(printf '\033[31m%s\033[m\n' 'Error'): $opts options found (expected: 1)"
     echo "'$f', -1"
     continue
   fi
   # echo $f
-  args=$(grep "#hylagi" $f | sed -e "s/^\s*\/\///" | sed -e 's/#hylagi//' | sed -e 's/\r//g')
+  args=$(grep "#hylagi" $f | head -1 | sed -e "s/^\s*\/\///" | sed -e 's/#hylagi//' | sed -e 's/\r//g')
   cmd="$hylagi $args $f"
   # echo $cmd
   mkdir -p "../logs/$(dirname "$f")"
