@@ -12,7 +12,7 @@ http://www.ueda.info.waseda.ac.jp/hydla/
 
 ## Build
 
-Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) even if you don't build HyLaGI.
+You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa programs without building HyLaGI on your own.
 
 ### Required packages
 
@@ -22,28 +22,43 @@ Also, you can use HydLa on [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) ev
 - Python
 - Wolfram system (Mathematica, or WolframEngine)
 
-### Ubuntu 22.04
+### Ubuntu 22.04 with Clang
 
 1. Install required packages
-   ```
-   sudo apt update && sudo apt install -y git make clang libboost-all-dev
+   ```bash
+   sudo apt update && sudo apt install -y git make clang libboost-all-dev uuid-dev
    ```
 1. Install and activate Mathematica  
    If you don't have Wolfram's license, you can use [Free Wolfram Engine for Developers](https://www.wolfram.com/engine/index.php).
-1. Library settings  
-   e.g. Mathematica 11.3
+1. Set `$MATHPATH` (see **What is `MATHPATH`?** below)  
+   e.g., Wolfram Engine 14.0
+   ```bash
+   echo "export MATHPATH='/usr/local/Wolfram/WolframEngine/14.0'" >> ~/.bashrc
+   source ~/.bashrc   # or restart the terminal
    ```
-   echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" >> /etc/ld.so.conf && ldconfig
+1. Library settings
+   ```bash
+   echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" | sudo tee /etc/ld.so.conf.d/wstp.conf
+   sudo ldconfig
    ```
 1. Build HyLaGI
-   ```
+   ```bash
    git clone https://github.com/HydLa/HyLaGI.git
    cd HyLaGI
-   make -j 4
-   export PATH="$PATH:/usr/local/Wolfram/Mathematica/11.3/Executables:$(pwd)/bin"
+   make -j 4 MATHPATH=$MATHPATH
+   echo "export PATH='$PATH:$MATHPATH/Executables:$(pwd)/bin'" >> ~/.bashrc
+   source ~/.bashrc   # or restart the terminal
    ```
-   Then, you can use `hylagi` command.
-
+   Then, you can use `hylagi` command. For example:
+   ```bash
+   hylagi -p 6 examples/bouncing_particle.hydla
+   ```
+1. Run tests  
+   By default, `make test` tries to do tests in parallel with too many threads. You should specify the number of threads as follows:
+   ```bash
+   make test fnum=2
+   ```
+   
 ### Other environments
 
 HyLaGI supports several environments.
@@ -73,27 +88,31 @@ you can set environment variables when you exec `make`.
 make -j 4 CC=gcc CXX=g++
 ```
 
-#### Other path/to/Mathematica:
-
-- in other version:
-  ```
-  make -j 4 MATHPATH=/usr/local/Wolfram/Mathematica/12.1
-  ```
-- using WolframEngine:
-  ```
-  make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/12.1
-  ```
-
-##### What is `MATHPATH`?
-
-Actually, `MATHPATH` is the path to the directory where the Wolfram system is installed.<br>
-You can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html).
-
 #### When using Python3 with `python` command:
 
 ```
 make -j 4 PYTHON_CONFIG=python-config
 ```
+
+## What is `MATHPATH`?
+
+`MATHPATH` is the path to the directory where the Wolfram system is installed.  
+You can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html).
+
+```
+$ math
+Wolfram Language 14.0.0 Engine for Linux x86 (64-bit)
+Copyright 1988-2023 Wolfram Research, Inc.
+
+In[1]:= $InstallationDirectory
+
+Out[1]= /usr/local/Wolfram/WolframEngine/14.0
+```
+
+Examples of `MATHPATH`:
+- With WolframEngine 14.0: `/usr/local/Wolfram/WolframEngine/14.0`
+- With Mathematica 12.1: `/usr/local/Wolfram/Mathematica/12.1`
+
 
 ## Known issues
 
