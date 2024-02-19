@@ -192,6 +192,7 @@ void AffineTreeVisitor::visit(
     std::shared_ptr<symbolic_expression::Function> node) {
   HYDLA_LOGGER_NODE_VISIT;
   std::string name = node->get_name();
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
   if (name == "log") {
     if (node->get_arguments_size() != 1)
       invalid_node(*node);

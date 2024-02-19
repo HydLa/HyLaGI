@@ -158,6 +158,7 @@ void IntervalTreeVisitor::visit(
 void IntervalTreeVisitor::visit(
     std::shared_ptr<symbolic_expression::Function> node) {
   std::string name = node->get_name();
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
   itvd arg;
   if (name == "sin") {
     if (node->get_arguments_size() != 1) {
