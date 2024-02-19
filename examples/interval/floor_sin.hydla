@@ -12,8 +12,8 @@ CONSTX <=> [](cont = 1 => x'' = 0).
 *  new x' = (-k * sin^2 + cos^2) * x' + (k+1) * sin * cos      * y'
 *  new y' = (k+1) * sin * cos    * x' + (sin^2 + (-k) * cos^2) * y'
 */
-CONST <=> [](s = cos(x-)/(1 + cos(x-)^2)^(1/2) &
-             c = 1      /(1 + cos(x-)^2)^(1/2)).
+CONST <=> [](s = cos(x)/(1 + cos(x)^2)^(1/2) &
+             c = 1      /(1 + cos(x)^2)^(1/2)).
 BOUNCE <=> []( y- = sin(x-) => cont = 0 &
         x' = ((-e) * s^2 + c^2) * x'- + ((e+1) * s * c) * y'-
         &
@@ -21,4 +21,4 @@ BOUNCE <=> []( y- = sin(x-) => cont = 0 &
 
 INIT, CONST, (FALL, CONSTX), [](cont = 1) << BOUNCE.
 
-//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1
+//#hylagi --fnd --finterval --fstep_by_step --guards_to_interval_newton y-=Sin[x-] --vars_to_approximate x,y,x',y' --approximation_step 1 -p 10
