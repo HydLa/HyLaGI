@@ -15,7 +15,7 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/13.2 CC=clang CXX=clang++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/14.0 CC=clang CXX=clang++
   ubuntu20_04-gcc9_3_0-python3_8_5:
     runs-on: ubuntu-20.04
     steps:
@@ -23,7 +23,7 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/13.2 CC=gcc CXX=g++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/14.0 CC=gcc CXX=g++
 
   ubuntu22_04-clang14_0_0-python3_10_6:
     runs-on: ubuntu-22.04
@@ -32,7 +32,7 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/13.2 CC=clang CXX=clang++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/14.0 CC=clang CXX=clang++
   ubuntu22_04-gcc11_3_0-python3_10_6:
     runs-on: ubuntu-22.04
     steps:
@@ -40,4 +40,4 @@ jobs:
     - uses: ./.github/actions/setup-ubuntu
     - name: build
       run: |
-        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/13.2 CC=gcc CXX=g++
+        make -j 4 MATHPATH=/usr/local/Wolfram/WolframEngine/14.0 CC=gcc CXX=g++
