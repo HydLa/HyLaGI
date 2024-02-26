@@ -54,10 +54,12 @@ You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa
    hylagi -p 6 examples/bouncing_particle.hydla
    ```
 1. Run tests  
-   By default, `make test` tries to do tests in parallel with too many threads. You should specify the number of threads as follows:
+   By default, `make test` runs tests sequentially.  
+   If you want it to run in parallel, you can set the number of threads as follows:
    ```bash
    make test fnum=2
    ```
+   Note that parallel execution may be restricted by your Wolfram license.
    
 ### Other environments
 
