@@ -1,8 +1,8 @@
 ## Usage
 
 /HyLaGI で`make test`すると統合テストが走る．
-ただしデフォルトでは約 40 並列でテストを行うので，
-ローカルで行う場合は`fnum=2 make test`などとする
+ただしデフォルトでは逐次でテストを行うので，
+並列で行う場合は`make test fnum=2`などとする．ただし，MathematicaやWolfram Engine等のライセンスによって同時実行数が制限されている場合があるため注意．
 
 ## Files
 - system_test.sh:  
