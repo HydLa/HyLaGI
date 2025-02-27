@@ -7,9 +7,9 @@ runs:
         clang++ --version | head -n 1
         python3 --version
       shell: bash
-    - name: install boost
+    - name: install boost and uuid
       run: |
-        sudo apt install libboost-all-dev
+        sudo apt install libboost-all-dev uuid-dev
       shell: bash
     - name: install mathematica
       run: |
