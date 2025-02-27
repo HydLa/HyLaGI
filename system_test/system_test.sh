@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 set -e
+cd $(dirname $0)
+
+rm -rf hydat/*.hydat
+ls hydat/*.hydat.master | sed -e 's/.master$//' | xargs -I {} bash -c 'touch {}'
 
 echo -n "testing system_test"
 if [ -z "$fnum" ]; then
@@ -10,10 +14,10 @@ if [ -z "$fnum" ]; then
 fi
 echo " in $fnum parallel..."
 
-ls ../examples/*.hydla | xargs -P $fnum -I {} bash -c 'hylagi {} &> /dev/null && printf "hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
+ls ../examples/*.hydla | xargs -P $fnum -I {} bash -c '../bin/hylagi {} &> /dev/null && printf "../bin/hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "../bin/hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
 printf "%s \033[32m%s\033[m\n" "exec examples" "succeeded"
 
-ls ../check_examples/*.hydla | xargs -P $fnum -I {} bash -c 'hylagi {} &> /dev/null && printf "hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
+ls ../check_examples/*.hydla | xargs -P $fnum -I {} bash -c '../bin/hylagi {} &> /dev/null && printf "../bin/hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "../bin/hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
 printf "%s \033[32m%s\033[m\n" "exec check_examples" "succeeded"
 
 ls hydat/*.hydat | xargs -P $fnum -I {} python3 compare_hydat.py {} {}.master
