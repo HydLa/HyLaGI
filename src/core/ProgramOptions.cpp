@@ -449,8 +449,8 @@ void ProgramOptions::parse(int argc, char *argv[]) {
 }
 
 void ProgramOptions::parse(std::string src_str) {
-  char dst_str[src_str.length()];
-  strcpy(dst_str, src_str.c_str());
+  char dst_str[src_str.length()+1];
+  strncpy(dst_str, src_str.c_str(), sizeof(dst_str));
   char *argv[(src_str.length() + 1) / 2 + 1];
   // Set the first element(program name) to dummy
   char dummy_hydla[1]{'\0'};
