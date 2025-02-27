@@ -2,7 +2,7 @@ src_directory := src
 UNAME := $(shell uname)
 .PHONY : all
 all: $(src_directory)
-	@make math-check
+	$(MAKE) math-check
 	@mkdir -p bin && cd src && $(MAKE)
 	@printf "%s \033[32m%s\033[m\n" "build" "succeeded"
 
