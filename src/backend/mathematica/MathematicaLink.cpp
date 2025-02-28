@@ -132,22 +132,22 @@ bool MathematicaLink::receive_to_return_packet() {
       str = utility::replace(str, "\\011", "\t");
       if (input_print_.empty()) {
         input_print_ = str;
-        if (trace){
-          for(int i = str.size(); i > 0; i--){
-            if(str[i-1] == '\n'){
-              str[i-1] = ' ';    
+        if (trace) {
+          for (int i = str.size(); i > 0; i--) {
+            if (str[i - 1] == '\n') {
+              str[i - 1] = ' ';
               break;
             }
           }
           HYDLA_LOGGER_DEBUG("input: \n", str);
         }
       } else {
-        if (trace){
-          for(int i = str.size(); i > 0; i--){
-            if(str[i-1] == '\n'){
-              str[i-1] = ' ';
+        if (trace) {
+          for (int i = str.size(); i > 0; i--) {
+            if (str[i - 1] == '\n') {
+              str[i - 1] = ' ';
               break;
-            }    
+            }
           }
           HYDLA_LOGGER_DEBUG_INTERNAL("trace: ", str);
         }

@@ -27,8 +27,8 @@ std::ostream &operator<<(std::ostream &ost, const AffineMixedValue &val) {
   return ost;
 }
 
-AffineMixedValue AffineMixedValue::
-operator+(const AffineMixedValue &rhs) const {
+AffineMixedValue
+AffineMixedValue::operator+(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
 
   switch (type) {
@@ -83,13 +83,13 @@ operator+(const AffineMixedValue &rhs) const {
   return ret;
 }
 
-AffineMixedValue AffineMixedValue::
-operator-(const AffineMixedValue &rhs) const {
+AffineMixedValue
+AffineMixedValue::operator-(const AffineMixedValue &rhs) const {
   return -(*this) + -(rhs);
 }
 
-AffineMixedValue AffineMixedValue::
-operator*(const AffineMixedValue &rhs) const {
+AffineMixedValue
+AffineMixedValue::operator*(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
   switch (type) {
   case INTEGER:
@@ -143,8 +143,8 @@ operator*(const AffineMixedValue &rhs) const {
   return ret;
 }
 
-AffineMixedValue AffineMixedValue::
-operator/(const AffineMixedValue &rhs) const {
+AffineMixedValue
+AffineMixedValue::operator/(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
 
   switch (type) {
@@ -205,8 +205,8 @@ operator/(const AffineMixedValue &rhs) const {
   return ret;
 }
 
-AffineMixedValue AffineMixedValue::
-operator^(const AffineMixedValue &rhs) const {
+AffineMixedValue
+AffineMixedValue::operator^(const AffineMixedValue &rhs) const {
   AffineMixedValue ret;
   kv::interval<double> itv = to_interval();
   double l = itv.lower(), u = itv.upper();

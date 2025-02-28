@@ -53,7 +53,7 @@ public:
   /**
    * ログレベルdebugとしてログの出力をおこなう
    */
-  template <typename... As> static void debug_write(const As &... args) {
+  template <typename... As> static void debug_write(const As &...args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Debug)) {
       i.debug_ << i.format(args...) << "\n";
@@ -64,7 +64,7 @@ public:
   /**
    * ログレベルwarnとしてログの出力をおこなう
    */
-  template <typename... As> static void warn_write(const As &... args) {
+  template <typename... As> static void warn_write(const As &...args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Warn)) {
       i.warn_ << i.format(args...) << std::endl;
@@ -74,7 +74,7 @@ public:
   /**
    * ログレベルerrorとしてログの出力をおこなう
    */
-  template <typename... As> static void error_write(const As &... args) {
+  template <typename... As> static void error_write(const As &...args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Error)) {
       i.error_ << i.format(args...) << std::endl;
@@ -84,7 +84,7 @@ public:
   /**
    * ログレベルfatalとしてログの出力をおこなう
    */
-  template <typename... As> static void fatal_write(const As &... args) {
+  template <typename... As> static void fatal_write(const As &...args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Fatal)) {
       i.fatal_ << i.format(args...) << std::endl;
@@ -94,7 +94,7 @@ public:
   /**
    * ログレベルstandardとしてログの出力をおこなう
    */
-  template <typename... As> static void standard_write(const As &... args) {
+  template <typename... As> static void standard_write(const As &...args) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.valid_level(LogLevel::Standard)) {
       i.standard_ << i.format(args...) << std::endl;
@@ -111,9 +111,8 @@ public:
   static void debug_write_timer(const hydla::timer::Timer &timer) {
     hydla::logger::Logger &i = hydla::logger::Logger::instance();
     if (i.html_mode) {
-      i.debug_
-          << R"(timer elapsed: )"
-          << timer.get_elapsed_us() << "[us]<br><br>" << std::endl;
+      i.debug_ << R"(timer elapsed: )" << timer.get_elapsed_us()
+               << "[us]<br><br>" << std::endl;
     } else {
       if (i.valid_level(LogLevel::Debug)) {
         i.debug_ << "timer elapsed: " << timer.get_elapsed_us() << "[us]\n\n";
@@ -207,7 +206,7 @@ summary {
   }
 
 private:
-  template <typename... As> std::string format(const As &... args) const {
+  template <typename... As> std::string format(const As &...args) const {
     std::stringstream stream;
 
     using swallow = std::initializer_list<int>;
@@ -247,7 +246,8 @@ private:
       }
     }
 
-    if (new_str.find("trace") != std::string::npos && new_str.find("publicRet") == std::string::npos) {
+    if (new_str.find("trace") != std::string::npos &&
+        new_str.find("publicRet") == std::string::npos) {
       new_str = "<span style=\"padding-left: 1em;\">" + new_str + " </span>";
     }
     new_str.append("<br>");
