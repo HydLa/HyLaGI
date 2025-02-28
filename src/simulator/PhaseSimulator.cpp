@@ -791,7 +791,7 @@ bool PhaseSimulator::calculate_closure(phase_result_sptr_t &phase,
           ask->get_child(), unknown_asks, phase_type,
           phase->parent && phase->parent->parent,
           phase->profile)) { // 成否を計算
-      case BRANCH_PAR: // パラメータの値によって成否が変わる場合
+      case BRANCH_PAR:       // パラメータの値によって成否が変わる場合
         HYDLA_LOGGER_DEBUG(
             "%% entailablity depends on conditions of parameters\n");
         push_branch_states(phase, check_consistency_result);
@@ -2167,14 +2167,20 @@ std::map<variable_set_t, module_set_t>
 PhaseSimulator::filter_required(std::map<variable_set_t, module_set_t> causes) {
   auto ims =
       std::dynamic_pointer_cast<IncrementalModuleSet>(module_set_container);
-  for (auto &&p : causes) {
-    for (auto m : p.second)
-      if (not ims->is_required(m))
-        p.second.erase(m);
-    if (p.second.size() == 0)
-      causes.erase(p.first);
+  std::map<variable_set_t, module_set_t> filteredCauses;
+
+  for (auto it = causes.begin(); it != causes.end(); ++it) {
+    module_set_t filteredModuleSet;
+    for (auto m : it->second) {
+      if (ims->is_required(m)) {
+        filteredModuleSet.insert(m);
+      }
+    }
+    if (!filteredModuleSet.empty()) {
+      filteredCauses[it->first] = filteredModuleSet;
+    }
   }
-  return causes;
+  return filteredCauses;
 }
 
 void PhaseSimulator::print_possible_causes(
