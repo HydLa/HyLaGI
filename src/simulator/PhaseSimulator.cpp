@@ -1859,6 +1859,12 @@ void PhaseSimulator::make_next_todo(phase_result_sptr_t &phase) {
                                        entry.parameter_constraint);
                   }
                   f_result = reduce_unsuitable_case(f_result, backend_, phase);
+                  if (f_result.size() == 0) {
+                    HYDLA_LOGGER_DEBUG(
+                        "#epsilon: No suitable case on this branch");
+                    continue;
+                  }
+
                   for (auto entry : time_result) {
                     HYDLA_LOGGER_DEBUG("#epsilon DC after : ",
                                        entry.parameter_constraint);
