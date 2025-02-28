@@ -61,7 +61,7 @@ You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa
    make test fnum=2
    ```
    Note that parallel execution may be restricted by your Wolfram license.
-   
+
 ### Other environments
 
 HyLaGI supports several environments.
@@ -74,6 +74,7 @@ HyLaGI supports several environments.
 
 <!-- - Ubuntu 20.04.1, GCC 9.3.0, Python 3.8.5
 - Ubuntu 20.04.1, Clang 10.0.0, Python 3.8.5 -->
+
 - Ubuntu 22.04.1, GCC 11.3.0, Python 3.10.6
 - Ubuntu 22.04.1, Clang 14.0.0, Python 3.10.6
 - Ubuntu 24.04.2, GCC 13.3.0, Python 3.12.3
@@ -85,7 +86,7 @@ HyLaGI supports several environments.
 ### Make options
 
 To build several environments,
-you can set environment variables when you exec `make`.  
+you can set environment variables when you exec `make`.
 
 #### Forcing to use GCC:
 
@@ -121,9 +122,9 @@ Out[1]= /usr/local/Wolfram/WolframEngine/14.0
 ```
 
 Examples of `MATHPATH`:
+
 - With WolframEngine 14.0: `/usr/local/Wolfram/WolframEngine/14.0`
 - With Mathematica 12.1: `/usr/local/Wolfram/Mathematica/12.1`
-
 
 ## Known issues
 
@@ -136,21 +137,37 @@ If you see this error, please make sure that the `math` command is installed and
 If the `math` command does not exist (as confirmed when using WolframEngine on MacOS), create a symbolic link to `WolframKernel` named math.
 
 ### For users who have both clang and gcc installed (Ubuntu)
+
 Where `gcc` and `clang` are both installed, Executing `make` with `clang` may cause errors claiming that some basic libraries are not found. Use `g++` instead, or install a specific version of the standard library in the following way.
 
 1. Run `clang -v` and check the dependent GCC version written at the end of the line: `Selected GCC installation`. (hereafter `[version]`)
 2. Install GNU libstdc++ of the version checked above.
+
 ```sh
 apt install libstdc++-[version]-dev
 ```
+
 or install the whole `g++` compiler of the version.
+
 ```sh
 apt install g++-[version]
 ```
+
 3. Run `make` to build.
+
 ```sh
 make CC=clang CXX=clang++
 ```
 
-## CI
-CI supports only build (not include testing examples). If you want to test them, do ``` make test ``` after building HyLaGI on your terminal. See `system_test/README.md` for details.
+## For developers
+
+### To format all files with clang-format
+
+```sh
+sudo apt install clang-format
+find . -name "*.h" -o -name "*.cpp" | xargs clang-format -i -style=file --verbose
+```
+
+### CI
+
+CI supports only build (not include testing examples). If you want to test them, do `make test` after building HyLaGI on your terminal. See `system_test/README.md` for details.
