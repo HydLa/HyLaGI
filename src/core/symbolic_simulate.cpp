@@ -118,7 +118,8 @@ void output_result(Simulator &ss, Opts &opts) {
     if (cmdline_options.get<std::vector<string>>("tm").at(0) == "s") {
       hydla::io::StdProfilePrinter().print_profile(ss.get_profile());
     } else if (cmdline_options.get<std::vector<string>>("tm").at(0) == "c") {
-      std::string csv_name = cmdline_options.get<std::vector<string>>("tm").at(1);
+      std::string csv_name =
+          cmdline_options.get<std::vector<string>>("tm").at(1);
       if (csv_name == "") {
         hydla::io::CsvProfilePrinter().print_profile(ss.get_profile());
       } else {
@@ -129,7 +130,6 @@ void output_result(Simulator &ss, Opts &opts) {
       }
     }
   }
-  
 }
 
 void trim_front_and_behind_space(std::string &buffer) {

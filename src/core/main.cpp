@@ -101,7 +101,7 @@ int hydla_main(int argc, char *argv[]) {
                    std::istreambuf_iterator<char>());
   }
 
-  //バックスラッシュ直後の改行の除去
+  // バックスラッシュ直後の改行の除去
   {
     const std::regex r("([^/]\\\\[ \t]*(\n|\r\n))");
     input = std::regex_replace(input, r, " ");
@@ -127,7 +127,7 @@ int hydla_main(int argc, char *argv[]) {
 
   Logger::set_html_mode(opts.html);
 
-  //マクロ処理
+  // マクロ処理
   {
     static const bool debugPrint = false;
 
@@ -150,7 +150,7 @@ int hydla_main(int argc, char *argv[]) {
           for (string::size_type pos = input.find(m_name, offset);
                pos != string::npos; pos = input.find(m_name, pos)) {
             {
-              //識別子の前後が英数字だったら読み飛ばす
+              // 識別子の前後が英数字だったら読み飛ばす
               if (0 < pos && isAlNum(input[pos - 1])) {
                 pos += m_name.length();
                 continue;
@@ -172,11 +172,11 @@ int hydla_main(int argc, char *argv[]) {
             }
           }
         } else {
-          //左括弧と右括弧が同じ数になるように対応づけなければならないので正規表現は使えない
+          // 左括弧と右括弧が同じ数になるように対応づけなければならないので正規表現は使えない
           for (string::size_type pos = input.find(m_name, offset);
                pos != string::npos; pos = input.find(m_name, pos)) {
             {
-              //識別子の前後が英数字だったら読み飛ばす
+              // 識別子の前後が英数字だったら読み飛ばす
               if (0 < pos && isAlNum(input[pos - 1])) {
                 pos += m_name.length();
                 continue;
@@ -300,7 +300,7 @@ int hydla_main(int argc, char *argv[]) {
           for (string::size_type pos = result.find(m_argments[i]);
                pos != string::npos; pos = result.find(m_argments[i], pos)) {
             {
-              //識別子の前後が英数字だったら読み飛ばす
+              // 識別子の前後が英数字だったら読み飛ばす
               if (0 < pos && isAlNum(result[pos - 1])) {
                 pos += m_argments[i].length();
                 continue;
