@@ -14,10 +14,18 @@ if [ -z "$fnum" ]; then
 fi
 echo " in $fnum parallel..."
 
-ls ../examples/*.hydla | xargs -P $fnum -I {} bash -c '../bin/hylagi {} &> /dev/null && printf "../bin/hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "../bin/hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
+function test(){
+  ../bin/hylagi $1 &> /dev/null \
+    && printf "../bin/hylagi %s \033[32m%s\033[m\n" $1 "finished" \
+    || (printf "../bin/hylagi %s \033[31m%s\033[m\n" $1 "failed"; \
+        exit 255)
+}
+export -f test
+
+ls ../examples/*.hydla | xargs -P $fnum -I {} bash -c "test {}"
 printf "%s \033[32m%s\033[m\n" "exec examples" "succeeded"
 
-ls ../check_examples/*.hydla | xargs -P $fnum -I {} bash -c '../bin/hylagi {} &> /dev/null && printf "../bin/hylagi %s \033[32m%s\033[m\n" {} "finished" || (printf "../bin/hylagi %s \033[31m%s\033[m\n" {} "failed"; exit 255)'
+ls ../check_examples/*.hydla | xargs -P $fnum -I {} bash -c "test {}"
 printf "%s \033[32m%s\033[m\n" "exec check_examples" "succeeded"
 
 ls hydat/*.hydat | xargs -P $fnum -I {} python3 compare_hydat.py {} {}.master
