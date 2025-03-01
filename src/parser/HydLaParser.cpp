@@ -30,7 +30,7 @@ bool Parser::parse_ended() {
 node_sptr Parser::is_defined(std::shared_ptr<Definition> definition) {
   node_sptr ret;
   std::string name = definition->get_name();
-  int size = definition->bound_variable_size();
+  size_t size = definition->bound_variable_size();
   IS_DEFINED_AS(name, size, tmp_constraint_definitions, ret);
   IS_DEFINED_AS(name, size, tmp_program_list_definitions, ret);
   IS_DEFINED_AS(name, size, tmp_expression_list_definitions, ret);

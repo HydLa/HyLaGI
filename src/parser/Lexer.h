@@ -135,9 +135,9 @@ private:
   // current token string
   std::string current_token_string;
   // line number that Lexer is reading now
-  int line;
+  unsigned line;
   // column number than Lexer is reading now
-  int column;
+  unsigned column;
 };
 
 } // namespace parser
