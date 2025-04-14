@@ -1,0 +1,42 @@
+add_library(hydla_simulator STATIC)
+
+target_sources(hydla_simulator
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/AlwaysFinder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/AnalysisResultChecker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/AtomicConstraintFinder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Automaton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ConsistencyChecker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ConstraintStore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMapMaker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/EpsilonMode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GuardMapApplier.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GuardNode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HybridAutomatonConverter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LTLModelChecker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LTLNode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MinTimeCalculator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Parameter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PhaseResult.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PhaseSimulator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrevReplacer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PropertyNode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RelationGraph.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SequentialSimulator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Simulator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Value.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ValueModifier.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ValueNumerizer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ValueRange.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VariableFinder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VariableRenamer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VariableReplacer.cpp
+)
+
+target_link_libraries(hydla_simulator
+    PUBLIC
+    hydla_backend
+    hydla_interval
+    hydla_hierarchy
+    hydla_symbolic_expression
+)

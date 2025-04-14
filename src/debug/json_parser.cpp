@@ -1,5 +1,3 @@
-#pragma once
-
 #include "json_parser.h"
 #include "ParseTree.h"
 #include "picojson.h"
