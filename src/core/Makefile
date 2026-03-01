@@ -23,7 +23,7 @@ LIBS_STATIC += -lboost_program_options
 LIBS     += $(MATH_FLAGS_$(ARCH)) -lm -lrt
 endif
 ifeq ($(UNAME),Darwin)
-LIBS_STATIC += -lboost_program_options-mt
+LIBS_STATIC += -lboost_program_options
 LIBS     += -lWSTPi4 -lm
 endif
 

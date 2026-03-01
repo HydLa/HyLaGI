@@ -24,6 +24,30 @@
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
+#ifdef __APPLE__
+#include <sstream>
+#include <unistd.h>
+static std::string detect_math_kernel() {
+  // 1. Search for 'math' in PATH (licensed Mathematica)
+  if (const char *path_env = std::getenv("PATH")) {
+    std::istringstream iss(path_env);
+    std::string dir;
+    while (std::getline(iss, dir, ':'))
+      if (access((dir + "/math").c_str(), X_OK) == 0)
+        return "math";
+  }
+  // 2. Mathematica app bundle
+  if (access("/Applications/Mathematica.app/Contents/MacOS/WolframKernel",
+             X_OK) == 0)
+    return "/Applications/Mathematica.app/Contents/MacOS/WolframKernel";
+  // 3. Wolfram Engine app bundle
+  if (access(
+          "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel",
+          X_OK) == 0)
+    return "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel";
+  return "math"; // final fallback
+}
+#endif
 // namespace
 using namespace hydla;
 using namespace hydla::symbolic_expression;
@@ -161,8 +185,16 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add,
 #define IF_SPECIFIED(X) if (use_default || !po.defaulted(X))
 
 void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
+  std::string math_name = po.get<string>("math_name");
+#ifdef __APPLE__
+  if (math_name.empty())
+    math_name = detect_math_kernel();
+#else
+  if (math_name.empty())
+    math_name = "math";
+#endif
   opts.wstp =
-      "-linkmode launch -linkname '" + po.get<string>("math_name") + " -wstp'";
+      "-linkmode launch -linkname '\"" + math_name + "\" -wstp'";
   IF_SPECIFIED("time") {
     parser::Parser parser(po.get<string>("time"));
     opts.max_time = parser.arithmetic();
