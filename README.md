@@ -22,7 +22,7 @@ You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa
 - Python
 - Wolfram system (Mathematica, or WolframEngine)
 
-### Ubuntu 24.04 with GCC
+### Ubuntu
 
 1. Install required packages.
    ```sh
@@ -80,7 +80,7 @@ If the auto-detection doesn't work, you can manually set the MATHPATH:
    ```
 </details>
 
-### macOS with Clang
+### macOS
 
 1. Install required packages using Homebrew.
    ```bash
@@ -147,13 +147,13 @@ you can set environment variables when you exec `make`.
 #### Forcing to use GCC:
 
 ```
-make -j 4 CC=gcc CXX=g++
+make -j 4 CXX=g++
 ```
 
 #### Forcing to use clang:
 
 ```
-make -j 4 CC=clang CXX=clang++
+make -j 4 CXX=clang++
 ```
 
 #### When using Python3 with `python` command:
@@ -164,8 +164,9 @@ make -j 4 PYTHON_CONFIG=python-config
 
 ## What is `MATHPATH`?
 
-`MATHPATH` is the path to the directory where the Wolfram system is installed.  
-You can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html).
+`MATHPATH` is the path to the directory where the Wolfram system is installed. **The build system now auto-detects this automatically**, so manual configuration is usually not needed.
+
+If you need to check or manually set it, you can see it in [$InstallationDirectory](https://reference.wolfram.com/language/ref/$InstallationDirectory.html):
 
 ```
 $ math
@@ -182,17 +183,22 @@ Examples of `MATHPATH`:
 - With WolframEngine 14.0: `/usr/local/Wolfram/WolframEngine/14.0`
 - With Mathematica 12.1: `/usr/local/Wolfram/Mathematica/12.1`
 
+To override auto-detection: `make MATHPATH=/your/custom/path`
+
 ## Known issues
 
 ### libc++abi: terminating with uncaught exception of type hydla::backend::LinkError: math link error: can not link : 1
 
 HyLaGI uses the wolfram system to calculate constraints.
-It uses WSTP communication with the `math` command to make the call.
+It uses WSTP communication with the Wolfram kernel to make the call.
 
-If you see this error, please make sure that the `math` command is installed and in the path.
-If the `math` command does not exist (as confirmed when using WolframEngine on MacOS), create a symbolic link to `WolframKernel` named math.
+If you see this error, the build system should automatically detect and use the correct Wolfram kernel. If the auto-detection fails, you can manually specify the kernel with `--math_name=/path/to/kernel` or ensure the `math` command is in your PATH.
 
+<!-- 
 ### For users who have both clang and gcc installed (Ubuntu)
+
+NOTE: This section is no longer relevant since the build system now uses 
+system defaults (g++ on Ubuntu) which avoids these conflicts entirely.
 
 Where `gcc` and `clang` are both installed, Executing `make` with `clang` may cause errors claiming that some basic libraries are not found. Use `g++` instead, or install a specific version of the standard library in the following way.
 
@@ -214,6 +220,7 @@ apt install g++-[version]
 ```sh
 make CC=clang CXX=clang++
 ```
+-->
 
 ## For developers
 
