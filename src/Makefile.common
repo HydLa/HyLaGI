@@ -1,11 +1,7 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-ifeq ($(origin CC),default)
-  CC := clang
-endif
-ifeq ($(origin CXX),default)
-  CXX := clang++
-endif
+CC	?= clang
+CXX	?= clang++
 SED	:= sed
 MV	:= mv
 AR	:= ar
