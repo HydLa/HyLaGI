@@ -522,7 +522,7 @@ void ListExpander::visit(
     }
   }
   caller->set_name(node->get_name());
-  for (int i = 0; i < node->actual_arg_size(); i++) {
+  for (size_t i = 0; i < node->actual_arg_size(); i++) {
     accept(node->get_actual_arg(i)->clone());
     if (new_child) {
       caller->add_actual_arg(new_child);
@@ -544,7 +544,7 @@ void ListExpander::visit(
     }
   }
   caller->set_name(node->get_name());
-  for (int i = 0; i < node->actual_arg_size(); i++) {
+  for (size_t i = 0; i < node->actual_arg_size(); i++) {
     accept(node->get_actual_arg(i)->clone());
     if (new_child) {
       caller->add_actual_arg(new_child);

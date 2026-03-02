@@ -441,7 +441,6 @@ LTLNode *LTLModelChecker::detect_loop_in_path(LTLNode *new_node,
 
 bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
                                        node_sptr guard) {
-  bool ret;
   if (guard->get_node_type_name() == "True") {
     return true;
   }
@@ -464,17 +463,15 @@ bool LTLModelChecker::check_edge_guard(phase_result_sptr_t phase,
   switch (consistency_checker->check_entailment(
       related_vm, cc_result, guard, phase->phase_type, phase->profile)) {
   case ENTAILED:
-    ret = true;
     HYDLA_LOGGER_DEBUG("guard condition : true");
-    break;
+    return true;
   case BRANCH_PAR:
   case CONFLICTING:
   case BRANCH_VAR:
-    ret = false;
     HYDLA_LOGGER_DEBUG("guard condition : false");
-    break;
+    return false;
   }
-  return ret;
+  return false; // never
 }
 
 // phase_list_t LTLModelChecker::get_path(PhaseResult &phase){

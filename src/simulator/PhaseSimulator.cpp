@@ -1328,7 +1328,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(
       phase->get_parameter_constraint();
   find_min_time_result_t min_time_for_this_ask;
 
-  std::map<int, int> current_atomic_guard_index_history_stack_index;
+  std::map<int, size_t> current_atomic_guard_index_history_stack_index;
   for (auto it = newton_guard_state_map.begin();
        it != newton_guard_state_map.end(); ++it) {
     const int index = std::distance(newton_guard_state_map.begin(), it);
@@ -1369,7 +1369,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(
                 atomic_guard_index) ==
             current_atomic_guard_index_history_stack_index.end();
         if (!generate_new_data) {
-          const int stack_index = current_atomic_guard_index_history_stack_index
+          const size_t stack_index = current_atomic_guard_index_history_stack_index
               [atomic_guard_index];
 
           auto &stack_states =
@@ -1470,7 +1470,7 @@ find_min_time_result_t PhaseSimulator::find_min_time_step_by_step(
               0;
         }
       } else {
-        const int stack_index =
+        const size_t stack_index =
             current_atomic_guard_index_history_stack_index[atomic_guard_index];
         auto &stack_states =
             atomic_guard_min_time_interval_map[atomic_guard_str].results;

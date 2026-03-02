@@ -101,7 +101,7 @@ public:
   }
   std::ostream &dump(std::ostream &s) const {
     s << strs[line] << std::endl;
-    for (int i = 0; i < column; i++)
+    for (size_t i = 0; i < column; i++)
       s << " ";
     s << "~";
     return s;
