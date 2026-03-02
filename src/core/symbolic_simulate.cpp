@@ -28,7 +28,16 @@
 #include <sstream>
 #include <unistd.h>
 static std::string detect_math_kernel() {
-  // 1. Search for 'math' in PATH (licensed Mathematica)
+  // 1. WolframKernel binary in Mathematica.app (full licensed product)
+  if (access("/Applications/Mathematica.app/Contents/MacOS/WolframKernel",
+             X_OK) == 0)
+    return "/Applications/Mathematica.app/Contents/MacOS/WolframKernel";
+  // 2. WolframKernel binary in Wolfram Engine.app
+  if (access(
+          "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel",
+          X_OK) == 0)
+    return "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel";
+  // 3. Fall back to 'math' in PATH (may be a shell script wrapper)
   if (const char *path_env = std::getenv("PATH")) {
     std::istringstream iss(path_env);
     std::string dir;
@@ -36,15 +45,6 @@ static std::string detect_math_kernel() {
       if (access((dir + "/math").c_str(), X_OK) == 0)
         return "math";
   }
-  // 2. Mathematica app bundle
-  if (access("/Applications/Mathematica.app/Contents/MacOS/WolframKernel",
-             X_OK) == 0)
-    return "/Applications/Mathematica.app/Contents/MacOS/WolframKernel";
-  // 3. Wolfram Engine app bundle
-  if (access(
-          "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel",
-          X_OK) == 0)
-    return "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel";
   return "math"; // final fallback
 }
 #endif
