@@ -128,7 +128,7 @@ void SymbolicTrajPrinter::output_variable_map(
   variable_map_t vm = result.variable_map;
   for (auto it = vm.begin(); it != vm.end(); ++it) {
 
-    // �����ѿ�����ꤷ�����
+    // 出力変数を指定した場合
     if (opts.output_mode != Opts::None) {
       bool hit = false;
       for (auto it2 = opts.output_vars.begin(); it2 != opts.output_vars.end();
