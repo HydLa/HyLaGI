@@ -1,6 +1,6 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CC	?= clang
+# CC	?= clang  # Not used - no .c files in codebase
 CXX	?= clang++
 SED	:= sed
 MV	:= mv
