@@ -29,45 +29,101 @@ You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa
    sudo apt update
    sudo apt install -y git make g++ libboost-all-dev uuid-dev
    ```
-1. Install and activate Mathematica.  
-   If you don't have Wolfram's license, you can use [Free Wolfram Engine for Developers](https://www.wolfram.com/engine/index.php).
-1. Set `$MATHPATH` (see **What is `MATHPATH`?** below).  
-   e.g., Wolfram Engine 14.2
-   ```sh
-   echo "export MATHPATH='/usr/local/Wolfram/WolframEngine/14.2'" >> ~/.bashrc
+
+2. Install Wolfram Engine or Mathematica.
+   - For free option: Download [Wolfram Engine](https://www.wolfram.com/engine/) and install using the provided installer
+   - For licensed users: Install Mathematica
+
+3. Build HyLaGI.
+   ```bash
+   git clone https://github.com/HydLa/HyLaGI.git
+   cd HyLaGI
+   make -j 4
+   ```
+   The build system will automatically detect your Wolfram installation.
+
+4. Add HyLaGI to your PATH.
+   ```bash
+   echo "export PATH='\$PATH:$(pwd)/bin'" >> ~/.bashrc
    source ~/.bashrc   # or restart the terminal
    ```
-1. Library settings
+   Then test with:
+   ```bash
+   hylagi -p 6 examples/bouncing_particle.hydla
+   ```
+
+5. Run tests.
+   ```bash
+   make test fnum=2  # Run with 2 parallel threads
+   ```
+   Note that parallel execution may be restricted by your Wolfram license.
+
+<details>
+<summary>Manual MATHPATH configuration (if auto-detection fails)</summary>
+
+If the auto-detection doesn't work, you can manually set the MATHPATH:
+
+1. Find your Wolfram installation path:
+   ```bash
+   math -c '$InstallationDirectory'
+   ```
+
+2. Set MATHPATH and rebuild:
+   ```bash
+   make -j 4 MATHPATH=/path/to/your/wolfram/installation
+   ```
+
+3. Configure system libraries:
    ```bash
    echo "$MATHPATH/SystemFiles/Links/WSTP/DeveloperKit/Linux-x86-64/CompilerAdditions" | sudo tee /etc/ld.so.conf.d/wstp.conf
    sudo ldconfig
    ```
-1. Build HyLaGI.
+</details>
+
+### macOS with Clang
+
+1. Install required packages using Homebrew.
+   ```bash
+   # Install Homebrew if not already installed
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   
+   # Install required packages
+   brew install git make boost
+   ```
+
+2. Install Wolfram Engine or Mathematica.
+   - For free option: Download [Wolfram Engine](https://www.wolfram.com/engine/) and install to `/Applications/Wolfram Engine.app`
+   - For licensed users: Install Mathematica to `/Applications/Mathematica.app`
+
+3. Build HyLaGI.
    ```bash
    git clone https://github.com/HydLa/HyLaGI.git
    cd HyLaGI
-   make -j 4 MATHPATH=$MATHPATH
-   echo "export PATH='\$PATH:$MATHPATH/Executables:$(pwd)/bin'" >> ~/.bashrc
-   source ~/.bashrc   # or restart the terminal
+   make -j 4
    ```
-   Then, you can use `hylagi` command. For example:
+   The build system will automatically detect your Wolfram installation and Boost location.
+
+4. Add HyLaGI to your PATH.
+   ```bash
+   echo "export PATH='\$PATH:$(pwd)/bin'" >> ~/.zshrc
+   source ~/.zshrc   # or restart the terminal
+   ```
+   Then test with:
    ```bash
    hylagi -p 6 examples/bouncing_particle.hydla
    ```
-1. Run tests.  
-   By default, `make test` runs tests sequentially.  
-   If you want it to run in parallel, you can set the number of threads as follows:
+
+5. Run tests.
    ```bash
-   make test fnum=2
+   make test fnum=2  # Run with 2 parallel threads
    ```
-   Note that parallel execution may be restricted by your Wolfram license.
 
 ### Other environments
 
 HyLaGI supports several environments.
 
 - OS: Ubuntu and macOS
-- C++ compiler: Clang and GCC (default)
+- C++ compiler: GCC and Clang (system default)
 
 <details>
 <summary>Build confirmed environment</summary>

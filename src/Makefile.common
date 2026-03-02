@@ -1,7 +1,7 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
 # CC	?= clang  # Not used - no .c files in codebase
-CXX	?= clang++
+# CXX	?= clang++  # Use system defaults: Ubuntu gets g++, macOS gets g++ -> clang++
 SED	:= sed
 MV	:= mv
 AR	:= ar
@@ -21,7 +21,11 @@ INCLUDES += `$(PYTHON_CONFIG) --embed 1> /dev/null 2> /dev/null && $(PYTHON_CONF
 ifeq ($(UNAME),Linux)
 	LIBS += -luuid
 
-	MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
+	# Auto-detect latest Wolfram installation
+	MATHPATH ?= $(shell \
+		for d in /usr/local/Wolfram/WolframEngine/* /usr/local/Wolfram/Mathematica/*; do \
+			if [ -d "$$d" ]; then echo "$$d"; fi; \
+		done | sort -V | tail -1)
 	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
 	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
 
