@@ -4,15 +4,14 @@
 
 HyLaGI is a C++ implementation of hybrid constraint language HydLa.
 
-Email address:
-hydla@ueda.info.waseda.ac.jp
+Information about HydLa can be found at
+https://github.com/HydLa/HyLaGI/wiki and 
+https://www.uedalab.jp/hydla/ .
 
-More information about HydLa:
-http://www.ueda.info.waseda.ac.jp/hydla/
+You can also use [webHydLa](https://github.com/HydLa/webHydLa)
+as a GUI with a visualizer of solution trajectories.
 
 ## Build
-
-You can also use [webHydLa](http://webhydla.ueda.info.waseda.ac.jp) to run HydLa programs without building HyLaGI on your own.
 
 ### Required packages
 
@@ -133,10 +132,10 @@ HyLaGI supports several environments.
 
 - Ubuntu 22.04.1, GCC 11.3.0, Python 3.10.6
 - Ubuntu 22.04.1, Clang 14.0.0, Python 3.10.6
-- Ubuntu 24.04.2, GCC 13.3.0, Python 3.12.3
-- Ubuntu 24.04.2, Clang 18.1.3, Python 3.12.3
-- macOS 10.15.7, Apple clang 12.0.0, Python 3.6.9
+- Ubuntu 24.04.3, GCC 13.3.0, Python 3.12.3
+- Ubuntu 24.04.3, Clang 18.1.3, Python 3.12.3
 - macOS 10.15.7, Apple clang 12.0.0, Python 3.8.5
+- macOS 15.4, Apple clang 17.0.0, Python 3.13.4
 </details>
 
 ### Make options
@@ -224,7 +223,7 @@ make CC=clang CXX=clang++
 
 ## For developers
 
-### To format all files with clang-format
+### To format all files with clang-format (Ubuntu)
 
 ```sh
 sudo apt install clang-format
