@@ -17,7 +17,7 @@ as a GUI with a visualizer of solution trajectories.
 
 - Git
 - Make
-- GCC or Clang, and Boost library
+- GCC or Clang, and Boost library (macOS: Clang only — see note below)
 - Python
 - Wolfram system (Mathematica, or WolframEngine)
 
@@ -122,7 +122,7 @@ If the auto-detection doesn't work, you can manually set the MATHPATH:
 HyLaGI supports several environments.
 
 - OS: Ubuntu and macOS
-- C++ compiler: GCC and Clang (system default)
+- C++ compiler: GCC and Clang on Linux; **Clang only on macOS**
 
 <details>
 <summary>Build confirmed environment</summary>
@@ -143,7 +143,11 @@ HyLaGI supports several environments.
 To build several environments,
 you can set environment variables when you exec `make`.
 
-#### Forcing to use GCC:
+#### Forcing to use GCC (Linux only):
+
+> **Note:** GCC cannot be used on macOS. The prebuilt `libWSTPi4.a` (Wolfram WSTP)
+> is compiled with Apple Clang/libc++, which is ABI-incompatible with GCC's libstdc++.
+> Use the default Clang on macOS.
 
 ```
 make -j 4 CXX=g++
