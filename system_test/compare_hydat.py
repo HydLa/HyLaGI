@@ -3,18 +3,47 @@ import sys
 import json
 from collections import defaultdict
 from collections import deque
+import atexit
 
 g = None
 idx = None
+wl = subprocess.Popen(
+    ["wolframscript", "-interactive"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.DEVNULL,
+    text=True,
+    bufsize=1
+)
+atexit.register(wl.terminate)
 
+expr_cache = {}
 def same_expr(e1, e2, assum='True'):
   if e1 == e2:
     return True
   
-  code = 'Simplify[Simplify[{}]==Simplify[{}],{}]'.format(e1, e2, assum)
-  command = ['wolframscript', '-code', code]
-  res = subprocess.check_output(command)
-  return res == b'True\n'
+  key = (e1, e2, assum)
+  if key in expr_cache:
+    return expr_cache[key]
+  
+  code = f'Print["__RESULT__:", Simplify[Simplify[{e1}]==Simplify[{e2}],{assum}]]'
+  # print(code)
+
+  wl.stdin.write(code + '\n')
+  wl.stdin.flush()
+
+  while True:
+    line = wl.stdout.readline()
+    if not line:
+      raise RuntimeError("Wolfram process terminated")
+    # print(line)
+    if "__RESULT__:" in line:
+      val = line.split("__RESULT__:",1)[1].strip()
+      # if val not in ("True", "False"):
+      #   raise RuntimeError("Wolfram returned: " + val)
+      result = val == 'True'
+      expr_cache[key] = result
+      return result
 
 def paramaps2assum(paramaps):
   assum = 'False'
@@ -133,15 +162,15 @@ def iso(g1, idx1, g2, idx2):
         return False
   return True
 
-if __name__=='__main__':
-  args = sys.argv
-
+def compare_hydats(hydats):
+  global g
+  global idx
   gs = []
   idxs = []
   msg = 'compare target:\n'
-  for i in range(1, len(args)):
-    msg += ' ' + args[i] + '\n'
-    with open(args[i]) as f:
+  for i in range(0, len(hydats)):
+    msg += ' ' + hydats[i] + '\n'
+    with open(hydats[i]) as f:
       s = f.read()
       d = json.loads(s)
       
@@ -155,5 +184,18 @@ if __name__=='__main__':
   for i in range(len(gs)):
     if not iso(g, idx, gs[i], idxs[i]):
       print(msg + '\033[31mdifferent result\033[0m')
-      sys.exit(1)
+      return False
   print(msg + '\033[32msame result\033[0m')
+  return True
+
+if __name__=='__main__':
+  args = sys.argv[1:]
+  # if not compare_hydats(args):
+  #   sys.exit(1)
+  flag = True
+  for hydat in args:
+    master = hydat + '.master'
+    if not compare_hydats([hydat, master]):
+      flag = False
+  if not flag:
+    sys.exit(1)

@@ -78,7 +78,7 @@ void ProgramOptions::init_descriptions() {
 
   if (not is_master()) {
     gop("debug,d", "display debug trace\n");
-    gop("math_name", value<std::string>()->default_value("math"),
+    gop("math_name", value<std::string>()->default_value(""),
         "name of the command to execute mathematica");
   }
 
@@ -197,7 +197,7 @@ void ProgramOptions::init_descriptions() {
     hop("csv", value<std::string>()->default_value(""), "");
     hop("debug,d", "");
     hop("simplify_time", value<std::string>()->default_value("1"), "");
-    hop("math_name", value<std::string>()->default_value("math"), "");
+    hop("math_name", value<std::string>()->default_value(""), "");
     hop("hs", value<char>()->default_value('n'), "");
     hop("ltl,l", value<char>()->default_value('n'), "");
     hop("affine", value<char>()->default_value('n'), "");

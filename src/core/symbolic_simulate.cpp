@@ -24,6 +24,87 @@
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
+#if defined(__APPLE__) || defined(__linux__)
+#include <sstream>
+#include <unistd.h>
+#include <dirent.h>
+#include <algorithm>
+
+#ifdef __linux__
+// Find the latest version of Wolfram installation on Linux
+static std::string find_latest_wolfram_path() {
+  std::vector<std::string> candidates;
+  
+  // Check WolframEngine installations
+  if (DIR* dir = opendir("/usr/local/Wolfram/WolframEngine")) {
+    struct dirent* entry;
+    while ((entry = readdir(dir))) {
+      if (entry->d_name[0] != '.') {
+        candidates.push_back("/usr/local/Wolfram/WolframEngine/" + std::string(entry->d_name));
+      }
+    }
+    closedir(dir);
+  }
+  
+  // Check Mathematica installations  
+  if (DIR* dir = opendir("/usr/local/Wolfram/Mathematica")) {
+    struct dirent* entry;
+    while ((entry = readdir(dir))) {
+      if (entry->d_name[0] != '.') {
+        candidates.push_back("/usr/local/Wolfram/Mathematica/" + std::string(entry->d_name));
+      }
+    }
+    closedir(dir);
+  }
+  
+  if (candidates.empty()) return "";
+  
+  // Sort to get the latest version (lexicographic sort works for version numbers)
+  std::sort(candidates.begin(), candidates.end(), std::greater<std::string>());
+  return candidates[0];
+}
+#endif
+
+static std::string detect_math_kernel() {
+#ifdef __APPLE__
+  // 1. WolframKernel binary in Mathematica.app (full licensed product)
+  if (access("/Applications/Mathematica.app/Contents/MacOS/WolframKernel",
+             X_OK) == 0)
+    return "/Applications/Mathematica.app/Contents/MacOS/WolframKernel";
+  // 2. WolframKernel binary in Wolfram Engine.app
+  if (access(
+          "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel",
+          X_OK) == 0)
+    return "/Applications/Wolfram Engine.app/Contents/MacOS/WolframKernel";
+#endif
+
+#ifdef __linux__
+  // 1. Try to find Wolfram installation and use its kernel
+  std::string wolfram_path = find_latest_wolfram_path();
+  if (!wolfram_path.empty()) {
+    std::string kernel_path = wolfram_path + "/Executables/WolframKernel";
+    if (access(kernel_path.c_str(), X_OK) == 0) {
+      return kernel_path;
+    }
+    // Fallback to math command in Executables directory
+    kernel_path = wolfram_path + "/Executables/math";
+    if (access(kernel_path.c_str(), X_OK) == 0) {
+      return kernel_path;
+    }
+  }
+#endif
+
+  // Common fallback: 'math' command in PATH
+  if (const char *path_env = std::getenv("PATH")) {
+    std::istringstream iss(path_env);
+    std::string dir;
+    while (std::getline(iss, dir, ':'))
+      if (access((dir + "/math").c_str(), X_OK) == 0)
+        return "math";
+  }
+  return "math"; // final fallback
+}
+#endif
 // namespace
 using namespace hydla;
 using namespace hydla::symbolic_expression;
@@ -161,8 +242,16 @@ void add_vars_from_string(string vars_list_string, set<string> &set_to_add,
 #define IF_SPECIFIED(X) if (use_default || !po.defaulted(X))
 
 void process_opts(Opts &opts, ProgramOptions &po, bool use_default) {
+  std::string math_name = po.get<string>("math_name");
+#if defined(__APPLE__) || defined(__linux__)
+  if (math_name.empty())
+    math_name = detect_math_kernel();
+#else
+  if (math_name.empty())
+    math_name = "math";
+#endif
   opts.wstp =
-      "-linkmode launch -linkname '" + po.get<string>("math_name") + " -wstp'";
+      "-linkmode launch -linkname '\"" + math_name + "\" -wstp'";
   IF_SPECIFIED("time") {
     parser::Parser parser(po.get<string>("time"));
     opts.max_time = parser.arithmetic();

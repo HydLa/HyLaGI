@@ -1,7 +1,7 @@
 .SUFFIXES: .o .c .cc .cpp .h .d
 
-CC	?= clang
-CXX	?= clang++
+# CC	?= clang  # Not used - no .c files in codebase
+# CXX	?= clang++  # Use system defaults: Ubuntu gets g++, macOS gets g++ -> clang++
 SED	:= sed
 MV	:= mv
 AR	:= ar
@@ -21,7 +21,11 @@ INCLUDES += `$(PYTHON_CONFIG) --embed 1> /dev/null 2> /dev/null && $(PYTHON_CONF
 ifeq ($(UNAME),Linux)
 	LIBS += -luuid
 
-	MATHPATH ?= /usr/local/Wolfram/Mathematica/11.3
+	# Auto-detect latest Wolfram installation
+	MATHPATH ?= $(shell \
+		for d in /usr/local/Wolfram/WolframEngine/* /usr/local/Wolfram/Mathematica/*; do \
+			if [ -d "$$d" ]; then echo "$$d"; fi; \
+		done | sort -V | tail -1)
 	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
 	LDFLAGS	 += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/Linux-$(MACHINE)/CompilerAdditions/
 
@@ -29,9 +33,13 @@ ifeq ($(UNAME),Linux)
 	CXX_OPT  += -Wall -std=c++17 -O -Wno-register -Wno-unused-command-line-argument -Wno-unused-variable
 endif
 ifeq ($(UNAME),Darwin)
-	MATHPATH ?= /Applications/Mathematica\ 2.app/Contents
+	MATHPATH ?= /Applications/Wolfram\ Engine.app/Contents/Resources/Wolfram\ Player.app/Contents
 	INCLUDES += -I$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-$(MACHINE)/CompilerAdditions/
 	LDFLAGS  += -L$(MATHPATH)/SystemFiles/Links/WSTP/DeveloperKit/MacOSX-$(MACHINE)/CompilerAdditions/
+
+	BOOST_PREFIX ?= $(shell brew --prefix boost 2>/dev/null || echo /usr/local)
+	INCLUDES += -I$(BOOST_PREFIX)/include
+	LDFLAGS  += -L$(BOOST_PREFIX)/lib
 
 	CXX_OPT  += -Wall -std=c++2a -framework Foundation -Wno-unused-command-line-argument -Wno-unused-variable
 endif
