@@ -465,7 +465,7 @@ std::ostream &ConditionalProgramList::dump(std::ostream &s) const {
   s << "[";
   if (arguments_.size() > 0)
     s << *arguments_[0];
-  for (int i = 1; i < arguments_.size(); i++)
+  for (unsigned int i = 1; i < arguments_.size(); i++)
     s << ", " << *arguments_[i];
   s << "]";
   return s;
@@ -477,7 +477,7 @@ std::ostream &ConditionalExpressionList::dump(std::ostream &s) const {
   s << "[";
   if (arguments_.size() > 0)
     s << *arguments_[0];
-  for (int i = 1; i < arguments_.size(); i++)
+  for (unsigned int i = 1; i < arguments_.size(); i++)
     s << ", " << *arguments_[i];
   s << "]";
   return s;
@@ -489,7 +489,7 @@ std::ostream &VariadicNode::dump(std::ostream &s) const {
   s << "[";
   if (arguments_.size() > 0)
     s << *arguments_[0];
-  for (int i = 1; i < arguments_.size(); i++)
+  for (unsigned int i = 1; i < arguments_.size(); i++)
     s << ", " << *arguments_[i];
   s << "]";
   return s;
@@ -614,17 +614,17 @@ DEFINE_BASE_NODE_VISITOR_ACCEPT_FUNC(BinaryNode)
 #define DEFINE_TREE_VISITOR_ACCEPT_FUNC(CLASS)                                 \
   DEFINE_ACCEPT_FUNC(CLASS, TreeVisitor)
 
-//定義
+// 定義
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramDefinition)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintDefinition)
 
-//呼び出し
+// 呼び出し
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ConstraintCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ExpressionListCaller)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(ProgramListCaller)
 
-//制約式
+// 制約式
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Constraint);
 
 // Tell制約
@@ -636,7 +636,7 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Ask)
 // Exists
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Exists)
 
-//比較演算子
+// 比較演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Equal)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnEqual)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Less)
@@ -644,40 +644,40 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(LessEqual)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Greater)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(GreaterEqual)
 
-//論理演算子
+// 論理演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalAnd)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(LogicalOr)
 
-//算術二項演算子
+// 算術二項演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Plus)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Subtract)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Times)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Divide)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Power)
 
-//算術単項演算子
+// 算術単項演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Negative)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Positive)
 
-//制約階層定義演算子
+// 制約階層定義演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Weaker)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parallel)
 
 // 時相演算子
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Always)
 
-//微分
+// 微分
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Differential)
 
-//左極限
+// 左極限
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Previous)
 
-//否定
+// 否定
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Not)
 
-//円周率
+// 円周率
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Pi)
-//自然対数の底
+// 自然対数の底
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(E)
 
 // Lists
@@ -701,14 +701,14 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Intersection)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(EachElement)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(DifferentVariable)
 
-//任意の文字列
+// 任意の文字列
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Function)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(UnsupportedFunction)
 
-//変数・束縛変数
+// 変数・束縛変数
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Variable)
 
-//数字
+// 数字
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Number)
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Float)
 
@@ -723,12 +723,12 @@ DEFINE_TREE_VISITOR_ACCEPT_FUNC(Abort)
 // SystemVariable
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SVtimer)
 
-//記号定数
+// 記号定数
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Parameter)
 
 // t
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(SymbolicT)
-//無限大
+// 無限大
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(Infinity)
 // True
 DEFINE_TREE_VISITOR_ACCEPT_FUNC(True)

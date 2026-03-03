@@ -1,5 +1,3 @@
-#pragma once
-
 #include "boost_algo_str.h"
 #include "debug_main.h"
 #include <Python.h>
@@ -1224,7 +1222,7 @@ Solve_sym::add_equations(
     sym_.erase(std::unique(sym_.begin(), sym_.end()), sym_.end());
     for (auto h : h_map) {
       if (h[1] == cons_name) {
-        for (int i = 2; i < h.size(); i++) {
+        for (size_t i = 2; i < h.size(); i++) {
           prio_.push_back(h[i]);
         }
       }
@@ -1272,7 +1270,7 @@ bool Solve_sym::check_duplication_ask(
         each_var_val_map,
     std::map<std::string, std::string> var_val,
     std::vector<std::string> each_ask_cons_set) {
-  bool ret;
+  bool ret = false;
 
   for (auto p : each_var_val_map) {
     ret = true;

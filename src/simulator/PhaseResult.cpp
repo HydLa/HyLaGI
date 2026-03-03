@@ -285,7 +285,7 @@ ostream &operator<<(std::ostream &s, const module_set_t &m) {
 
 ostream &operator<<(std::ostream &s, const change_variables_t &a) {
   s << "%% ChangedVariables: ";
-  int i = 1;
+  size_t i = 1;
   for (change_variables_t::iterator it = a.begin(); it != a.end(); it++, i++)
     s << *it << (i < a.size() ? " , " : "");
   s << endl;

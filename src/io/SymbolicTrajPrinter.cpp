@@ -128,7 +128,7 @@ void SymbolicTrajPrinter::output_variable_map(
   variable_map_t vm = result.variable_map;
   for (auto it = vm.begin(); it != vm.end(); ++it) {
 
-    // ½ÐÎÏÊÑ¿ô¤ò»ØÄê¤·¤¿¾ì¹ç
+    // å‡ºåŠ›å¤‰æ•°ã‚’æŒ‡å®šã—ãŸå ´åˆ
     if (opts.output_mode != Opts::None) {
       bool hit = false;
       for (auto it2 = opts.output_vars.begin(); it2 != opts.output_vars.end();
@@ -163,7 +163,7 @@ void SymbolicTrajPrinter::output_variable_map(
           itvd itv = visitor.get_interval_value(
               it->second.get_unique_value().get_node(), &dummy, &par_maps[0]);
           stream << "width(" << it->first << "): " << width(itv) << endl;
-        } catch (HydLaError) {
+        } catch (HydLaError const&) {
           // do nothing
         }
       }

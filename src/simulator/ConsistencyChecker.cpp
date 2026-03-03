@@ -376,7 +376,7 @@ CheckConsistencyResult ConsistencyChecker::check_consistency(
   profile["PreparationInCC"] += timer.get_elapsed_us();
   for (auto ask : relation_graph.get_active_asks())
     HYDLA_LOGGER_DEBUG_VAR(get_infix_string(ask));
-  for (int i = 0; i < related_constraints_list.size(); i++) {
+  for (size_t i = 0; i < related_constraints_list.size(); i++) {
     HYDLA_LOGGER_DEBUG("related[", i + 1, "/", related_constraints_list.size(),
                        "]: ", related_constraints_list[i]);
     check_consistency_foreach(related_constraints_list[i], relation_graph,

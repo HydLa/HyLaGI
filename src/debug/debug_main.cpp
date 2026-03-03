@@ -1,5 +1,3 @@
-#pragma once
-
 #include "debug_main.h"
 #include "ParseTree.h"
 
@@ -38,7 +36,7 @@ void Debug::dump_debug(Debug *db, std::string string,
 void Debug::debug_call(
     std::vector<std::vector<std::vector<std::string>>> constraint_map,
     std::vector<std::vector<std::string>> v_map,
-    std::vector<std::vector<std::string>> h_map) //ここで構文木をパースする
+    std::vector<std::vector<std::string>> h_map) // ここで構文木をパースする
 {
   Solve_sym::solve_main(constraint_map, v_map, h_map);
 }

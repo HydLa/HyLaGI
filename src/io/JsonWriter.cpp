@@ -34,7 +34,7 @@ void JsonWriter::write(const simulator_t &simulator, const std::string &name,
     ofs.exceptions(ios::eofbit | ios::failbit | ios::badbit);
     ofs << json.serialize();
     ofs.close();
-  } catch (ifstream::failure e) {
+  } catch (ifstream::failure const &e) {
     cerr << "warning: destination hydat cannot be written." << endl;
   }
 }

@@ -101,7 +101,7 @@ public:
   }
   std::ostream &dump(std::ostream &s) const {
     s << strs[line] << std::endl;
-    for (int i = 0; i < column; i++)
+    for (size_t i = 0; i < column; i++)
       s << " ";
     s << "~";
     return s;
@@ -135,9 +135,9 @@ private:
   // current token string
   std::string current_token_string;
   // line number that Lexer is reading now
-  int line;
+  unsigned line;
   // column number than Lexer is reading now
-  int column;
+  unsigned column;
 };
 
 } // namespace parser

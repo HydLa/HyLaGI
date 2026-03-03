@@ -58,7 +58,7 @@ value_t AffineApproximator::translate_into_symbolic_value(
                            &ret);
   double sum = 0;
   int available_index;
-  for (int i = 1; i < affine_value.a.size(); i++) {
+  for (unsigned int i = 1; i < affine_value.a.size(); i++) {
     if (affine_value.a(i) == 0)
       continue;
     parameter_idx_map_t::right_iterator r_it = parameter_idx_map.right.find(i);

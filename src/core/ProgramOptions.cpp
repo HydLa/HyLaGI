@@ -254,6 +254,6 @@ void ProgramOptions::parse(std::string src_str) {
   parse(argc, argv);
 }
 
-bool is_master() { return BRANCH_NAME == "master"; }
+bool is_master() { return BRANCH_NAME == (std::string) "master"; }
 
 } // namespace hydla
